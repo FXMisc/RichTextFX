@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="codearea">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="srcdirs">
+        <pathelement location="src/main"/>
+        <pathelement location="src/demo"/>
+        <pathelement location="src/test"/>
+    </path>
+    <path id="codearea.classpath">
+        <pathelement location="build"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="build"/>
+        <copy includeemptydirs="false" todir="build">
+            <fileset dir="src/main">
+                <exclude name="**/*.java"/>
+            </fileset>
+            <fileset dir="src/demo">
+                <exclude name="**/*.java"/>
+            </fileset>
+            <fileset dir="src/test">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="initdist">
+        <mkdir dir="dist"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+
+    <target name="cleandist">
+        <delete dir="dist"/>
+    </target>
+
+    <target name="cleanall" depends="clean,cleandist"/>
+
+    <target name="build" depends="init">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="build" includeantruntime="false" source="${source}" target="${target}">
+            <src refid="srcdirs"/>
+            <classpath refid="codearea.classpath"/>
+        </javac>
+    </target>
+
+    <target name="dist" depends="build,initdist" description="Package project as a JAR archive.">
+        <jar basedir="build" destfile="dist/codearea.jar"/>
+    </target>
+
+    <target name="javadoc" description="Generate API documentation.">
+        <javadoc sourcepath="src" destdir="javadoc"/>
+    </target>
+
+    <target name="ManualHighlighting" depends="build">
+        <java classname="codearea.demo.ManualHighlighting" failonerror="true" fork="yes">
+            <classpath refid="codearea.classpath"/>
+        </java>
+    </target>
+
+    <target name="JavaKeywords" depends="build">
+        <java classname="codearea.demo.JavaKeywords" failonerror="true" fork="yes">
+            <classpath refid="codearea.classpath"/>
+        </java>
+    </target>
+</project>
