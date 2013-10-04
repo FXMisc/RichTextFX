@@ -25,9 +25,6 @@
 
 package codearea.demo;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,12 +51,7 @@ public class JavaKeywords extends Application {
             "transient", "try", "void", "volatile", "while"
     };
 
-    private static final Pattern KEYWORD = Pattern.compile("\\b(" + String.join("|", KEYWORDS) + ")\\b");
-
-    private static final Set<String> KW_CLASSES = new HashSet<String>(1);
-    static {
-        KW_CLASSES.add("keyword");
-    }
+    private static final Pattern KEYWORD_PATTERN = Pattern.compile("\\b(" + String.join("|", KEYWORDS) + ")\\b");
 
     private static final String sampleCode = String.join("\n", new String[] {
         "package com.example;",
@@ -92,14 +84,14 @@ public class JavaKeywords extends Application {
             @Override
             public void changed(ObservableValue<? extends String> observable,
                     String oldText, String newText) {
-                Matcher matcher = KEYWORD.matcher(newText);
+                Matcher matcher = KEYWORD_PATTERN.matcher(newText);
                 int lastKwEnd = 0;
                 while(matcher.find()) {
-                    codeArea.setStyleClasses(lastKwEnd, matcher.start(), Collections.EMPTY_SET);
-                    codeArea.setStyleClasses(matcher.start(), matcher.end(), KW_CLASSES);
+                    codeArea.clearStyleClasses(lastKwEnd, matcher.start());
+                    codeArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
                     lastKwEnd = matcher.end();
                 }
-                codeArea.setStyleClasses(lastKwEnd, newText.length(), Collections.EMPTY_SET);
+                codeArea.clearStyleClasses(lastKwEnd, newText.length());
             }
         });
         codeArea.replaceText(0, 0, sampleCode);

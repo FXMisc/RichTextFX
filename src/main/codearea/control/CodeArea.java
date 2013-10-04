@@ -28,6 +28,7 @@ package codearea.control;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -301,8 +302,18 @@ public class CodeArea extends Control {
         return FXCollections.unmodifiableObservableList(content.lines);
     }
 
+    public void setStyleClass(int from, int to, String styleClass) {
+        Set<String> styleClasses = new HashSet<>(1);
+        styleClasses.add(styleClass);
+        setStyleClasses(from, to, styleClasses);
+    }
+
     public void setStyleClasses(int from, int to, Set<String> styleClasses) {
         content.setStyleClasses(from, to, styleClasses);
+    }
+
+    public void clearStyleClasses(int from, int to) {
+        setStyleClasses(from, to, Collections.<String>emptySet());
     }
 
     /***************************************************************************
