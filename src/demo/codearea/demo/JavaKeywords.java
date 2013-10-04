@@ -25,10 +25,8 @@
 
 package codearea.demo;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +41,7 @@ import codearea.control.CodeArea;
 
 public class JavaKeywords extends Application {
 
-    private static final List<String> KEYWORDS = Arrays.asList(
+    private static final String[] KEYWORDS = new String[] {
             "abstract", "assert", "boolean", "break", "byte",
             "case", "catch", "char", "class", "const",
             "continue", "default", "do", "double", "else",
@@ -54,7 +52,7 @@ public class JavaKeywords extends Application {
             "return", "short", "static", "strictfp", "super",
             "switch", "synchronized", "this", "throw", "throws",
             "transient", "try", "void", "volatile", "while"
-    );
+    };
 
     private static final Pattern KEYWORD = Pattern.compile("\\b(" + String.join("|", KEYWORDS) + ")\\b");
 
@@ -63,39 +61,56 @@ public class JavaKeywords extends Application {
         KW_CLASSES.add("keyword");
     }
 
+    private static final String sampleCode = String.join("\n", new String[] {
+        "package com.example;",
+        "",
+        "import java.util.*;",
+        "",
+        "public class Foo extends Bar implements Baz {",
+        "",
+        "   public static void main(String[] args) {",
+        "       for(String arg: args) {",
+        "           if(arg.length() != 0)",
+        "               System.out.println(arg);",
+        "           else",
+        "               System.err.println(\"Warning: empty string as argument\");",
+        "       }",
+        "   }",
+        "",
+        "}"
+    });
+
 
     public static void main(String[] args) {
         launch(args);
     }
 
-	private final CodeArea area = new CodeArea();
-
-	public JavaKeywords() {
-	    area.textProperty().addListener(new ChangeListener<String>() {
+    @Override
+    public void start(Stage primaryStage) {
+        final CodeArea codeArea = new CodeArea();
+        codeArea.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable,
                     String oldText, String newText) {
                 Matcher matcher = KEYWORD.matcher(newText);
                 int lastKwEnd = 0;
                 while(matcher.find()) {
-                    area.setStyleClasses(lastKwEnd, matcher.start(), Collections.EMPTY_SET);
-                    area.setStyleClasses(matcher.start(), matcher.end(), KW_CLASSES);
+                    codeArea.setStyleClasses(lastKwEnd, matcher.start(), Collections.EMPTY_SET);
+                    codeArea.setStyleClasses(matcher.start(), matcher.end(), KW_CLASSES);
                     lastKwEnd = matcher.end();
                 }
-                area.setStyleClasses(lastKwEnd, newText.length(), Collections.EMPTY_SET);
+                codeArea.setStyleClasses(lastKwEnd, newText.length(), Collections.EMPTY_SET);
             }
-	    });
-	}
+        });
+        codeArea.replaceText(0, 0, sampleCode);
 
-	@Override
-	public void start(Stage primaryStage) {
-		StackPane root = new StackPane();
-        root.getChildren().add(area);
+        StackPane root = new StackPane();
+        root.getChildren().add(codeArea);
         Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
-		primaryStage.setScene(scene);
-        area.requestFocus();
-		primaryStage.show();
-	}
+        primaryStage.setScene(scene);
+        codeArea.requestFocus();
+        primaryStage.show();
+    }
 
 }
