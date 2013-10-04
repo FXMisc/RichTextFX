@@ -36,11 +36,15 @@
         <delete dir="build"/>
     </target>
 
-    <target name="cleandist">
+    <target name="distclean">
         <delete dir="dist"/>
     </target>
 
-    <target name="cleanall" depends="clean,cleandist"/>
+    <target name="javadocclean">
+        <delete dir="javadoc"/>
+    </target>
+
+    <target name="cleanall" depends="clean,distclean,javadocclean"/>
 
     <target name="build" depends="init">
         <echo message="${ant.project.name}: ${ant.file}"/>
@@ -55,7 +59,7 @@
     </target>
 
     <target name="javadoc" description="Generate API documentation.">
-        <javadoc sourcepath="src" destdir="javadoc"/>
+        <javadoc sourcepathref="srcdirs" destdir="javadoc"/>
     </target>
 
     <target name="ManualHighlighting" depends="build">
