@@ -91,7 +91,7 @@ public class JavaKeywords extends Application {
 	public void start(Stage primaryStage) {
 		StackPane root = new StackPane();
         root.getChildren().add(area);
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
 		primaryStage.setScene(scene);
         area.requestFocus();

@@ -58,7 +58,7 @@ public class ManualHighlighting extends Application {
 		Button bold = createBoldButton("bold");
 		panel.getChildren().addAll(red, green, blue, bold);
         root.getChildren().addAll(panel, area);
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
 		primaryStage.setScene(scene);
         area.requestFocus();
