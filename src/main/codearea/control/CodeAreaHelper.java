@@ -42,20 +42,20 @@ import com.sun.javafx.Utils;
  */
 public class CodeAreaHelper {
 
-	public static enum SelectionPolicy {
-		CLEAR,
-		ADJUST,
-		EXTEND,
-	}
+    public static enum SelectionPolicy {
+        CLEAR,
+        ADJUST,
+        EXTEND,
+    }
 
-	private final CodeArea codeArea;
+    private final CodeArea codeArea;
 
     // Used for previous/next word navigation.
     private final BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
 
-	public CodeAreaHelper(CodeArea codeArea) {
-		this.codeArea = codeArea;
-	}
+    public CodeAreaHelper(CodeArea codeArea) {
+        this.codeArea = codeArea;
+    }
 
 
     /**
@@ -74,7 +74,7 @@ public class CodeAreaHelper {
      * @param text The text to insert.
      */
     public void insertText(int index, String text) {
-    	codeArea.replaceText(index, index, text);
+        codeArea.replaceText(index, index, text);
     }
 
     /**
@@ -85,7 +85,7 @@ public class CodeAreaHelper {
      * @see #deleteText(int, int)
      */
     public void deleteText(IndexRange range) {
-    	deleteText(range.getStart(), range.getEnd());
+        deleteText(range.getStart(), range.getEnd());
     }
 
     /**
@@ -97,7 +97,7 @@ public class CodeAreaHelper {
      *            and &lt;= the length of the text.
      */
     public void deleteText(int start, int end) {
-    	codeArea.replaceText(start, end, "");
+        codeArea.replaceText(start, end, "");
     }
 
     /**
@@ -145,26 +145,26 @@ public class CodeAreaHelper {
      */
     public void previousChar(SelectionPolicy selectionPolicy) {
         if (codeArea.getCaretPosition() > 0) {
-        	int newCaretPos = Character.offsetByCodePoints(codeArea.getText(), codeArea.getCaretPosition(), -1);
-        	positionCaret(newCaretPos, selectionPolicy);
+            int newCaretPos = Character.offsetByCodePoints(codeArea.getText(), codeArea.getCaretPosition(), -1);
+            positionCaret(newCaretPos, selectionPolicy);
         }
     }
 
 
-	/**
+    /**
      * Moves the caret forward one char in the text.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
      */
     public void nextChar(SelectionPolicy selectionPolicy) {
         if (codeArea.getCaretPosition() < codeArea.getLength()) {
-        	int newCaretPos = Character.offsetByCodePoints(codeArea.getText(), codeArea.getCaretPosition(), 1);
-        	positionCaret(newCaretPos, selectionPolicy);
+            int newCaretPos = Character.offsetByCodePoints(codeArea.getText(), codeArea.getCaretPosition(), 1);
+            positionCaret(newCaretPos, selectionPolicy);
         }
     }
 
 
-	/**
+    /**
      * Moves the caret to the beginning of previous word.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
@@ -212,13 +212,13 @@ public class CodeAreaHelper {
     }
 
     public void lineStart(SelectionPolicy selectionPolicy) {
-    	positionCaret(codeArea.getCaretPosition() - codeArea.caretCol.get(), selectionPolicy);
+        positionCaret(codeArea.getCaretPosition() - codeArea.caretCol.get(), selectionPolicy);
     }
 
     public void lineEnd(SelectionPolicy selectionPolicy) {
-    	int lineLen = codeArea.getLines().get(codeArea.caretRow.get()).length();
-    	int newPos = codeArea.getCaretPosition() - codeArea.caretCol.get() + lineLen;
-    	positionCaret(newPos, selectionPolicy);
+        int lineLen = codeArea.getLines().get(codeArea.caretRow.get()).length();
+        int newPos = codeArea.getCaretPosition() - codeArea.caretCol.get() + lineLen;
+        positionCaret(newPos, selectionPolicy);
     }
 
     public void start(SelectionPolicy selectionPolicy) {
@@ -233,7 +233,7 @@ public class CodeAreaHelper {
      * Selects all text in the text input.
      */
     public void selectAll() {
-    	codeArea.selectRange(0, codeArea.getLength());
+        codeArea.selectRange(0, codeArea.getLength());
     }
 
     /**
@@ -261,7 +261,7 @@ public class CodeAreaHelper {
     }
 
     public void positionCaret(int pos) {
-    	positionCaret(pos, SelectionPolicy.CLEAR);
+        positionCaret(pos, SelectionPolicy.CLEAR);
     }
 
     /**
@@ -275,25 +275,25 @@ public class CodeAreaHelper {
      */
     public void positionCaret(int pos, SelectionPolicy selectionPolicy) {
         pos = Utils.clamp(0, pos, codeArea.getLength());
-    	switch(selectionPolicy) {
-    		case CLEAR:
-    			codeArea.selectRange(pos, pos);
-    			break;
-    		case ADJUST:
-    			codeArea.selectRange(codeArea.getAnchor(), pos);
-    			break;
-    		case EXTEND:
-    	        IndexRange sel = codeArea.getSelection();
-    	        int anchor;
-    	        if(pos <= sel.getStart())
-    	        	anchor = sel.getEnd();
-    	        else if(pos >= sel.getEnd())
-    	        	anchor = sel.getStart();
-    	        else
-    	        	anchor = codeArea.getAnchor();
-	        	codeArea.selectRange(anchor, pos);
-	        	break;
-    	}
+        switch(selectionPolicy) {
+            case CLEAR:
+                codeArea.selectRange(pos, pos);
+                break;
+            case ADJUST:
+                codeArea.selectRange(codeArea.getAnchor(), pos);
+                break;
+            case EXTEND:
+                IndexRange sel = codeArea.getSelection();
+                int anchor;
+                if(pos <= sel.getStart())
+                    anchor = sel.getEnd();
+                else if(pos >= sel.getEnd())
+                    anchor = sel.getStart();
+                else
+                    anchor = codeArea.getAnchor();
+                codeArea.selectRange(anchor, pos);
+                break;
+        }
     }
 
     public void moveSelectedText(int pos) {
@@ -327,8 +327,8 @@ public class CodeAreaHelper {
     public void deselect() {
         // set the anchor equal to the caret position, which clears the selection
         // while also preserving the caret position
-    	int p = codeArea.getCaretPosition();
-    	codeArea.selectRange(p, p);
+        int p = codeArea.getCaretPosition();
+        codeArea.selectRange(p, p);
     }
 
     /**

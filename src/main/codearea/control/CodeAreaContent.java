@@ -144,7 +144,7 @@ final class CodeAreaContent extends ReadOnlyStringPropertyBase implements Observ
         return textBuilder.toString();
     }
 
-	public void replaceText(int start, int end, String replacement) {
+    public void replaceText(int start, int end, String replacement) {
         if (replacement == null)
             throw new NullPointerException("replacement text is null");
 
@@ -167,32 +167,32 @@ final class CodeAreaContent extends ReadOnlyStringPropertyBase implements Observ
         int n = replacementLines.length;
 
         if(n == 1) {
-        	// replacement is just a single line,
-        	// use it to join the two leftover lines
-        	left.append(replacementLines[0]);
-        	left.appendFrom(right);
+            // replacement is just a single line,
+            // use it to join the two leftover lines
+            left.append(replacementLines[0]);
+            left.appendFrom(right);
 
-        	// replace the affected liens with the merger of leftovers and the replacement line
+            // replace the affected liens with the merger of leftovers and the replacement line
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-        	lines.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-        	lines.remove(leadingLineIndex+1, trailingLineIndex+1);
+            lines.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            lines.remove(leadingLineIndex+1, trailingLineIndex+1);
         }
         else {
-        	// append the first replacement line to the left leftover
-        	// and prepend the last replacement line to the right leftover
-        	left.append(replacementLines[0]);
-        	right.insert(0, replacementLines[n-1]);
+            // append the first replacement line to the left leftover
+            // and prepend the last replacement line to the right leftover
+            left.append(replacementLines[0]);
+            right.insert(0, replacementLines[n-1]);
 
             // create list of new lines to replace the affected lines
             List<Line> newLines = new ArrayList<>(n-1);
             for(int i = 1; i < n - 1; ++i)
-            	newLines.add(new Line(replacementLines[i]));
+                newLines.add(new Line(replacementLines[i]));
             newLines.add(right);
 
             // replace the affected lines with the new lines
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
             lines.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-        	lines.remove(leadingLineIndex+1, trailingLineIndex+1);
+            lines.remove(leadingLineIndex+1, trailingLineIndex+1);
             lines.addAll(leadingLineIndex+1, newLines);
         }
 
@@ -201,7 +201,7 @@ final class CodeAreaContent extends ReadOnlyStringPropertyBase implements Observ
 
         fireValueChangedEvent();
         fireTextChange(start, replacedText, replacement);
-	}
+    }
 
     public void setStyleClasses(int from, int to, Set<String> styleClasses) {
         int[] range2D = rangeToRowAndCol(from, to);
@@ -210,27 +210,27 @@ final class CodeAreaContent extends ReadOnlyStringPropertyBase implements Observ
         int lastLineIndex = range2D[2];
         int lastLineTo = range2D[3];
 
-    	if(from == to)
-    		return;
+        if(from == to)
+            return;
 
-    	Line firstLine = lines.get(firstLineIndex);
-    	Line lastLine = lines.get(lastLineIndex);
+        Line firstLine = lines.get(firstLineIndex);
+        Line lastLine = lines.get(lastLineIndex);
 
-    	if(firstLineIndex == lastLineIndex) {
-    		lastLine.setStyleClasses(firstLineFrom, lastLineTo, styleClasses);
-    		lines.set(lastLineIndex, lastLine); // to generate change event
-    	}
-    	else {
-    		firstLine.setStyleClasses(firstLineFrom, firstLine.length(), styleClasses);
-    		lines.set(firstLineIndex, firstLine); // to generate change event
-    		for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
-    			Line l = lines.get(i);
-    			l.setStyleClasses(styleClasses);
-    			lines.set(i, l); // to generate change event
-    		}
-    		lastLine.setStyleClasses(0, lastLineTo, styleClasses);
-    		lines.set(lastLineIndex, lastLine); // to generate change event
-    	}
+        if(firstLineIndex == lastLineIndex) {
+            lastLine.setStyleClasses(firstLineFrom, lastLineTo, styleClasses);
+            lines.set(lastLineIndex, lastLine); // to generate change event
+        }
+        else {
+            firstLine.setStyleClasses(firstLineFrom, firstLine.length(), styleClasses);
+            lines.set(firstLineIndex, firstLine); // to generate change event
+            for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
+                Line l = lines.get(i);
+                l.setStyleClasses(styleClasses);
+                lines.set(i, l); // to generate change event
+            }
+            lastLine.setStyleClasses(0, lastLineTo, styleClasses);
+            lines.set(lastLineIndex, lastLine); // to generate change event
+        }
     }
 
     int[] positionToRowAndCol(int pos) {

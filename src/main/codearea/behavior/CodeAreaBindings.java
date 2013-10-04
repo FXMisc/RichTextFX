@@ -66,18 +66,18 @@ import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.behavior.OptionalBoolean;
 
 enum CodeAreaAction {
-	Left,
-	Right,
-	LeftWord,
-	RightWord,
-	LineStart,
-	LineEnd,
-	PreviousLine,
-	NextLine,
-	PreviousPage,
-	NextPage,
-	TextStart,
-	TextEnd,
+    Left,
+    Right,
+    LeftWord,
+    RightWord,
+    LineStart,
+    LineEnd,
+    PreviousLine,
+    NextLine,
+    PreviousPage,
+    NextPage,
+    TextStart,
+    TextEnd,
 
     SelectLeft,
     SelectRight,
@@ -109,29 +109,29 @@ enum CodeAreaAction {
     DeleteNextWord(true),
     DeletePreviousWord(true),
 
-	Cut(true),
-	Copy,
-	Paste(true),
+    Cut(true),
+    Copy,
+    Paste(true),
 
-	Undo(true),
-	Redo(true),
+    Undo(true),
+    Redo(true),
 
-	ToParent;
+    ToParent;
 
 
-	private final boolean isEdit;
+    private final boolean isEdit;
 
-	CodeAreaAction() {
-	    this(false);
-	}
+    CodeAreaAction() {
+        this(false);
+    }
 
-	CodeAreaAction(boolean isEdit) {
-	    this.isEdit = isEdit;
-	}
+    CodeAreaAction(boolean isEdit) {
+        this.isEdit = isEdit;
+    }
 
-	public boolean isEditAction() {
-	    return isEdit;
-	}
+    public boolean isEditAction() {
+        return isEdit;
+    }
 }
 
 public class CodeAreaBindings {

@@ -79,7 +79,7 @@ class UndoManager {
         }
     }
 
-	private final CodeArea codeArea;
+    private final CodeArea codeArea;
 
     private final ArrayList<Change> chain = new ArrayList<Change>();
     private int currentIndex = 0;
@@ -92,19 +92,19 @@ class UndoManager {
      */
     private boolean modifyingText = false;
 
-	/**
-	 * @param codeArea
-	 */
-	UndoManager(CodeArea codeArea) {
-		this.codeArea = codeArea;
-		codeArea.textProperty().addListener(new TextChangeListener() {
+    /**
+     * @param codeArea
+     */
+    UndoManager(CodeArea codeArea) {
+        this.codeArea = codeArea;
+        codeArea.textProperty().addListener(new TextChangeListener() {
             @Override
             public void handle(int pos, String removedText, String addedText) {
                 if(!modifyingText) // change is not coming from this UndoManager
                     addChange(new Change(pos, removedText, addedText));
             }
-		});
-	}
+        });
+    }
 
     private void addChange(Change change) {
         // dismiss any undone changes

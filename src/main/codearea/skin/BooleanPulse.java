@@ -43,19 +43,19 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
     private final EventHandler<ActionEvent> toggler = new EventHandler<ActionEvent>() {
         @Override
         public void handle(final ActionEvent event) {
-        	toggle();
+            toggle();
         }
     };
 
     public BooleanPulse(Duration duration) {
-    	this(duration, null, null, true);
+        this(duration, null, null, true);
     }
 
     public BooleanPulse(Duration duration, Object bean, String name, boolean initialValue) {
-    	this.bean = bean;
-    	this.name = name;
+        this.bean = bean;
+        this.name = name;
 
-    	currentValue = initialValue;
+        currentValue = initialValue;
 
         timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -67,9 +67,9 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
     }
 
     public void start(boolean initialValue) {
-    	if(currentValue != initialValue)
-    		toggle();
-    	timeline.play();
+        if(currentValue != initialValue)
+            toggle();
+        timeline.play();
     }
 
     public void stop() {
@@ -77,28 +77,28 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
     }
 
     public void stop(boolean terminalValue) {
-    	timeline.stop();
-    	if(currentValue != terminalValue)
-    		toggle();
+        timeline.stop();
+        if(currentValue != terminalValue)
+            toggle();
     }
 
     private void toggle() {
-    	currentValue = !currentValue;
-    	fireValueChangedEvent();
+        currentValue = !currentValue;
+        fireValueChangedEvent();
     }
 
-	@Override
-	public Object getBean() {
-		return bean;
-	}
+    @Override
+    public Object getBean() {
+        return bean;
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public boolean get() {
-		return currentValue;
-	}
+    @Override
+    public boolean get() {
+        return currentValue;
+    }
 }

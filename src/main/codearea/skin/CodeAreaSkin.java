@@ -101,8 +101,8 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
         }
     };
 
-	private final ListView<Line> listView;
-	private final Set<LineCell> visibleCells = new HashSet<>();
+    private final ListView<Line> listView;
+    private final Set<LineCell> visibleCells = new HashSet<>();
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
@@ -120,71 +120,71 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
 
         // Use LineCell as cell implementation
         listView.setCellFactory(new Callback<ListView<Line>, ListCell<Line>>() {
-			@Override
-			public ListCell<Line> call(final ListView<Line> listView) {
-				final LineCell lineCell = new LineCell(CodeAreaSkin.this);
+            @Override
+            public ListCell<Line> call(final ListView<Line> listView) {
+                final LineCell lineCell = new LineCell(CodeAreaSkin.this);
 
-				// keep track of visible cells
-				lineCell.emptyProperty().addListener(new ChangeListener<Boolean>() {
-					@Override
-					public void changed(ObservableValue<? extends Boolean> observable,
-							Boolean wasEmpty, Boolean isEmpty) {
-						if(isEmpty)
-							visibleCells.remove(lineCell);
-						else
-							visibleCells.add(lineCell);
-					}
-				});
+                // keep track of visible cells
+                lineCell.emptyProperty().addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observable,
+                            Boolean wasEmpty, Boolean isEmpty) {
+                        if(isEmpty)
+                            visibleCells.remove(lineCell);
+                        else
+                            visibleCells.add(lineCell);
+                    }
+                });
 
-				// listen to mouse events on lines
-				lineCell.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-		            @Override public void handle(MouseEvent event) {
-		                getBehavior().mousePressed(event);
-		                event.consume();
-		            }
-		        });
-				lineCell.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
-					@Override
-					public void handle(MouseEvent event) {
-						// startFullDrag() causes subsequent drag events to be
-						// received by corresponding LineCells, instead of all
-						// events being delivered to the original LineCell.
-						lineCell.getScene().startFullDrag();
-						getBehavior().dragDetected(event);
-						event.consume();
-					}
-				});
-				lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, new EventHandler<MouseDragEvent>() {
-		            @Override public void handle(MouseDragEvent event) {
-		                getBehavior().mouseDragOver(event);
-		                event.consume();
-		            }
-		        });
-				lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
-		            @Override public void handle(MouseDragEvent event) {
-		                getBehavior().mouseDragReleased(event);
-		                event.consume();
-		            }
-		        });
-				lineCell.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-		            @Override public void handle(MouseEvent event) {
-		                getBehavior().mouseReleased(event);
-		                event.consume();
-		            }
-				});
+                // listen to mouse events on lines
+                lineCell.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+                    @Override public void handle(MouseEvent event) {
+                        getBehavior().mousePressed(event);
+                        event.consume();
+                    }
+                });
+                lineCell.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        // startFullDrag() causes subsequent drag events to be
+                        // received by corresponding LineCells, instead of all
+                        // events being delivered to the original LineCell.
+                        lineCell.getScene().startFullDrag();
+                        getBehavior().dragDetected(event);
+                        event.consume();
+                    }
+                });
+                lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, new EventHandler<MouseDragEvent>() {
+                    @Override public void handle(MouseDragEvent event) {
+                        getBehavior().mouseDragOver(event);
+                        event.consume();
+                    }
+                });
+                lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
+                    @Override public void handle(MouseDragEvent event) {
+                        getBehavior().mouseDragReleased(event);
+                        event.consume();
+                    }
+                });
+                lineCell.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
+                    @Override public void handle(MouseEvent event) {
+                        getBehavior().mouseReleased(event);
+                        event.consume();
+                    }
+                });
 
-				return lineCell;
-			}
-		});
+                return lineCell;
+            }
+        });
 
         // selected line reflects the caret row
         codeArea.caretRow.addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> observable,
-					Number oldRow, Number currentRow) {
-				listView.getSelectionModel().select(currentRow.intValue());
-				scrollToVisible(currentRow.intValue());
-			}
+            @Override
+            public void changed(ObservableValue<? extends Number> observable,
+                    Number oldRow, Number currentRow) {
+                listView.getSelectionModel().select(currentRow.intValue());
+                scrollToVisible(currentRow.intValue());
+            }
         });
         listView.getSelectionModel().select(codeArea.caretRow.get());
 
@@ -195,11 +195,11 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
         // use InvalidationListener, since that one would be called before
         // change listeners.
         listView.getItems().addListener(new ListChangeListener<Line>() {
-			@Override
-			public void onChanged(
-					javafx.collections.ListChangeListener.Change<? extends Line> arg0) {
-				listView.getSelectionModel().select(codeArea.caretRow.get());
-			}
+            @Override
+            public void onChanged(
+                    javafx.collections.ListChangeListener.Change<? extends Line> arg0) {
+                listView.getSelectionModel().select(codeArea.caretRow.get());
+            }
         });
 
         // blink caret when focused
@@ -209,19 +209,19 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
                 if(focused)
                     caretPulse.start(true);
                 else
-                	caretPulse.stop(false);
+                    caretPulse.stop(false);
             }
         });
         if (codeArea.isFocused())
-        	caretPulse.start(true);
+            caretPulse.start(true);
 
         // The caret is visible when code area is not disabled, focused and editable.
         caretVisible = new BooleanBinding() {
             { bind(codeArea.focusedProperty(), codeArea.disabledProperty(),
-            		codeArea.editableProperty(), caretPulse);}
+                    codeArea.editableProperty(), caretPulse);}
             @Override protected boolean computeValue() {
                 return caretPulse.get() &&
-                		codeArea.isFocused() &&
+                        codeArea.isFocused() &&
                         !codeArea.isDisabled() &&
                         codeArea.isEditable();
             }
@@ -234,7 +234,7 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
             if(isFullyVisible(cell))
                 ++n;
         }
-    	return n;
+        return n;
     }
 
     private void scrollToVisible(int row) {

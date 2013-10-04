@@ -44,8 +44,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.CodeArea;
 import codearea.control.CodeAreaHelper;
-import codearea.control.Line;
 import codearea.control.CodeAreaHelper.SelectionPolicy;
+import codearea.control.Line;
 import codearea.skin.CodeAreaSkin;
 import codearea.skin.LineCell;
 
@@ -58,18 +58,18 @@ import com.sun.javafx.scene.text.HitInfo;
  */
 public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
-	/**
-	 * Possible dragging states.
-	 */
+    /**
+     * Possible dragging states.
+     */
     private enum DragState {
-    	/** No dragging is happening. */
-    	NO_DRAG,
+        /** No dragging is happening. */
+        NO_DRAG,
 
-    	/** Mouse has been pressed, but drag has not been detected yet. */
-    	POTENTIAL_DRAG,
+        /** Mouse has been pressed, but drag has not been detected yet. */
+        POTENTIAL_DRAG,
 
-    	/** Drag in progress. */
-    	DRAG,
+        /** Drag in progress. */
+        DRAG,
     }
 
     /**************************************************************************
@@ -100,12 +100,12 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
      */
     private int targetCaretCol = -1;
     public void clearTargetCaretColumn() {
-    	targetCaretCol = -1;
+        targetCaretCol = -1;
     }
     private int getTargetCaretColumn() {
-    	if(targetCaretCol == -1)
-    		targetCaretCol = codeArea.caretCol.get();
-    	return targetCaretCol;
+        if(targetCaretCol == -1)
+            targetCaretCol = codeArea.caretCol.get();
+        return targetCaretCol;
     }
 
     /**************************************************************************
@@ -158,17 +158,17 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
         // invalidate remembered horizontal position
         // on every action except vertical navigation
         switch(action) {
-        	case PreviousLine:
-        	case NextLine:
-        	case PreviousPage:
-        	case NextPage:
-        	case SelectPreviousLine:
-        	case SelectNextLine:
-        	case SelectPreviousPage:
-        	case SelectNextPage:
-        		break;
-        	default:
-        		clearTargetCaretColumn();
+            case PreviousLine:
+            case NextLine:
+            case PreviousPage:
+            case NextPage:
+            case SelectPreviousLine:
+            case SelectNextLine:
+            case SelectPreviousPage:
+            case SelectNextPage:
+                break;
+            default:
+                clearTargetCaretColumn();
         }
 
         switch(action) {
@@ -283,27 +283,27 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     private void left() {
-    	IndexRange sel = codeArea.getSelection();
-    	if(sel.getLength() == 0)
-    		codeAreaHelper.previousChar(SelectionPolicy.CLEAR);
-    	else
-    		codeAreaHelper.positionCaret(sel.getStart(), SelectionPolicy.CLEAR);
+        IndexRange sel = codeArea.getSelection();
+        if(sel.getLength() == 0)
+            codeAreaHelper.previousChar(SelectionPolicy.CLEAR);
+        else
+            codeAreaHelper.positionCaret(sel.getStart(), SelectionPolicy.CLEAR);
     }
 
     private void right() {
-    	IndexRange sel = codeArea.getSelection();
-    	if(sel.getLength() == 0)
-    		codeAreaHelper.nextChar(SelectionPolicy.CLEAR);
-    	else
-    		codeAreaHelper.positionCaret(sel.getEnd(), SelectionPolicy.CLEAR);
+        IndexRange sel = codeArea.getSelection();
+        if(sel.getLength() == 0)
+            codeAreaHelper.nextChar(SelectionPolicy.CLEAR);
+        else
+            codeAreaHelper.positionCaret(sel.getEnd(), SelectionPolicy.CLEAR);
     }
 
     private void selectLeft() {
-    	codeAreaHelper.previousChar(SelectionPolicy.ADJUST);
+        codeAreaHelper.previousChar(SelectionPolicy.ADJUST);
     }
 
     private void selectRight() {
-    	codeAreaHelper.nextChar(SelectionPolicy.ADJUST);
+        codeAreaHelper.nextChar(SelectionPolicy.ADJUST);
     }
 
     private void leftWord(SelectionPolicy selectionPolicy) {
@@ -315,15 +315,15 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     private void selectWord() {
-    	codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
-    	codeAreaHelper.nextWord(SelectionPolicy.ADJUST);
+        codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
+        codeAreaHelper.nextWord(SelectionPolicy.ADJUST);
     }
 
     private void deletePreviousWord() {
         int end = codeArea.getCaretPosition();
 
         if (end > 0) {
-        	codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
+            codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
             int start = codeArea.getCaretPosition();
             codeArea.replaceText(start, end, "");
         }
@@ -340,19 +340,19 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     private void downLines(int nLines, SelectionPolicy selectionPolicy) {
-    	// get target line number
-    	int targetRow = codeArea.caretRow.get() + nLines;
-    	targetRow = Math.min(targetRow, codeArea.getLines().size()-1);
-    	targetRow = Math.max(targetRow, 0);
-    	if(targetRow == codeArea.caretRow.get())
-    		return;
+        // get target line number
+        int targetRow = codeArea.caretRow.get() + nLines;
+        targetRow = Math.min(targetRow, codeArea.getLines().size()-1);
+        targetRow = Math.max(targetRow, 0);
+        if(targetRow == codeArea.caretRow.get())
+            return;
 
-    	// compute new caret position
-    	Line targetLine = codeArea.getLines().get(targetRow);
-    	int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
-    	int newCaretPos = codeArea.getLineOffset(targetRow) + targetCaretCol;
+        // compute new caret position
+        Line targetLine = codeArea.getLines().get(targetRow);
+        int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
+        int newCaretPos = codeArea.getLineOffset(targetRow) + targetCaretCol;
 
-    	// update model
+        // update model
         codeAreaHelper.positionCaret(newCaretPos, selectionPolicy);
     }
 
@@ -373,10 +373,10 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     @Override
-	public void mousePressed(MouseEvent e) {
+    public void mousePressed(MouseEvent e) {
         // don't respond if disabled
         if (codeArea.isDisabled())
-        	return;
+            return;
 
         // ensure focus
         if (!codeArea.isFocused())
@@ -387,9 +387,9 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
             contextMenu.hide();
 
         switch(e.getButton()) {
-        	case PRIMARY: leftPress(e); break;
-        	case SECONDARY: rightPress(e); break;
-        	default: // do nothing
+            case PRIMARY: leftPress(e); break;
+            case SECONDARY: rightPress(e); break;
+            default: // do nothing
         }
     }
 
@@ -399,7 +399,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
         if(e.isShiftDown()) {
             // On Mac always extend selection,
-        	// switching anchor and caret if necessary.
+            // switching anchor and caret if necessary.
             codeAreaHelper.positionCaret(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
         }
         else {
@@ -413,18 +413,18 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     private void firstLeftPress(HitInfo hit) {
-    	clearTargetCaretColumn();
+        clearTargetCaretColumn();
         IndexRange selection = codeArea.getSelection();
-    	if (selection.getLength() != 0 &&
-        		hit.getCharIndex() >= selection.getStart() &&
-        		hit.getCharIndex() < selection.getEnd()) {
-    	    // press inside selection
+        if (selection.getLength() != 0 &&
+                hit.getCharIndex() >= selection.getStart() &&
+                hit.getCharIndex() < selection.getEnd()) {
+            // press inside selection
             dragSelection = DragState.POTENTIAL_DRAG;
         }
-    	else {
+        else {
             dragSelection = DragState.NO_DRAG;
-			codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-    	}
+            codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+        }
     }
 
     private void rightPress(MouseEvent e) {
@@ -458,25 +458,25 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     public void dragDetected(MouseEvent e) {
-    	if(dragSelection == DragState.POTENTIAL_DRAG)
-    		dragSelection = DragState.DRAG;
+        if(dragSelection == DragState.POTENTIAL_DRAG)
+            dragSelection = DragState.DRAG;
     }
 
     public void mouseDragOver(MouseDragEvent e) {
         // don't respond if disabled
         if(codeArea.isDisabled())
-        	return;
+            return;
 
         // only respond to primary button alone
         if(e.getButton() != MouseButton.PRIMARY || e.isMiddleButtonDown() || e.isSecondaryButtonDown())
-        	return;
+            return;
 
         // get the position within text
         LineCell lineCell = (LineCell) e.getSource();
         HitInfo hit = lineCell.hit(e);
 
         if (dragSelection == DragState.DRAG) {
-        	codeArea.positionCaretIndependently(hit.getInsertionIndex());
+            codeArea.positionCaretIndependently(hit.getInsertionIndex());
         }
         else {
             codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
@@ -484,26 +484,26 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
 
     @Override
-	public void mouseReleased(MouseEvent e) {
-    	switch(dragSelection) {
-			case POTENTIAL_DRAG:
-				// drag didn't happen, position caret
-		        LineCell lineCell = (LineCell) e.getSource();
-		        HitInfo hit = lineCell.hit(e);
-		        codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-		        break;
-			case DRAG:
-				// do nothing, handled by mouseDragReleased
-			case NO_DRAG:
-				// do nothing, caret already repositioned in mousePressed
-    	}
-    	dragSelection = DragState.NO_DRAG;
+    public void mouseReleased(MouseEvent e) {
+        switch(dragSelection) {
+            case POTENTIAL_DRAG:
+                // drag didn't happen, position caret
+                LineCell lineCell = (LineCell) e.getSource();
+                HitInfo hit = lineCell.hit(e);
+                codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                break;
+            case DRAG:
+                // do nothing, handled by mouseDragReleased
+            case NO_DRAG:
+                // do nothing, caret already repositioned in mousePressed
+        }
+        dragSelection = DragState.NO_DRAG;
     }
 
     public void mouseDragReleased(final MouseDragEvent e) {
         // don't respond if disabled
         if(codeArea.isDisabled())
-        	return;
+            return;
 
         if(dragSelection == DragState.DRAG) {
             // get the position within text

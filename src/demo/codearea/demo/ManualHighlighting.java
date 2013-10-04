@@ -46,50 +46,50 @@ public class ManualHighlighting extends Application {
         launch(args);
     }
 
-	private final CodeArea area = new CodeArea();
+    private final CodeArea area = new CodeArea();
 
-	@Override
-	public void start(Stage primaryStage) {
-		VBox root = new VBox();
-		HBox panel = new HBox();
-		Button red = createColorButton(Color.RED, "red");
-		Button green = createColorButton(Color.GREEN, "green");
-		Button blue = createColorButton(Color.BLUE, "blue");
-		Button bold = createBoldButton("bold");
-		panel.getChildren().addAll(red, green, blue, bold);
+    @Override
+    public void start(Stage primaryStage) {
+        VBox root = new VBox();
+        HBox panel = new HBox();
+        Button red = createColorButton(Color.RED, "red");
+        Button green = createColorButton(Color.GREEN, "green");
+        Button blue = createColorButton(Color.BLUE, "blue");
+        Button bold = createBoldButton("bold");
+        panel.getChildren().addAll(red, green, blue, bold);
         root.getChildren().addAll(panel, area);
         Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
-		primaryStage.setScene(scene);
+        primaryStage.setScene(scene);
         area.requestFocus();
-		primaryStage.show();
-	}
+        primaryStage.show();
+    }
 
-	private Button createBoldButton(String styleClass) {
-		Button button = new Button("B");
-		button.styleProperty().set("-fx-font-weight: bold;");
-		setPushHandler(button, styleClass);
-		return button;
-	}
+    private Button createBoldButton(String styleClass) {
+        Button button = new Button("B");
+        button.styleProperty().set("-fx-font-weight: bold;");
+        setPushHandler(button, styleClass);
+        return button;
+    }
 
-	private Button createColorButton(Color color, String styleClass) {
-		Rectangle rect = new Rectangle(20, 20, color);
-		Button button = new Button(null, rect);
-		setPushHandler(button, styleClass);
-		return button;
-	}
+    private Button createColorButton(Color color, String styleClass) {
+        Rectangle rect = new Rectangle(20, 20, color);
+        Button button = new Button(null, rect);
+        setPushHandler(button, styleClass);
+        return button;
+    }
 
-	private void setPushHandler(Button button, String styleClass) {
-		final HashSet<String> styleClasses = new HashSet<>(1);
-		styleClasses.add(styleClass);
-		button.onActionProperty().set(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent evt) {
-				IndexRange range = area.getSelection();
-				area.setStyleClasses(range.getStart(), range.getEnd(), styleClasses);
-				area.requestFocus();
-			}
-		});
-	}
+    private void setPushHandler(Button button, String styleClass) {
+        final HashSet<String> styleClasses = new HashSet<>(1);
+        styleClasses.add(styleClass);
+        button.onActionProperty().set(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent evt) {
+                IndexRange range = area.getSelection();
+                area.setStyleClasses(range.getStart(), range.getEnd(), styleClasses);
+                area.requestFocus();
+            }
+        });
+    }
 
 }

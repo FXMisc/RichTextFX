@@ -54,38 +54,38 @@ import com.sun.javafx.scene.text.HitInfo;
 
 public class LineGraphic extends TextFlow {
 
-	// FIXME: changing it currently has not effect, because
-	// Text.impl_selectionFillProperty().set(newFill) doesn't work
-	// properly for Text node inside a TextFlow (as of JDK8-b100).
-	public final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
+    // FIXME: changing it currently has not effect, because
+    // Text.impl_selectionFillProperty().set(newFill) doesn't work
+    // properly for Text node inside a TextFlow (as of JDK8-b100).
+    public final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
 
-	private final Line line;
+    private final Line line;
 
     private final Path caret = new Path();
     private final Rectangle selectionHighlightRect = new Rectangle();
 
     private final ChangeListener<Number> updateCaretPosition = new ChangeListener<Number>() {
-		@Override
-		public void changed(ObservableValue<? extends Number> observable,
-				Number oldPos, Number newPos) {
-			setCaretPosition(newPos.intValue());
-		}
-	};
+        @Override
+        public void changed(ObservableValue<? extends Number> observable,
+                Number oldPos, Number newPos) {
+            setCaretPosition(newPos.intValue());
+        }
+    };
 
-	private final ChangeListener<IndexRange> updateSelection = new ChangeListener<IndexRange>() {
-		@Override
-		public void changed(ObservableValue<? extends IndexRange> observable,
-				IndexRange oldRange, IndexRange newRange) {
-			setSelection(newRange);
-		}
-	};
+    private final ChangeListener<IndexRange> updateSelection = new ChangeListener<IndexRange>() {
+        @Override
+        public void changed(ObservableValue<? extends IndexRange> observable,
+                IndexRange oldRange, IndexRange newRange) {
+            setSelection(newRange);
+        }
+    };
 
-	private PumpedUpText currentTextNode;
+    private PumpedUpText currentTextNode;
 
-	public LineGraphic(Line line) {
-		this.line = line;
+    public LineGraphic(Line line) {
+        this.line = line;
 
-		setPrefWidth(Region.USE_COMPUTED_SIZE); // no wrapping
+        setPrefWidth(Region.USE_COMPUTED_SIZE); // no wrapping
 
         // selection highlight
         selectionHighlightRect.setManaged(false);
@@ -100,147 +100,147 @@ public class LineGraphic extends TextFlow {
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
-//			@Override
-//			public void changed(ObservableValue<? extends Paint> observable,
-//					Paint oldFill, Paint newFill) {
-//				for(PumpedUpText text: textNodes())
-//					text.impl_selectionFillProperty().set(newFill);
-//			}
+//            @Override
+//            public void changed(ObservableValue<? extends Paint> observable,
+//                    Paint oldFill, Paint newFill) {
+//                for(PumpedUpText text: textNodes())
+//                    text.impl_selectionFillProperty().set(newFill);
+//            }
 //        });
 
         // populate with text nodes
-		for(StyledString segment: line.getSegments()) {
-			PumpedUpText t = new PumpedUpText(segment.toString());
-	        t.setTextOrigin(VPos.TOP);
-			t.getStyleClass().add("text");
-			t.getStyleClass().addAll(segment.getStyleClasses());
+        for(StyledString segment: line.getSegments()) {
+            PumpedUpText t = new PumpedUpText(segment.toString());
+            t.setTextOrigin(VPos.TOP);
+            t.getStyleClass().add("text");
+            t.getStyleClass().addAll(segment.getStyleClasses());
 
-	        // XXX: binding selectionFill to textFill,
-			// see the note at highlightTextFill
-			t.impl_selectionFillProperty().bind(t.fillProperty());
+            // XXX: binding selectionFill to textFill,
+            // see the note at highlightTextFill
+            t.impl_selectionFillProperty().bind(t.fillProperty());
 
-			// keep the caret graphic up to date
-			InvalidationListener updateCaret = new InvalidationListener() {
-				@Override
-				public void invalidated(Observable boundsProperty) {
-					updateCaretPath();
-				}
-			};
-			t.caretShapeProperty().addListener(updateCaret);
-			t.layoutXProperty().addListener(updateCaret);
+            // keep the caret graphic up to date
+            InvalidationListener updateCaret = new InvalidationListener() {
+                @Override
+                public void invalidated(Observable boundsProperty) {
+                    updateCaretPath();
+                }
+            };
+            t.caretShapeProperty().addListener(updateCaret);
+            t.layoutXProperty().addListener(updateCaret);
 
-			// keep the selection graphic up to date
-			InvalidationListener updateSelectionHighlight = new InvalidationListener() {
-				@Override
-				public void invalidated(Observable boundsProperty) {
-					updateSelectionHighlight();
-				}
-			};
-			t.selectionBoundsProperty().addListener(updateSelectionHighlight);
-			t.layoutXProperty().addListener(updateSelectionHighlight);
+            // keep the selection graphic up to date
+            InvalidationListener updateSelectionHighlight = new InvalidationListener() {
+                @Override
+                public void invalidated(Observable boundsProperty) {
+                    updateSelectionHighlight();
+                }
+            };
+            t.selectionBoundsProperty().addListener(updateSelectionHighlight);
+            t.layoutXProperty().addListener(updateSelectionHighlight);
 
-			getChildren().add(t);
-		}
-		this.currentTextNode = (PumpedUpText) getChildren().get(2); // skip caret and selection highlight
+            getChildren().add(t);
+        }
+        this.currentTextNode = (PumpedUpText) getChildren().get(2); // skip caret and selection highlight
 
-		// keep caret position up to date
-		line.caretPositionProperty().addListener(updateCaretPosition);
-		setCaretPosition(line.getCaretPosition());
+        // keep caret position up to date
+        line.caretPositionProperty().addListener(updateCaretPosition);
+        setCaretPosition(line.getCaretPosition());
 
-		// keep selection up to date
-		line.selectionProperty().addListener(updateSelection);
-		setSelection(line.getSelection());
-	}
+        // keep selection up to date
+        line.selectionProperty().addListener(updateSelection);
+        setSelection(line.getSelection());
+    }
 
-	public void dispose() {
-		line.caretPositionProperty().removeListener(updateCaretPosition);
-		line.selectionProperty().removeListener(updateSelection);
-	}
+    public void dispose() {
+        line.caretPositionProperty().removeListener(updateCaretPosition);
+        line.selectionProperty().removeListener(updateSelection);
+    }
 
-	public BooleanProperty caretVisibleProperty() {
-		return caret.visibleProperty();
-	}
+    public BooleanProperty caretVisibleProperty() {
+        return caret.visibleProperty();
+    }
 
-	public ObjectProperty<Paint> highlightFillProperty() {
-		return selectionHighlightRect.fillProperty();
-	}
+    public ObjectProperty<Paint> highlightFillProperty() {
+        return selectionHighlightRect.fillProperty();
+    }
 
-	public HitInfo hit(double x) {
-		// compute y as the vertical center of the text flow
-		Bounds bounds = getBoundsInLocal();
-		double y = (bounds.getMinY() + bounds.getMaxY()) / 2;
+    public HitInfo hit(double x) {
+        // compute y as the vertical center of the text flow
+        Bounds bounds = getBoundsInLocal();
+        double y = (bounds.getMinY() + bounds.getMaxY()) / 2;
 
-		// hit the text node
-		// XXX Hitting the first text node works because of implementation details in JDK8-b100,
-		// where hit is delegated to TextLayout
-		HitInfo hit = textNodes().iterator().next().impl_hitTestChar(new Point2D(x, y));
+        // hit the text node
+        // XXX Hitting the first text node works because of implementation details in JDK8-b100,
+        // where hit is delegated to TextLayout
+        HitInfo hit = textNodes().iterator().next().impl_hitTestChar(new Point2D(x, y));
 
-		if(hit.getCharIndex() == line.length()) // clicked beyond the end of line
-			hit.setLeading(true); // prevent going to the start of the next line
+        if(hit.getCharIndex() == line.length()) // clicked beyond the end of line
+            hit.setLeading(true); // prevent going to the start of the next line
 
-		return hit;
-	}
+        return hit;
+    }
 
-	private void setCaretPosition(int pos) {
-		if(pos < 0)
-			throw new IllegalArgumentException();
+    private void setCaretPosition(int pos) {
+        if(pos < 0)
+            throw new IllegalArgumentException();
 
-		if(pos > line.length())
-			pos = line.length();
+        if(pos > line.length())
+            pos = line.length();
 
-		for(PumpedUpText text: textNodes()) {
-			if(pos <= text.getText().length()) {
-				currentTextNode = text;
-				text.setCaretPosition(pos);
-				updateCaretPath(); // in case the above line didn't trigger this
-				break;
-			}
-			else {
-				pos -= text.getText().length();
-			}
-		}
-	}
+        for(PumpedUpText text: textNodes()) {
+            if(pos <= text.getText().length()) {
+                currentTextNode = text;
+                text.setCaretPosition(pos);
+                updateCaretPath(); // in case the above line didn't trigger this
+                break;
+            }
+            else {
+                pos -= text.getText().length();
+            }
+        }
+    }
 
-	private void updateCaretPath() {
-		caret.getElements().setAll(currentTextNode.caretShapeProperty().get());
-		caret.setTranslateX(currentTextNode.getLayoutX());
-		caret.setTranslateY(currentTextNode.getLayoutY());
-	}
+    private void updateCaretPath() {
+        caret.getElements().setAll(currentTextNode.caretShapeProperty().get());
+        caret.setTranslateX(currentTextNode.getLayoutX());
+        caret.setTranslateY(currentTextNode.getLayoutY());
+    }
 
-	private void setSelection(IndexRange range) {
-		int start = range.getStart();
-		int end = range.getEnd();
+    private void setSelection(IndexRange range) {
+        int start = range.getStart();
+        int end = range.getEnd();
 
-		int offset = 0;
-		for(PumpedUpText text: textNodes()) {
-			int len = text.getText().length();
-			if(start < offset + len && end > offset) {
-				int a = Math.max(start - offset, 0);
-				int b = Math.min(end - offset, len);
-				text.setSelection(a, b);
-			}
-			else {
-				text.setSelection(-1, -1);
-			}
-			offset += len;
-		}
-	}
+        int offset = 0;
+        for(PumpedUpText text: textNodes()) {
+            int len = text.getText().length();
+            if(start < offset + len && end > offset) {
+                int a = Math.max(start - offset, 0);
+                int b = Math.min(end - offset, len);
+                text.setSelection(a, b);
+            }
+            else {
+                text.setSelection(-1, -1);
+            }
+            offset += len;
+        }
+    }
 
-	private void updateSelectionHighlight() {
+    private void updateSelectionHighlight() {
         double minX = Double.POSITIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
 
-		this.layout(); // make sure text nodes are laid out even if the text flow is not displayed yet
+        this.layout(); // make sure text nodes are laid out even if the text flow is not displayed yet
         for(PumpedUpText text: textNodes()) {
-        	Bounds bounds = text.selectionBoundsProperty().get();
-        	if(!bounds.isEmpty()) {
-        		minX = Math.min(minX, text.getLayoutX() + bounds.getMinX());
-        		minY = Math.min(minY, text.getLayoutY() + bounds.getMinY());
-        		maxX = Math.max(maxX, text.getLayoutX() + bounds.getMaxX());
-        		maxY = Math.max(maxY, text.getLayoutY() + bounds.getMaxY());
-        	}
+            Bounds bounds = text.selectionBoundsProperty().get();
+            if(!bounds.isEmpty()) {
+                minX = Math.min(minX, text.getLayoutX() + bounds.getMinX());
+                minY = Math.min(minY, text.getLayoutY() + bounds.getMinY());
+                maxX = Math.max(maxX, text.getLayoutX() + bounds.getMaxX());
+                maxY = Math.max(maxY, text.getLayoutY() + bounds.getMaxY());
+            }
         }
 
         double width = maxX - minX;
@@ -250,57 +250,57 @@ public class LineGraphic extends TextFlow {
         selectionHighlightRect.setY(minY);
         selectionHighlightRect.setWidth(width);
         selectionHighlightRect.setHeight(height);
-	}
+    }
 
-	/**
-	 * Utility method to iterate children of type Text.
-	 *
-	 * TODO: can be much shorter using subList(), stream() and map().
-	 */
-	private Iterable<PumpedUpText> textNodes() {
-		return new Iterable<PumpedUpText>() {
+    /**
+     * Utility method to iterate children of type Text.
+     *
+     * TODO: can be much shorter using subList(), stream() and map().
+     */
+    private Iterable<PumpedUpText> textNodes() {
+        return new Iterable<PumpedUpText>() {
 
-			@Override
-			public Iterator<PumpedUpText> iterator() {
-				return new Iterator<PumpedUpText>() {
-					private final Iterator<Node> it = getChildren().iterator();
-					{
-						it.next(); // skip caret
-						it.next(); // skip selection highlight
-					}
+            @Override
+            public Iterator<PumpedUpText> iterator() {
+                return new Iterator<PumpedUpText>() {
+                    private final Iterator<Node> it = getChildren().iterator();
+                    {
+                        it.next(); // skip caret
+                        it.next(); // skip selection highlight
+                    }
 
-					@Override
-					public boolean hasNext() {
-						return it.hasNext();
-					}
+                    @Override
+                    public boolean hasNext() {
+                        return it.hasNext();
+                    }
 
-					@Override
-					public PumpedUpText next() {
-						return (PumpedUpText) it.next();
-					}
+                    @Override
+                    public PumpedUpText next() {
+                        return (PumpedUpText) it.next();
+                    }
 
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
 
-					@Override
-					public void forEachRemaining(Consumer<? super PumpedUpText> action) {
-						throw new UnsupportedOperationException();
-					}
-				};
-			}
+                    @Override
+                    public void forEachRemaining(Consumer<? super PumpedUpText> action) {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
 
-			@Override
-			public void forEach(Consumer<? super PumpedUpText> action) {
-				throw new UnsupportedOperationException();
+            @Override
+            public void forEach(Consumer<? super PumpedUpText> action) {
+                throw new UnsupportedOperationException();
 
-			}
+            }
 
-			@Override
-			public Spliterator<PumpedUpText> spliterator() {
-				throw new UnsupportedOperationException();
-			}
-		};
-	}
+            @Override
+            public Spliterator<PumpedUpText> spliterator() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
 }

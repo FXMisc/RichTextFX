@@ -40,86 +40,86 @@ import javafx.scene.text.TextFlow;
  */
 public class PumpedUpText extends Text {
 
-	private final Path selectionHighlightPath = new Path();
-	private final ReadOnlyObjectWrapper<PathElement[]> caretShape = new ReadOnlyObjectWrapper<>();
+    private final Path selectionHighlightPath = new Path();
+    private final ReadOnlyObjectWrapper<PathElement[]> caretShape = new ReadOnlyObjectWrapper<>();
 
-	public PumpedUpText(String text) {
-		super(text);
+    public PumpedUpText(String text) {
+        super(text);
 
-		// update selection path whenever font changes
-		fontProperty().addListener(new InvalidationListener() {
-			@Override
-			public void invalidated(Observable fontProperty) {
-				updateCaretShape();
-				updateSelectionPath();
-			}
-		});
-	}
+        // update selection path whenever font changes
+        fontProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable fontProperty) {
+                updateCaretShape();
+                updateSelectionPath();
+            }
+        });
+    }
 
-	public ReadOnlyObjectProperty<PathElement[]> caretShapeProperty() {
-		return caretShape.getReadOnlyProperty();
-	}
+    public ReadOnlyObjectProperty<PathElement[]> caretShapeProperty() {
+        return caretShape.getReadOnlyProperty();
+    }
 
-	public void setCaretPosition(int pos) {
-		setImpl_caretPosition(pos);
-		updateCaretShape();
-	}
+    public void setCaretPosition(int pos) {
+        setImpl_caretPosition(pos);
+        updateCaretShape();
+    }
 
-	public int getCaretPosition(int pos) {
-		return getImpl_caretPosition();
-	}
+    public int getCaretPosition(int pos) {
+        return getImpl_caretPosition();
+    }
 
-	private void updateCaretShape() {
-		caretShape.set(independentCopy().getImpl_caretShape());
-	}
+    private void updateCaretShape() {
+        caretShape.set(independentCopy().getImpl_caretShape());
+    }
 
-	public ReadOnlyObjectProperty<Bounds> selectionBoundsProperty() {
-		return selectionHighlightPath.layoutBoundsProperty();
-	}
+    public ReadOnlyObjectProperty<Bounds> selectionBoundsProperty() {
+        return selectionHighlightPath.layoutBoundsProperty();
+    }
 
-	public void setSelection(int start, int end) {
-		if(start < end) {
-			setImpl_selectionStart(start);
-			setImpl_selectionEnd(end);
-		}
-		else {
-			setImpl_selectionStart(-1);
-			setImpl_selectionEnd(-1);
-		}
-		updateSelectionPath();
-	}
+    public void setSelection(int start, int end) {
+        if(start < end) {
+            setImpl_selectionStart(start);
+            setImpl_selectionEnd(end);
+        }
+        else {
+            setImpl_selectionStart(-1);
+            setImpl_selectionEnd(-1);
+        }
+        updateSelectionPath();
+    }
 
-	public int getSelectionStart() {
-		return getImpl_selectionStart();
-	}
+    public int getSelectionStart() {
+        return getImpl_selectionStart();
+    }
 
-	public int getSelectionEnd() {
-		return getImpl_selectionEnd();
-	}
+    public int getSelectionEnd() {
+        return getImpl_selectionEnd();
+    }
 
-	private void updateSelectionPath() {
-		selectionHighlightPath.getElements().setAll(independentCopy().getImpl_selectionShape());
-	}
+    private void updateSelectionPath() {
+        selectionHighlightPath.getElements().setAll(independentCopy().getImpl_selectionShape());
+    }
 
-	/**
-	 * If this text node is a child of a TextFlow,
-	 * creates and returns a copy with no parent.
-	 * Otherwise, this node is returned.
-	 * This is useful to work around https://javafx-jira.kenai.com/browse/RT-32398
-	 */
-	public PumpedUpText independentCopy() {
-		if(getParent() instanceof TextFlow) {
-			PumpedUpText text = new PumpedUpText(getText());
-			text.setImpl_caretPosition(getImpl_caretPosition());
-			text.setSelection(getSelectionStart(), getSelectionEnd());
-			text.setFont(getFont());
-			text.setTextOrigin(getTextOrigin());
-			text.setBoundsType(getBoundsType());
-			return text;
-		}
-		else {
-			return this;
-		}
-	}
+    /**
+     * If this text node is a child of a TextFlow,
+     * creates and returns a copy with no parent.
+     * Otherwise, this node is returned.
+     * This is useful to work around https://javafx-jira.kenai.com/browse/RT-32398
+     */
+    public PumpedUpText independentCopy() {
+        if(getParent() instanceof TextFlow) {
+            PumpedUpText text = new PumpedUpText(getText());
+            text.setImpl_caretPosition(getImpl_caretPosition());
+            text.setSelection(getSelectionStart(), getSelectionEnd());
+            text.setFont(getFont());
+            text.setTextOrigin(getTextOrigin());
+            text.setBoundsType(getBoundsType());
+            return text;
+        }
+        else {
+            return this;
+        }
+    }
 
 }

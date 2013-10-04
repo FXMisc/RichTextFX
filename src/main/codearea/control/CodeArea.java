@@ -126,7 +126,7 @@ public class CodeArea extends Control {
     /**
      * The textual content of this TextInputControl.
      */
-	private final CodeAreaContent content = new CodeAreaContent();
+    private final CodeAreaContent content = new CodeAreaContent();
     public final String getText() { return content.get(); }
     public final String getText(int start, int end) { return content.get(start, end); }
     public final ObservableTextValue textProperty() { return content; }
@@ -168,23 +168,23 @@ public class CodeArea extends Control {
     public final IndexRange getSelection() { return selection.getValue(); }
     public final ReadOnlyObjectProperty<IndexRange> selectionProperty() { return selection.getReadOnlyProperty(); }
     {
-	    selection.addListener(new ChangeListener<IndexRange>() {
-	        @Override
-	        public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldRange, IndexRange newRange) {
-	            int start = newRange.getStart();
-	            int end = newRange.getEnd();
-	            for (Line line: content.lines) {
-	                int lineLen = line.length();
-	                if (end > start && start < lineLen) {
-	                    line.setSelection(start, Math.min(end, lineLen));
-	                } else {
-	                    line.setSelection(0, 0);
-	                }
-	                start = Math.max(0, start - (lineLen+1));
-	                end   = Math.max(0, end   - (lineLen+1));
-	            }
-	        }
-	    });
+        selection.addListener(new ChangeListener<IndexRange>() {
+            @Override
+            public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldRange, IndexRange newRange) {
+                int start = newRange.getStart();
+                int end = newRange.getEnd();
+                for (Line line: content.lines) {
+                    int lineLen = line.length();
+                    if (end > start && start < lineLen) {
+                        line.setSelection(start, Math.min(end, lineLen));
+                    } else {
+                        line.setSelection(0, 0);
+                    }
+                    start = Math.max(0, start - (lineLen+1));
+                    end   = Math.max(0, end   - (lineLen+1));
+                }
+            }
+        });
     }
 
     /**
@@ -194,84 +194,84 @@ public class CodeArea extends Control {
     public final String getSelectedText() { return selectedText.get(); }
     public final ReadOnlyStringProperty selectedTextProperty() { return selectedText.getReadOnlyProperty(); }
     {
-	    selectedText.bind(new StringBinding() {
-	        { bind(selection, content); }
-	        @Override protected String computeValue() {
-	            IndexRange sel = selection.get();
-	            int start = sel.getStart();
-	            int end = sel.getEnd();
+        selectedText.bind(new StringBinding() {
+            { bind(selection, content); }
+            @Override protected String computeValue() {
+                IndexRange sel = selection.get();
+                int start = sel.getStart();
+                int end = sel.getEnd();
 
-	            int textLength = content.length().get();
-	            end = Math.min(end, textLength);
-	            if(start >= textLength)
-	                start = end = 0;
+                int textLength = content.length().get();
+                end = Math.min(end, textLength);
+                if(start >= textLength)
+                    start = end = 0;
 
-	            return content.get(start, end);
-	        }
-	    });
-	}
+                return content.get(start, end);
+            }
+        });
+    }
 
     private final ObservableValue<int[]> caretPosition2D = new ObjectBinding<int[]>() {
-    	{ bind(caretPosition); }
+        { bind(caretPosition); }
 
-		@Override
-		protected int[] computeValue() {
-			return content.positionToRowAndCol(caretPosition.get());
-	    }
+        @Override
+        protected int[] computeValue() {
+            return content.positionToRowAndCol(caretPosition.get());
+        }
     };
 
     /**
      * The row where the caret is positioned.
      */
     public final ObservableIntegerValue caretRow = new IntegerBinding() {
-    	{ bind(caretPosition2D); }
+        { bind(caretPosition2D); }
 
-		@Override
-		protected int computeValue() {
-			return caretPosition2D.getValue()[0];
-		}
-	};
+        @Override
+        protected int computeValue() {
+            return caretPosition2D.getValue()[0];
+        }
+    };
 
-	/**
-	 * Caret position relative to the current row.
-	 */
+    /**
+     * Caret position relative to the current row.
+     */
     public final ObservableIntegerValue caretCol = new IntegerBinding() {
-    	{ bind(caretPosition2D); }
+        { bind(caretPosition2D); }
 
-		@Override
-		protected int computeValue() {
-			return caretPosition2D.getValue()[1];
-		}
-	};
+        @Override
+        protected int computeValue() {
+            return caretPosition2D.getValue()[1];
+        }
+    };
 
-	/**
-	 * The line with the caret.
-	 */
+    /**
+     * The line with the caret.
+     */
     private final ObservableObjectValue<Line> currentLine = new ObjectBinding<Line>() {
-		{ bind(caretRow, content.lines); }
+        { bind(caretRow, content.lines); }
 
-		@Override
-		protected Line computeValue() {
-			int i = Math.min(caretRow.get(), content.lines.size()-1); // in case lines were removed before updating caretRow
-			return content.lines.get(i);
-		}
-	};
+        @Override
+        protected Line computeValue() {
+            int i = Math.min(caretRow.get(), content.lines.size()-1); // in case lines were removed before updating caretRow
+            return content.lines.get(i);
+        }
+    };
 
-	/**
-	 * Keep caret position in the current line up to date.
-	 */
-	{
-		InvalidationListener updateCaretPosInCurrentLine = new InvalidationListener() {
-			@Override
-			public void invalidated(Observable observable) {
-				int pos = Math.min(caretCol.get(), currentLine.get().length()); // because caretCol and currentLine are not updated atomically
-				currentLine.get().setCaretPosition(pos);
-			}
-		};
+    /**
+     * Keep caret position in the current line up to date.
+     */
+    {
+        InvalidationListener updateCaretPosInCurrentLine = new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                int pos = Math.min(caretCol.get(), currentLine.get().length()); // because caretCol and currentLine are not updated atomically
+                currentLine.get().setCaretPosition(pos);
+            }
+        };
 
-		caretCol.addListener(updateCaretPosInCurrentLine);
-		currentLine.addListener(updateCaretPosInCurrentLine);
-	}
+        caretCol.addListener(updateCaretPosInCurrentLine);
+        currentLine.addListener(updateCaretPosInCurrentLine);
+    }
 
 
     /**
@@ -302,7 +302,7 @@ public class CodeArea extends Control {
     }
 
     public void setStyleClasses(int from, int to, Set<String> styleClasses) {
-    	content.setStyleClasses(from, to, styleClasses);
+        content.setStyleClasses(from, to, styleClasses);
     }
 
     /***************************************************************************
@@ -324,7 +324,7 @@ public class CodeArea extends Control {
      *            and &lt;= the length of the text.
      * @param text The text that is to replace the range. This must not be null.
      */
-	public void replaceText(int start, int end, String text) {
+    public void replaceText(int start, int end, String text) {
         content.replaceText(start, end, text);
 
         int newCaretPos = start + text.length();
@@ -348,10 +348,10 @@ public class CodeArea extends Control {
      * i.e. the sum of lengths of all previous lines, including newlines.
      */
     public int getLineOffset(int lineNum) {
-    	int offset = 0;
-    	for(int i=0; i<lineNum; ++i)
-    		offset += content.lines.get(i).length() + 1;
-    	return offset;
+        int offset = 0;
+        for(int i=0; i<lineNum; ++i)
+            offset += content.lines.get(i).length() + 1;
+        return offset;
     }
 
     /**
