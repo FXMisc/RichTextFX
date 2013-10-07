@@ -24,4 +24,4 @@ Links
 -----
 
 [API Documentation](http://tomasmikula.github.io/CodeAreaFX/)  
-[Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/)
+[Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)
