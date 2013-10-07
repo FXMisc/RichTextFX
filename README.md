@@ -62,6 +62,12 @@ Demos
 [ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/codearea/demo/ManualHighlighting.java)
 
 
+License
+-------
+
+[GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html)
+
+
 Links
 -----
 
