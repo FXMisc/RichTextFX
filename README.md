@@ -3,6 +3,7 @@ CodeAreaFX
 
 CodeAreaFX is a text area for JavaFX that supports assigning style classes for ranges of text. It is intended as a base for code editors with syntax highlighting.
 
+
 Usage
 -----
 
@@ -19,6 +20,47 @@ example.css:
 ```
 
 This renders the text in the range `[from, to)` in red.
+
+
+Demos
+-----
+
+### 1. Automatic highlighting of Java keywords
+
+![Screenshot of the JavaKeywords demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/java-keywords.png)
+
+#### Run using the pre-built JAR
+
+[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built JAR file and run
+
+    java -cp codearea.jar codearea.demo.JavaKeywords
+
+#### Run from the source repo
+
+    ant JavaKeywords
+
+#### Source code
+
+[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/codearea/demo/JavaKeywords.java)
+
+
+### 2. Manual text highlighting
+
+![Screenshot of the ManualHighlighting demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/manual-highlighting.png)
+
+#### Run using the pre-built JAR
+[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built JAR file and run
+
+    java -cp codearea.jar codearea.demo.ManualHighlighting
+
+#### Run from the source repo
+
+    ant ManualHighlighting
+
+#### Source code
+
+[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/codearea/demo/ManualHighlighting.java)
+
 
 Links
 -----
