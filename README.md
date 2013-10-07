@@ -22,6 +22,12 @@ example.css:
 This renders the text in the range `[from, to)` in red.
 
 
+Requirements
+------------
+
+[JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line.
+
+
 Demos
 -----
 
@@ -73,3 +79,5 @@ Links
 
 [API Documentation](http://tomasmikula.github.io/CodeAreaFX/)  
 [Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)
+[Dropped Features](https://github.com/TomasMikula/CodeAreaFX/wiki/Dropped-Features)
+[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues)
