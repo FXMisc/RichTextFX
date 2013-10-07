@@ -78,6 +78,6 @@ Links
 -----
 
 [API Documentation](http://tomasmikula.github.io/CodeAreaFX/)  
-[Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)
-[Dropped Features](https://github.com/TomasMikula/CodeAreaFX/wiki/Dropped-Features)
-[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues)
+[Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)  
+[Dropped Features](https://github.com/TomasMikula/CodeAreaFX/wiki/Dropped-Features)  
+[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues)  
