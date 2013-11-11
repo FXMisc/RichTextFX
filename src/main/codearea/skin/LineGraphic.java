@@ -25,34 +25,41 @@
 
 package codearea.skin;
 
-import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.function.Consumer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.PathElement;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import codearea.control.Line;
 import codearea.control.StyledString;
 
 import com.sun.javafx.scene.text.HitInfo;
+import com.sun.javafx.scene.text.TextLayout;
 
 public class LineGraphic extends TextFlow {
+
+    private static Method mGetTextLayout;
+    static {
+        try {
+            mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
+        mGetTextLayout.setAccessible(true);
+    }
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -61,26 +68,22 @@ public class LineGraphic extends TextFlow {
 
     private final Line line;
 
-    private final Path caret = new Path();
-    private final Rectangle selectionHighlightRect = new Rectangle();
+    private final Path caretShape = new Path();
+    private final Path selectionShape = new Path();
 
-    private final ChangeListener<Number> updateCaretPosition = new ChangeListener<Number>() {
+    private final InvalidationListener updateCaretShape = new InvalidationListener() {
         @Override
-        public void changed(ObservableValue<? extends Number> observable,
-                Number oldPos, Number newPos) {
-            setCaretPosition(newPos.intValue());
+        public void invalidated(Observable observable) {
+            updateCaretShape();
         }
     };
 
-    private final ChangeListener<IndexRange> updateSelection = new ChangeListener<IndexRange>() {
+    private final InvalidationListener updateSelectionShape = new InvalidationListener() {
         @Override
-        public void changed(ObservableValue<? extends IndexRange> observable,
-                IndexRange oldRange, IndexRange newRange) {
-            setSelection(newRange);
+        public void invalidated(Observable boundsProperty) {
+            updateSelectionShape();
         }
     };
-
-    private PumpedUpText currentTextNode;
 
     public LineGraphic(Line line) {
         this.line = line;
@@ -88,15 +91,16 @@ public class LineGraphic extends TextFlow {
         setPrefWidth(Region.USE_COMPUTED_SIZE); // no wrapping
 
         // selection highlight
-        selectionHighlightRect.setManaged(false);
-        selectionHighlightRect.setVisible(true);
-        selectionHighlightRect.setFill(Color.DODGERBLUE);
-        getChildren().add(selectionHighlightRect);
+        selectionShape.setManaged(false);
+        selectionShape.setVisible(true);
+        selectionShape.setFill(Color.DODGERBLUE);
+        selectionShape.setStrokeWidth(0);
+        getChildren().add(selectionShape);
 
         // caret
-        caret.setManaged(false);
-        caret.setStrokeWidth(1);
-        getChildren().add(caret);
+        caretShape.setManaged(false);
+        caretShape.setStrokeWidth(1);
+        getChildren().add(caretShape);
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
@@ -110,7 +114,7 @@ public class LineGraphic extends TextFlow {
 
         // populate with text nodes
         for(StyledString segment: line.getSegments()) {
-            PumpedUpText t = new PumpedUpText(segment.toString());
+            Text t = new Text(segment.toString());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
             t.getStyleClass().addAll(segment.getStyleClasses());
@@ -120,49 +124,34 @@ public class LineGraphic extends TextFlow {
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
             // keep the caret graphic up to date
-            InvalidationListener updateCaret = new InvalidationListener() {
-                @Override
-                public void invalidated(Observable boundsProperty) {
-                    updateCaretPath();
-                }
-            };
-            t.caretShapeProperty().addListener(updateCaret);
-            t.layoutXProperty().addListener(updateCaret);
+            t.fontProperty().addListener(updateCaretShape);
 
             // keep the selection graphic up to date
-            InvalidationListener updateSelectionHighlight = new InvalidationListener() {
-                @Override
-                public void invalidated(Observable boundsProperty) {
-                    updateSelectionHighlight();
-                }
-            };
-            t.selectionBoundsProperty().addListener(updateSelectionHighlight);
-            t.layoutXProperty().addListener(updateSelectionHighlight);
+            t.fontProperty().addListener(updateSelectionShape);
 
             getChildren().add(t);
         }
-        this.currentTextNode = (PumpedUpText) getChildren().get(2); // skip caret and selection highlight
 
         // keep caret position up to date
-        line.caretPositionProperty().addListener(updateCaretPosition);
-        setCaretPosition(line.getCaretPosition());
+        line.caretPositionProperty().addListener(updateCaretShape);
+        updateCaretShape();
 
         // keep selection up to date
-        line.selectionProperty().addListener(updateSelection);
-        setSelection(line.getSelection());
+        line.selectionProperty().addListener(updateSelectionShape);
+        updateSelectionShape();
     }
 
     public void dispose() {
-        line.caretPositionProperty().removeListener(updateCaretPosition);
-        line.selectionProperty().removeListener(updateSelection);
+        line.caretPositionProperty().removeListener(updateCaretShape);
+        line.selectionProperty().removeListener(updateSelectionShape);
     }
 
     public BooleanProperty caretVisibleProperty() {
-        return caret.visibleProperty();
+        return caretShape.visibleProperty();
     }
 
     public ObjectProperty<Paint> highlightFillProperty() {
-        return selectionHighlightRect.fillProperty();
+        return selectionShape.fillProperty();
     }
 
     public HitInfo hit(double x) {
@@ -170,10 +159,8 @@ public class LineGraphic extends TextFlow {
         Bounds bounds = getBoundsInLocal();
         double y = (bounds.getMinY() + bounds.getMaxY()) / 2;
 
-        // hit the text node
-        // XXX Hitting the first text node works because of implementation details in JDK8-b100,
-        // where hit is delegated to TextLayout
-        HitInfo hit = textNodes().iterator().next().impl_hitTestChar(new Point2D(x, y));
+        // hit
+        HitInfo hit = textLayout().getHitInfo((float)x, (float)y);
 
         if(hit.getCharIndex() == line.length()) // clicked beyond the end of line
             hit.setLeading(true); // prevent going to the start of the next line
@@ -181,126 +168,23 @@ public class LineGraphic extends TextFlow {
         return hit;
     }
 
-    private void setCaretPosition(int pos) {
-        if(pos < 0)
-            throw new IllegalArgumentException();
-
-        if(pos > line.length())
-            pos = line.length();
-
-        for(PumpedUpText text: textNodes()) {
-            if(pos <= text.getText().length()) {
-                currentTextNode = text;
-                text.setCaretPosition(pos);
-                updateCaretPath(); // in case the above line didn't trigger this
-                break;
-            }
-            else {
-                pos -= text.getText().length();
-            }
+    private TextLayout textLayout() {
+        try {
+            return (TextLayout) mGetTextLayout.invoke(this);
+        } catch (IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void updateCaretPath() {
-        caret.getElements().setAll(currentTextNode.caretShapeProperty().get());
-        caret.setTranslateX(currentTextNode.getLayoutX());
-        caret.setTranslateY(currentTextNode.getLayoutY());
+    private void updateCaretShape() {
+        PathElement[] shape = textLayout().getCaretShape(line.getCaretPosition(), true, 0, 0);
+        caretShape.getElements().setAll(shape);
     }
 
-    private void setSelection(IndexRange range) {
-        int start = range.getStart();
-        int end = range.getEnd();
-
-        int offset = 0;
-        for(PumpedUpText text: textNodes()) {
-            int len = text.getText().length();
-            if(start < offset + len && end > offset) {
-                int a = Math.max(start - offset, 0);
-                int b = Math.min(end - offset, len);
-                text.setSelection(a, b);
-            }
-            else {
-                text.setSelection(-1, -1);
-            }
-            offset += len;
-        }
-    }
-
-    private void updateSelectionHighlight() {
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
-
-        this.layout(); // make sure text nodes are laid out even if the text flow is not displayed yet
-        for(PumpedUpText text: textNodes()) {
-            Bounds bounds = text.selectionBoundsProperty().get();
-            if(!bounds.isEmpty()) {
-                minX = Math.min(minX, text.getLayoutX() + bounds.getMinX());
-                minY = Math.min(minY, text.getLayoutY() + bounds.getMinY());
-                maxX = Math.max(maxX, text.getLayoutX() + bounds.getMaxX());
-                maxY = Math.max(maxY, text.getLayoutY() + bounds.getMaxY());
-            }
-        }
-
-        double width = maxX - minX;
-        double height = maxY - minY;
-
-        selectionHighlightRect.setX(minX);
-        selectionHighlightRect.setY(minY);
-        selectionHighlightRect.setWidth(width);
-        selectionHighlightRect.setHeight(height);
-    }
-
-    /**
-     * Utility method to iterate children of type Text.
-     *
-     * TODO: can be much shorter using subList(), stream() and map().
-     */
-    private Iterable<PumpedUpText> textNodes() {
-        return new Iterable<PumpedUpText>() {
-
-            @Override
-            public Iterator<PumpedUpText> iterator() {
-                return new Iterator<PumpedUpText>() {
-                    private final Iterator<Node> it = getChildren().iterator();
-                    {
-                        it.next(); // skip caret
-                        it.next(); // skip selection highlight
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return it.hasNext();
-                    }
-
-                    @Override
-                    public PumpedUpText next() {
-                        return (PumpedUpText) it.next();
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    @Override
-                    public void forEachRemaining(Consumer<? super PumpedUpText> action) {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-
-            @Override
-            public void forEach(Consumer<? super PumpedUpText> action) {
-                throw new UnsupportedOperationException();
-
-            }
-
-            @Override
-            public Spliterator<PumpedUpText> spliterator() {
-                throw new UnsupportedOperationException();
-            }
-        };
+    private void updateSelectionShape() {
+        IndexRange selection = line.getSelection();
+        PathElement[] shape = textLayout().getRange(selection.getStart(), selection.getEnd(), TextLayout.TYPE_TEXT, 0, 0);
+        selectionShape.getElements().setAll(shape);
     }
 }
