@@ -64,7 +64,7 @@ public class LineGraphic extends TextFlow {
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
-    public final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
+    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
 
     private final Line line;
 
@@ -152,6 +152,10 @@ public class LineGraphic extends TextFlow {
 
     public ObjectProperty<Paint> highlightFillProperty() {
         return selectionShape.fillProperty();
+    }
+
+    public ObjectProperty<Paint> highlightTextFillProperty() {
+        return highlightTextFill;
     }
 
     public HitInfo hit(double x) {

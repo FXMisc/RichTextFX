@@ -27,10 +27,8 @@ package codearea.skin;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableBooleanValue;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Paint;
 import codearea.control.Line;
 
 import com.sun.javafx.scene.text.HitInfo;
@@ -40,8 +38,6 @@ public class LineCell extends ListCell<Line> {
     private final CodeAreaSkin skin;
 
     private final ObservableBooleanValue caretVisible;
-    private final ObservableObjectValue<Paint> highlightFill;
-    private final ObservableObjectValue<Paint> highlightTextFill;
 
     public LineCell(CodeAreaSkin skin) {
         this.skin = skin;
@@ -49,10 +45,6 @@ public class LineCell extends ListCell<Line> {
         // Caret is visible only on the selected line,
         // but only if the owner CodeArea has visible caret.
         caretVisible = Bindings.and(this.selectedProperty(), skin.caretVisible);
-
-        // highlightFill and highlightTextFill are taken from the skin
-        this.highlightFill = skin.highlightFill;
-        this.highlightTextFill = skin.highlightTextFill;
     }
 
     @Override
@@ -64,15 +56,18 @@ public class LineCell extends ListCell<Line> {
         if(oldLineGraphic != null) {
             oldLineGraphic.caretVisibleProperty().unbind();
             oldLineGraphic.highlightFillProperty().unbind();
-            oldLineGraphic.highlightTextFill.unbind();
+            oldLineGraphic.highlightTextFillProperty().unbind();
             oldLineGraphic.dispose();
         }
 
         if(!empty) {
             LineGraphic lineGraphic = new LineGraphic(item);
             lineGraphic.caretVisibleProperty().bind(caretVisible);
-            lineGraphic.highlightFillProperty().bind(highlightFill);
-            lineGraphic.highlightTextFill.bind(highlightTextFill);
+
+            // highlightFill and highlightTextFill are taken from the skin
+            lineGraphic.highlightFillProperty().bind(skin.highlightFill);
+            lineGraphic.highlightTextFillProperty().bind(skin.highlightTextFill);
+
             setGraphic(lineGraphic);
         }
         else {
