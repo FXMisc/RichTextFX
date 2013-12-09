@@ -332,10 +332,21 @@ public class CodeAreaHelper {
     }
 
     /**
+     * Replaces the entire text content with the given text.
+     */
+    public void replaceText(String replacement) {
+        if (replacement == null) {
+            throw new NullPointerException();
+        }
+
+        codeArea.replaceText(0,  codeArea.getLength(), replacement);
+    }
+
+    /**
      * Replaces the selection with the given replacement String. If there is
      * no selection, then the replacement text is simply inserted at the current
      * caret position. If there was a selection, then the selection is cleared
-     * and the given replacement text inserted.
+     * and the given replacement text is inserted.
      */
     public void replaceSelection(String replacement) {
         if (replacement == null) {
