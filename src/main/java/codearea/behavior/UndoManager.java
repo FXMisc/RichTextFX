@@ -28,7 +28,7 @@ package codearea.behavior;
 
 import java.util.ArrayList;
 
-import codearea.control.CodeArea;
+import codearea.control.StyledTextArea;
 import codearea.control.TextChangeListener;
 
 class UndoManager {
@@ -79,7 +79,7 @@ class UndoManager {
         }
     }
 
-    private final CodeArea codeArea;
+    private final StyledTextArea styledTextArea;
 
     private final ArrayList<Change> chain = new ArrayList<Change>();
     private int currentIndex = 0;
@@ -93,11 +93,11 @@ class UndoManager {
     private boolean modifyingText = false;
 
     /**
-     * @param codeArea
+     * @param styledTextArea
      */
-    UndoManager(CodeArea codeArea) {
-        this.codeArea = codeArea;
-        codeArea.textProperty().addListener(new TextChangeListener() {
+    UndoManager(StyledTextArea styledTextArea) {
+        this.styledTextArea = styledTextArea;
+        styledTextArea.textProperty().addListener(new TextChangeListener() {
             @Override
             public void handle(int pos, String removedText, String addedText) {
                 if(!modifyingText) // change is not coming from this UndoManager
@@ -141,7 +141,7 @@ class UndoManager {
             // Apply reverse change here
             Change change = chain.get(currentIndex - 1);
             modifyingText = true;
-            this.codeArea.replaceText(change.start,
+            this.styledTextArea.replaceText(change.start,
                     change.start + change.newText.length(),
                     change.oldText);
             modifyingText = false;
@@ -155,7 +155,7 @@ class UndoManager {
             // Apply change here
             Change change = chain.get(currentIndex);
             modifyingText = true;
-            this.codeArea.replaceText(change.start,
+            this.styledTextArea.replaceText(change.start,
                     change.start + change.oldText.length(),
                     change.newText);
             modifyingText = false;

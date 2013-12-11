@@ -34,7 +34,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import codearea.control.CodeArea;
+import codearea.control.StyledTextArea;
 
 public class JavaKeywords extends Application {
 
@@ -79,29 +79,29 @@ public class JavaKeywords extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        final CodeArea codeArea = new CodeArea();
-        codeArea.textProperty().addListener(new ChangeListener<String>() {
+        final StyledTextArea styledTextArea = new StyledTextArea();
+        styledTextArea.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable,
                     String oldText, String newText) {
                 Matcher matcher = KEYWORD_PATTERN.matcher(newText);
                 int lastKwEnd = 0;
                 while(matcher.find()) {
-                    codeArea.clearStyleClasses(lastKwEnd, matcher.start());
-                    codeArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
+                    styledTextArea.clearStyleClasses(lastKwEnd, matcher.start());
+                    styledTextArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
                     lastKwEnd = matcher.end();
                 }
-                codeArea.clearStyleClasses(lastKwEnd, newText.length());
+                styledTextArea.clearStyleClasses(lastKwEnd, newText.length());
             }
         });
-        codeArea.replaceText(0, 0, sampleCode);
+        styledTextArea.replaceText(0, 0, sampleCode);
 
         StackPane root = new StackPane();
-        root.getChildren().add(codeArea);
+        root.getChildren().add(styledTextArea);
         Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
-        codeArea.requestFocus();
+        styledTextArea.requestFocus();
         primaryStage.show();
     }
 

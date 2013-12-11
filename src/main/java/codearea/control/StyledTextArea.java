@@ -61,7 +61,7 @@ import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
-import codearea.skin.CodeAreaSkin;
+import codearea.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.Utils;
 
@@ -70,7 +70,7 @@ import com.sun.javafx.Utils;
  * It allows a user to enter plain text, which can then be styled
  * programmatically (i.e. automatically), e.g. to highlight syntax.
  */
-public class CodeArea extends Control {
+public class StyledTextArea extends Control {
 
     /***************************************************************************
      *                                                                         *
@@ -104,13 +104,13 @@ public class CodeArea extends Control {
             font = new StyleableObjectProperty<Font>(Font.getDefault()) {
 
                 @Override
-                public CssMetaData<CodeArea,Font> getCssMetaData() {
+                public CssMetaData<StyledTextArea,Font> getCssMetaData() {
                     return StyleableProperties.FONT;
                 }
 
                 @Override
                 public Object getBean() {
-                    return CodeArea.this;
+                    return StyledTextArea.this;
                 }
 
                 @Override
@@ -127,7 +127,7 @@ public class CodeArea extends Control {
     /**
      * The textual content of this TextInputControl.
      */
-    private final CodeAreaContent content = new CodeAreaContent();
+    private final StyledTextAreaContent content = new StyledTextAreaContent();
     public final String getText() { return content.get(); }
     public final String getText(int start, int end) { return content.get(start, end); }
     public final ObservableTextValue textProperty() { return content; }
@@ -278,7 +278,7 @@ public class CodeArea extends Control {
     /**
      * Creates a {@code TextArea} with empty text content.
      */
-    public CodeArea() {
+    public StyledTextArea() {
         this("");
     }
 
@@ -287,7 +287,7 @@ public class CodeArea extends Control {
      *
      * @param text A string for text content.
      */
-    public CodeArea(String text) {
+    public StyledTextArea(String text) {
         getStyleClass().add("code-area");
 
         replaceText(0, 0, text);
@@ -324,7 +324,7 @@ public class CodeArea extends Control {
 
     /** {@inheritDoc} */
     @Override protected Skin<?> createDefaultSkin() {
-        return new CodeAreaSkin(this);
+        return new StyledTextAreaSkin(this);
     }
     /**
      * Replaces a range of characters with the given text.
@@ -399,16 +399,16 @@ public class CodeArea extends Control {
      * @treatAsPrivate implementation detail
      */
     private static class StyleableProperties {
-        private static final FontCssMetaData<CodeArea> FONT =
-            new FontCssMetaData<CodeArea>("-fx-font", Font.getDefault()) {
+        private static final FontCssMetaData<StyledTextArea> FONT =
+            new FontCssMetaData<StyledTextArea>("-fx-font", Font.getDefault()) {
 
             @Override
-            public boolean isSettable(CodeArea n) {
+            public boolean isSettable(StyledTextArea n) {
                 return n.font == null || !n.font.isBound();
             }
 
             @Override
-            public StyleableProperty<Font> getStyleableProperty(CodeArea n) {
+            public StyleableProperty<Font> getStyleableProperty(StyledTextArea n) {
                 return n.fontProperty();
             }
         };

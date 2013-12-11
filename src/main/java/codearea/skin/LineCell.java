@@ -35,11 +35,11 @@ import com.sun.javafx.scene.text.HitInfo;
 
 public class LineCell extends ListCell<Line> {
 
-    private final CodeAreaSkin skin;
+    private final StyledTextAreaSkin skin;
 
     private final ObservableBooleanValue caretVisible;
 
-    public LineCell(CodeAreaSkin skin) {
+    public LineCell(StyledTextAreaSkin skin) {
         this.skin = skin;
 
         // Caret is visible only on the selected line,

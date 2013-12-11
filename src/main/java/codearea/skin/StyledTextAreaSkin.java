@@ -55,7 +55,7 @@ import javafx.scene.paint.Paint;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
-import codearea.control.CodeArea;
+import codearea.control.StyledTextArea;
 import codearea.control.Line;
 
 import com.sun.javafx.css.converters.PaintConverter;
@@ -64,21 +64,21 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 /**
  * Code area skin.
  */
-public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
+public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAreaBehavior> {
 
     /**
      * Background fill for highlighted text.
      */
     final ObjectProperty<Paint> highlightFill = new StyleableObjectProperty<Paint>(Color.DODGERBLUE) {
         @Override public Object getBean() {
-            return CodeAreaSkin.this;
+            return StyledTextAreaSkin.this;
         }
 
         @Override public String getName() {
             return "highlightFill";
         }
 
-        @Override public CssMetaData<CodeArea,Paint> getCssMetaData() {
+        @Override public CssMetaData<StyledTextArea,Paint> getCssMetaData() {
             return StyleableProperties.HIGHLIGHT_FILL;
         }
     };
@@ -89,14 +89,14 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
     final ObjectProperty<Paint> highlightTextFill = new StyleableObjectProperty<Paint>(Color.WHITE) {
 
         @Override public Object getBean() {
-            return CodeAreaSkin.this;
+            return StyledTextAreaSkin.this;
         }
 
         @Override public String getName() {
             return "highlightTextFill";
         }
 
-        @Override public CssMetaData<CodeArea,Paint> getCssMetaData() {
+        @Override public CssMetaData<StyledTextArea,Paint> getCssMetaData() {
             return StyleableProperties.HIGHLIGHT_TEXT_FILL;
         }
     };
@@ -107,22 +107,22 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
 
-    public CodeAreaSkin(final CodeArea codeArea) {
-        super(codeArea, new CodeAreaBehavior(codeArea));
+    public StyledTextAreaSkin(final StyledTextArea styledTextArea) {
+        super(styledTextArea, new CodeAreaBehavior(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
         // load the default style
-        codeArea.getStylesheets().add(CodeAreaSkin.class.getResource("code-area.css").toExternalForm());
+        styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("code-area.css").toExternalForm());
 
         // Initialize content
-        listView = new ListView<Line>(codeArea.getLines());
+        listView = new ListView<Line>(styledTextArea.getLines());
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
         listView.setCellFactory(new Callback<ListView<Line>, ListCell<Line>>() {
             @Override
             public ListCell<Line> call(final ListView<Line> listView) {
-                final LineCell lineCell = new LineCell(CodeAreaSkin.this);
+                final LineCell lineCell = new LineCell(StyledTextAreaSkin.this);
 
                 // keep track of visible cells
                 lineCell.emptyProperty().addListener(new ChangeListener<Boolean>() {
@@ -178,7 +178,7 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
         });
 
         // selected line reflects the caret row
-        codeArea.caretRow.addListener(new ChangeListener<Number>() {
+        styledTextArea.caretRow.addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable,
                     Number oldRow, Number currentRow) {
@@ -186,7 +186,7 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
                 scrollToVisible(currentRow.intValue());
             }
         });
-        listView.getSelectionModel().select(codeArea.caretRow.get());
+        listView.getSelectionModel().select(styledTextArea.caretRow.get());
 
         // If the current line changes without changing the current row
         // we need to reselect the corresponding list item.
@@ -198,12 +198,12 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
             @Override
             public void onChanged(
                     javafx.collections.ListChangeListener.Change<? extends Line> arg0) {
-                listView.getSelectionModel().select(codeArea.caretRow.get());
+                listView.getSelectionModel().select(styledTextArea.caretRow.get());
             }
         });
 
         // blink caret when focused
-        codeArea.focusedProperty().addListener(new ChangeListener<Boolean>() {
+        styledTextArea.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean wasFocused, Boolean focused) {
                 if(focused)
@@ -212,18 +212,18 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
                     caretPulse.stop(false);
             }
         });
-        if (codeArea.isFocused())
+        if (styledTextArea.isFocused())
             caretPulse.start(true);
 
         // The caret is visible when code area is not disabled, focused and editable.
         caretVisible = new BooleanBinding() {
-            { bind(codeArea.focusedProperty(), codeArea.disabledProperty(),
-                    codeArea.editableProperty(), caretPulse);}
+            { bind(styledTextArea.focusedProperty(), styledTextArea.disabledProperty(),
+                    styledTextArea.editableProperty(), caretPulse);}
             @Override protected boolean computeValue() {
                 return caretPulse.get() &&
-                        codeArea.isFocused() &&
-                        !codeArea.isDisabled() &&
-                        codeArea.isEditable();
+                        styledTextArea.isFocused() &&
+                        !styledTextArea.isDisabled() &&
+                        styledTextArea.isEditable();
             }
         };
     }
@@ -274,36 +274,36 @@ public class CodeAreaSkin extends BehaviorSkinBase<CodeArea, CodeAreaBehavior> {
     }
 
     private static class StyleableProperties {
-        private static final CssMetaData<CodeArea,Paint> HIGHLIGHT_FILL =
-            new CssMetaData<CodeArea,Paint>("-fx-highlight-fill",
+        private static final CssMetaData<StyledTextArea,Paint> HIGHLIGHT_FILL =
+            new CssMetaData<StyledTextArea,Paint>("-fx-highlight-fill",
                 PaintConverter.getInstance(), Color.DODGERBLUE) {
 
             @Override
-            public boolean isSettable(CodeArea n) {
-                final CodeAreaSkin skin = (CodeAreaSkin) n.getSkin();
+            public boolean isSettable(StyledTextArea n) {
+                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
                 return !skin.highlightFill.isBound();
             }
 
             @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(CodeArea n) {
-                final CodeAreaSkin skin = (CodeAreaSkin) n.getSkin();
+            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea n) {
+                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
                 return (StyleableProperty<Paint>)skin.highlightFill;
             }
         };
 
-        private static final CssMetaData<CodeArea,Paint> HIGHLIGHT_TEXT_FILL =
-            new CssMetaData<CodeArea,Paint>("-fx-highlight-text-fill",
+        private static final CssMetaData<StyledTextArea,Paint> HIGHLIGHT_TEXT_FILL =
+            new CssMetaData<StyledTextArea,Paint>("-fx-highlight-text-fill",
                 PaintConverter.getInstance(), Color.WHITE) {
 
             @Override
-            public boolean isSettable(CodeArea n) {
-                final CodeAreaSkin skin = (CodeAreaSkin) n.getSkin();
+            public boolean isSettable(StyledTextArea n) {
+                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
                 return !skin.highlightTextFill.isBound();
             }
 
             @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(CodeArea n) {
-                final CodeAreaSkin skin = (CodeAreaSkin) n.getSkin();
+            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea n) {
+                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
                 return (StyleableProperty<Paint>)skin.highlightTextFill;
             }
         };

@@ -42,11 +42,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
-import codearea.control.CodeArea;
-import codearea.control.CodeAreaHelper;
-import codearea.control.CodeAreaHelper.SelectionPolicy;
+import codearea.control.StyledTextArea;
+import codearea.control.StyledTextAreaHelper;
+import codearea.control.StyledTextAreaHelper.SelectionPolicy;
 import codearea.control.Line;
-import codearea.skin.CodeAreaSkin;
+import codearea.skin.StyledTextAreaSkin;
 import codearea.skin.LineCell;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
@@ -56,7 +56,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Text area behavior.
  */
-public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
+public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
 
     /**
      * Possible dragging states.
@@ -76,8 +76,8 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
      * Fields                                                                 *
      *************************************************************************/
 
-    protected final CodeArea codeArea;
-    protected final CodeAreaHelper codeAreaHelper;
+    protected final StyledTextArea styledTextArea;
+    protected final StyledTextAreaHelper styledTextAreaHelper;
 
     /**
      * Used to keep track of the most recent key event. This is used when
@@ -87,7 +87,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
     private final UndoManager undoManager;
 
-    private CodeAreaSkin skin;
+    private StyledTextAreaSkin skin;
     private final ContextMenu contextMenu = new ContextMenu();
 
     /**
@@ -104,7 +104,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     }
     private int getTargetCaretColumn() {
         if(targetCaretCol == -1)
-            targetCaretCol = codeArea.caretCol.get();
+            targetCaretCol = styledTextArea.caretCol.get();
         return targetCaretCol;
     }
 
@@ -112,16 +112,16 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
      * Constructors                                                           *
      *************************************************************************/
 
-    public CodeAreaBehavior(CodeArea codeArea) {
-        super(codeArea, CodeAreaBindings.BINDINGS);
+    public CodeAreaBehavior(StyledTextArea styledTextArea) {
+        super(styledTextArea, CodeAreaBindings.BINDINGS);
 
-        this.codeArea = codeArea;
-        this.codeAreaHelper = new CodeAreaHelper(codeArea);
-        this.undoManager = new UndoManager(codeArea);
+        this.styledTextArea = styledTextArea;
+        this.styledTextAreaHelper = new StyledTextAreaHelper(styledTextArea);
+        this.undoManager = new UndoManager(styledTextArea);
     }
 
     // XXX An unholy back-reference!
-    public void setCodeAreaSkin(CodeAreaSkin skin) {
+    public void setCodeAreaSkin(StyledTextAreaSkin skin) {
         this.skin = skin;
     }
 
@@ -152,7 +152,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
     private void callAction(CodeAreaAction action) {
         // ignore edit actions when not editable
-        if(action.isEditAction() && !codeArea.isEditable())
+        if(action.isEditAction() && !styledTextArea.isEditable())
             return;
 
         // invalidate remembered horizontal position
@@ -184,19 +184,19 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
             case SelectLeftWordExtend: leftWord(SelectionPolicy.EXTEND); break;
             case SelectRightWordExtend: rightWord(SelectionPolicy.EXTEND); break;
 
-            case LineStart: codeAreaHelper.lineStart(SelectionPolicy.CLEAR); break;
-            case LineEnd: codeAreaHelper.lineEnd(SelectionPolicy.CLEAR); break;
-            case SelectLineStart: codeAreaHelper.lineStart(SelectionPolicy.ADJUST); break;
-            case SelectLineEnd: codeAreaHelper.lineEnd(SelectionPolicy.ADJUST); break;
-            case SelectLineStartExtend: codeAreaHelper.lineStart(SelectionPolicy.EXTEND); break;
-            case SelectLineEndExtend: codeAreaHelper.lineEnd(SelectionPolicy.EXTEND); break;
+            case LineStart: styledTextAreaHelper.lineStart(SelectionPolicy.CLEAR); break;
+            case LineEnd: styledTextAreaHelper.lineEnd(SelectionPolicy.CLEAR); break;
+            case SelectLineStart: styledTextAreaHelper.lineStart(SelectionPolicy.ADJUST); break;
+            case SelectLineEnd: styledTextAreaHelper.lineEnd(SelectionPolicy.ADJUST); break;
+            case SelectLineStartExtend: styledTextAreaHelper.lineStart(SelectionPolicy.EXTEND); break;
+            case SelectLineEndExtend: styledTextAreaHelper.lineEnd(SelectionPolicy.EXTEND); break;
 
-            case TextStart: codeAreaHelper.start(SelectionPolicy.CLEAR); break;
-            case TextEnd: codeAreaHelper.end(SelectionPolicy.CLEAR); break;
-            case SelectTextStart: codeAreaHelper.start(SelectionPolicy.ADJUST); break;
-            case SelectTextEnd: codeAreaHelper.end(SelectionPolicy.ADJUST); break;
-            case SelectTextStartExtend: codeAreaHelper.start(SelectionPolicy.EXTEND); break;
-            case SelectTextEndExtend: codeAreaHelper.end(SelectionPolicy.EXTEND); break;
+            case TextStart: styledTextAreaHelper.start(SelectionPolicy.CLEAR); break;
+            case TextEnd: styledTextAreaHelper.end(SelectionPolicy.CLEAR); break;
+            case SelectTextStart: styledTextAreaHelper.start(SelectionPolicy.ADJUST); break;
+            case SelectTextEnd: styledTextAreaHelper.end(SelectionPolicy.ADJUST); break;
+            case SelectTextStartExtend: styledTextAreaHelper.start(SelectionPolicy.EXTEND); break;
+            case SelectTextEndExtend: styledTextAreaHelper.end(SelectionPolicy.EXTEND); break;
 
             case PreviousLine: previousLine(SelectionPolicy.CLEAR); break;
             case NextLine: nextLine(SelectionPolicy.CLEAR); break;
@@ -214,27 +214,27 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
             case DeletePreviousWord: deletePreviousWord(); break;
             case DeleteNextWord: deleteNextWord(); break;
 
-            case InsertNewLine: codeAreaHelper.replaceSelection("\n"); break;
-            case InsertTab: codeAreaHelper.replaceSelection("\t"); break;
+            case InsertNewLine: styledTextAreaHelper.replaceSelection("\n"); break;
+            case InsertTab: styledTextAreaHelper.replaceSelection("\t"); break;
             case InputCharacter: defaultKeyTyped(lastEvent); break;
 
-            case Cut: codeAreaHelper.cut(); break;
-            case Copy: codeAreaHelper.copy(); break;
-            case Paste: codeAreaHelper.paste(); break;
+            case Cut: styledTextAreaHelper.cut(); break;
+            case Copy: styledTextAreaHelper.copy(); break;
+            case Paste: styledTextAreaHelper.paste(); break;
 
             case Undo: undoManager.undo(); break;
             case Redo: undoManager.redo(); break;
 
-            case SelectAll: codeAreaHelper.selectAll(); break;
-            case Unselect: codeAreaHelper.deselect(); break;
+            case SelectAll: styledTextAreaHelper.selectAll(); break;
+            case Unselect: styledTextAreaHelper.deselect(); break;
 
             case ToParent: forwardToParent(lastEvent); break;
         }
     }
 
     private void forwardToParent(KeyEvent event) {
-        if (codeArea.getParent() != null) {
-            codeArea.getParent().fireEvent(event);
+        if (styledTextArea.getParent() != null) {
+            styledTextArea.getParent().fireEvent(event);
         }
     }
 
@@ -262,98 +262,98 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
         if (character.charAt(0) > 0x1F
                 && character.charAt(0) != 0x7F
                 && !event.isMetaDown()) { // Not sure about this one
-            codeAreaHelper.replaceSelection(character);
+            styledTextAreaHelper.replaceSelection(character);
         }
     }
 
     private void deleteBackward() {
-        IndexRange selection = codeArea.getSelection();
+        IndexRange selection = styledTextArea.getSelection();
         if(selection.getLength() == 0)
-            codeAreaHelper.deletePreviousChar();
+            styledTextAreaHelper.deletePreviousChar();
         else
-            codeAreaHelper.replaceSelection("");
+            styledTextAreaHelper.replaceSelection("");
     }
 
     private void deleteForward() {
-        IndexRange selection = codeArea.getSelection();
+        IndexRange selection = styledTextArea.getSelection();
         if(selection.getLength() == 0)
-            codeAreaHelper.deleteNextChar();
+            styledTextAreaHelper.deleteNextChar();
         else
-            codeAreaHelper.replaceSelection("");
+            styledTextAreaHelper.replaceSelection("");
     }
 
     private void left() {
-        IndexRange sel = codeArea.getSelection();
+        IndexRange sel = styledTextArea.getSelection();
         if(sel.getLength() == 0)
-            codeAreaHelper.previousChar(SelectionPolicy.CLEAR);
+            styledTextAreaHelper.previousChar(SelectionPolicy.CLEAR);
         else
-            codeAreaHelper.positionCaret(sel.getStart(), SelectionPolicy.CLEAR);
+            styledTextAreaHelper.positionCaret(sel.getStart(), SelectionPolicy.CLEAR);
     }
 
     private void right() {
-        IndexRange sel = codeArea.getSelection();
+        IndexRange sel = styledTextArea.getSelection();
         if(sel.getLength() == 0)
-            codeAreaHelper.nextChar(SelectionPolicy.CLEAR);
+            styledTextAreaHelper.nextChar(SelectionPolicy.CLEAR);
         else
-            codeAreaHelper.positionCaret(sel.getEnd(), SelectionPolicy.CLEAR);
+            styledTextAreaHelper.positionCaret(sel.getEnd(), SelectionPolicy.CLEAR);
     }
 
     private void selectLeft() {
-        codeAreaHelper.previousChar(SelectionPolicy.ADJUST);
+        styledTextAreaHelper.previousChar(SelectionPolicy.ADJUST);
     }
 
     private void selectRight() {
-        codeAreaHelper.nextChar(SelectionPolicy.ADJUST);
+        styledTextAreaHelper.nextChar(SelectionPolicy.ADJUST);
     }
 
     private void leftWord(SelectionPolicy selectionPolicy) {
-        codeAreaHelper.previousWord(selectionPolicy);
+        styledTextAreaHelper.previousWord(selectionPolicy);
     }
 
     private void rightWord(SelectionPolicy selectionPolicy) {
-        codeAreaHelper.nextWord(selectionPolicy);
+        styledTextAreaHelper.nextWord(selectionPolicy);
     }
 
     private void selectWord() {
-        codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
-        codeAreaHelper.nextWord(SelectionPolicy.ADJUST);
+        styledTextAreaHelper.previousWord(SelectionPolicy.CLEAR);
+        styledTextAreaHelper.nextWord(SelectionPolicy.ADJUST);
     }
 
     private void deletePreviousWord() {
-        int end = codeArea.getCaretPosition();
+        int end = styledTextArea.getCaretPosition();
 
         if (end > 0) {
-            codeAreaHelper.previousWord(SelectionPolicy.CLEAR);
-            int start = codeArea.getCaretPosition();
-            codeArea.replaceText(start, end, "");
+            styledTextAreaHelper.previousWord(SelectionPolicy.CLEAR);
+            int start = styledTextArea.getCaretPosition();
+            styledTextArea.replaceText(start, end, "");
         }
     }
 
     private void deleteNextWord() {
-        int start = codeArea.getCaretPosition();
+        int start = styledTextArea.getCaretPosition();
 
-        if (start < codeArea.getLength()) {
-            codeAreaHelper.nextWord(SelectionPolicy.CLEAR);
-            int end = codeArea.getCaretPosition();
-            codeArea.replaceText(start, end, "");
+        if (start < styledTextArea.getLength()) {
+            styledTextAreaHelper.nextWord(SelectionPolicy.CLEAR);
+            int end = styledTextArea.getCaretPosition();
+            styledTextArea.replaceText(start, end, "");
         }
     }
 
     private void downLines(int nLines, SelectionPolicy selectionPolicy) {
         // get target line number
-        int targetRow = codeArea.caretRow.get() + nLines;
-        targetRow = Math.min(targetRow, codeArea.getLines().size()-1);
+        int targetRow = styledTextArea.caretRow.get() + nLines;
+        targetRow = Math.min(targetRow, styledTextArea.getLines().size()-1);
         targetRow = Math.max(targetRow, 0);
-        if(targetRow == codeArea.caretRow.get())
+        if(targetRow == styledTextArea.caretRow.get())
             return;
 
         // compute new caret position
-        Line targetLine = codeArea.getLines().get(targetRow);
+        Line targetLine = styledTextArea.getLines().get(targetRow);
         int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
-        int newCaretPos = codeArea.getLineOffset(targetRow) + targetCaretCol;
+        int newCaretPos = styledTextArea.getLineOffset(targetRow) + targetCaretCol;
 
         // update model
-        codeAreaHelper.positionCaret(newCaretPos, selectionPolicy);
+        styledTextAreaHelper.positionCaret(newCaretPos, selectionPolicy);
     }
 
     private void previousLine(SelectionPolicy selectionPolicy) {
@@ -375,12 +375,12 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     @Override
     public void mousePressed(MouseEvent e) {
         // don't respond if disabled
-        if (codeArea.isDisabled())
+        if (styledTextArea.isDisabled())
             return;
 
         // ensure focus
-        if (!codeArea.isFocused())
-            codeArea.requestFocus();
+        if (!styledTextArea.isFocused())
+            styledTextArea.requestFocus();
 
         // cancel context menu
         if (contextMenu.isShowing())
@@ -400,13 +400,13 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
         if(e.isShiftDown()) {
             // On Mac always extend selection,
             // switching anchor and caret if necessary.
-            codeAreaHelper.positionCaret(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
+            styledTextAreaHelper.positionCaret(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
         }
         else {
             switch (e.getClickCount()) {
                 case 1: firstLeftPress(hit); break;
                 case 2: selectWord(); break;
-                case 3: codeAreaHelper.selectLine(); break;
+                case 3: styledTextAreaHelper.selectLine(); break;
                 default: // no-op
             }
         }
@@ -414,7 +414,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
     private void firstLeftPress(HitInfo hit) {
         clearTargetCaretColumn();
-        IndexRange selection = codeArea.getSelection();
+        IndexRange selection = styledTextArea.getSelection();
         if (selection.getLength() != 0 &&
                 hit.getCharIndex() >= selection.getStart() &&
                 hit.getCharIndex() < selection.getEnd()) {
@@ -423,14 +423,14 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
         }
         else {
             dragSelection = DragState.NO_DRAG;
-            codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            styledTextAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
         }
     }
 
     private void rightPress(MouseEvent e) {
         if (contextMenu.isShowing()) {
             contextMenu.hide();
-        } else if (codeArea.getContextMenu() == null) {
+        } else if (styledTextArea.getContextMenu() == null) {
             double screenX = e.getScreenX();
             double screenY = e.getScreenY();
             double sceneX = e.getSceneX();
@@ -441,18 +441,18 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
             Rectangle2D bounds = currentScreen.getBounds();
 
             if (screenX < bounds.getMinX()) {
-                codeArea.getProperties().put("CONTEXT_MENU_SCREEN_X", screenX);
-                codeArea.getProperties().put("CONTEXT_MENU_SCENE_X", sceneX);
-                contextMenu.show(codeArea, bounds.getMinX(), screenY);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCREEN_X", screenX);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCENE_X", sceneX);
+                contextMenu.show(styledTextArea, bounds.getMinX(), screenY);
             } else if (screenX + menuWidth > bounds.getMaxX()) {
                 double leftOver = menuWidth - ( bounds.getMaxX() - screenX);
-                codeArea.getProperties().put("CONTEXT_MENU_SCREEN_X", screenX);
-                codeArea.getProperties().put("CONTEXT_MENU_SCENE_X", sceneX);
-                contextMenu.show(codeArea, screenX - leftOver, screenY);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCREEN_X", screenX);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCENE_X", sceneX);
+                contextMenu.show(styledTextArea, screenX - leftOver, screenY);
             } else {
-                codeArea.getProperties().put("CONTEXT_MENU_SCREEN_X", 0);
-                codeArea.getProperties().put("CONTEXT_MENU_SCENE_X", 0);
-                contextMenu.show(codeArea, screenX, screenY);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCREEN_X", 0);
+                styledTextArea.getProperties().put("CONTEXT_MENU_SCENE_X", 0);
+                contextMenu.show(styledTextArea, screenX, screenY);
             }
         }
     }
@@ -464,7 +464,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
     public void mouseDragOver(MouseDragEvent e) {
         // don't respond if disabled
-        if(codeArea.isDisabled())
+        if(styledTextArea.isDisabled())
             return;
 
         // only respond to primary button alone
@@ -476,10 +476,10 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
         HitInfo hit = lineCell.hit(e);
 
         if (dragSelection == DragState.DRAG) {
-            codeArea.positionCaretIndependently(hit.getInsertionIndex());
+            styledTextArea.positionCaretIndependently(hit.getInsertionIndex());
         }
         else {
-            codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+            styledTextAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
     }
 
@@ -490,7 +490,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
                 // drag didn't happen, position caret
                 LineCell lineCell = (LineCell) e.getSource();
                 HitInfo hit = lineCell.hit(e);
-                codeAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                styledTextAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
                 // do nothing, handled by mouseDragReleased
@@ -502,7 +502,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
 
     public void mouseDragReleased(final MouseDragEvent e) {
         // don't respond if disabled
-        if(codeArea.isDisabled())
+        if(styledTextArea.isDisabled())
             return;
 
         if(dragSelection == DragState.DRAG) {
@@ -510,7 +510,7 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
             LineCell lineCell = (LineCell) e.getSource();
             HitInfo hit = lineCell.hit(e);
 
-            codeAreaHelper.moveSelectedText(hit.getInsertionIndex());
+            styledTextAreaHelper.moveSelectedText(hit.getInsertionIndex());
         }
     }
 
@@ -544,10 +544,10 @@ public class CodeAreaBehavior extends BehaviorBase<CodeArea> {
     final MenuItem separatorMI = new SeparatorMenuItem();
 
     public void populateContextMenu(ContextMenu contextMenu) {
-        boolean hasSelection = (codeArea.getSelection().getLength() > 0);
+        boolean hasSelection = (styledTextArea.getSelection().getLength() > 0);
         ObservableList<MenuItem> items = contextMenu.getItems();
 
-        if (codeArea.isEditable()) {
+        if (styledTextArea.isEditable()) {
             items.setAll(undoMI, redoMI, cutMI, copyMI, pasteMI, deleteMI,
                          separatorMI, selectAllMI);
         } else {

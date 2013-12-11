@@ -40,7 +40,7 @@ import javafx.collections.ObservableList;
 /**
  * Code area content model.
  */
-final class CodeAreaContent extends ReadOnlyStringPropertyBase implements ObservableTextValue {
+final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements ObservableTextValue {
     final ObservableList<Line> lines = FXCollections.observableArrayList();
 
     /**
@@ -74,7 +74,7 @@ final class CodeAreaContent extends ReadOnlyStringPropertyBase implements Observ
             l.handle(pos, removedText, addedText);
     }
 
-    CodeAreaContent() {
+    StyledTextAreaContent() {
         lines.add(new Line());
 
         this.addListener(new InvalidationListener() {

@@ -38,7 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import codearea.control.CodeArea;
+import codearea.control.StyledTextArea;
 
 public class ManualHighlighting extends Application {
 
@@ -46,7 +46,7 @@ public class ManualHighlighting extends Application {
         launch(args);
     }
 
-    private final CodeArea area = new CodeArea();
+    private final StyledTextArea area = new StyledTextArea();
 
     @Override
     public void start(Stage primaryStage) {
