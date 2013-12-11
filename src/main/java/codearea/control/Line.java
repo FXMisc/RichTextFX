@@ -28,7 +28,6 @@ package codearea.control;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.ToIntFunction;
 
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -37,8 +36,8 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.IndexRange;
 
-public final class Line {
-    private final List<StyledString> segments = new ArrayList<>();
+public final class Line<S> {
+    private final List<StyledString<S>> segments = new ArrayList<>();
 
     // selection proprety
     private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection", new IndexRange(0, 0));
@@ -55,23 +54,20 @@ public final class Line {
     }
     public final ReadOnlyIntegerProperty caretPositionProperty() { return caretPosition.getReadOnlyProperty(); }
 
-
-    public Line() {
-        this("");
+    public Line(String text, S style) {
+        this(new StyledString<S>(text, style));
     }
 
-    public Line(String text) {
-        segments.add(new StyledString(text));
+    public Line(StyledString<S> text) {
+        segments.add(text);
     }
 
-    private Line(List<StyledString> segments) {
-        if(segments.isEmpty())
-            this.segments.add(new StyledString(""));
-        else
-            this.segments.addAll(segments);
+    private Line(List<StyledString<S>> segments) {
+        assert !segments.isEmpty();
+        this.segments.addAll(segments);
     }
 
-    public List<StyledString> getSegments() {
+    public List<StyledString<S>> getSegments() {
         return Collections.unmodifiableList(segments);
     }
 
@@ -80,9 +76,9 @@ public final class Line {
     }
 
     public int length() {
-        return segments.stream().mapToInt(new ToIntFunction<StyledString>(){
+        return segments.stream().mapToInt(new ToIntFunction<StyledString<S>>(){
             @Override
-            public int applyAsInt(StyledString t) {
+            public int applyAsInt(StyledString<S> t) {
                 return t.length();
             }
         }).sum();
@@ -92,7 +88,7 @@ public final class Line {
         if(index < 0)
             throw new IndexOutOfBoundsException();
 
-        for(StyledString seg: segments)
+        for(StyledString<S> seg: segments)
             if(seg.length() > index)
                 return seg.charAt(index);
             else
@@ -101,7 +97,7 @@ public final class Line {
         throw new IndexOutOfBoundsException();
     }
 
-    public void appendFrom(Line line) {
+    public void appendFrom(Line<S> line) {
         if(line.length() == 0)
             return;
 
@@ -115,8 +111,8 @@ public final class Line {
 
     public void append(CharSequence str) {
         int lastSegIdx = segments.size() - 1;
-        StyledString lastSegment = segments.get(lastSegIdx);
-        StyledString replacement = lastSegment.concat(str);
+        StyledString<S> lastSegment = segments.get(lastSegIdx);
+        StyledString<S> replacement = lastSegment.concat(str);
         segments.set(lastSegIdx, replacement);
     }
 
@@ -125,7 +121,7 @@ public final class Line {
             throw new IndexOutOfBoundsException();
 
         for(int i=0, n=segments.size(); i < n; ++i) {
-            StyledString seg = segments.get(i);
+            StyledString<S> seg = segments.get(i);
             if(seg.length() >= offset) {
                 segments.set(i, seg.spliced(offset, offset, str));
                 return;
@@ -154,14 +150,14 @@ public final class Line {
         int lastSegEnd = end-offset;
 
         if(firstSegIdx == lastSegIdx) {
-            StyledString seg = segments.get(firstSegIdx);
+            StyledString<S> seg = segments.get(firstSegIdx);
             if(firstSegStart == 0 && lastSegEnd == seg.length() && segments.size() > 1)
                 segments.remove(firstSegIdx);
             else
                 segments.set(firstSegIdx, seg.spliced(firstSegStart, lastSegEnd, ""));
         }
         else {
-            StyledString lastSeg = segments.get(lastSegIdx);
+            StyledString<S> lastSeg = segments.get(lastSegIdx);
             if(lastSegEnd == lastSeg.length())
                 segments.remove(lastSegIdx);
             else
@@ -170,7 +166,7 @@ public final class Line {
             if(firstSegStart == 0 && segments.size() > 1)
                 segments.remove(firstSegIdx);
             else {
-                StyledString firstSeg = segments.get(firstSegIdx);
+                StyledString<S> firstSeg = segments.get(firstSegIdx);
                 segments.set(firstSegIdx, firstSeg.spliced(firstSegStart, firstSeg.length(), ""));
             }
         }
@@ -178,12 +174,12 @@ public final class Line {
         caretPosition.set(Math.min(caretPosition.get(), length()));
     }
 
-    public void setStyleClasses(Set<String> classes) {
-        for(StyledString t: segments)
-            t.setStyleClasses(classes);
+    public void setStyle(S style) {
+        for(StyledString<S> t: segments)
+            t.setStyle(style);
     }
 
-    public void setStyleClasses(int from, int to, Set<String> classes) {
+    public void setStyle(int from, int to, S style) {
         if(from == to)
             return;
 
@@ -196,14 +192,43 @@ public final class Line {
             for(int i = fromSeg; i < toSeg; ++i)
                 sb.append(segments.get(i));
             segments.subList(fromSeg, toSeg).clear();
-            segments.add(fromSeg, new StyledString(sb.toString(), classes));
+            segments.add(fromSeg, new StyledString<S>(sb.toString(), style));
         }
         else {
-            segments.get(fromSeg).setStyleClasses(classes);
+            segments.get(fromSeg).setStyle(style);
         }
 
         tryMergeAtSeg(fromSeg+1);
         tryMergeAtSeg(fromSeg);
+    }
+
+    /**
+     * Returns style at the given character position.
+     * If {@code charIdx < 0}, returns the style at the beginning of this line.
+     * If {@code charIdx >= this.length()}, returns the style at the end of this line.
+     */
+    public S getStyleAt(int charIdx) {
+        int l = length();
+        if(charIdx < 0)
+            return getLeadingStyle();
+        if(charIdx >= l)
+            return getTrailingStyle();
+
+        for(StyledString<S> seg: segments)
+            if(seg.length() > charIdx)
+                return seg.getStyle();
+            else
+                charIdx -= seg.length();
+        
+        throw new AssertionError("Unreachable code");
+    }
+    
+    private S getLeadingStyle() {
+        return segments.get(0).getStyle();
+    }
+    
+    private S getTrailingStyle() {
+        return segments.get(segments.size()-1).getStyle();
     }
 
     private int splitAt(int pos) {
@@ -214,14 +239,14 @@ public final class Line {
         if(pos == 0)
             return segIdx;
 
-        StyledString segment = segments.get(segIdx);
+        StyledString<S> segment = segments.get(segIdx);
         if(segment.length() < pos) {
             return splitAt(segIdx+1, pos - segment.length());
         }
         else {
             if(segment.length() > pos) {
-                StyledString left = segment.subSequence(0, pos);
-                StyledString right = segment.subSequence(pos, segment.length());
+                StyledString<S> left = segment.subSequence(0, pos);
+                StyledString<S> right = segment.subSequence(pos, segment.length());
                 segments.set(segIdx, left);
                 segments.add(segIdx+1, right);
             }
@@ -235,10 +260,21 @@ public final class Line {
      * and right side of the split position.
      * After return, the content of this line is undefined.
      */
-    public Line[] split(int pos) {
+    public Line<S>[] split(int pos) {
         int segIdx = splitAt(pos);
-        Line left = new Line(segments.subList(0, segIdx));
-        Line right = new Line(segments.subList(segIdx, segments.size()));
+
+        Line<S> left;
+        if(segIdx == 0)
+            left = new Line<S>(new StyledString<S>("", getLeadingStyle()));
+        else
+            left = new Line<S>(segments.subList(0, segIdx));
+
+        Line<S> right;
+        if(segIdx == segments.size())
+            right = new Line<S>(new StyledString<S>("", getTrailingStyle()));
+        else
+            right = new Line<S>(segments.subList(segIdx, segments.size()));
+
         return new Line[] { left, right };
     }
 
@@ -248,10 +284,12 @@ public final class Line {
         if(segIdx < 0 || segIdx > segments.size())
             throw new IndexOutOfBoundsException("index: " + segIdx + ", size: " + segments.size());
 
-        StyledString left = segments.get(segIdx-1);
-        StyledString right = segments.get(segIdx);
-        if(left.getStyleClasses().equals(right.getStyleClasses())) {
-            StyledString segment = new StyledString(left.toString()+right.toString(), left.getStyleClasses());
+        StyledString<S> left = segments.get(segIdx-1);
+        StyledString<S> right = segments.get(segIdx);
+        S lStyle = left.getStyle();
+        S rStyle = right.getStyle();
+        if(lStyle == null && rStyle == null || lStyle.equals(rStyle)) {
+            StyledString<S> segment = new StyledString<S>(left.toString()+right.toString(), left.getStyle());
             segments.remove(segIdx);
             segments.set(segIdx-1, segment);
         }
@@ -260,7 +298,7 @@ public final class Line {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(length());
-        for(StyledString seg: segments)
+        for(StyledString<S> seg: segments)
             sb.append(seg);
         return sb.toString();
     }

@@ -28,9 +28,8 @@ package codearea.control;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -61,6 +60,7 @@ import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import codearea.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.Utils;
@@ -69,8 +69,13 @@ import com.sun.javafx.Utils;
  * Text input component suitable for source code editing.
  * It allows a user to enter plain text, which can then be styled
  * programmatically (i.e. automatically), e.g. to highlight syntax.
+ *
+ * Subclassing is allowed to define the type of style, e.g. inline
+ * style or style classes.
+ *
+ * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea extends Control {
+public class StyledTextArea<S> extends Control {
 
     /***************************************************************************
      *                                                                         *
@@ -104,7 +109,7 @@ public class StyledTextArea extends Control {
             font = new StyleableObjectProperty<Font>(Font.getDefault()) {
 
                 @Override
-                public CssMetaData<StyledTextArea,Font> getCssMetaData() {
+                public CssMetaData<StyledTextArea<?>,Font> getCssMetaData() {
                     return StyleableProperties.FONT;
                 }
 
@@ -127,7 +132,7 @@ public class StyledTextArea extends Control {
     /**
      * The textual content of this TextInputControl.
      */
-    private final StyledTextAreaContent content = new StyledTextAreaContent();
+    private final StyledTextAreaContent<S> content;
     public final String getText() { return content.get(); }
     public final String getText(int start, int end) { return content.get(start, end); }
     public final ObservableTextValue textProperty() { return content; }
@@ -174,7 +179,7 @@ public class StyledTextArea extends Control {
             public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldRange, IndexRange newRange) {
                 int start = newRange.getStart();
                 int end = newRange.getEnd();
-                for (Line line: content.lines) {
+                for (Line<S> line: content.lines) {
                     int lineLen = line.length();
                     if (end > start && start < lineLen) {
                         line.setSelection(start, Math.min(end, lineLen));
@@ -194,7 +199,89 @@ public class StyledTextArea extends Control {
     private final ReadOnlyStringWrapper selectedText = new ReadOnlyStringWrapper(this, "selectedText");
     public final String getSelectedText() { return selectedText.get(); }
     public final ReadOnlyStringProperty selectedTextProperty() { return selectedText.getReadOnlyProperty(); }
-    {
+
+    /**
+     * The row where the caret is positioned.
+     */
+    public final ObservableIntegerValue caretRow;
+
+    /**
+     * Caret position relative to the current row.
+     */
+    public final ObservableIntegerValue caretCol;
+
+    /**
+     * Style used by default when no other style is provided.
+     */
+    private final S initialStyle;
+
+    /**
+     * Style applicator used by the default skin.
+     */
+    private final BiConsumer<Text, S> applyStyle;
+
+
+    /**
+     * Creates a text area with empty text content.
+     *
+     * @param applyStyle function that, given a {@link Text} node and
+     * a style, applies the style to the text node. This function is
+     * used by the default skin to apply style to text nodes.
+     */
+    public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
+        this.initialStyle = initialStyle;
+        this.applyStyle = applyStyle;
+        content = new StyledTextAreaContent<>(initialStyle);
+
+        ObservableValue<int[]> caretPosition2D = new ObjectBinding<int[]>() {
+            { bind(caretPosition); }
+
+            @Override
+            protected int[] computeValue() {
+                return content.positionToRowAndCol(caretPosition.get());
+            }
+        };
+
+        caretRow = new IntegerBinding() {
+            { bind(caretPosition2D); }
+
+            @Override
+            protected int computeValue() {
+                return caretPosition2D.getValue()[0];
+            }
+        };
+
+        caretCol = new IntegerBinding() {
+            { bind(caretPosition2D); }
+
+            @Override
+            protected int computeValue() {
+                return caretPosition2D.getValue()[1];
+            }
+        };
+
+        // The line with the caret.
+        ObservableObjectValue<Line<S>> currentLine = new ObjectBinding<Line<S>>() {
+            { bind(caretRow, content.lines); }
+
+            @Override
+            protected Line<S> computeValue() {
+                int i = Math.min(caretRow.get(), content.lines.size()-1); // in case lines were removed before updating caretRow
+                return content.lines.get(i);
+            }
+        };
+
+        // Keep caret position in the current line up to date.
+        InvalidationListener updateCaretPosInCurrentLine = new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                int pos = Math.min(caretCol.get(), currentLine.get().length()); // because caretCol and currentLine are not updated atomically
+                currentLine.get().setCaretPosition(pos);
+            }
+        };
+        caretCol.addListener(updateCaretPosInCurrentLine);
+        currentLine.addListener(updateCaretPosInCurrentLine);
+
         selectedText.bind(new StringBinding() {
             { bind(selection, content); }
             @Override protected String computeValue() {
@@ -210,110 +297,27 @@ public class StyledTextArea extends Control {
                 return content.get(start, end);
             }
         });
-    }
 
-    private final ObservableValue<int[]> caretPosition2D = new ObjectBinding<int[]>() {
-        { bind(caretPosition); }
-
-        @Override
-        protected int[] computeValue() {
-            return content.positionToRowAndCol(caretPosition.get());
-        }
-    };
-
-    /**
-     * The row where the caret is positioned.
-     */
-    public final ObservableIntegerValue caretRow = new IntegerBinding() {
-        { bind(caretPosition2D); }
-
-        @Override
-        protected int computeValue() {
-            return caretPosition2D.getValue()[0];
-        }
-    };
-
-    /**
-     * Caret position relative to the current row.
-     */
-    public final ObservableIntegerValue caretCol = new IntegerBinding() {
-        { bind(caretPosition2D); }
-
-        @Override
-        protected int computeValue() {
-            return caretPosition2D.getValue()[1];
-        }
-    };
-
-    /**
-     * The line with the caret.
-     */
-    private final ObservableObjectValue<Line> currentLine = new ObjectBinding<Line>() {
-        { bind(caretRow, content.lines); }
-
-        @Override
-        protected Line computeValue() {
-            int i = Math.min(caretRow.get(), content.lines.size()-1); // in case lines were removed before updating caretRow
-            return content.lines.get(i);
-        }
-    };
-
-    /**
-     * Keep caret position in the current line up to date.
-     */
-    {
-        InvalidationListener updateCaretPosInCurrentLine = new InvalidationListener() {
-            @Override
-            public void invalidated(Observable observable) {
-                int pos = Math.min(caretCol.get(), currentLine.get().length()); // because caretCol and currentLine are not updated atomically
-                currentLine.get().setCaretPosition(pos);
-            }
-        };
-
-        caretCol.addListener(updateCaretPosInCurrentLine);
-        currentLine.addListener(updateCaretPosInCurrentLine);
-    }
-
-
-    /**
-     * Creates a {@code TextArea} with empty text content.
-     */
-    public StyledTextArea() {
-        this("");
-    }
-
-    /**
-     * Creates a {@code TextArea} with initial text content.
-     *
-     * @param text A string for text content.
-     */
-    public StyledTextArea(String text) {
-        getStyleClass().add("code-area");
-
-        replaceText(0, 0, text);
-        selectRange(0, 0);
+        getStyleClass().add("styled-text-area");
     }
 
     /**
      * Returns an unmodifiable list of lines
      * that back this code area's content.
      */
-    public ObservableList<Line> getLines() {
+    public ObservableList<Line<S>> getLines() {
         return FXCollections.unmodifiableObservableList(content.lines);
     }
 
-    public void setStyleClass(int from, int to, String styleClass) {
-        Set<String> styleClasses = new HashSet<>(1);
-        styleClasses.add(styleClass);
-        setStyleClasses(from, to, styleClasses);
+    public void setStyle(int from, int to, S style) {
+        content.setStyle(from, to, style);
     }
 
-    public void setStyleClasses(int from, int to, Set<String> styleClasses) {
-        content.setStyleClasses(from, to, styleClasses);
-    }
-
-    public void clearStyleClasses(int from, int to) {
-        setStyleClasses(from, to, Collections.<String>emptySet());
+    /**
+     * Resets the style of the given range to the initial style.
+     */
+    public void clearStyle(int from, int to) {
+        setStyle(from, to, initialStyle);
     }
 
     /***************************************************************************
@@ -324,7 +328,7 @@ public class StyledTextArea extends Control {
 
     /** {@inheritDoc} */
     @Override protected Skin<?> createDefaultSkin() {
-        return new StyledTextAreaSkin(this);
+        return new StyledTextAreaSkin<S>(this, applyStyle);
     }
     /**
      * Replaces a range of characters with the given text.
@@ -399,16 +403,16 @@ public class StyledTextArea extends Control {
      * @treatAsPrivate implementation detail
      */
     private static class StyleableProperties {
-        private static final FontCssMetaData<StyledTextArea> FONT =
-            new FontCssMetaData<StyledTextArea>("-fx-font", Font.getDefault()) {
+        private static final FontCssMetaData<StyledTextArea<?>> FONT =
+            new FontCssMetaData<StyledTextArea<?>>("-fx-font", Font.getDefault()) {
 
             @Override
-            public boolean isSettable(StyledTextArea n) {
+            public boolean isSettable(StyledTextArea<?> n) {
                 return n.font == null || !n.font.isBound();
             }
 
             @Override
-            public StyleableProperty<Font> getStyleableProperty(StyledTextArea n) {
+            public StyleableProperty<Font> getStyleableProperty(StyledTextArea<?> n) {
                 return n.fontProperty();
             }
         };

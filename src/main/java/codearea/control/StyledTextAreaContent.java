@@ -28,7 +28,6 @@ package codearea.control;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -40,8 +39,8 @@ import javafx.collections.ObservableList;
 /**
  * Code area content model.
  */
-final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements ObservableTextValue {
-    final ObservableList<Line> lines = FXCollections.observableArrayList();
+final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implements ObservableTextValue {
+    final ObservableList<Line<S>> lines = FXCollections.observableArrayList();
 
     /**
      * stores the last value returned by get().
@@ -74,8 +73,8 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
             l.handle(pos, removedText, addedText);
     }
 
-    StyledTextAreaContent() {
-        lines.add(new Line());
+    StyledTextAreaContent(S initialStyle) {
+        lines.add(new Line<S>("", initialStyle));
 
         this.addListener(new InvalidationListener() {
             @Override
@@ -117,7 +116,7 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
         int lineCount = lines.size();
         int lineIndex = 0;
         while (lineIndex < lineCount) {
-            Line line = lines.get(lineIndex);
+            Line<S> line = lines.get(lineIndex);
             int lineLen = line.length() + 1;
 
             if (start < lineLen)
@@ -129,7 +128,7 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
 
         // Read characters until end is reached, appending to text builder
         // and moving to next line as needed
-        Line line = lines.get(lineIndex);
+        Line<S> line = lines.get(lineIndex);
 
         for(int i = 0; i < length; ++i) {
             if (start == line.length()) {
@@ -158,13 +157,15 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
         String replacedText = get(start, end);
 
         // Get the leftovers after cutting out the deletion
-        Line leadingLine = lines.get(leadingLineIndex);
-        Line trailingLine = lines.get(trailingLineIndex);
-        Line left = leadingLine.split(leadingLineFrom)[0];
-        Line right = trailingLine.split(trailingLineTo)[1];
+        Line<S> leadingLine = lines.get(leadingLineIndex);
+        Line<S> trailingLine = lines.get(trailingLineIndex);
+        Line<S> left = leadingLine.split(leadingLineFrom)[0];
+        Line<S> right = trailingLine.split(trailingLineTo)[1];
 
         String[] replacementLines = replacement.split("\n", -1);
         int n = replacementLines.length;
+        
+        S replacementStyle = leadingLine.getStyleAt(leadingLineFrom-1);
 
         if(n == 1) {
             // replacement is just a single line,
@@ -184,9 +185,9 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
             right.insert(0, replacementLines[n-1]);
 
             // create list of new lines to replace the affected lines
-            List<Line> newLines = new ArrayList<>(n-1);
+            List<Line<S>> newLines = new ArrayList<>(n-1);
             for(int i = 1; i < n - 1; ++i)
-                newLines.add(new Line(replacementLines[i]));
+                newLines.add(new Line<S>(replacementLines[i], replacementStyle));
             newLines.add(right);
 
             // replace the affected lines with the new lines
@@ -203,7 +204,7 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
         fireTextChange(start, replacedText, replacement);
     }
 
-    public void setStyleClasses(int from, int to, Set<String> styleClasses) {
+    public void setStyle(int from, int to, S style) {
         int[] range2D = rangeToRowAndCol(from, to);
         int firstLineIndex = range2D[0];
         int firstLineFrom = range2D[1];
@@ -213,22 +214,22 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
         if(from == to)
             return;
 
-        Line firstLine = lines.get(firstLineIndex);
-        Line lastLine = lines.get(lastLineIndex);
+        Line<S> firstLine = lines.get(firstLineIndex);
+        Line<S> lastLine = lines.get(lastLineIndex);
 
         if(firstLineIndex == lastLineIndex) {
-            lastLine.setStyleClasses(firstLineFrom, lastLineTo, styleClasses);
+            lastLine.setStyle(firstLineFrom, lastLineTo, style);
             lines.set(lastLineIndex, lastLine); // to generate change event
         }
         else {
-            firstLine.setStyleClasses(firstLineFrom, firstLine.length(), styleClasses);
+            firstLine.setStyle(firstLineFrom, firstLine.length(), style);
             lines.set(firstLineIndex, firstLine); // to generate change event
             for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
-                Line l = lines.get(i);
-                l.setStyleClasses(styleClasses);
+                Line<S> l = lines.get(i);
+                l.setStyle(style);
                 lines.set(i, l); // to generate change event
             }
-            lastLine.setStyleClasses(0, lastLineTo, styleClasses);
+            lastLine.setStyle(0, lastLineTo, style);
             lines.set(lastLineIndex, lastLine); // to generate change event
         }
     }
@@ -259,7 +260,7 @@ final class StyledTextAreaContent extends ReadOnlyStringPropertyBase implements 
     }
 
     private int[] positionToRowAndCol(int pos, int fromLine) {
-        Line line = lines.get(fromLine);
+        Line<S> line = lines.get(fromLine);
         while(pos >= line.length()+1) {
             pos -= line.length()+1;
             line = lines.get(++fromLine);

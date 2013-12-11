@@ -27,6 +27,7 @@ package codearea.skin;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -49,7 +50,7 @@ import codearea.control.StyledString;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 
-public class LineGraphic extends TextFlow {
+public class LineGraphic<S> extends TextFlow {
 
     private static Method mGetTextLayout;
     static {
@@ -66,7 +67,7 @@ public class LineGraphic extends TextFlow {
     // properly for Text node inside a TextFlow (as of JDK8-b100).
     private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
 
-    private final Line line;
+    private final Line<S> line;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -85,7 +86,7 @@ public class LineGraphic extends TextFlow {
         }
     };
 
-    public LineGraphic(Line line) {
+    public LineGraphic(Line<S> line, BiConsumer<Text, S> applyStyle) {
         this.line = line;
 
         setPrefWidth(Region.USE_COMPUTED_SIZE); // no wrapping
@@ -113,11 +114,11 @@ public class LineGraphic extends TextFlow {
 //        });
 
         // populate with text nodes
-        for(StyledString segment: line.getSegments()) {
+        for(StyledString<S> segment: line.getSegments()) {
             Text t = new Text(segment.toString());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
-            t.getStyleClass().addAll(segment.getStyleClasses());
+            applyStyle.accept(t, segment.getStyle());
 
             // XXX: binding selectionFill to textFill,
             // see the note at highlightTextFill

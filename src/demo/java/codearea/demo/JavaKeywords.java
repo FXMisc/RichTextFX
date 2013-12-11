@@ -34,7 +34,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import codearea.control.StyledTextArea;
+import codearea.control.CodeArea;
 
 public class JavaKeywords extends Application {
 
@@ -79,29 +79,29 @@ public class JavaKeywords extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        final StyledTextArea styledTextArea = new StyledTextArea();
-        styledTextArea.textProperty().addListener(new ChangeListener<String>() {
+        final CodeArea codeArea = new CodeArea();
+        codeArea.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable,
                     String oldText, String newText) {
                 Matcher matcher = KEYWORD_PATTERN.matcher(newText);
                 int lastKwEnd = 0;
                 while(matcher.find()) {
-                    styledTextArea.clearStyleClasses(lastKwEnd, matcher.start());
-                    styledTextArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
+                    codeArea.clearStyle(lastKwEnd, matcher.start());
+                    codeArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
                     lastKwEnd = matcher.end();
                 }
-                styledTextArea.clearStyleClasses(lastKwEnd, newText.length());
+                codeArea.clearStyle(lastKwEnd, newText.length());
             }
         });
-        styledTextArea.replaceText(0, 0, sampleCode);
+        codeArea.replaceText(0, 0, sampleCode);
 
         StackPane root = new StackPane();
-        root.getChildren().add(styledTextArea);
+        root.getChildren().add(codeArea);
         Scene scene = new Scene(root, 600, 400);
         scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
-        styledTextArea.requestFocus();
+        codeArea.requestFocus();
         primaryStage.show();
     }
 

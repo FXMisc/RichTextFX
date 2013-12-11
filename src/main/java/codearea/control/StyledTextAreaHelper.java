@@ -40,7 +40,7 @@ import com.sun.javafx.Utils;
  * {@link StyledTextArea#replaceText(int, int, String)} or
  * {@link StyledTextArea#selectRange(int, int)}.
  */
-public class StyledTextAreaHelper {
+public class StyledTextAreaHelper<S> {
 
     public static enum SelectionPolicy {
         CLEAR,
@@ -48,12 +48,12 @@ public class StyledTextAreaHelper {
         EXTEND,
     }
 
-    private final StyledTextArea styledTextArea;
+    private final StyledTextArea<S> styledTextArea;
 
     // Used for previous/next word navigation.
     private final BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
 
-    public StyledTextAreaHelper(StyledTextArea styledTextArea) {
+    public StyledTextAreaHelper(StyledTextArea<S> styledTextArea) {
         this.styledTextArea = styledTextArea;
     }
 

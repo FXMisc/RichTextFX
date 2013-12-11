@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
@@ -52,6 +53,7 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
@@ -64,7 +66,7 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 /**
  * Code area skin.
  */
-public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAreaBehavior> {
+public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, CodeAreaBehavior<S>> {
 
     /**
      * Background fill for highlighted text.
@@ -78,7 +80,7 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
             return "highlightFill";
         }
 
-        @Override public CssMetaData<StyledTextArea,Paint> getCssMetaData() {
+        @Override public CssMetaData<StyledTextArea<?>, Paint> getCssMetaData() {
             return StyleableProperties.HIGHLIGHT_FILL;
         }
     };
@@ -96,33 +98,33 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
             return "highlightTextFill";
         }
 
-        @Override public CssMetaData<StyledTextArea,Paint> getCssMetaData() {
+        @Override public CssMetaData<StyledTextArea<?>,Paint> getCssMetaData() {
             return StyleableProperties.HIGHLIGHT_TEXT_FILL;
         }
     };
 
-    private final ListView<Line> listView;
-    private final Set<LineCell> visibleCells = new HashSet<>();
+    private final ListView<Line<S>> listView;
+    private final Set<LineCell<S>> visibleCells = new HashSet<>();
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
 
-    public StyledTextAreaSkin(final StyledTextArea styledTextArea) {
-        super(styledTextArea, new CodeAreaBehavior(styledTextArea));
+    public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
+        super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
         // load the default style
-        styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("code-area.css").toExternalForm());
+        styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
         // Initialize content
-        listView = new ListView<Line>(styledTextArea.getLines());
+        listView = new ListView<Line<S>>(styledTextArea.getLines());
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
-        listView.setCellFactory(new Callback<ListView<Line>, ListCell<Line>>() {
+        listView.setCellFactory(new Callback<ListView<Line<S>>, ListCell<Line<S>>>() {
             @Override
-            public ListCell<Line> call(final ListView<Line> listView) {
-                final LineCell lineCell = new LineCell(StyledTextAreaSkin.this);
+            public ListCell<Line<S>> call(final ListView<Line<S>> listView) {
+                final LineCell<S> lineCell = new LineCell<S>(StyledTextAreaSkin.this, applyStyle);
 
                 // keep track of visible cells
                 lineCell.emptyProperty().addListener(new ChangeListener<Boolean>() {
@@ -194,10 +196,10 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
         // listViews listener on the same list. For this reason, we cannot
         // use InvalidationListener, since that one would be called before
         // change listeners.
-        listView.getItems().addListener(new ListChangeListener<Line>() {
+        listView.getItems().addListener(new ListChangeListener<Line<S>>() {
             @Override
             public void onChanged(
-                    javafx.collections.ListChangeListener.Change<? extends Line> arg0) {
+                    javafx.collections.ListChangeListener.Change<? extends Line<S>> arg0) {
                 listView.getSelectionModel().select(styledTextArea.caretRow.get());
             }
         });
@@ -230,7 +232,7 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
 
     public int getDisplayedRowCount() {
         int n = 0;
-        for(LineCell cell: visibleCells) {
+        for(LineCell<S> cell: visibleCells) {
             if(isFullyVisible(cell))
                 ++n;
         }
@@ -243,14 +245,14 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
     }
 
     private boolean isVisible(int row) {
-        for(LineCell cell: visibleCells) {
+        for(LineCell<S> cell: visibleCells) {
             if(cell.getIndex() == row)
                 return isFullyVisible(cell);
         }
         return false;
     }
 
-    private boolean isFullyVisible(LineCell cell) {
+    private boolean isFullyVisible(LineCell<S> cell) {
         listView.requestLayout();
         Parent p = cell.getParent();
         if(p == null) {
@@ -274,36 +276,36 @@ public class StyledTextAreaSkin extends BehaviorSkinBase<StyledTextArea, CodeAre
     }
 
     private static class StyleableProperties {
-        private static final CssMetaData<StyledTextArea,Paint> HIGHLIGHT_FILL =
-            new CssMetaData<StyledTextArea,Paint>("-fx-highlight-fill",
+        private static final CssMetaData<StyledTextArea<?>, Paint> HIGHLIGHT_FILL =
+            new CssMetaData<StyledTextArea<?>, Paint>("-fx-highlight-fill",
                 PaintConverter.getInstance(), Color.DODGERBLUE) {
 
             @Override
-            public boolean isSettable(StyledTextArea n) {
-                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
+            public boolean isSettable(StyledTextArea<?> n) {
+                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
                 return !skin.highlightFill.isBound();
             }
 
             @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea n) {
-                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
+            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea<?> n) {
+                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
                 return (StyleableProperty<Paint>)skin.highlightFill;
             }
         };
 
-        private static final CssMetaData<StyledTextArea,Paint> HIGHLIGHT_TEXT_FILL =
-            new CssMetaData<StyledTextArea,Paint>("-fx-highlight-text-fill",
+        private static final CssMetaData<StyledTextArea<?>, Paint> HIGHLIGHT_TEXT_FILL =
+            new CssMetaData<StyledTextArea<?>, Paint>("-fx-highlight-text-fill",
                 PaintConverter.getInstance(), Color.WHITE) {
 
             @Override
-            public boolean isSettable(StyledTextArea n) {
-                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
+            public boolean isSettable(StyledTextArea<?> n) {
+                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
                 return !skin.highlightTextFill.isBound();
             }
 
             @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea n) {
-                final StyledTextAreaSkin skin = (StyledTextAreaSkin) n.getSkin();
+            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea<?> n) {
+                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
                 return (StyleableProperty<Paint>)skin.highlightTextFill;
             }
         };

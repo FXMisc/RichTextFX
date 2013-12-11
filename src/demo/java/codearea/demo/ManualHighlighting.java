@@ -25,8 +25,6 @@
 
 package codearea.demo;
 
-import java.util.HashSet;
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -38,7 +36,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import codearea.control.StyledTextArea;
+import codearea.control.CodeArea;
 
 public class ManualHighlighting extends Application {
 
@@ -46,7 +44,7 @@ public class ManualHighlighting extends Application {
         launch(args);
     }
 
-    private final StyledTextArea area = new StyledTextArea();
+    private final CodeArea area = new CodeArea();
 
     @Override
     public void start(Stage primaryStage) {
@@ -80,13 +78,11 @@ public class ManualHighlighting extends Application {
     }
 
     private void setPushHandler(Button button, String styleClass) {
-        final HashSet<String> styleClasses = new HashSet<>(1);
-        styleClasses.add(styleClass);
         button.onActionProperty().set(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent evt) {
                 IndexRange range = area.getSelection();
-                area.setStyleClasses(range.getStart(), range.getEnd(), styleClasses);
+                area.setStyleClass(range.getStart(), range.getEnd(), styleClass);
                 area.requestFocus();
             }
         });

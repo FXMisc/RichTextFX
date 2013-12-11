@@ -56,7 +56,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Text area behavior.
  */
-public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
+public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     /**
      * Possible dragging states.
@@ -76,8 +76,8 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
      * Fields                                                                 *
      *************************************************************************/
 
-    protected final StyledTextArea styledTextArea;
-    protected final StyledTextAreaHelper styledTextAreaHelper;
+    protected final StyledTextArea<S> styledTextArea;
+    protected final StyledTextAreaHelper<S> styledTextAreaHelper;
 
     /**
      * Used to keep track of the most recent key event. This is used when
@@ -87,7 +87,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
 
     private final UndoManager undoManager;
 
-    private StyledTextAreaSkin skin;
+    private StyledTextAreaSkin<S> skin;
     private final ContextMenu contextMenu = new ContextMenu();
 
     /**
@@ -112,16 +112,16 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
      * Constructors                                                           *
      *************************************************************************/
 
-    public CodeAreaBehavior(StyledTextArea styledTextArea) {
+    public CodeAreaBehavior(StyledTextArea<S> styledTextArea) {
         super(styledTextArea, CodeAreaBindings.BINDINGS);
 
         this.styledTextArea = styledTextArea;
-        this.styledTextAreaHelper = new StyledTextAreaHelper(styledTextArea);
+        this.styledTextAreaHelper = new StyledTextAreaHelper<S>(styledTextArea);
         this.undoManager = new UndoManager(styledTextArea);
     }
 
     // XXX An unholy back-reference!
-    public void setCodeAreaSkin(StyledTextAreaSkin skin) {
+    public void setCodeAreaSkin(StyledTextAreaSkin<S> skin) {
         this.skin = skin;
     }
 
@@ -348,7 +348,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
             return;
 
         // compute new caret position
-        Line targetLine = styledTextArea.getLines().get(targetRow);
+        Line<S> targetLine = styledTextArea.getLines().get(targetRow);
         int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
         int newCaretPos = styledTextArea.getLineOffset(targetRow) + targetCaretCol;
 
@@ -394,7 +394,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
     }
 
     private void leftPress(MouseEvent e) {
-        LineCell lineCell = (LineCell) e.getSource();
+        LineCell<S> lineCell = (LineCell<S>) e.getSource();
         HitInfo hit = lineCell.hit(e);
 
         if(e.isShiftDown()) {
@@ -472,7 +472,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
             return;
 
         // get the position within text
-        LineCell lineCell = (LineCell) e.getSource();
+        LineCell<S> lineCell = (LineCell<S>) e.getSource();
         HitInfo hit = lineCell.hit(e);
 
         if (dragSelection == DragState.DRAG) {
@@ -488,7 +488,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                LineCell lineCell = (LineCell) e.getSource();
+                LineCell<S> lineCell = (LineCell<S>) e.getSource();
                 HitInfo hit = lineCell.hit(e);
                 styledTextAreaHelper.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
@@ -507,7 +507,7 @@ public class CodeAreaBehavior extends BehaviorBase<StyledTextArea> {
 
         if(dragSelection == DragState.DRAG) {
             // get the position within text
-            LineCell lineCell = (LineCell) e.getSource();
+            LineCell<S> lineCell = (LineCell<S>) e.getSource();
             HitInfo hit = lineCell.hit(e);
 
             styledTextAreaHelper.moveSelectedText(hit.getInsertionIndex());

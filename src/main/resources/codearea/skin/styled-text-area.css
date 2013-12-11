@@ -1,9 +1,8 @@
-.code-area {
+.styled-text-area {
     -fx-cursor: text;
-    -fx-font-family: monospace;
 }
 
-.code-area .list-view .list-cell {
+.styled-text-area .list-view .list-cell {
     -fx-padding: 0;
     -fx-background-color: transparent!important;
 }

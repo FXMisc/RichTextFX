@@ -25,22 +25,28 @@
 
 package codearea.skin;
 
+import java.util.function.BiConsumer;
+
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.text.Text;
 import codearea.control.Line;
 
 import com.sun.javafx.scene.text.HitInfo;
 
-public class LineCell extends ListCell<Line> {
+public class LineCell<S> extends ListCell<Line<S>> {
 
-    private final StyledTextAreaSkin skin;
+    private final StyledTextAreaSkin<S> skin;
 
     private final ObservableBooleanValue caretVisible;
+    
+    private final BiConsumer<Text, S> applyStyle;
 
-    public LineCell(StyledTextAreaSkin skin) {
+    public LineCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
         this.skin = skin;
+        this.applyStyle = applyStyle;
 
         // Caret is visible only on the selected line,
         // but only if the owner CodeArea has visible caret.
@@ -48,11 +54,11 @@ public class LineCell extends ListCell<Line> {
     }
 
     @Override
-    protected void updateItem(Line item, boolean empty) {
+    protected void updateItem(Line<S> item, boolean empty) {
         super.updateItem(item, empty);
 
         // dispose old LineNode (unregister listeners etc.)
-        LineGraphic oldLineGraphic = (LineGraphic) getGraphic();
+        LineGraphic<S> oldLineGraphic = (LineGraphic<S>) getGraphic();
         if(oldLineGraphic != null) {
             oldLineGraphic.caretVisibleProperty().unbind();
             oldLineGraphic.highlightFillProperty().unbind();
@@ -61,7 +67,7 @@ public class LineCell extends ListCell<Line> {
         }
 
         if(!empty) {
-            LineGraphic lineGraphic = new LineGraphic(item);
+            LineGraphic<S> lineGraphic = new LineGraphic<S>(item, applyStyle);
             lineGraphic.caretVisibleProperty().bind(caretVisible);
 
             // highlightFill and highlightTextFill are taken from the skin
@@ -96,7 +102,7 @@ public class LineCell extends ListCell<Line> {
         }
 
         // get hit in the clicked line
-        LineGraphic lineGraphic = (LineGraphic) getGraphic();
+        LineGraphic<S> lineGraphic = (LineGraphic<S>) getGraphic();
         HitInfo hit = lineGraphic.hit(e.getX() - lineGraphic.getLayoutX());
 
         // add line offset

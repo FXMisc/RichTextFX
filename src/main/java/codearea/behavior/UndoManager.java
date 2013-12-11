@@ -79,7 +79,7 @@ class UndoManager {
         }
     }
 
-    private final StyledTextArea styledTextArea;
+    private final StyledTextArea<?> styledTextArea;
 
     private final ArrayList<Change> chain = new ArrayList<Change>();
     private int currentIndex = 0;
@@ -95,7 +95,7 @@ class UndoManager {
     /**
      * @param styledTextArea
      */
-    UndoManager(StyledTextArea styledTextArea) {
+    UndoManager(StyledTextArea<?> styledTextArea) {
         this.styledTextArea = styledTextArea;
         styledTextArea.textProperty().addListener(new TextChangeListener() {
             @Override

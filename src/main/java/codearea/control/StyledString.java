@@ -25,21 +25,15 @@
 
 package codearea.control;
 
-import java.util.Collections;
-import java.util.Set;
 import java.util.stream.IntStream;
 
-public class StyledString implements CharSequence {
+public class StyledString<S> implements CharSequence {
     private final String text;
-    private Set<String> styleClasses;
+    private S style;
 
-    public StyledString(String text) {
-        this(text, Collections.<String> emptySet());
-    }
-
-    public StyledString(String text, Set<String> styleClasses) {
+    public StyledString(String text, S style) {
         this.text = text;
-        this.styleClasses = styleClasses;
+        this.style= style;
     }
 
     @Override
@@ -58,8 +52,8 @@ public class StyledString implements CharSequence {
     }
 
     @Override
-    public StyledString subSequence(int start, int end) {
-        return new StyledString(text.substring(start, end), styleClasses);
+    public StyledString<S> subSequence(int start, int end) {
+        return new StyledString<S>(text.substring(start, end), style);
     }
 
     @Override
@@ -72,21 +66,21 @@ public class StyledString implements CharSequence {
         return text.codePoints();
     }
 
-    public StyledString concat(CharSequence str) {
-        return new StyledString(text + str, styleClasses);
+    public StyledString<S> concat(CharSequence str) {
+        return new StyledString<S>(text + str, style);
     }
 
-    public StyledString spliced(int from, int to, CharSequence replacement) {
+    public StyledString<S> spliced(int from, int to, CharSequence replacement) {
         String left = text.substring(0, from);
         String right = text.substring(to);
-        return new StyledString(left + replacement + right, styleClasses);
+        return new StyledString<S>(left + replacement + right, style);
     }
 
-    public Set<String> getStyleClasses() {
-        return styleClasses;
+    public S getStyle() {
+        return style;
     }
 
-    public void setStyleClasses(Set<String> styleClasses) {
-        this.styleClasses = styleClasses;
+    public void setStyle(S style) {
+        this.style = style;
     }
 }
