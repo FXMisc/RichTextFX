@@ -28,7 +28,6 @@ package codearea.control;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.ToIntFunction;
 
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
@@ -76,12 +75,7 @@ public final class Line<S> {
     }
 
     public int length() {
-        return segments.stream().mapToInt(new ToIntFunction<StyledString<S>>(){
-            @Override
-            public int applyAsInt(StyledString<S> t) {
-                return t.length();
-            }
-        }).sum();
+        return segments.stream().mapToInt(s -> s.length()).sum();
     }
 
     public char charAt(int index) {
@@ -219,14 +213,14 @@ public final class Line<S> {
                 return seg.getStyle();
             else
                 charIdx -= seg.length();
-        
+
         throw new AssertionError("Unreachable code");
     }
-    
+
     private S getLeadingStyle() {
         return segments.get(0).getStyle();
     }
-    
+
     private S getTrailingStyle() {
         return segments.get(segments.size()-1).getStyle();
     }

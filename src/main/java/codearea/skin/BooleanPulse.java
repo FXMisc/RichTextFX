@@ -28,8 +28,6 @@ package codearea.skin;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyBooleanPropertyBase;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.util.Duration;
 
 final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
@@ -38,14 +36,6 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
 
     private final Timeline timeline;
     private boolean currentValue;
-
-    // TODO: replace with a lambda expression
-    private final EventHandler<ActionEvent> toggler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(final ActionEvent event) {
-            toggle();
-        }
-    };
 
     public BooleanPulse(Duration duration) {
         this(duration, null, null, true);
@@ -59,7 +49,7 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
 
         timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.getKeyFrames().add(new KeyFrame(duration, toggler));
+        timeline.getKeyFrames().add(new KeyFrame(duration, event -> toggle()));
     }
 
     public void start() {
