@@ -4,12 +4,18 @@
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.8"/>
     <property name="source" value="1.8"/>
+
+    <tstamp>
+        <format property="build.date" pattern="yyyyMMdd"/>
+    </tstamp>
+
     <path id="srcdirs">
         <pathelement location="src/main/java"/>
         <pathelement location="src/main/resources"/>
         <pathelement location="src/demo/java"/>
         <pathelement location="src/demo/resources"/>
     </path>
+
     <path id="codearea.classpath">
         <pathelement location="build"/>
     </path>
@@ -49,7 +55,7 @@
     </target>
 
     <target name="dist" depends="build,initdist" description="Package project as a JAR archive.">
-        <jar basedir="build" destfile="dist/codearea.jar"/>
+        <jar basedir="build" destfile="dist/${ant.project.name}-${build.date}.jar"/>
     </target>
 
     <target name="javadoc" description="Generate API documentation.">
