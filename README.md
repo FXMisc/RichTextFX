@@ -47,7 +47,7 @@ Demos
 
 #### Source code
 
-[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/codearea/demo/JavaKeywords.java)
+[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/java/codearea/demo/JavaKeywords.java)
 
 
 ### 2. Manual text highlighting
@@ -65,7 +65,7 @@ Demos
 
 #### Source code
 
-[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/codearea/demo/ManualHighlighting.java)
+[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/java/codearea/demo/ManualHighlighting.java)
 
 
 License
