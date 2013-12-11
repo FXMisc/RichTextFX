@@ -309,8 +309,25 @@ public class StyledTextArea<S> extends Control {
         return FXCollections.unmodifiableObservableList(content.lines);
     }
 
+    /**
+     * Sets style for the given range of offsets.
+     */
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
+    }
+
+    /**
+     * Sets style for the whole line.
+     */
+    public void setStyle(int line, S style) {
+        content.setStyle(line, style);
+    }
+
+    /**
+     * Sets style for the given column range on the given line.
+     */
+    public void setStyle(int line, int fromCol, int toCol, S style) {
+        content.setStyle(line, fromCol, toCol, style);
     }
 
     /**
@@ -318,6 +335,38 @@ public class StyledTextArea<S> extends Control {
      */
     public void clearStyle(int from, int to) {
         setStyle(from, to, initialStyle);
+    }
+
+    /**
+     * Resets the style of the given line to the initial style.
+     */
+    public void clearStyle(int line) {
+        setStyle(line, initialStyle);
+    }
+
+    /**
+     * Resets the style of the given column range on the given line
+     * to the initial style.
+     */
+    public void clearStyle(int line, int formCol, int toCol) {
+        setStyle(line, formCol, toCol, initialStyle);
+    }
+
+    /**
+     * Returns the style of the character at the given position.
+     */
+    public S getStyleAt(int pos) {
+        return content.getStyleAt(pos);
+    }
+
+    /**
+     * Returns the style of the character in the given column at the given
+     * line. If {@code column} is beyond the end of the line, the style at
+     * the end of line is returned. If {@code column} is negative, it is
+     * the same as if it was 0.
+     */
+    public S getStyleAt(int line, int column) {
+        return content.getStyleAt(line, column);
     }
 
     /***************************************************************************

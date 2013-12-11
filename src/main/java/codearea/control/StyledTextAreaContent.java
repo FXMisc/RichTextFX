@@ -164,7 +164,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implemen
 
         String[] replacementLines = replacement.split("\n", -1);
         int n = replacementLines.length;
-        
+
         S replacementStyle = leadingLine.getStyleAt(leadingLineFrom-1);
 
         if(n == 1) {
@@ -232,6 +232,25 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implemen
             lastLine.setStyle(0, lastLineTo, style);
             lines.set(lastLineIndex, lastLine); // to generate change event
         }
+    }
+
+    public void setStyle(int line, S style) {
+        lines.get(line).setStyle(style);
+    }
+
+    public void setStyle(int line, int fromCol, int toCol, S style) {
+        lines.get(line).setStyle(fromCol, toCol, style);
+    }
+
+    public S getStyleAt(int pos) {
+        int[] pos2D = positionToRowAndCol(pos);
+        int line = pos2D[0];
+        int col = pos2D[1];
+        return lines.get(line).getStyleAt(col);
+    }
+
+    public S getStyleAt(int line, int column) {
+        return lines.get(line).getStyleAt(column);
     }
 
     int[] positionToRowAndCol(int pos) {
