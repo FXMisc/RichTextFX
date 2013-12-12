@@ -214,32 +214,29 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implemen
         if(from == to)
             return;
 
-        Line<S> firstLine = lines.get(firstLineIndex);
-        Line<S> lastLine = lines.get(lastLineIndex);
-
         if(firstLineIndex == lastLineIndex) {
-            lastLine.setStyle(firstLineFrom, lastLineTo, style);
-            lines.set(lastLineIndex, lastLine); // to generate change event
+            setStyle(firstLineIndex, firstLineFrom, lastLineTo, style);
         }
         else {
-            firstLine.setStyle(firstLineFrom, firstLine.length(), style);
-            lines.set(firstLineIndex, firstLine); // to generate change event
+            int firstLineLen = lines.get(firstLineIndex).length();
+            setStyle(firstLineIndex, firstLineFrom, firstLineLen, style);
             for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
-                Line<S> l = lines.get(i);
-                l.setStyle(style);
-                lines.set(i, l); // to generate change event
+                setStyle(i, style);
             }
-            lastLine.setStyle(0, lastLineTo, style);
-            lines.set(lastLineIndex, lastLine); // to generate change event
+            setStyle(lastLineIndex, 0, lastLineTo, style);
         }
     }
 
     public void setStyle(int line, S style) {
-        lines.get(line).setStyle(style);
+        Line<S> l = lines.get(line);
+        l.setStyle(style);
+        lines.set(line, l); // to generate change event
     }
 
     public void setStyle(int line, int fromCol, int toCol, S style) {
-        lines.get(line).setStyle(fromCol, toCol, style);
+        Line<S> l = lines.get(line);
+        l.setStyle(fromCol, toCol, style);
+        lines.set(line, l); // to generate change event
     }
 
     public S getStyleAt(int pos) {
