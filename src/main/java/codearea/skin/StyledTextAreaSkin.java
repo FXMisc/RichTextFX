@@ -57,8 +57,8 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
-import codearea.control.StyledTextArea;
 import codearea.control.Line;
+import codearea.control.StyledTextArea;
 
 import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
@@ -103,7 +103,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     };
 
-    private final ListView<Line<S>> listView;
+    private final MyListView<Line<S>> listView;
     private final Set<LineCell<S>> visibleCells = new HashSet<>();
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
@@ -117,7 +117,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
         // Initialize content
-        listView = new ListView<Line<S>>(styledTextArea.getLines());
+        listView = new MyListView<Line<S>>(styledTextArea.getLines());
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
@@ -185,7 +185,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             public void changed(ObservableValue<? extends Number> observable,
                     Number oldRow, Number currentRow) {
                 listView.getSelectionModel().select(currentRow.intValue());
-                scrollToVisible(currentRow.intValue());
+                listView.show(currentRow.intValue());
             }
         });
         listView.getSelectionModel().select(styledTextArea.caretRow.get());
@@ -237,19 +237,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 ++n;
         }
         return n;
-    }
-
-    private void scrollToVisible(int row) {
-        if(!isVisible(row))
-            listView.scrollTo(row);
-    }
-
-    private boolean isVisible(int row) {
-        for(LineCell<S> cell: visibleCells) {
-            if(cell.getIndex() == row)
-                return isFullyVisible(cell);
-        }
-        return false;
     }
 
     private boolean isFullyVisible(LineCell<S> cell) {
