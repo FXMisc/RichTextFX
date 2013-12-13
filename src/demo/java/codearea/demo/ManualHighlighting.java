@@ -32,6 +32,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.IndexRange;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -48,15 +49,18 @@ public class ManualHighlighting extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        VBox root = new VBox();
         HBox panel = new HBox();
         Button red = createColorButton(Color.RED, "red");
         Button green = createColorButton(Color.GREEN, "green");
         Button blue = createColorButton(Color.BLUE, "blue");
         Button bold = createBoldButton("bold");
         panel.getChildren().addAll(red, green, blue, bold);
-        root.getChildren().addAll(panel, area);
-        Scene scene = new Scene(root, 600, 400);
+
+        VBox vbox = new VBox();
+        VBox.setVgrow(area, Priority.ALWAYS);
+        vbox.getChildren().addAll(panel, area);
+
+        Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
