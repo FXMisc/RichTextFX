@@ -289,6 +289,9 @@ public final class Line<S> {
         }
     }
 
+    /**
+     * Returns the string content of this line.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(length());

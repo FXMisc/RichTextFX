@@ -75,7 +75,8 @@ import com.sun.javafx.Utils;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S> extends Control {
+public class StyledTextArea<S> extends Control
+implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
     /***************************************************************************
      *                                                                         *
@@ -133,14 +134,14 @@ public class StyledTextArea<S> extends Control {
      * The textual content of this TextInputControl.
      */
     private final StyledTextAreaContent<S> content;
-    public final String getText() { return content.get(); }
+    @Override public final String getText() { return content.get(); }
     public final String getText(int start, int end) { return content.get(start, end); }
     public final ObservableTextValue textProperty() { return content; }
 
     /**
      * The number of characters in the text input.
      */
-    public final int getLength() { return content.length().get(); }
+    @Override public final int getLength() { return content.length().get(); }
     public final ObservableIntegerValue lengthProperty() { return content.length(); }
 
     /**
@@ -152,7 +153,7 @@ public class StyledTextArea<S> extends Control {
      * the anchor might represent the lower or upper bound of the selection.
      */
     private final ReadOnlyIntegerWrapper anchor = new ReadOnlyIntegerWrapper(this, "anchor", 0);
-    public final int getAnchor() { return anchor.get(); }
+    @Override public final int getAnchor() { return anchor.get(); }
     public final ReadOnlyIntegerProperty anchorProperty() { return anchor.getReadOnlyProperty(); }
 
     /**
@@ -164,14 +165,14 @@ public class StyledTextArea<S> extends Control {
      * the caretPosition might represent the lower or upper bound of the selection.
      */
     private final ReadOnlyIntegerWrapper caretPosition = new ReadOnlyIntegerWrapper(this, "caretPosition", 0);
-    public final int getCaretPosition() { return caretPosition.get(); }
+    @Override public final int getCaretPosition() { return caretPosition.get(); }
     public final ReadOnlyIntegerProperty caretPositionProperty() { return caretPosition.getReadOnlyProperty(); }
 
     /**
      * The current selection.
      */
     private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection", new IndexRange(0, 0));
-    public final IndexRange getSelection() { return selection.getValue(); }
+    @Override public final IndexRange getSelection() { return selection.getValue(); }
     public final ReadOnlyObjectProperty<IndexRange> selectionProperty() { return selection.getReadOnlyProperty(); }
     {
         selection.addListener(new ChangeListener<IndexRange>() {
@@ -197,18 +198,22 @@ public class StyledTextArea<S> extends Control {
      * Defines the characters in the TextInputControl which are selected
      */
     private final ReadOnlyStringWrapper selectedText = new ReadOnlyStringWrapper(this, "selectedText");
-    public final String getSelectedText() { return selectedText.get(); }
+    @Override public final String getSelectedText() { return selectedText.get(); }
     public final ReadOnlyStringProperty selectedTextProperty() { return selectedText.getReadOnlyProperty(); }
 
     /**
      * The row where the caret is positioned.
      */
     public final ObservableIntegerValue caretRow;
+    @Override
+    public final int getCaretLine() { return caretRow.get(); }
 
     /**
      * Caret position relative to the current row.
      */
     public final ObservableIntegerValue caretCol;
+    @Override
+    public final int getCaretColumn() { return caretCol.get(); }
 
     /**
      * Style used by default when no other style is provided.
@@ -301,6 +306,11 @@ public class StyledTextArea<S> extends Control {
         getStyleClass().add("styled-text-area");
     }
 
+    @Override
+    public String getLine(int index) {
+        return content.lines.get(index).toString();
+    }
+
     /**
      * Returns an unmodifiable list of lines
      * that back this code area's content.
@@ -379,32 +389,16 @@ public class StyledTextArea<S> extends Control {
     @Override protected Skin<?> createDefaultSkin() {
         return new StyledTextAreaSkin<S>(this, applyStyle);
     }
-    /**
-     * Replaces a range of characters with the given text.
-     *
-     * @param start The starting index in the range, inclusive. This must be &gt;= 0 and &lt; the end.
-     * @param end The ending index in the range, exclusive. This is one-past the last character to
-     *            delete (consistent with the String manipulation methods). This must be &gt;= the start,
-     *            and &lt;= the length of the text.
-     * @param text The text that is to replace the range. This must not be null.
-     */
+
+    @Override
     public void replaceText(int start, int end, String text) {
+        start = Utils.clamp(0, start, getLength());
+        end = Utils.clamp(0, end, getLength());
+
         content.replaceText(start, end, text);
 
         int newCaretPos = start + text.length();
         selectRange(newCaretPos, newCaretPos);
-    }
-
-    /**
-     * Replaces a range of characters with the given text.
-     *
-     * @param range The range of text to replace. The range object must not be null.
-     * @param text The text that is to replace the range. This must not be null.
-     *
-     * @see #replaceText(int, int, String)
-     */
-    public void replaceText(IndexRange range, String text) {
-        replaceText(range.getStart(), range.getEnd(), text);
     }
 
     /**
@@ -418,9 +412,7 @@ public class StyledTextArea<S> extends Control {
         return offset;
     }
 
-    /**
-     * Positions the anchor and caretPosition explicitly.
-     */
+    @Override
     public void selectRange(int anchor, int caretPosition) {
         this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
         this.anchor.set(Utils.clamp(0, anchor, getLength()));
