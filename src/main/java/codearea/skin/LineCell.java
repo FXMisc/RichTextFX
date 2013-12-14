@@ -41,7 +41,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
     private final StyledTextAreaSkin<S> skin;
 
     private final ObservableBooleanValue caretVisible;
-    
+
     private final BiConsumer<Text, S> applyStyle;
 
     public LineCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
@@ -49,7 +49,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
         this.applyStyle = applyStyle;
 
         // Caret is visible only on the selected line,
-        // but only if the owner CodeArea has visible caret.
+        // but only if the owner StyledTextArea has visible caret.
         caretVisible = Bindings.and(this.selectedProperty(), skin.caretVisible);
     }
 
@@ -58,7 +58,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
         super.updateItem(item, empty);
 
         // dispose old LineNode (unregister listeners etc.)
-        LineGraphic<S> oldLineGraphic = (LineGraphic<S>) getGraphic();
+        LineGraphic<S> oldLineGraphic = getLineGraphic();
         if(oldLineGraphic != null) {
             oldLineGraphic.caretVisibleProperty().unbind();
             oldLineGraphic.highlightFillProperty().unbind();
@@ -90,24 +90,50 @@ public class LineCell<S> extends ListCell<Line<S>> {
      *
      * If this cell is empty, then the position at the end of text content
      * is returned.
-     *
-     * @param e
      */
     public HitInfo hit(MouseEvent e) {
-        if(isEmpty()) { // hit beyond the last line
-            HitInfo hit = new HitInfo();
-            hit.setCharIndex(skin.getSkinnable().getLength());
-            hit.setLeading(true);
-            return hit;
-        }
+        if(isEmpty()) // hit beyond the last line
+            return hitEnd();
+        else
+            return hit(e.getX() - getLineGraphic().getLayoutX());
+    }
+
+    /**
+     * Hits the embedded TextFlow at the given x offset.
+     * The returned character index is an index within the whole text content
+     * of the code area, not relative to this cell.
+     *
+     * If this cell is empty, then the position at the end of text content
+     * is returned.
+     */
+    HitInfo hit(double x) {
+        if(isEmpty())
+            throw new AssertionError("shouldn't happen");
 
         // get hit in the clicked line
-        LineGraphic<S> lineGraphic = (LineGraphic<S>) getGraphic();
-        HitInfo hit = lineGraphic.hit(e.getX() - lineGraphic.getLayoutX());
+        LineGraphic<S> lineGraphic = getLineGraphic();
+        HitInfo hit = lineGraphic.hit(x);
 
         // add line offset
         hit.setCharIndex(skin.getSkinnable().getLineOffset(getIndex()) + hit.getCharIndex());
 
         return hit;
+    }
+
+    private HitInfo hitEnd() {
+        HitInfo hit = new HitInfo();
+        hit.setCharIndex(skin.getSkinnable().getLength());
+        hit.setLeading(true);
+        return hit;
+    }
+
+    public double getCaretOffsetX() {
+        LineGraphic<S> graphic = getLineGraphic();
+        return graphic != null ? graphic.getCaretOffsetX() : 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    private LineGraphic<S> getLineGraphic() {
+        return (LineGraphic<S>) getGraphic();
     }
 }

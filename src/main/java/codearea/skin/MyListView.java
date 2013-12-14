@@ -31,6 +31,7 @@ import java.util.function.Function;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.IndexedCell;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 
 import com.sun.javafx.scene.control.skin.VirtualFlow;
@@ -61,6 +62,15 @@ class MyListView<T> extends ListView<T> {
         return withFlow(f -> f.getLastVisibleCell().getIndex(), -1);
     }
 
+    /**
+     * Returns the cell for the given index.
+     * The returned cell shall be used read-only
+     * (for measurement purposes) and shall not be stored.
+     */
+    public ListCell<T> getCell(int index) {
+        return withFlow(flow -> flow.getCell(index), null);
+    }
+
     private static <C extends IndexedCell<?>> void showAsFirst(VirtualFlow<C> flow, int index) {
         flow.show(index);
         C cell = flow.getVisibleCell(index);
@@ -75,21 +85,22 @@ class MyListView<T> extends ListView<T> {
         flow.showAsLast(cell);
     }
 
-    private void withFlow(Consumer<VirtualFlow<?>> f) {
-        VirtualFlow<?> flow = getFlow();
+    private void withFlow(Consumer<VirtualFlow<? extends ListCell<T>>> f) {
+        VirtualFlow<? extends ListCell<T>> flow = getFlow();
         if(flow != null)
             f.accept(flow);
     }
 
-    private <R> R withFlow(Function<VirtualFlow<?>, R> f, R orElse) {
-        VirtualFlow<?> flow = getFlow();
+    private <R> R withFlow(Function<VirtualFlow<? extends ListCell<T>>, R> f, R orElse) {
+        VirtualFlow<? extends ListCell<T>> flow = getFlow();
         return flow != null ? f.apply(flow) : orElse;
     }
 
-    private VirtualFlow<?> getFlow() {
+    @SuppressWarnings("unchecked")
+    private VirtualFlow<? extends ListCell<T>> getFlow() {
         for(Node child: getChildren()) {
             if(child instanceof VirtualFlow)
-                return (VirtualFlow<?>) child;
+                return (VirtualFlow<? extends ListCell<T>>) child;
         }
         return null;
     }

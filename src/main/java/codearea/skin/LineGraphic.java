@@ -173,6 +173,11 @@ public class LineGraphic<S> extends TextFlow {
         return hit;
     }
 
+    public double getCaretOffsetX() {
+        Bounds bounds = caretShape.getLayoutBounds();
+        return (bounds.getMinX() + bounds.getMaxX()) / 2;
+    }
+
     private TextLayout textLayout() {
         try {
             return (TextLayout) mGetTextLayout.invoke(this);

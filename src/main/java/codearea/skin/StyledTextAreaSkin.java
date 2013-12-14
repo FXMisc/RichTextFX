@@ -60,6 +60,7 @@ import codearea.control.StyledTextArea;
 
 import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import com.sun.javafx.scene.text.HitInfo;
 
 /**
  * Code area skin.
@@ -107,6 +108,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
 
+    // keeps track of the currently selected cell,
+    // i.e. the cell with the caret
+    private LineCell<S> selectedCell = null;
+
     public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
@@ -133,6 +138,14 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                             visibleCells.remove(lineCell);
                         else
                             visibleCells.add(lineCell);
+                    }
+                });
+
+                lineCell.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> o, Boolean old, Boolean selected) {
+                        if(selected)
+                            selectedCell = lineCell;
                     }
                 });
 
@@ -242,6 +255,14 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     public int getLastVisibleIndex() {
         return listView.getLastVisibleIndex();
+    }
+
+    public double getCaretOffsetX() {
+        return selectedCell != null ? selectedCell.getCaretOffsetX() : 0;
+    }
+
+    public HitInfo hit(int line, double x) {
+        return ((LineCell<S>) listView.getCell(line)).hit(x);
     }
 
     @Override

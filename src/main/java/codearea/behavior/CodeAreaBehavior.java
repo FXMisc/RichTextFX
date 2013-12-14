@@ -42,7 +42,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
-import codearea.control.Line;
 import codearea.control.StyledTextArea;
 import codearea.control.StyledTextAreaHelper;
 import codearea.control.StyledTextAreaHelper.SelectionPolicy;
@@ -98,14 +97,14 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     /**
      * Remembers horizontal position when traversing up / down.
      */
-    private int targetCaretCol = -1;
-    public void clearTargetCaretColumn() {
-        targetCaretCol = -1;
+    private double targetCaretOffset = -1;
+    public void clearTargetCaretOffset() {
+        targetCaretOffset = -1;
     }
-    private int getTargetCaretColumn() {
-        if(targetCaretCol == -1)
-            targetCaretCol = styledTextArea.caretCol.get();
-        return targetCaretCol;
+    private double getTargetCaretOffset() {
+        if(targetCaretOffset == -1)
+            targetCaretOffset = skin.getCaretOffsetX();
+        return targetCaretOffset;
     }
 
     /**************************************************************************
@@ -168,7 +167,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
             case SelectNextPage:
                 break;
             default:
-                clearTargetCaretColumn();
+                clearTargetCaretOffset();
         }
 
         switch(action) {
@@ -351,9 +350,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     private void goToLine(int index, SelectionPolicy selectionPolicy) {
         // compute new caret position
-        Line<S> targetLine = styledTextArea.getLines().get(index);
-        int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
-        int newCaretPos = styledTextArea.getLineOffset(index) + targetCaretCol;
+        HitInfo hit = skin.hit(index, getTargetCaretOffset());
+        int newCaretPos = hit.getInsertionIndex();
 
         // update model
         styledTextAreaHelper.positionCaret(newCaretPos, selectionPolicy);
@@ -422,7 +420,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void firstLeftPress(HitInfo hit) {
-        clearTargetCaretColumn();
+        clearTargetCaretOffset();
         IndexRange selection = styledTextArea.getSelection();
         if (selection.getLength() != 0 &&
                 hit.getCharIndex() >= selection.getStart() &&
