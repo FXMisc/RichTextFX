@@ -44,8 +44,6 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
 import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
-import javafx.scene.Parent;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
@@ -230,30 +228,20 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         };
     }
 
-    public int getDisplayedRowCount() {
-        int n = 0;
-        for(LineCell<S> cell: visibleCells) {
-            if(isFullyVisible(cell))
-                ++n;
-        }
-        return n;
+    public void showAsFirst(int index) {
+        listView.showAsFirst(index);
     }
 
-    private boolean isFullyVisible(LineCell<S> cell) {
-        listView.requestLayout();
-        Parent p = cell.getParent();
-        if(p == null) {
-            // throw new AssertionError();
-            System.err.println("Warning: Could not determine line's visibility, because it's cell has no parent");
-            return true;
-        }
-        Parent clip = p.getParent(); // XXX: just a guess that this is the clip
-        Bounds clipBounds = clip.getBoundsInLocal();
-        Bounds boundsInClip = p.localToParent(cell.getBoundsInParent());
-//        System.out.println();
-//        System.out.println("clipBounds: " + clipBounds);
-//        System.out.println("cellBounds: " + boundsInClip);
-        return clipBounds.contains(boundsInClip);
+    public void showAsLast(int index) {
+        listView.showAsLast(index);
+    }
+
+    public int getFirstVisibleIndex() {
+        return listView.getFirstVisibleIndex();
+    }
+
+    public int getLastVisibleIndex() {
+        return listView.getLastVisibleIndex();
     }
 
     @Override

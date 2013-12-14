@@ -26,9 +26,11 @@
 package codearea.skin;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.IndexedCell;
 import javafx.scene.control.ListView;
 
 import com.sun.javafx.scene.control.skin.VirtualFlow;
@@ -43,10 +45,45 @@ class MyListView<T> extends ListView<T> {
         withFlow(flow -> flow.show(index));
     }
 
+    public void showAsFirst(int index) {
+        withFlow(flow -> showAsFirst(flow, index));
+    }
+
+    public void showAsLast(int index) {
+        withFlow(flow -> showAsLast(flow, index));
+    }
+
+    public int getFirstVisibleIndex() {
+        return withFlow(f -> f.getFirstVisibleCell().getIndex(), -1);
+    }
+
+    public int getLastVisibleIndex() {
+        return withFlow(f -> f.getLastVisibleCell().getIndex(), -1);
+    }
+
+    private static <C extends IndexedCell<?>> void showAsFirst(VirtualFlow<C> flow, int index) {
+        flow.show(index);
+        C cell = flow.getVisibleCell(index);
+        assert cell != null;
+        flow.showAsFirst(cell);
+    }
+
+    private static <C extends IndexedCell<?>> void showAsLast(VirtualFlow<C> flow, int index) {
+        flow.show(index);
+        C cell = flow.getVisibleCell(index);
+        assert cell != null;
+        flow.showAsLast(cell);
+    }
+
     private void withFlow(Consumer<VirtualFlow<?>> f) {
         VirtualFlow<?> flow = getFlow();
         if(flow != null)
             f.accept(flow);
+    }
+
+    private <R> R withFlow(Function<VirtualFlow<?>, R> f, R orElse) {
+        VirtualFlow<?> flow = getFlow();
+        return flow != null ? f.apply(flow) : orElse;
     }
 
     private VirtualFlow<?> getFlow() {

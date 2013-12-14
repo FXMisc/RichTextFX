@@ -42,12 +42,12 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
+import codearea.control.Line;
 import codearea.control.StyledTextArea;
 import codearea.control.StyledTextAreaHelper;
 import codearea.control.StyledTextAreaHelper.SelectionPolicy;
-import codearea.control.Line;
-import codearea.skin.StyledTextAreaSkin;
 import codearea.skin.LineCell;
+import codearea.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.text.HitInfo;
@@ -344,13 +344,16 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         int targetRow = styledTextArea.caretRow.get() + nLines;
         targetRow = Math.min(targetRow, styledTextArea.getLines().size()-1);
         targetRow = Math.max(targetRow, 0);
-        if(targetRow == styledTextArea.caretRow.get())
-            return;
 
+        if(targetRow != styledTextArea.caretRow.get())
+            goToLine(targetRow, selectionPolicy);
+    }
+
+    private void goToLine(int index, SelectionPolicy selectionPolicy) {
         // compute new caret position
-        Line<S> targetLine = styledTextArea.getLines().get(targetRow);
+        Line<S> targetLine = styledTextArea.getLines().get(index);
         int targetCaretCol = Math.min(getTargetCaretColumn(), targetLine.length());
-        int newCaretPos = styledTextArea.getLineOffset(targetRow) + targetCaretCol;
+        int newCaretPos = styledTextArea.getLineOffset(index) + targetCaretCol;
 
         // update model
         styledTextAreaHelper.positionCaret(newCaretPos, selectionPolicy);
@@ -365,11 +368,17 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void previousPage(SelectionPolicy selectionPolicy) {
-        downLines(-skin.getDisplayedRowCount(), selectionPolicy);
+        int currentRow = styledTextArea.caretRow.get();
+        skin.showAsLast(currentRow);
+        int targetRow = skin.getFirstVisibleIndex();
+        goToLine(targetRow, selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        downLines(skin.getDisplayedRowCount(), selectionPolicy);
+        int currentRow = styledTextArea.caretRow.get();
+        skin.showAsFirst(currentRow);
+        int targetRow = skin.getLastVisibleIndex();
+        goToLine(targetRow, selectionPolicy);
     }
 
     @Override
