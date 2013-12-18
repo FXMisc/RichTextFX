@@ -43,9 +43,12 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
+import codearea.control.StringChange;
 import codearea.control.StyledTextArea;
 import codearea.skin.LineCell;
 import codearea.skin.StyledTextAreaSkin;
+import codearea.undo.UndoManager;
+import codearea.undo.impl.ObservingUndoManager;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.text.HitInfo;
@@ -113,7 +116,11 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         super(styledTextArea, CodeAreaBindings.BINDINGS);
 
         this.styledTextArea = styledTextArea;
-        this.undoManager = new UndoManager(styledTextArea);
+        this.undoManager = new ObservingUndoManager<StringChange>(
+                change -> styledTextArea.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted()), // redo lambda
+                change -> styledTextArea.replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved()), // undo lambda
+                (change1, change2) -> change1.mergeWith(change2), // merge lambda
+                styledTextArea.textChanges());
     }
 
     // XXX An unholy back-reference!
