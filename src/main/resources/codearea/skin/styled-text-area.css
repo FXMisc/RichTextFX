@@ -1,8 +1,12 @@
-.styled-text-area {
+.styled-text-area .list-view .clipped-container {
     -fx-cursor: text;
 }
 
 .styled-text-area .list-view .list-cell {
-    -fx-padding: 0;
+    -fx-padding: 2;
     -fx-background-color: transparent!important;
+}
+
+.styled-text-area .list-view {
+    -fx-padding: 0;
 }

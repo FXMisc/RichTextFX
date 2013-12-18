@@ -29,6 +29,7 @@ package codearea.control;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
@@ -95,9 +96,19 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
             pseudoClassStateChanged(PSEUDO_CLASS_READONLY, ! get());
         }
     };
-    public final boolean isEditable() { return editable.getValue(); }
-    public final void setEditable(boolean value) { editable.setValue(value); }
+    public final boolean isEditable() { return editable.get(); }
+    public final void setEditable(boolean value) { editable.set(value); }
     public final BooleanProperty editableProperty() { return editable; }
+
+    /**
+     * When a run of text exceeds the width of the text region,
+     * then this property indicates whether the text should wrap
+     * onto another line.
+     */
+    private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
+    public final boolean isWrapText() { return wrapText.get(); }
+    public final void setWrapText(boolean value) { wrapText.set(value); }
+    public final BooleanProperty wrapTextProperty() { return wrapText; }
 
     /**
      * The default font to use for text in the TextInputControl. If the TextInputControl's text is
@@ -324,6 +335,17 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      */
     public ObservableList<Line<S>> getLines() {
         return FXCollections.unmodifiableObservableList(content.lines);
+    }
+
+    /**
+     * @deprecated Temporary internal API.
+     */
+    @Deprecated
+    public void impl_resetLineRange(int from, int to) {
+        ListIterator<Line<S>> it = content.lines.subList(from, to).listIterator();
+        while(it.hasNext()) {
+            it.set(it.next());
+        }
     }
 
     /**

@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.IndexedCell;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -55,11 +56,29 @@ class MyListView<T> extends ListView<T> {
     }
 
     public int getFirstVisibleIndex() {
-        return withFlow(f -> f.getFirstVisibleCell().getIndex(), -1);
+        return withFlow(f -> {
+            ListCell<T> cell = f.getFirstVisibleCell();
+            return cell != null ? cell.getIndex() : -1;
+        }, -1);
     }
 
     public int getLastVisibleIndex() {
-        return withFlow(f -> f.getLastVisibleCell().getIndex(), -1);
+        return withFlow(f -> {
+            ListCell<T> cell = f.getLastVisibleCell();
+            return cell != null ? cell.getIndex() : -1;
+        }, -1);
+    }
+
+    public IndexRange getVisibleRange() {
+        return withFlow(f -> {
+            ListCell<T> first = f.getFirstVisibleCell();
+            ListCell<T> last = f.getLastVisibleCell();
+            if(first != null && last != null) {
+                return new IndexRange(first.getIndex(), last.getIndex() + 1);
+            } else {
+                return new IndexRange(0, 0);
+            }
+        }, new IndexRange(0, 0));
     }
 
     /**

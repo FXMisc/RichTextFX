@@ -34,7 +34,9 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
@@ -44,11 +46,13 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
 import javafx.event.EventHandler;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -103,6 +107,16 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     };
 
     private final MyListView<Line<S>> listView;
+    final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
+    private void updateWrapWidth() {
+        if(getSkinnable().isWrapText())
+            wrapWidth.bind(listView.widthProperty());
+        else {
+            wrapWidth.unbind();
+            wrapWidth.set(Region.USE_COMPUTED_SIZE); // no wrapping
+        }
+    }
+
     private final Set<LineCell<S>> visibleCells = new HashSet<>();
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
@@ -188,6 +202,18 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
                 return lineCell;
             }
+        });
+
+        // make wrapWidth behave according to the wrapText property
+        styledTextArea.wrapTextProperty().addListener(o -> updateWrapWidth());
+        updateWrapWidth();
+
+        // reset visible lines when wrap width changes
+        // XXX How else to make ListView resize the cells?
+        // See https://javafx-jira.kenai.com/browse/RT-34897
+        wrapWidth.addListener((obs, old, w) -> {
+            IndexRange visibleRange = listView.getVisibleRange();
+            styledTextArea.impl_resetLineRange(visibleRange.getStart(), visibleRange.getEnd());
         });
 
         // selected line reflects the caret row

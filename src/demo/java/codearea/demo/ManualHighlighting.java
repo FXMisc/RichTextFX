@@ -46,6 +46,9 @@ public class ManualHighlighting extends Application {
     }
 
     private final StyleClassedTextArea area = new StyleClassedTextArea();
+    {
+        area.setWrapText(true);
+    }
 
     @Override
     public void start(Stage primaryStage) {

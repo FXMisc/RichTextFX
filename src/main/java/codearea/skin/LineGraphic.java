@@ -37,7 +37,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.VPos;
 import javafx.scene.control.IndexRange;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
@@ -88,8 +87,6 @@ public class LineGraphic<S> extends TextFlow {
 
     public LineGraphic(Line<S> line, BiConsumer<Text, S> applyStyle) {
         this.line = line;
-
-        setPrefWidth(Region.USE_COMPUTED_SIZE); // no wrapping
 
         // selection highlight
         selectionShape.setManaged(false);

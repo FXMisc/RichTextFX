@@ -69,10 +69,12 @@ public class LineCell<S> extends ListCell<Line<S>> {
         if(!empty) {
             LineGraphic<S> lineGraphic = new LineGraphic<S>(item, applyStyle);
             lineGraphic.caretVisibleProperty().bind(caretVisible);
-
-            // highlightFill and highlightTextFill are taken from the skin
             lineGraphic.highlightFillProperty().bind(skin.highlightFill);
             lineGraphic.highlightTextFillProperty().bind(skin.highlightTextFill);
+
+            double wrapWidth = skin.wrapWidth.get() - snappedLeftInset() - snappedRightInset();
+            double prefWidth = Math.min(lineGraphic.prefWidth(-1), wrapWidth);
+            lineGraphic.setPrefWidth(prefWidth);
 
             setGraphic(lineGraphic);
         }
