@@ -29,7 +29,6 @@ package codearea.behavior;
 import java.util.ArrayList;
 
 import codearea.control.StyledTextArea;
-import codearea.control.TextChangeListener;
 
 class UndoManager {
 
@@ -97,12 +96,9 @@ class UndoManager {
      */
     UndoManager(StyledTextArea<?> styledTextArea) {
         this.styledTextArea = styledTextArea;
-        styledTextArea.textProperty().addListener(new TextChangeListener() {
-            @Override
-            public void handle(int pos, String removedText, String addedText) {
-                if(!modifyingText) // change is not coming from this UndoManager
-                    addChange(new Change(pos, removedText, addedText));
-            }
+        styledTextArea.textChanges().subscribe(change -> {
+            if(!modifyingText) // change is not coming from this UndoManager
+                addChange(new Change(change.getPosition(), change.getRemoved(), change.getInserted()));
         });
     }
 

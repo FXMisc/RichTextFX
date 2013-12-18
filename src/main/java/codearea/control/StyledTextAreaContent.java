@@ -35,11 +35,13 @@ import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyStringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import codearea.rx.PushSource;
+import codearea.rx.Source;
 
 /**
  * Code area content model.
  */
-final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implements ObservableTextValue {
+final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     final ObservableList<Line<S>> lines = FXCollections.observableArrayList();
 
     /**
@@ -61,16 +63,10 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implemen
     /*
      * text change events
      */
-    private final List<TextChangeListener> textChangeListeners = new ArrayList<>();
-    @Override public void addListener(TextChangeListener listener) {
-        textChangeListeners.add(listener);
-    }
-    @Override public void removeListener(TextChangeListener listener) {
-        textChangeListeners.remove(listener);
-    }
+    private final PushSource<StringChange> textChanges = new PushSource<>();
+    public Source<StringChange> textChanges() { return textChanges; }
     private void fireTextChange(int pos, String removedText, String addedText) {
-        for(TextChangeListener l: textChangeListeners)
-            l.handle(pos, removedText, addedText);
+        textChanges.push(new StringChange(pos, removedText, addedText));
     }
 
     StyledTextAreaContent(S initialStyle) {

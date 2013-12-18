@@ -47,6 +47,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -61,6 +62,7 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.Utils;
@@ -136,7 +138,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     private final StyledTextAreaContent<S> content;
     @Override public final String getText() { return content.get(); }
     public final String getText(int start, int end) { return content.get(start, end); }
-    public final ObservableTextValue textProperty() { return content; }
+    public final ObservableStringValue textProperty() { return content; }
+
+    /**
+     * Stream of text changes.
+     */
+    public final Source<StringChange> textChanges() { return content.textChanges(); }
 
     /**
      * The number of characters in the text input.
