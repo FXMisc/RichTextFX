@@ -48,7 +48,6 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
 import javafx.event.EventHandler;
-import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
@@ -209,14 +208,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // make wrapWidth behave according to the wrapText property
         styledTextArea.wrapTextProperty().addListener(o -> updateWrapWidth());
         updateWrapWidth();
-
-        // reset visible lines when wrap width changes
-        // XXX How else to make ListView resize the cells?
-        // See https://javafx-jira.kenai.com/browse/RT-34897
-        wrapWidth.addListener((obs, old, w) -> {
-            IndexRange visibleRange = listView.getVisibleRange();
-            styledTextArea.impl_resetLineRange(visibleRange.getStart(), visibleRange.getEnd());
-        });
 
         // selected line reflects the caret row
         styledTextArea.caretRow.addListener(new ChangeListener<Number>() {

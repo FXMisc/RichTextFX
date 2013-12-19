@@ -75,9 +75,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
             lineGraphic.highlightFillProperty().bind(skin.highlightFill);
             lineGraphic.highlightTextFillProperty().bind(skin.highlightTextFill);
 
-            double wrapWidth = getWrapWidth();
-            double prefWidth = Math.min(lineGraphic.prefWidth(-1), wrapWidth);
-            lineGraphic.setPrefWidth(prefWidth);
+            lineGraphic.setPrefWidth(0);
 
             setGraphic(lineGraphic);
         }
