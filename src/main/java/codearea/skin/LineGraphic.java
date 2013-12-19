@@ -156,23 +156,69 @@ public class LineGraphic<S> extends TextFlow {
         return highlightTextFill;
     }
 
-    public HitInfo hit(double x) {
-        // compute y as the vertical center of the text flow
-        Bounds bounds = getBoundsInLocal();
-        double y = (bounds.getMinY() + bounds.getMaxY()) / 2;
+    HitInfo hit(int lineIndex, double x) {
+        return hit(x, getLineCenter(lineIndex));
+    }
 
-        // hit
+    HitInfo hit(double x, double y) {
         HitInfo hit = textLayout().getHitInfo((float)x, (float)y);
 
         if(hit.getCharIndex() == line.length()) // clicked beyond the end of line
             hit.setLeading(true); // prevent going to the start of the next line
 
         return hit;
+
+    }
+
+    private double getLineCenter(int index) {
+        return verticalCenterOf(getLineSpans()[index]);
     }
 
     public double getCaretOffsetX() {
         Bounds bounds = caretShape.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
+    }
+
+    public int getLineCount() {
+        return getLineSpans().length;
+    }
+
+    private Bounds[] getLineSpans() {
+        return getLineSpans(0, line.length());
+    }
+
+    private Bounds[] getLineSpans(int minPos, int maxPos) {
+        Bounds first = getLineSpanAt(minPos);
+        Bounds last = getLineSpanAt(maxPos);
+
+        if(verticalCenterOf(last) < first.getMaxY()) {
+            return new Bounds[] { first };
+        } else {
+            int midPos = (minPos + maxPos) / 2;
+            if(midPos == minPos) {
+                return new Bounds[] { first, last };
+            } else {
+                Bounds[] left = getLineSpans(minPos, midPos);
+                Bounds[] right = getLineSpans(midPos, maxPos);
+                Bounds[] res = new Bounds[left.length + right.length-1];
+                System.arraycopy(left, 0, res, 0, left.length);
+                System.arraycopy(right, 1, res, left.length, right.length-1);
+                return res;
+            }
+        }
+    }
+
+    private Bounds getLineSpanAt(int position) {
+        Path caretAtPos = new Path(textLayout().getCaretShape(position, true, 0, 0));
+        return caretAtPos.getBoundsInLocal();
+    }
+
+    private static double verticalCenterOf(Bounds bounds) {
+        return (bounds.getMinY() + bounds.getMaxY()) / 2;
+    }
+
+    public int currentLineIndex() {
+        return getLineSpans(0, line.getCaretPosition()).length - 1;
     }
 
     private TextLayout textLayout() {

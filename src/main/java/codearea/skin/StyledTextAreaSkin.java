@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.IntFunction;
+import java.util.function.ToIntFunction;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.DoubleProperty;
@@ -60,6 +62,7 @@ import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Line;
 import codearea.control.StyledTextArea;
+import codearea.control.TwoLevelNavigator;
 
 import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
@@ -286,14 +289,34 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return selectedCell != null ? selectedCell.getCaretOffsetX() : 0;
     }
 
-    public HitInfo hit(int line, double x) {
-        return ((LineCell<S>) listView.getCell(line)).hit(x);
+    public HitInfo hit(TwoLevelNavigator<LineCell<S>>.Position targetLine, double x) {
+        return getCell(targetLine.getOuter()).hit(targetLine.getInner(), x);
+    }
+
+    public TwoLevelNavigator<LineCell<S>>.Position currentVisualLine() {
+        int currentLine = getSkinnable().caretRow.get();
+        int relativeVisualLine = getCell(currentLine).getCurrentLineIndex();
+
+        return position(currentLine, relativeVisualLine);
+    }
+
+    public TwoLevelNavigator<LineCell<S>>.Position position(int logicalLine, int visualLine) {
+        int cellCount = getSkinnable().getLines().size();
+        IntFunction<LineCell<S>> cellGetter = i -> getCell(i);
+        ToIntFunction<LineCell<S>> cellLength = cell -> cell.getLineCount();
+        TwoLevelNavigator<LineCell<S>> navigator = new TwoLevelNavigator<>(cellGetter, cellCount, cellLength);
+
+        return navigator.position(logicalLine, visualLine);
     }
 
     @Override
     public void dispose() {
         // TODO Unregister listeners on text editor, line list
         throw new UnsupportedOperationException();
+    }
+
+    private LineCell<S> getCell(int index) {
+        return (LineCell<S>) listView.getCell(index);
     }
 
     private static class StyleableProperties {

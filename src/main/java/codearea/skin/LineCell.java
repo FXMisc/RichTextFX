@@ -25,10 +25,12 @@
 
 package codearea.skin;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableBooleanValue;
+import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
@@ -58,12 +60,13 @@ public class LineCell<S> extends ListCell<Line<S>> {
         super.updateItem(item, empty);
 
         // dispose old LineNode (unregister listeners etc.)
-        LineGraphic<S> oldLineGraphic = getLineGraphic();
-        if(oldLineGraphic != null) {
-            oldLineGraphic.caretVisibleProperty().unbind();
-            oldLineGraphic.highlightFillProperty().unbind();
-            oldLineGraphic.highlightTextFillProperty().unbind();
-            oldLineGraphic.dispose();
+        Optional<LineGraphic<S>> oldGraphicOpt = tryGetLineGraphic();
+        if(oldGraphicOpt.isPresent()) {
+            LineGraphic<S> oldGraphic = oldGraphicOpt.get();
+            oldGraphic.caretVisibleProperty().unbind();
+            oldGraphic.highlightFillProperty().unbind();
+            oldGraphic.highlightTextFillProperty().unbind();
+            oldGraphic.dispose();
         }
 
         if(!empty) {
@@ -113,28 +116,32 @@ public class LineCell<S> extends ListCell<Line<S>> {
      * is returned.
      */
     public HitInfo hit(MouseEvent e) {
-        if(isEmpty()) // hit beyond the last line
+        if(isEmpty()) { // hit beyond the last line
             return hitEnd();
-        else
-            return hit(e.getX() - getLineGraphic().getLayoutX());
+        } else {
+            LineGraphic<S> textFlow = getLineGraphic();
+            HitInfo hit = textFlow.hit(e.getX() - textFlow.getLayoutX(), e.getY());
+            return toGlobalHit(hit);
+        }
     }
 
     /**
-     * Hits the embedded TextFlow at the given x offset.
-     * The returned character index is an index within the whole text content
-     * of the code area, not relative to this cell.
+     * Hits the embedded TextFlow at the given line and x offset.
+     * The returned character index is an index within the whole text
+     * content of the code area rather than relative to this cell.
      *
      * If this cell is empty, then the position at the end of text content
      * is returned.
      */
-    HitInfo hit(double x) {
-        if(isEmpty())
-            throw new AssertionError("shouldn't happen");
+    HitInfo hit(int visualLine, double x) {
+        // obtain HitInfo relative to this line
+        HitInfo hit = getLineGraphic().hit(visualLine, x);
 
-        // get hit in the clicked line
-        LineGraphic<S> lineGraphic = getLineGraphic();
-        HitInfo hit = lineGraphic.hit(x);
+        // add line offset
+        return toGlobalHit(hit);
+    }
 
+    private HitInfo toGlobalHit(HitInfo hit) {
         // add line offset
         hit.setCharIndex(skin.getSkinnable().getLineOffset(getIndex()) + hit.getCharIndex());
 
@@ -153,8 +160,30 @@ public class LineCell<S> extends ListCell<Line<S>> {
         return graphic != null ? graphic.getCaretOffsetX() : 0;
     }
 
-    @SuppressWarnings("unchecked")
     private LineGraphic<S> getLineGraphic() {
-        return (LineGraphic<S>) getGraphic();
+        Optional<LineGraphic<S>> graphic = tryGetLineGraphic();
+        if(graphic.isPresent()) {
+            return graphic.get();
+        } else {
+            throw new AssertionError("There's no graphic in this cell");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Optional<LineGraphic<S>> tryGetLineGraphic() {
+        Node graphic = getGraphic();
+        if(graphic != null) {
+            return Optional.of((LineGraphic<S>) graphic);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public int getLineCount() {
+        return getLineGraphic().getLineCount();
+    }
+
+    public int getCurrentLineIndex() {
+        return getLineGraphic().currentLineIndex();
     }
 }
