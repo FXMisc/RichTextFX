@@ -52,7 +52,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -113,7 +112,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             wrapWidth.bind(listView.widthProperty());
         else {
             wrapWidth.unbind();
-            wrapWidth.set(Region.USE_COMPUTED_SIZE); // no wrapping
+            wrapWidth.set(Double.MAX_VALUE); // no wrapping
         }
     }
 

@@ -72,7 +72,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
             lineGraphic.highlightFillProperty().bind(skin.highlightFill);
             lineGraphic.highlightTextFillProperty().bind(skin.highlightTextFill);
 
-            double wrapWidth = skin.wrapWidth.get() - snappedLeftInset() - snappedRightInset();
+            double wrapWidth = getWrapWidth();
             double prefWidth = Math.min(lineGraphic.prefWidth(-1), wrapWidth);
             lineGraphic.setPrefWidth(prefWidth);
 
@@ -83,6 +83,25 @@ public class LineCell<S> extends ListCell<Line<S>> {
             if(getGraphic() != null)
                 throw new AssertionError();
         }
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        // XXX we cannot rely on the given width, because ListView does not pass
+        // the correct width (https://javafx-jira.kenai.com/browse/RT-35041)
+        // So we have to get the width by our own means.
+        width = getWrapWidth();
+
+        if(isEmpty()) {
+            // go big so that we don't need to construct too many empty cells
+            return 200;
+        } else {
+            return getLineGraphic().prefHeight(width) + snappedTopInset() + snappedBottomInset();
+        }
+    }
+
+    private double getWrapWidth() {
+        return skin.wrapWidth.get() - snappedLeftInset() - snappedRightInset();
     }
 
     /**
