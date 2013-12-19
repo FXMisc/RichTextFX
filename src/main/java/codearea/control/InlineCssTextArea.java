@@ -1,12 +1,12 @@
 package codearea.control;
 
 /**
- * Text area that uses inline style string to define style of text segments.
+ * Text area that uses inline css to define style of text segments.
  */
-public class InlineStyledTextArea extends StyledTextArea<String> {
+public class InlineCssTextArea extends InlineStyleTextArea<String> {
 
-    public InlineStyledTextArea() {
-        super("", (text, style) -> text.setStyle(style));
+    public InlineCssTextArea() {
+        super("", css -> css);
     }
 
     /**
@@ -15,7 +15,7 @@ public class InlineStyledTextArea extends StyledTextArea<String> {
      *
      * @param text Initial text content.
      */
-    public InlineStyledTextArea(String text) {
+    public InlineCssTextArea(String text) {
         this();
 
         replaceText(0, 0, text);
