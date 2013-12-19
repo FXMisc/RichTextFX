@@ -29,7 +29,6 @@ package codearea.control;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
@@ -335,17 +334,6 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      */
     public ObservableList<Line<S>> getLines() {
         return FXCollections.unmodifiableObservableList(content.lines);
-    }
-
-    /**
-     * @deprecated Temporary internal API.
-     */
-    @Deprecated
-    public void impl_resetLineRange(int from, int to) {
-        ListIterator<Line<S>> it = content.lines.subList(from, to).listIterator();
-        while(it.hasNext()) {
-            it.set(it.next());
-        }
     }
 
     /**
