@@ -43,13 +43,10 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
-import codearea.control.StringChange;
 import codearea.control.StyledTextArea;
 import codearea.control.TwoLevelNavigator;
 import codearea.skin.LineCell;
 import codearea.skin.StyledTextAreaSkin;
-import codearea.undo.UndoManager;
-import codearea.undo.impl.ObservingUndoManager;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.text.HitInfo;
@@ -86,8 +83,6 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
      */
     private KeyEvent lastEvent;
 
-    private final UndoManager undoManager;
-
     private StyledTextAreaSkin<S> skin;
     private final ContextMenu contextMenu = new ContextMenu();
 
@@ -115,13 +110,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     public CodeAreaBehavior(StyledTextArea<S> styledTextArea) {
         super(styledTextArea, CodeAreaBindings.BINDINGS);
-
         this.styledTextArea = styledTextArea;
-        this.undoManager = new ObservingUndoManager<StringChange>(
-                change -> styledTextArea.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted()), // redo lambda
-                change -> styledTextArea.replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved()), // undo lambda
-                (change1, change2) -> change1.mergeWith(change2), // merge lambda
-                styledTextArea.textChanges());
     }
 
     // XXX An unholy back-reference!
@@ -226,8 +215,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
             case Copy: styledTextArea.copy(); break;
             case Paste: styledTextArea.paste(); break;
 
-            case Undo: undoManager.undo(); break;
-            case Redo: undoManager.redo(); break;
+            case Undo: styledTextArea.getUndoManager().undo(); break;
+            case Redo: styledTextArea.getUndoManager().redo(); break;
 
             case SelectAll: styledTextArea.selectAll(); break;
             case Unselect: styledTextArea.deselect(); break;
@@ -524,14 +513,6 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         }
     }
 
-    public boolean canUndo() {
-        return undoManager.canUndo();
-    }
-
-    public boolean canRedo() {
-        return undoManager.canRedo();
-    }
-
     class ContextMenuItem extends MenuItem {
         ContextMenuItem(final String action) {
             super(getString("TextInputControl.menu." + action));
@@ -563,8 +544,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         } else {
             items.setAll(copyMI, separatorMI, selectAllMI);
         }
-        undoMI.setDisable(!canUndo());
-        redoMI.setDisable(!canRedo());
+        undoMI.setDisable(!styledTextArea.getUndoManager().canUndo());
+        redoMI.setDisable(!styledTextArea.getUndoManager().canRedo());
         cutMI.setDisable(!hasSelection);
         copyMI.setDisable(!hasSelection);
         pasteMI.setDisable(!Clipboard.getSystemClipboard().hasString());

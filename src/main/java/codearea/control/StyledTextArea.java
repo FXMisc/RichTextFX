@@ -64,6 +64,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
+import codearea.undo.UndoManager;
+import codearea.undo.impl.ObservingUndoManager;
 
 import com.sun.javafx.Utils;
 
@@ -154,6 +156,13 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      * Stream of text changes.
      */
     public final Source<StringChange> textChanges() { return content.textChanges(); }
+
+    /**
+     * Return undo manager that can be used to undo/redo changes
+     * of this text area's content.
+     */
+    public UndoManager getUndoManager() { return undoManager; }
+    private final UndoManager undoManager;
 
     /**
      * The number of characters in the text input.
@@ -254,6 +263,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
         content = new StyledTextAreaContent<>(initialStyle);
+
+        undoManager = new ObservingUndoManager<StringChange>(
+                change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted()), // redo lambda
+                change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved()), // undo lambda
+                (change1, change2) -> change1.mergeWith(change2), // merge lambda
+                textChanges());
 
         ObservableValue<int[]> caretPosition2D = new ObjectBinding<int[]>() {
             { bind(caretPosition); }
