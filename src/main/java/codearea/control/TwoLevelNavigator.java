@@ -2,6 +2,7 @@ package codearea.control;
 
 import java.util.List;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
 
 public class TwoLevelNavigator<T> {
@@ -29,7 +30,7 @@ public class TwoLevelNavigator<T> {
         }
 
         public Position clamp() {
-            if(outer == elemCount-1) {
+            if(outer == elemCount.getAsInt() - 1) {
                 int elemLen = elemLength.applyAsInt(elems.apply(outer));
                 if(inner < elemLen) {
                     return this;
@@ -56,7 +57,8 @@ public class TwoLevelNavigator<T> {
             int outer = this.outer;
             int curElemLength = elemLength.applyAsInt(elems.apply(outer));
 
-            while(outer < elemCount-1) {
+            int elemCount = TwoLevelNavigator.this.elemCount.getAsInt();
+            while(outer < elemCount - 1) {
                 if(offset < curElemLength + spacing) {
                     return new Position(outer, offset);
                 } else {
@@ -67,7 +69,7 @@ public class TwoLevelNavigator<T> {
             }
 
             // now the position is either in the last high-level element or beyond
-            return new Position(elemCount-1, offset);
+            return new Position(elemCount - 1, offset);
         }
 
         private Position backward(int offset) {
@@ -90,7 +92,7 @@ public class TwoLevelNavigator<T> {
     }
 
     private final IntFunction<T> elems;
-    private final int elemCount;
+    private final IntSupplier elemCount;
     private final ToIntFunction<T> elemLength;
     private int spacing;
 
@@ -99,14 +101,14 @@ public class TwoLevelNavigator<T> {
     }
 
     public TwoLevelNavigator(List<T> highLevelElems, ToIntFunction<T> elemLength, int spacing) {
-        this(i -> highLevelElems.get(i), highLevelElems.size(), elemLength, 0);
+        this(i -> highLevelElems.get(i), () -> highLevelElems.size(), elemLength, 0);
     }
 
-    public TwoLevelNavigator(IntFunction<T> highLevelElems, int elemCount, ToIntFunction<T> elemLength) {
+    public TwoLevelNavigator(IntFunction<T> highLevelElems, IntSupplier elemCount, ToIntFunction<T> elemLength) {
         this(highLevelElems, elemCount, elemLength, 0);
     }
 
-    public TwoLevelNavigator(IntFunction<T> highLevelElems, int elemCount, ToIntFunction<T> elemLength, int spacing) {
+    public TwoLevelNavigator(IntFunction<T> highLevelElems, IntSupplier elemCount, ToIntFunction<T> elemLength, int spacing) {
         this.elems = highLevelElems;
         this.elemCount = elemCount;
         this.elemLength = elemLength;

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
 
 import javafx.beans.binding.BooleanBinding;
@@ -127,9 +128,19 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     // i.e. the cell with the caret
     private LineCell<S> selectedCell = null;
 
+    // used for two-level navigation, where on the outer level are
+    // logical lines (paragraphs) and on the inner level are visual lines
+    private final TwoLevelNavigator<LineCell<S>> navigator;
+
     public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
+
+        // initialize navigator
+        IntFunction<LineCell<S>> cellGetter = i -> getCell(i);
+        IntSupplier cellCount = () -> getSkinnable().getLines().size();
+        ToIntFunction<LineCell<S>> cellLength = cell -> cell.getLineCount();
+        navigator = new TwoLevelNavigator<>(cellGetter, cellCount, cellLength);
 
         // load the default style
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
@@ -292,11 +303,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     public TwoLevelNavigator<LineCell<S>>.Position position(int logicalLine, int visualLine) {
-        int cellCount = getSkinnable().getLines().size();
-        IntFunction<LineCell<S>> cellGetter = i -> getCell(i);
-        ToIntFunction<LineCell<S>> cellLength = cell -> cell.getLineCount();
-        TwoLevelNavigator<LineCell<S>> navigator = new TwoLevelNavigator<>(cellGetter, cellCount, cellLength);
-
         return navigator.position(logicalLine, visualLine);
     }
 

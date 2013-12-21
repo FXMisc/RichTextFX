@@ -62,6 +62,7 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import codearea.control.TwoLevelNavigator.Position;
 import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
 import codearea.undo.UndoManager;
@@ -270,12 +271,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
                 (change1, change2) -> change1.mergeWith(change2), // merge lambda
                 textChanges());
 
-        ObservableValue<int[]> caretPosition2D = new ObjectBinding<int[]>() {
+        ObservableValue<Position> caretPosition2D = new ObjectBinding<Position>() {
             { bind(caretPosition); }
 
             @Override
-            protected int[] computeValue() {
-                return content.positionToRowAndCol(caretPosition.get());
+            protected Position computeValue() {
+                return content.position(caretPosition.get());
             }
         };
 
@@ -284,7 +285,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
             @Override
             protected int computeValue() {
-                return caretPosition2D.getValue()[0];
+                return caretPosition2D.getValue().getOuter();
             }
         };
 
@@ -293,7 +294,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
             @Override
             protected int computeValue() {
-                return caretPosition2D.getValue()[1];
+                return caretPosition2D.getValue().getInner();
             }
         };
 

@@ -34,9 +34,12 @@ import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.IndexRange;
+import codearea.control.TwoLevelNavigator.Position;
 
 public final class Line<S> {
     private final List<StyledString<S>> segments = new ArrayList<>();
+    private final TwoLevelNavigator<StyledString<S>> navigator =
+            new TwoLevelNavigator<>(segments, seg -> seg.length());
 
     // selection proprety
     private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection", new IndexRange(0, 0));
@@ -79,16 +82,11 @@ public final class Line<S> {
     }
 
     public char charAt(int index) {
-        if(index < 0)
-            throw new IndexOutOfBoundsException();
+        if(index < 0 || index >= length())
+            throw new IndexOutOfBoundsException(String.valueOf(index));
 
-        for(StyledString<S> seg: segments)
-            if(seg.length() > index)
-                return seg.charAt(index);
-            else
-                index -= seg.length();
-
-        throw new IndexOutOfBoundsException();
+        Position pos = navigator.offset(index);
+        return segments.get(pos.getOuter()).charAt(pos.getInner());
     }
 
     public void appendFrom(Line<S> line) {
@@ -111,37 +109,21 @@ public final class Line<S> {
     }
 
     public void insert(int offset, CharSequence str) {
-        if(offset < 0)
-            throw new IndexOutOfBoundsException();
+        if(offset < 0 || offset > length())
+            throw new IndexOutOfBoundsException(String.valueOf(offset));
 
-        for(int i=0, n=segments.size(); i < n; ++i) {
-            StyledString<S> seg = segments.get(i);
-            if(seg.length() >= offset) {
-                segments.set(i, seg.spliced(offset, offset, str));
-                return;
-            }
-            else
-                offset -= seg.length();
-        }
-
-        throw new IndexOutOfBoundsException();
+        Position pos = navigator.offset(offset);
+        StyledString<S> seg = segments.get(pos.getOuter());
+        segments.set(pos.getOuter(), seg.spliced(pos.getInner(), pos.getInner(), str));
     }
 
     public void delete(int start, int end) {
-        int i=0, offset=0;
-        int seglen = segments.get(i).length();
-        while(start > offset+seglen) {
-            offset += seglen;
-            seglen = segments.get(++i).length();
-        }
-        int firstSegIdx = i;
-        int firstSegStart = start-offset;
-        while(end > offset+seglen) {
-            offset += seglen;
-            seglen = segments.get(++i).length();
-        }
-        int lastSegIdx = i;
-        int lastSegEnd = end-offset;
+        Position start2D = navigator.offset(start);
+        Position end2D = start2D.offsetBy(end - start);
+        int firstSegIdx = start2D.getOuter();
+        int firstSegStart = start2D.getInner();
+        int lastSegIdx = end2D.getOuter();
+        int lastSegEnd = end2D.getInner();
 
         if(firstSegIdx == lastSegIdx) {
             StyledString<S> seg = segments.get(firstSegIdx);
@@ -202,19 +184,11 @@ public final class Line<S> {
      * If {@code charIdx >= this.length()}, returns the style at the end of this line.
      */
     public S getStyleAt(int charIdx) {
-        int l = length();
         if(charIdx < 0)
             return getLeadingStyle();
-        if(charIdx >= l)
-            return getTrailingStyle();
 
-        for(StyledString<S> seg: segments)
-            if(seg.length() > charIdx)
-                return seg.getStyle();
-            else
-                charIdx -= seg.length();
-
-        throw new AssertionError("Unreachable code");
+        Position pos = navigator.offset(charIdx);
+        return segments.get(pos.getOuter()).getStyle();
     }
 
     private S getLeadingStyle() {
@@ -226,24 +200,20 @@ public final class Line<S> {
     }
 
     private int splitAt(int pos) {
-        return splitAt(0, pos);
-    }
+        if(pos == length())
+            return segments.size();
 
-    private int splitAt(int segIdx, int pos) {
-        if(pos == 0)
-            return segIdx;
-
+        Position pos2D = navigator.offset(pos);
+        int segIdx = pos2D.getOuter();
+        int segPos = pos2D.getInner();
         StyledString<S> segment = segments.get(segIdx);
-        if(segment.length() < pos) {
-            return splitAt(segIdx+1, pos - segment.length());
-        }
-        else {
-            if(segment.length() > pos) {
-                StyledString<S> left = segment.subSequence(0, pos);
-                StyledString<S> right = segment.subSequence(pos, segment.length());
-                segments.set(segIdx, left);
-                segments.add(segIdx+1, right);
-            }
+        if(segPos == 0) {
+            return segIdx;
+        } else {
+            StyledString<S> left = segment.subSequence(0, segPos);
+            StyledString<S> right = segment.subSequence(segPos, segment.length());
+            segments.set(segIdx, left);
+            segments.add(segIdx+1, right);
             return segIdx+1;
         }
     }

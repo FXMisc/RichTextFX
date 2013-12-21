@@ -35,6 +35,7 @@ import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyStringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import codearea.control.TwoLevelNavigator.Position;
 import codearea.rx.PushSource;
 import codearea.rx.Source;
 
@@ -43,6 +44,9 @@ import codearea.rx.Source;
  */
 final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     final ObservableList<Line<S>> lines = FXCollections.observableArrayList();
+
+    private final TwoLevelNavigator<Line<S>> navigator =
+            new TwoLevelNavigator<>(lines, line -> line.length(), 1);
 
     /**
      * stores the last value returned by get().
@@ -143,11 +147,12 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         if (replacement == null)
             throw new NullPointerException("replacement text is null");
 
-        int[] range2D = rangeToRowAndCol(start, end);
-        int leadingLineIndex = range2D[0];
-        int leadingLineFrom = range2D[1];
-        int trailingLineIndex = range2D[2];
-        int trailingLineTo = range2D[3];
+        Position start2D = navigator.offset(start);
+        Position end2D = start2D.offsetBy(end - start);
+        int leadingLineIndex = start2D.getOuter();
+        int leadingLineFrom = start2D.getInner();
+        int trailingLineIndex = end2D.getOuter();
+        int trailingLineTo = end2D.getInner();
 
         replacement = filterInput(replacement);
         String replacedText = get(start, end);
@@ -201,11 +206,12 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     }
 
     public void setStyle(int from, int to, S style) {
-        int[] range2D = rangeToRowAndCol(from, to);
-        int firstLineIndex = range2D[0];
-        int firstLineFrom = range2D[1];
-        int lastLineIndex = range2D[2];
-        int lastLineTo = range2D[3];
+        Position start = navigator.offset(from);
+        Position end = start.offsetBy(to - from);
+        int firstLineIndex = start.getOuter();
+        int firstLineFrom = start.getInner();
+        int lastLineIndex = end.getOuter();
+        int lastLineTo = end.getInner();
 
         if(from == to)
             return;
@@ -236,9 +242,9 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     }
 
     public S getStyleAt(int pos) {
-        int[] pos2D = positionToRowAndCol(pos);
-        int line = pos2D[0];
-        int col = pos2D[1];
+        Position pos2D = navigator.offset(pos);
+        int line = pos2D.getOuter();
+        int col = pos2D.getInner();
         return lines.get(line).getStyleAt(col);
     }
 
@@ -246,38 +252,8 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         return lines.get(line).getStyleAt(column);
     }
 
-    int[] positionToRowAndCol(int pos) {
-        return positionToRowAndCol(pos, 0);
-    }
-
-    private int[] rangeToRowAndCol(int start, int end) {
-        if (start > end)
-            throw new IllegalArgumentException(
-                    "end has to be greater than or equal to start"
-                    + " (start: " + start + ", end: " + end + ")");
-
-        if (start < 0 || end > contentLength)
-            throw new IndexOutOfBoundsException();
-
-        int[] start2D = positionToRowAndCol(start);
-        int startRow = start2D[0];
-        int startCol = start2D[1];
-
-        int startRowOffset = start - startCol;
-        int[] end2D = positionToRowAndCol(end - startRowOffset, startRow);
-        int endRow = end2D[0];
-        int endCol = end2D[1];
-
-        return new int[]{ startRow, startCol, endRow, endCol };
-    }
-
-    private int[] positionToRowAndCol(int pos, int fromLine) {
-        Line<S> line = lines.get(fromLine);
-        while(pos >= line.length()+1) {
-            pos -= line.length()+1;
-            line = lines.get(++fromLine);
-        }
-        return new int[]{ fromLine, pos };
+    TwoLevelNavigator<Line<S>>.Position position(int pos) {
+        return navigator.offset(pos);
     }
 
     /**
