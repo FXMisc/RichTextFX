@@ -34,11 +34,11 @@ import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
-import codearea.control.Line;
+import codearea.control.Paragraph;
 
 import com.sun.javafx.scene.text.HitInfo;
 
-public class LineCell<S> extends ListCell<Line<S>> {
+public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     private final StyledTextAreaSkin<S> skin;
 
@@ -46,7 +46,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
 
     private final BiConsumer<Text, S> applyStyle;
 
-    public LineCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
+    public ParagraphCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
         this.skin = skin;
         this.applyStyle = applyStyle;
 
@@ -56,13 +56,13 @@ public class LineCell<S> extends ListCell<Line<S>> {
     }
 
     @Override
-    protected void updateItem(Line<S> item, boolean empty) {
+    protected void updateItem(Paragraph<S> item, boolean empty) {
         super.updateItem(item, empty);
 
         // dispose old LineNode (unregister listeners etc.)
-        Optional<LineGraphic<S>> oldGraphicOpt = tryGetLineGraphic();
+        Optional<ParagraphGraphic<S>> oldGraphicOpt = tryGetParagraphGraphic();
         if(oldGraphicOpt.isPresent()) {
-            LineGraphic<S> oldGraphic = oldGraphicOpt.get();
+            ParagraphGraphic<S> oldGraphic = oldGraphicOpt.get();
             oldGraphic.caretVisibleProperty().unbind();
             oldGraphic.highlightFillProperty().unbind();
             oldGraphic.highlightTextFillProperty().unbind();
@@ -70,19 +70,17 @@ public class LineCell<S> extends ListCell<Line<S>> {
         }
 
         if(!empty) {
-            LineGraphic<S> lineGraphic = new LineGraphic<S>(item, applyStyle);
-            lineGraphic.caretVisibleProperty().bind(caretVisible);
-            lineGraphic.highlightFillProperty().bind(skin.highlightFill);
-            lineGraphic.highlightTextFillProperty().bind(skin.highlightTextFill);
+            ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
+            graphic.caretVisibleProperty().bind(caretVisible);
+            graphic.highlightFillProperty().bind(skin.highlightFill);
+            graphic.highlightTextFillProperty().bind(skin.highlightTextFill);
 
-            lineGraphic.setPrefWidth(0);
+            graphic.setPrefWidth(0);
 
-            setGraphic(lineGraphic);
+            setGraphic(graphic);
         }
         else {
             setGraphic(null);
-            if(getGraphic() != null)
-                throw new AssertionError();
         }
     }
 
@@ -97,7 +95,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
             // go big so that we don't need to construct too many empty cells
             return 200;
         } else {
-            return getLineGraphic().prefHeight(width) + snappedTopInset() + snappedBottomInset();
+            return getParagraphGraphic().prefHeight(width) + snappedTopInset() + snappedBottomInset();
         }
     }
 
@@ -117,7 +115,7 @@ public class LineCell<S> extends ListCell<Line<S>> {
         if(isEmpty()) { // hit beyond the last line
             return hitEnd();
         } else {
-            LineGraphic<S> textFlow = getLineGraphic();
+            ParagraphGraphic<S> textFlow = getParagraphGraphic();
             HitInfo hit = textFlow.hit(e.getX() - textFlow.getLayoutX(), e.getY());
             return toGlobalHit(hit);
         }
@@ -131,9 +129,9 @@ public class LineCell<S> extends ListCell<Line<S>> {
      * If this cell is empty, then the position at the end of text content
      * is returned.
      */
-    HitInfo hit(int visualLine, double x) {
-        // obtain HitInfo relative to this line
-        HitInfo hit = getLineGraphic().hit(visualLine, x);
+    HitInfo hit(int line, double x) {
+        // obtain HitInfo relative to this paragraph
+        HitInfo hit = getParagraphGraphic().hit(line, x);
 
         // add line offset
         return toGlobalHit(hit);
@@ -154,12 +152,12 @@ public class LineCell<S> extends ListCell<Line<S>> {
     }
 
     public double getCaretOffsetX() {
-        LineGraphic<S> graphic = getLineGraphic();
+        ParagraphGraphic<S> graphic = getParagraphGraphic();
         return graphic != null ? graphic.getCaretOffsetX() : 0;
     }
 
-    private LineGraphic<S> getLineGraphic() {
-        Optional<LineGraphic<S>> graphic = tryGetLineGraphic();
+    private ParagraphGraphic<S> getParagraphGraphic() {
+        Optional<ParagraphGraphic<S>> graphic = tryGetParagraphGraphic();
         if(graphic.isPresent()) {
             return graphic.get();
         } else {
@@ -168,20 +166,20 @@ public class LineCell<S> extends ListCell<Line<S>> {
     }
 
     @SuppressWarnings("unchecked")
-    private Optional<LineGraphic<S>> tryGetLineGraphic() {
+    private Optional<ParagraphGraphic<S>> tryGetParagraphGraphic() {
         Node graphic = getGraphic();
         if(graphic != null) {
-            return Optional.of((LineGraphic<S>) graphic);
+            return Optional.of((ParagraphGraphic<S>) graphic);
         } else {
             return Optional.empty();
         }
     }
 
     public int getLineCount() {
-        return getLineGraphic().getLineCount();
+        return getParagraphGraphic().getLineCount();
     }
 
     public int getCurrentLineIndex() {
-        return getLineGraphic().currentLineIndex();
+        return getParagraphGraphic().currentLineIndex();
     }
 }

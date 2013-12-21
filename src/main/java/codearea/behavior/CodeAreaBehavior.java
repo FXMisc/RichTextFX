@@ -45,7 +45,7 @@ import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
 import codearea.control.StyledTextArea;
 import codearea.control.TwoLevelNavigator;
-import codearea.skin.LineCell;
+import codearea.skin.ParagraphCell;
 import codearea.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
@@ -333,14 +333,14 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void downLines(int nLines, SelectionPolicy selectionPolicy) {
-        TwoLevelNavigator<LineCell<S>>.Position currentLine = skin.currentVisualLine();
-        TwoLevelNavigator<LineCell<S>>.Position targetLine = currentLine.offsetBy(nLines).clamp();
+        TwoLevelNavigator<ParagraphCell<S>>.Position currentLine = skin.currentLine();
+        TwoLevelNavigator<ParagraphCell<S>>.Position targetLine = currentLine.offsetBy(nLines).clamp();
         if(!currentLine.sameAs(targetLine)) {
-            goToVisualLine(targetLine, selectionPolicy);
+            goToLine(targetLine, selectionPolicy);
         }
     }
 
-    private void goToVisualLine(TwoLevelNavigator<LineCell<S>>.Position targetLine, SelectionPolicy selectionPolicy) {
+    private void goToLine(TwoLevelNavigator<ParagraphCell<S>>.Position targetLine, SelectionPolicy selectionPolicy) {
         // compute new caret position
         HitInfo hit = skin.hit(targetLine, getTargetCaretOffset());
         int newCaretPos = hit.getInsertionIndex();
@@ -361,14 +361,14 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         int currentRow = styledTextArea.caretRow.get();
         skin.showAsLast(currentRow);
         int targetRow = skin.getFirstVisibleIndex();
-        goToVisualLine(skin.position(targetRow, 0), selectionPolicy);
+        goToLine(skin.position(targetRow, 0), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
         int currentRow = styledTextArea.caretRow.get();
         skin.showAsFirst(currentRow);
         int targetRow = skin.getLastVisibleIndex();
-        goToVisualLine(skin.position(targetRow, 0), selectionPolicy);
+        goToLine(skin.position(targetRow, 0), selectionPolicy);
     }
 
     @Override
@@ -393,7 +393,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void leftPress(MouseEvent e) {
-        LineCell<S> lineCell = (LineCell<S>) e.getSource();
+        ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
         HitInfo hit = lineCell.hit(e);
 
         if(e.isShiftDown()) {
@@ -471,7 +471,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
             return;
 
         // get the position within text
-        LineCell<S> lineCell = (LineCell<S>) e.getSource();
+        ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
         HitInfo hit = lineCell.hit(e);
 
         if (dragSelection == DragState.DRAG) {
@@ -487,7 +487,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                LineCell<S> lineCell = (LineCell<S>) e.getSource();
+                ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
                 HitInfo hit = lineCell.hit(e);
                 styledTextArea.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
@@ -506,7 +506,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
         if(dragSelection == DragState.DRAG) {
             // get the position within text
-            LineCell<S> lineCell = (LineCell<S>) e.getSource();
+            ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
             HitInfo hit = lineCell.hit(e);
 
             styledTextArea.moveSelectedText(hit.getInsertionIndex());

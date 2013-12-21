@@ -156,7 +156,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     /**
      * Stream of text changes.
      */
-    public final Source<StringChange> textChanges() { return content.textChanges(); }
+    public final Source<TextChange> textChanges() { return content.textChanges(); }
 
     /**
      * Return undo manager that can be used to undo/redo changes
@@ -207,7 +207,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
             public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldRange, IndexRange newRange) {
                 int start = newRange.getStart();
                 int end = newRange.getEnd();
-                for (Line<S> line: content.lines) {
+                for (Paragraph<S> line: content.paragraphs) {
                     int lineLen = line.length();
                     if (end > start && start < lineLen) {
                         line.setSelection(start, Math.min(end, lineLen));
@@ -265,7 +265,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
         this.applyStyle = applyStyle;
         content = new StyledTextAreaContent<>(initialStyle);
 
-        undoManager = new ObservingUndoManager<StringChange>(
+        undoManager = new ObservingUndoManager<TextChange>(
                 change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted()), // redo lambda
                 change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved()), // undo lambda
                 (change1, change2) -> change1.mergeWith(change2), // merge lambda
@@ -285,7 +285,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
             @Override
             protected int computeValue() {
-                return caretPosition2D.getValue().getOuter();
+                return caretPosition2D.getValue().getMajor();
             }
         };
 
@@ -294,18 +294,18 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
             @Override
             protected int computeValue() {
-                return caretPosition2D.getValue().getInner();
+                return caretPosition2D.getValue().getMinor();
             }
         };
 
         // The line with the caret.
-        ObservableObjectValue<Line<S>> currentLine = new ObjectBinding<Line<S>>() {
-            { bind(caretRow, content.lines); }
+        ObservableObjectValue<Paragraph<S>> currentLine = new ObjectBinding<Paragraph<S>>() {
+            { bind(caretRow, content.paragraphs); }
 
             @Override
-            protected Line<S> computeValue() {
-                int i = Math.min(caretRow.get(), content.lines.size()-1); // in case lines were removed before updating caretRow
-                return content.lines.get(i);
+            protected Paragraph<S> computeValue() {
+                int i = Math.min(caretRow.get(), content.paragraphs.size()-1); // in case lines were removed before updating caretRow
+                return content.paragraphs.get(i);
             }
         };
 
@@ -341,15 +341,15 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
     @Override
     public String getLine(int index) {
-        return content.lines.get(index).toString();
+        return content.paragraphs.get(index).toString();
     }
 
     /**
      * Returns an unmodifiable list of lines
      * that back this code area's content.
      */
-    public ObservableList<Line<S>> getLines() {
-        return FXCollections.unmodifiableObservableList(content.lines);
+    public ObservableList<Paragraph<S>> getLines() {
+        return FXCollections.unmodifiableObservableList(content.paragraphs);
     }
 
     /**
@@ -441,7 +441,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     public int getLineOffset(int lineNum) {
         int offset = 0;
         for(int i=0; i<lineNum; ++i)
-            offset += content.lines.get(i).length() + 1;
+            offset += content.paragraphs.get(i).length() + 1;
         return offset;
     }
 

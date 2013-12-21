@@ -43,13 +43,13 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import codearea.control.Line;
-import codearea.control.StyledString;
+import codearea.control.Paragraph;
+import codearea.control.StyledText;
 
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 
-public class LineGraphic<S> extends TextFlow {
+public class ParagraphGraphic<S> extends TextFlow {
 
     private static Method mGetTextLayout;
     static {
@@ -66,7 +66,7 @@ public class LineGraphic<S> extends TextFlow {
     // properly for Text node inside a TextFlow (as of JDK8-b100).
     private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
 
-    private final Line<S> line;
+    private final Paragraph<S> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -85,8 +85,8 @@ public class LineGraphic<S> extends TextFlow {
         }
     };
 
-    public LineGraphic(Line<S> line, BiConsumer<Text, S> applyStyle) {
-        this.line = line;
+    public ParagraphGraphic(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
+        this.paragraph = par;
 
         // selection highlight
         selectionShape.setManaged(false);
@@ -111,7 +111,7 @@ public class LineGraphic<S> extends TextFlow {
 //        });
 
         // populate with text nodes
-        for(StyledString<S> segment: line.getSegments()) {
+        for(StyledText<S> segment: par.getSegments()) {
             Text t = new Text(segment.toString());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
@@ -131,17 +131,17 @@ public class LineGraphic<S> extends TextFlow {
         }
 
         // keep caret position up to date
-        line.caretPositionProperty().addListener(updateCaretShape);
+        par.caretPositionProperty().addListener(updateCaretShape);
         updateCaretShape();
 
         // keep selection up to date
-        line.selectionProperty().addListener(updateSelectionShape);
+        par.selectionProperty().addListener(updateSelectionShape);
         updateSelectionShape();
     }
 
     public void dispose() {
-        line.caretPositionProperty().removeListener(updateCaretShape);
-        line.selectionProperty().removeListener(updateSelectionShape);
+        paragraph.caretPositionProperty().removeListener(updateCaretShape);
+        paragraph.selectionProperty().removeListener(updateSelectionShape);
     }
 
     public BooleanProperty caretVisibleProperty() {
@@ -163,7 +163,7 @@ public class LineGraphic<S> extends TextFlow {
     HitInfo hit(double x, double y) {
         HitInfo hit = textLayout().getHitInfo((float)x, (float)y);
 
-        if(hit.getCharIndex() == line.length()) // clicked beyond the end of line
+        if(hit.getCharIndex() == paragraph.length()) // clicked beyond the end of line
             hit.setLeading(true); // prevent going to the start of the next line
 
         return hit;
@@ -184,7 +184,7 @@ public class LineGraphic<S> extends TextFlow {
     }
 
     private Bounds[] getLineSpans() {
-        return getLineSpans(0, line.length());
+        return getLineSpans(0, paragraph.length());
     }
 
     private Bounds[] getLineSpans(int minPos, int maxPos) {
@@ -218,7 +218,7 @@ public class LineGraphic<S> extends TextFlow {
     }
 
     public int currentLineIndex() {
-        return getLineSpans(0, line.getCaretPosition()).length - 1;
+        return getLineSpans(0, paragraph.getCaretPosition()).length - 1;
     }
 
     private TextLayout textLayout() {
@@ -231,12 +231,12 @@ public class LineGraphic<S> extends TextFlow {
     }
 
     private void updateCaretShape() {
-        PathElement[] shape = textLayout().getCaretShape(line.getCaretPosition(), true, 0, 0);
+        PathElement[] shape = textLayout().getCaretShape(paragraph.getCaretPosition(), true, 0, 0);
         caretShape.getElements().setAll(shape);
     }
 
     private void updateSelectionShape() {
-        IndexRange selection = line.getSelection();
+        IndexRange selection = paragraph.getSelection();
         PathElement[] shape = textLayout().getRange(selection.getStart(), selection.getEnd(), TextLayout.TYPE_TEXT, 0, 0);
         selectionShape.getElements().setAll(shape);
     }

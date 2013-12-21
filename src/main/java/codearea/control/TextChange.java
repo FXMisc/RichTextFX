@@ -2,13 +2,13 @@ package codearea.control;
 
 import java.util.Optional;
 
-public class StringChange {
+public class TextChange {
 
     private final int position;
     private final String removed;
     private final String inserted;
 
-    public StringChange(int position, String removed, String inserted) {
+    public TextChange(int position, String removed, String inserted) {
         this.position = position;
         this.removed = removed;
         this.inserted = inserted;
@@ -31,20 +31,20 @@ public class StringChange {
      * @return a new merged change if changes can be merged,
      * {@code null} otherwise.
      */
-    public Optional<StringChange> mergeWith(StringChange latter) {
+    public Optional<TextChange> mergeWith(TextChange latter) {
         if(latter.position == this.position + this.inserted.length()) {
             String removedText = this.removed + latter.removed;
             String addedText = this.inserted + latter.inserted;
-            return Optional.of(new StringChange(this.position, removedText, addedText));
+            return Optional.of(new TextChange(this.position, removedText, addedText));
         }
         else if(latter.position + latter.removed.length() == this.position + this.inserted.length()) {
             if(this.position <= latter.position) {
                 String addedText = this.inserted.substring(0, latter.position - this.position) + latter.inserted;
-                return Optional.of(new StringChange(this.position, this.removed, addedText));
+                return Optional.of(new TextChange(this.position, this.removed, addedText));
             }
             else {
                 String removedText = latter.removed.substring(0, this.position - latter.position) + this.removed;
-                return Optional.of(new StringChange(latter.position, removedText, latter.inserted));
+                return Optional.of(new TextChange(latter.position, removedText, latter.inserted));
             }
         }
         else {

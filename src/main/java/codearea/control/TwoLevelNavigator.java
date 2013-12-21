@@ -8,34 +8,34 @@ import java.util.function.ToIntFunction;
 public class TwoLevelNavigator<T> {
 
     public class Position {
-        private final int outer;
-        private final int inner;
+        private final int major;
+        private final int minor;
 
-        private Position(int outer, int inner) {
-            this.outer = outer;
-            this.inner = inner;
+        private Position(int major, int minor) {
+            this.major = major;
+            this.minor = minor;
         }
 
         public boolean sameAs(TwoLevelNavigator<T>.Position other) {
             // XXX we should also check that they come from the same navigator
-            return outer == other.outer && inner == other.inner;
+            return major == other.major && minor == other.minor;
         }
 
-        public int getOuter() {
-            return outer;
+        public int getMajor() {
+            return major;
         }
 
-        public int getInner() {
-            return inner;
+        public int getMinor() {
+            return minor;
         }
 
         public Position clamp() {
-            if(outer == elemCount.getAsInt() - 1) {
-                int elemLen = elemLength.applyAsInt(elems.apply(outer));
-                if(inner < elemLen) {
+            if(major == elemCount.getAsInt() - 1) {
+                int elemLen = elemLength.applyAsInt(elems.apply(major));
+                if(minor < elemLen) {
                     return this;
                 } else {
-                    return new Position(outer, elemLen-1);
+                    return new Position(major, elemLen-1);
                 }
             } else {
                 return this;
@@ -53,18 +53,18 @@ public class TwoLevelNavigator<T> {
         }
 
         private Position forward(int offset) {
-            offset += inner;
-            int outer = this.outer;
-            int curElemLength = elemLength.applyAsInt(elems.apply(outer));
+            offset += minor;
+            int major = this.major;
+            int curElemLength = elemLength.applyAsInt(elems.apply(major));
 
             int elemCount = TwoLevelNavigator.this.elemCount.getAsInt();
-            while(outer < elemCount - 1) {
+            while(major < elemCount - 1) {
                 if(offset < curElemLength + spacing) {
-                    return new Position(outer, offset);
+                    return new Position(major, offset);
                 } else {
                     offset -= curElemLength + spacing;
-                    outer += 1;
-                    curElemLength = elemLength.applyAsInt(elems.apply(outer));
+                    major += 1;
+                    curElemLength = elemLength.applyAsInt(elems.apply(major));
                 }
             }
 
@@ -73,17 +73,17 @@ public class TwoLevelNavigator<T> {
         }
 
         private Position backward(int offset) {
-            int inner = this.inner;
-            int outer = this.outer;
-            while(offset > inner && outer > 0) {
-                offset -= inner;
-                outer -= 1; // move to the previous element
+            int minor = this.minor;
+            int major = this.major;
+            while(offset > minor && major > 0) {
+                offset -= minor;
+                major -= 1; // move to the previous element
                 // set inner position to the end of the previous element
-                inner = elemLength.applyAsInt(elems.apply(outer)) + spacing;
+                minor = elemLength.applyAsInt(elems.apply(major)) + spacing;
             }
 
-            if(offset <= inner) {
-                return new Position(outer, inner - offset);
+            if(offset <= minor) {
+                return new Position(major, minor - offset);
             } else {
                 // we went beyond the start
                 return new Position(0, 0);
@@ -101,7 +101,7 @@ public class TwoLevelNavigator<T> {
     }
 
     public TwoLevelNavigator(List<T> highLevelElems, ToIntFunction<T> elemLength, int spacing) {
-        this(i -> highLevelElems.get(i), () -> highLevelElems.size(), elemLength, 0);
+        this(i -> highLevelElems.get(i), () -> highLevelElems.size(), elemLength, spacing);
     }
 
     public TwoLevelNavigator(IntFunction<T> highLevelElems, IntSupplier elemCount, ToIntFunction<T> elemLength) {

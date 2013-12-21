@@ -60,7 +60,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
-import codearea.control.Line;
+import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;
 import codearea.control.TwoLevelNavigator;
 
@@ -108,7 +108,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     };
 
-    private final MyListView<Line<S>> listView;
+    private final MyListView<Paragraph<S>> listView;
     final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
     private void updateWrapWidth() {
         if(getSkinnable().isWrapText())
@@ -119,100 +119,100 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     }
 
-    private final Set<LineCell<S>> visibleCells = new HashSet<>();
+    private final Set<ParagraphCell<S>> visibleCells = new HashSet<>();
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
 
     // keeps track of the currently selected cell,
     // i.e. the cell with the caret
-    private LineCell<S> selectedCell = null;
+    private ParagraphCell<S> selectedCell = null;
 
-    // used for two-level navigation, where on the outer level are
-    // logical lines (paragraphs) and on the inner level are visual lines
-    private final TwoLevelNavigator<LineCell<S>> navigator;
+    // used for two-level navigation, where on the higher level are
+    // paragraphs and on the lower level are lines within a paragraph
+    private final TwoLevelNavigator<ParagraphCell<S>> navigator;
 
     public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
         // initialize navigator
-        IntFunction<LineCell<S>> cellGetter = i -> getCell(i);
+        IntFunction<ParagraphCell<S>> cellGetter = i -> getCell(i);
         IntSupplier cellCount = () -> getSkinnable().getLines().size();
-        ToIntFunction<LineCell<S>> cellLength = cell -> cell.getLineCount();
+        ToIntFunction<ParagraphCell<S>> cellLength = cell -> cell.getLineCount();
         navigator = new TwoLevelNavigator<>(cellGetter, cellCount, cellLength);
 
         // load the default style
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
         // Initialize content
-        listView = new MyListView<Line<S>>(styledTextArea.getLines());
+        listView = new MyListView<Paragraph<S>>(styledTextArea.getLines());
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
-        listView.setCellFactory(new Callback<ListView<Line<S>>, ListCell<Line<S>>>() {
+        listView.setCellFactory(new Callback<ListView<Paragraph<S>>, ListCell<Paragraph<S>>>() {
             @Override
-            public ListCell<Line<S>> call(final ListView<Line<S>> listView) {
-                final LineCell<S> lineCell = new LineCell<S>(StyledTextAreaSkin.this, applyStyle);
+            public ListCell<Paragraph<S>> call(final ListView<Paragraph<S>> listView) {
+                final ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
 
                 // keep track of visible cells
-                lineCell.emptyProperty().addListener(new ChangeListener<Boolean>() {
+                cell.emptyProperty().addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable,
                             Boolean wasEmpty, Boolean isEmpty) {
                         if(isEmpty)
-                            visibleCells.remove(lineCell);
+                            visibleCells.remove(cell);
                         else
-                            visibleCells.add(lineCell);
+                            visibleCells.add(cell);
                     }
                 });
 
-                lineCell.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                cell.selectedProperty().addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> o, Boolean old, Boolean selected) {
                         if(selected)
-                            selectedCell = lineCell;
+                            selectedCell = cell;
                     }
                 });
 
                 // listen to mouse events on lines
-                lineCell.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+                cell.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
                     @Override public void handle(MouseEvent event) {
                         getBehavior().mousePressed(event);
                         event.consume();
                     }
                 });
-                lineCell.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
+                cell.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
                         // startFullDrag() causes subsequent drag events to be
                         // received by corresponding LineCells, instead of all
                         // events being delivered to the original LineCell.
-                        lineCell.getScene().startFullDrag();
+                        cell.getScene().startFullDrag();
                         getBehavior().dragDetected(event);
                         event.consume();
                     }
                 });
-                lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, new EventHandler<MouseDragEvent>() {
+                cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, new EventHandler<MouseDragEvent>() {
                     @Override public void handle(MouseDragEvent event) {
                         getBehavior().mouseDragOver(event);
                         event.consume();
                     }
                 });
-                lineCell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
+                cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
                     @Override public void handle(MouseDragEvent event) {
                         getBehavior().mouseDragReleased(event);
                         event.consume();
                     }
                 });
-                lineCell.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
+                cell.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override public void handle(MouseEvent event) {
                         getBehavior().mouseReleased(event);
                         event.consume();
                     }
                 });
 
-                return lineCell;
+                return cell;
             }
         });
 
@@ -237,10 +237,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // listViews listener on the same list. For this reason, we cannot
         // use InvalidationListener, since that one would be called before
         // change listeners.
-        listView.getItems().addListener(new ListChangeListener<Line<S>>() {
+        listView.getItems().addListener(new ListChangeListener<Paragraph<S>>() {
             @Override
             public void onChanged(
-                    javafx.collections.ListChangeListener.Change<? extends Line<S>> arg0) {
+                    javafx.collections.ListChangeListener.Change<? extends Paragraph<S>> arg0) {
                 listView.getSelectionModel().select(styledTextArea.caretRow.get());
             }
         });
@@ -291,19 +291,24 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return selectedCell != null ? selectedCell.getCaretOffsetX() : 0;
     }
 
-    public HitInfo hit(TwoLevelNavigator<LineCell<S>>.Position targetLine, double x) {
-        return getCell(targetLine.getOuter()).hit(targetLine.getInner(), x);
+    public HitInfo hit(TwoLevelNavigator<ParagraphCell<S>>.Position targetLine, double x) {
+        return getCell(targetLine.getMajor()).hit(targetLine.getMinor(), x);
     }
 
-    public TwoLevelNavigator<LineCell<S>>.Position currentVisualLine() {
-        int currentLine = getSkinnable().caretRow.get();
-        int relativeVisualLine = getCell(currentLine).getCurrentLineIndex();
+    /**
+     * Returns the current line as a two-level index.
+     * The major number is the paragraph index, the minor
+     * number is the line number within the paragraph.
+     */
+    public TwoLevelNavigator<ParagraphCell<S>>.Position currentLine() {
+        int parIdx = getSkinnable().caretRow.get();
+        int lineIdx = getCell(parIdx).getCurrentLineIndex();
 
-        return position(currentLine, relativeVisualLine);
+        return position(parIdx, lineIdx);
     }
 
-    public TwoLevelNavigator<LineCell<S>>.Position position(int logicalLine, int visualLine) {
-        return navigator.position(logicalLine, visualLine);
+    public TwoLevelNavigator<ParagraphCell<S>>.Position position(int par, int line) {
+        return navigator.position(par, line);
     }
 
     @Override
@@ -312,8 +317,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         throw new UnsupportedOperationException();
     }
 
-    private LineCell<S> getCell(int index) {
-        return (LineCell<S>) listView.getCell(index);
+    private ParagraphCell<S> getCell(int index) {
+        return (ParagraphCell<S>) listView.getCell(index);
     }
 
     private static class StyleableProperties {

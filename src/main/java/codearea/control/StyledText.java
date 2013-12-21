@@ -27,11 +27,11 @@ package codearea.control;
 
 import java.util.stream.IntStream;
 
-public class StyledString<S> implements CharSequence {
+public class StyledText<S> implements CharSequence {
     private final String text;
     private S style;
 
-    public StyledString(String text, S style) {
+    public StyledText(String text, S style) {
         this.text = text;
         this.style= style;
     }
@@ -52,8 +52,8 @@ public class StyledString<S> implements CharSequence {
     }
 
     @Override
-    public StyledString<S> subSequence(int start, int end) {
-        return new StyledString<S>(text.substring(start, end), style);
+    public StyledText<S> subSequence(int start, int end) {
+        return new StyledText<S>(text.substring(start, end), style);
     }
 
     @Override
@@ -66,14 +66,14 @@ public class StyledString<S> implements CharSequence {
         return text.codePoints();
     }
 
-    public StyledString<S> concat(CharSequence str) {
-        return new StyledString<S>(text + str, style);
+    public StyledText<S> concat(CharSequence str) {
+        return new StyledText<S>(text + str, style);
     }
 
-    public StyledString<S> spliced(int from, int to, CharSequence replacement) {
+    public StyledText<S> spliced(int from, int to, CharSequence replacement) {
         String left = text.substring(0, from);
         String right = text.substring(to);
-        return new StyledString<S>(left + replacement + right, style);
+        return new StyledText<S>(left + replacement + right, style);
     }
 
     public S getStyle() {

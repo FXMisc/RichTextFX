@@ -43,10 +43,11 @@ import codearea.rx.Source;
  * Code area content model.
  */
 final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
-    final ObservableList<Line<S>> lines = FXCollections.observableArrayList();
+    final ObservableList<Paragraph<S>> paragraphs =
+            FXCollections.observableArrayList();
 
-    private final TwoLevelNavigator<Line<S>> navigator =
-            new TwoLevelNavigator<>(lines, line -> line.length(), 1);
+    private final TwoLevelNavigator<Paragraph<S>> navigator =
+            new TwoLevelNavigator<>(paragraphs, p -> p.length(), 1);
 
     /**
      * stores the last value returned by get().
@@ -67,14 +68,14 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     /*
      * text change events
      */
-    private final PushSource<StringChange> textChanges = new PushSource<>();
-    public Source<StringChange> textChanges() { return textChanges; }
+    private final PushSource<TextChange> textChanges = new PushSource<>();
+    public Source<TextChange> textChanges() { return textChanges; }
     private void fireTextChange(int pos, String removedText, String addedText) {
-        textChanges.push(new StringChange(pos, removedText, addedText));
+        textChanges.push(new TextChange(pos, removedText, addedText));
     }
 
     StyledTextAreaContent(S initialStyle) {
-        lines.add(new Line<S>("", initialStyle));
+        paragraphs.add(new Paragraph<S>("", initialStyle));
 
         this.addListener(new InvalidationListener() {
             @Override
@@ -111,36 +112,36 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
 
     public String get(int start, int end) {
         int length = end - start;
-        StringBuilder textBuilder = new StringBuilder(length);
+        StringBuilder sb = new StringBuilder(length);
 
-        int lineCount = lines.size();
-        int lineIndex = 0;
-        while (lineIndex < lineCount) {
-            Line<S> line = lines.get(lineIndex);
-            int lineLen = line.length() + 1;
+        Position start2D = navigator.offset(start);
+        Position end2D = start2D.offsetBy(length);
+        int p1 = start2D.getMajor();
+        int col1 = start2D.getMinor();
+        int p2 = end2D.getMajor();
+        int col2 = end2D.getMinor();
 
-            if (start < lineLen)
-                break;
+        if(p1 == p2) {
+            sb.append(paragraphs.get(p1).substring(col1, col2));
+        } else {
+            sb.append(paragraphs.get(p1).substring(col1));
+            sb.append('\n');
 
-            start -= lineLen;
-            lineIndex++;
-        }
-
-        // Read characters until end is reached, appending to text builder
-        // and moving to next line as needed
-        Line<S> line = lines.get(lineIndex);
-
-        for(int i = 0; i < length; ++i) {
-            if (start == line.length()) {
-                textBuilder.append('\n');
-                line = lines.get(++lineIndex);
-                start = 0;
-            } else {
-                textBuilder.append(line.charAt(start++));
+            for(int i = p1 + 1; i < p2; ++i) {
+                sb.append(paragraphs.get(i).toString());
+                sb.append('\n');
             }
+
+            sb.append(paragraphs.get(p2).substring(0, col2));
         }
 
-        return textBuilder.toString();
+        // If we were instructed to go beyond the end in a non-last paragraph,
+        // we omitted a newline. Add it back.
+        if(col2 > paragraphs.get(p2).length() && p2 < paragraphs.size() - 1) {
+            sb.append('\n');
+        }
+
+        return sb.toString();
     }
 
     public void replaceText(int start, int end, String replacement) {
@@ -149,19 +150,19 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
 
         Position start2D = navigator.offset(start);
         Position end2D = start2D.offsetBy(end - start);
-        int leadingLineIndex = start2D.getOuter();
-        int leadingLineFrom = start2D.getInner();
-        int trailingLineIndex = end2D.getOuter();
-        int trailingLineTo = end2D.getInner();
+        int leadingLineIndex = start2D.getMajor();
+        int leadingLineFrom = start2D.getMinor();
+        int trailingLineIndex = end2D.getMajor();
+        int trailingLineTo = end2D.getMinor();
 
         replacement = filterInput(replacement);
         String replacedText = get(start, end);
 
         // Get the leftovers after cutting out the deletion
-        Line<S> leadingLine = lines.get(leadingLineIndex);
-        Line<S> trailingLine = lines.get(trailingLineIndex);
-        Line<S> left = leadingLine.split(leadingLineFrom)[0];
-        Line<S> right = trailingLine.split(trailingLineTo)[1];
+        Paragraph<S> leadingLine = paragraphs.get(leadingLineIndex);
+        Paragraph<S> trailingLine = paragraphs.get(trailingLineIndex);
+        Paragraph<S> left = leadingLine.split(leadingLineFrom)[0];
+        Paragraph<S> right = trailingLine.split(trailingLineTo)[1];
 
         String[] replacementLines = replacement.split("\n", -1);
         int n = replacementLines.length;
@@ -176,8 +177,8 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
 
             // replace the affected liens with the merger of leftovers and the replacement line
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            lines.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            lines.remove(leadingLineIndex+1, trailingLineIndex+1);
+            paragraphs.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(leadingLineIndex+1, trailingLineIndex+1);
         }
         else {
             // append the first replacement line to the left leftover
@@ -186,16 +187,16 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
             right.insert(0, replacementLines[n-1]);
 
             // create list of new lines to replace the affected lines
-            List<Line<S>> newLines = new ArrayList<>(n-1);
+            List<Paragraph<S>> newLines = new ArrayList<>(n-1);
             for(int i = 1; i < n - 1; ++i)
-                newLines.add(new Line<S>(replacementLines[i], replacementStyle));
+                newLines.add(new Paragraph<S>(replacementLines[i], replacementStyle));
             newLines.add(right);
 
             // replace the affected lines with the new lines
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            lines.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            lines.remove(leadingLineIndex+1, trailingLineIndex+1);
-            lines.addAll(leadingLineIndex+1, newLines);
+            paragraphs.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(leadingLineIndex+1, trailingLineIndex+1);
+            paragraphs.addAll(leadingLineIndex+1, newLines);
         }
 
         // Update content length
@@ -208,10 +209,10 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     public void setStyle(int from, int to, S style) {
         Position start = navigator.offset(from);
         Position end = start.offsetBy(to - from);
-        int firstLineIndex = start.getOuter();
-        int firstLineFrom = start.getInner();
-        int lastLineIndex = end.getOuter();
-        int lastLineTo = end.getInner();
+        int firstLineIndex = start.getMajor();
+        int firstLineFrom = start.getMinor();
+        int lastLineIndex = end.getMajor();
+        int lastLineTo = end.getMinor();
 
         if(from == to)
             return;
@@ -220,7 +221,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
             setStyle(firstLineIndex, firstLineFrom, lastLineTo, style);
         }
         else {
-            int firstLineLen = lines.get(firstLineIndex).length();
+            int firstLineLen = paragraphs.get(firstLineIndex).length();
             setStyle(firstLineIndex, firstLineFrom, firstLineLen, style);
             for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
                 setStyle(i, style);
@@ -229,30 +230,30 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         }
     }
 
-    public void setStyle(int line, S style) {
-        Line<S> l = lines.get(line);
-        l.setStyle(style);
-        lines.set(line, l); // to generate change event
+    public void setStyle(int paragraph, S style) {
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p.setStyle(style);
+        paragraphs.set(paragraph, p); // to generate change event
     }
 
-    public void setStyle(int line, int fromCol, int toCol, S style) {
-        Line<S> l = lines.get(line);
-        l.setStyle(fromCol, toCol, style);
-        lines.set(line, l); // to generate change event
+    public void setStyle(int paragraph, int fromCol, int toCol, S style) {
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p.setStyle(fromCol, toCol, style);
+        paragraphs.set(paragraph, p); // to generate change event
     }
 
     public S getStyleAt(int pos) {
         Position pos2D = navigator.offset(pos);
-        int line = pos2D.getOuter();
-        int col = pos2D.getInner();
-        return lines.get(line).getStyleAt(col);
+        int line = pos2D.getMajor();
+        int col = pos2D.getMinor();
+        return paragraphs.get(line).getStyleAt(col);
     }
 
-    public S getStyleAt(int line, int column) {
-        return lines.get(line).getStyleAt(column);
+    public S getStyleAt(int paragraph, int column) {
+        return paragraphs.get(paragraph).getStyleAt(column);
     }
 
-    TwoLevelNavigator<Line<S>>.Position position(int pos) {
+    TwoLevelNavigator<Paragraph<S>>.Position position(int pos) {
         return navigator.offset(pos);
     }
 
