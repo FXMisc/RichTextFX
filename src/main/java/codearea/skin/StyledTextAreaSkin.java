@@ -28,9 +28,7 @@ package codearea.skin;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
@@ -119,8 +117,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     }
 
-    private final Set<ParagraphCell<S>> visibleCells = new HashSet<>();
-
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
     final ObservableBooleanValue caretVisible;
 
@@ -154,18 +150,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             @Override
             public ListCell<Paragraph<S>> call(final ListView<Paragraph<S>> listView) {
                 final ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
-
-                // keep track of visible cells
-                cell.emptyProperty().addListener(new ChangeListener<Boolean>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> observable,
-                            Boolean wasEmpty, Boolean isEmpty) {
-                        if(isEmpty)
-                            visibleCells.remove(cell);
-                        else
-                            visibleCells.add(cell);
-                    }
-                });
 
                 cell.selectedProperty().addListener(new ChangeListener<Boolean>() {
                     @Override
