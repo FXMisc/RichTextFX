@@ -207,7 +207,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      */
     public final ObservableIntegerValue caretRow;
     @Override
-    public final int getCaretLine() { return caretRow.get(); }
+    public final int getCurrentParagraph() { return caretRow.get(); }
 
     /**
      * Caret position relative to the current row.
@@ -313,38 +313,45 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
         getStyleClass().add("styled-text-area");
     }
 
+
+    /***************************************************************************
+     *                                                                         *
+     * Methods                                                                 *
+     *                                                                         *
+     **************************************************************************/
+
     @Override
-    public String getLine(int index) {
-        return content.paragraphs.get(index).toString();
+    public String getText(int paragraph) {
+        return content.paragraphs.get(paragraph).toString();
     }
 
     /**
-     * Returns an unmodifiable list of lines
+     * Returns an unmodifiable list of paragraphs
      * that back this code area's content.
      */
-    public ObservableList<Paragraph<S>> getLines() {
+    public ObservableList<Paragraph<S>> getParagraphs() {
         return FXCollections.unmodifiableObservableList(content.paragraphs);
     }
 
     /**
-     * Sets style for the given range of offsets.
+     * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
     }
 
     /**
-     * Sets style for the whole line.
+     * Sets style for the whole paragraph.
      */
-    public void setStyle(int line, S style) {
-        content.setStyle(line, style);
+    public void setStyle(int paragraph, S style) {
+        content.setStyle(paragraph, style);
     }
 
     /**
-     * Sets style for the given column range on the given line.
+     * Sets style for the given range relative in the given paragraph.
      */
-    public void setStyle(int line, int fromCol, int toCol, S style) {
-        content.setStyle(line, fromCol, toCol, style);
+    public void setStyle(int paragraph, int from, int to, S style) {
+        content.setStyle(paragraph, from, to, style);
     }
 
     /**
@@ -355,18 +362,18 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     }
 
     /**
-     * Resets the style of the given line to the initial style.
+     * Resets the style of the given paragraph to the initial style.
      */
-    public void clearStyle(int line) {
-        setStyle(line, initialStyle);
+    public void clearStyle(int paragraph) {
+        setStyle(paragraph, initialStyle);
     }
 
     /**
-     * Resets the style of the given column range on the given line
+     * Resets the style of the given range in the given paragraph
      * to the initial style.
      */
-    public void clearStyle(int line, int formCol, int toCol) {
-        setStyle(line, formCol, toCol, initialStyle);
+    public void clearStyle(int paragraph, int from, int to) {
+        setStyle(paragraph, from, to, initialStyle);
     }
 
     /**
@@ -377,20 +384,14 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     }
 
     /**
-     * Returns the style of the character in the given column at the given
-     * line. If {@code column} is beyond the end of the line, the style at
-     * the end of line is returned. If {@code column} is negative, it is
-     * the same as if it was 0.
+     * Returns the style of the character at the given position in the given
+     * paragraph. If {@code pos} is beyond the end of the paragraph, the style
+     * at the end of line is returned. If {@code pos} is negative, it is the
+     * same as if it was 0.
      */
-    public S getStyleAt(int line, int column) {
-        return content.getStyleAt(line, column);
+    public S getStyleAt(int paragraph, int pos) {
+        return content.getStyleAt(paragraph, pos);
     }
-
-    /***************************************************************************
-     *                                                                         *
-     * Methods                                                                 *
-     *                                                                         *
-     **************************************************************************/
 
     /** {@inheritDoc} */
     @Override protected Skin<?> createDefaultSkin() {
@@ -409,12 +410,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     }
 
     /**
-     * Returns the character offset of the line at the given number,
-     * i.e. the sum of lengths of all previous lines, including newlines.
+     * Returns the character offset of the paragraph with the given index,
+     * i.e. the sum of lengths of all previous paragraphs, including newlines.
      */
-    public int getLineOffset(int lineNum) {
+    public int getParagraphOffset(int paragraph) {
         int offset = 0;
-        for(int i=0; i<lineNum; ++i)
+        for(int i=0; i<paragraph; ++i)
             offset += content.paragraphs.get(i).length() + 1;
         return offset;
     }

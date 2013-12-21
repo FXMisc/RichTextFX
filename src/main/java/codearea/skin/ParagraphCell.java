@@ -139,7 +139,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     private HitInfo toGlobalHit(HitInfo hit) {
         // add line offset
-        hit.setCharIndex(skin.getSkinnable().getLineOffset(getIndex()) + hit.getCharIndex());
+        hit.setCharIndex(skin.getSkinnable().getParagraphOffset(getIndex()) + hit.getCharIndex());
 
         return hit;
     }

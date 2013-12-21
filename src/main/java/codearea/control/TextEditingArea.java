@@ -41,14 +41,14 @@ public interface TextEditingArea {
     int getLength();
 
     /**
-     * Returns content of this text-editing area.
+     * Returns text content of this text-editing area.
      */
     String getText();
 
     /**
-     * Returns the given line of text.
+     * Returns text content of the given paragraph.
      */
-    String getLine(int index);
+    String getText(int paragraphIndex);
 
     /**
      * Returns the current caret position as an offset in the text.
@@ -56,9 +56,10 @@ public interface TextEditingArea {
     int getCaretPosition();
 
     /**
-     * Returns the line with the caret.
+     * Returns the index of the current paragraph,
+     * i.e. the paragraph with the caret.
      */
-    int getCaretLine();
+    int getCurrentParagraph();
 
     /**
      * Returns the caret's position within the current line.

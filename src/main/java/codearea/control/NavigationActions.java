@@ -161,7 +161,7 @@ public interface NavigationActions extends TextEditingArea {
      * Moves the caret to the end of the current line.
      */
     default void lineEnd(SelectionPolicy selectionPolicy) {
-        int lineLen = getLine(getCaretLine()).length();
+        int lineLen = getText(getCurrentParagraph()).length();
         int newPos = getCaretPosition() - getCaretColumn() + lineLen;
         positionCaret(newPos, selectionPolicy);
     }

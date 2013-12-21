@@ -133,7 +133,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         getBehavior().setCodeAreaSkin(this);
 
         // initialize navigator
-        IntSupplier cellCount = () -> getSkinnable().getLines().size();
+        IntSupplier cellCount = () -> getSkinnable().getParagraphs().size();
         IntUnaryOperator cellLength = i -> getCell(i).getLineCount();
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
@@ -141,7 +141,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
         // Initialize content
-        listView = new MyListView<Paragraph<S>>(styledTextArea.getLines());
+        listView = new MyListView<Paragraph<S>>(styledTextArea.getParagraphs());
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
