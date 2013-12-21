@@ -46,8 +46,13 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     final ObservableList<Paragraph<S>> paragraphs =
             FXCollections.observableArrayList();
 
-    private final TwoLevelNavigator<Paragraph<S>> navigator =
-            new TwoLevelNavigator<>(paragraphs, p -> p.length(), 1);
+    private final TwoLevelNavigator navigator = new TwoLevelNavigator(
+            () -> paragraphs.size(),
+            i -> {
+                int len = paragraphs.get(i).length();
+                // add 1 for newline to every paragraph except last
+                return i == paragraphs.size()-1 ? len : len + 1;
+            });
 
     /**
      * stores the last value returned by get().
@@ -253,7 +258,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         return paragraphs.get(paragraph).getStyleAt(column);
     }
 
-    TwoLevelNavigator<Paragraph<S>>.Position position(int pos) {
+    Position position(int pos) {
         return navigator.offset(pos);
     }
 

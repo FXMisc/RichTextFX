@@ -38,8 +38,9 @@ import codearea.control.TwoLevelNavigator.Position;
 
 public final class Paragraph<S> {
     private final List<StyledText<S>> segments = new ArrayList<>();
-    private final TwoLevelNavigator<StyledText<S>> navigator =
-            new TwoLevelNavigator<>(segments, seg -> seg.length());
+    private final TwoLevelNavigator navigator = new TwoLevelNavigator(
+            () -> segments.size(),
+            i -> segments.get(i).length());
 
     // selection proprety
     private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection", new IndexRange(0, 0));

@@ -30,9 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
-import java.util.function.ToIntFunction;
+import java.util.function.IntUnaryOperator;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.DoubleProperty;
@@ -61,6 +60,7 @@ import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;
 import codearea.control.TwoLevelNavigator;
+import codearea.control.TwoLevelNavigator.Position;
 
 import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
@@ -126,17 +126,16 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
-    private final TwoLevelNavigator<ParagraphCell<S>> navigator;
+    private final TwoLevelNavigator navigator;
 
     public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
         // initialize navigator
-        IntFunction<ParagraphCell<S>> cellGetter = i -> getCell(i);
         IntSupplier cellCount = () -> getSkinnable().getLines().size();
-        ToIntFunction<ParagraphCell<S>> cellLength = cell -> cell.getLineCount();
-        navigator = new TwoLevelNavigator<>(cellGetter, cellCount, cellLength);
+        IntUnaryOperator cellLength = i -> getCell(i).getLineCount();
+        navigator = new TwoLevelNavigator(cellCount, cellLength);
 
         // load the default style
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
@@ -275,7 +274,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return selectedCell != null ? selectedCell.getCaretOffsetX() : 0;
     }
 
-    public HitInfo hit(TwoLevelNavigator<ParagraphCell<S>>.Position targetLine, double x) {
+    public HitInfo hit(Position targetLine, double x) {
         return getCell(targetLine.getMajor()).hit(targetLine.getMinor(), x);
     }
 
@@ -284,14 +283,14 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
      * The major number is the paragraph index, the minor
      * number is the line number within the paragraph.
      */
-    public TwoLevelNavigator<ParagraphCell<S>>.Position currentLine() {
+    public Position currentLine() {
         int parIdx = getSkinnable().caretRow.get();
         int lineIdx = getCell(parIdx).getCurrentLineIndex();
 
         return position(parIdx, lineIdx);
     }
 
-    public TwoLevelNavigator<ParagraphCell<S>>.Position position(int par, int line) {
+    public Position position(int par, int line) {
         return navigator.position(par, line);
     }
 

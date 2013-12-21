@@ -44,7 +44,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
 import codearea.control.StyledTextArea;
-import codearea.control.TwoLevelNavigator;
+import codearea.control.TwoLevelNavigator.Position;
 import codearea.skin.ParagraphCell;
 import codearea.skin.StyledTextAreaSkin;
 
@@ -333,14 +333,14 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void downLines(int nLines, SelectionPolicy selectionPolicy) {
-        TwoLevelNavigator<ParagraphCell<S>>.Position currentLine = skin.currentLine();
-        TwoLevelNavigator<ParagraphCell<S>>.Position targetLine = currentLine.offsetBy(nLines).clamp();
+        Position currentLine = skin.currentLine();
+        Position targetLine = currentLine.offsetBy(nLines).clamp();
         if(!currentLine.sameAs(targetLine)) {
             goToLine(targetLine, selectionPolicy);
         }
     }
 
-    private void goToLine(TwoLevelNavigator<ParagraphCell<S>>.Position targetLine, SelectionPolicy selectionPolicy) {
+    private void goToLine(Position targetLine, SelectionPolicy selectionPolicy) {
         // compute new caret position
         HitInfo hit = skin.hit(targetLine, getTargetCaretOffset());
         int newCaretPos = hit.getInsertionIndex();
