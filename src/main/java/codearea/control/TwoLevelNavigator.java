@@ -16,6 +16,11 @@ public class TwoLevelNavigator<T> {
             this.minor = minor;
         }
 
+        @Override
+        public String toString() {
+            return "(" + major + ", " + minor + ")";
+        }
+
         public boolean sameAs(TwoLevelNavigator<T>.Position other) {
             // XXX we should also check that they come from the same navigator
             return major == other.major && minor == other.minor;
