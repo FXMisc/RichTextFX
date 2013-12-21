@@ -26,8 +26,9 @@
 
 package codearea.control;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import static codearea.control.CssProperties.PSEUDO_CLASS_READONLY;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -52,16 +53,14 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
-import javafx.css.FontCssMetaData;
-import javafx.css.PseudoClass;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.css.StyleableProperty;
 import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import codearea.control.CssProperties.FontProperty;
 import codearea.control.TwoLevelNavigator.Position;
 import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
@@ -113,37 +112,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     public final BooleanProperty wrapTextProperty() { return wrapText; }
 
     /**
-     * The default font to use for text in the TextInputControl. If the TextInputControl's text is
-     * rich text then this font may or may not be used depending on the font
-     * information embedded in the rich text, but in any case where a default
-     * font is required, this font will be used.
-     * @since JavaFX 8.0
+     * The default font to use where font is not specified otherwise.
      */
-    private StyleableObjectProperty<Font> font;
-    public final StyleableObjectProperty<Font> fontProperty() {
-        if (font == null) {
-            font = new StyleableObjectProperty<Font>(Font.getDefault()) {
-
-                @Override
-                public CssMetaData<StyledTextArea<?>,Font> getCssMetaData() {
-                    return StyleableProperties.FONT;
-                }
-
-                @Override
-                public Object getBean() {
-                    return StyledTextArea.this;
-                }
-
-                @Override
-                public String getName() {
-                    return "font";
-                }
-            };
-        }
-        return font;
-    }
-    public final void setFont(Font value) { fontProperty().setValue(value); }
-    public final Font getFont() { return font == null ? Font.getDefault() : font.getValue(); }
+    private final StyleableObjectProperty<Font> font = new FontProperty<S>(this);
+    public final StyleableObjectProperty<Font> fontProperty() { return font; }
+    public final void setFont(Font value) { font.setValue(value); }
+    public final Font getFont() { return font.getValue(); }
 
     /**
      * The textual content of this TextInputControl.
@@ -469,52 +443,9 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      *                                                                         *
      **************************************************************************/
 
-
-    private static final PseudoClass PSEUDO_CLASS_READONLY
-            = PseudoClass.getPseudoClass("readonly");
-
-    /**
-     * @treatAsPrivate implementation detail
-     */
-    private static class StyleableProperties {
-        private static final FontCssMetaData<StyledTextArea<?>> FONT =
-            new FontCssMetaData<StyledTextArea<?>>("-fx-font", Font.getDefault()) {
-
-            @Override
-            public boolean isSettable(StyledTextArea<?> n) {
-                return n.font == null || !n.font.isBound();
-            }
-
-            @Override
-            public StyleableProperty<Font> getStyleableProperty(StyledTextArea<?> n) {
-                return n.fontProperty();
-            }
-        };
-
-        private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
-        static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables =
-                new ArrayList<CssMetaData<? extends Styleable, ?>>(Control.getClassCssMetaData());
-            styleables.add(FONT);
-            STYLEABLES = Collections.unmodifiableList(styleables);
-        }
-    }
-
-    /**
-     * @return The CssMetaData associated with this class, which may include the
-     * CssMetaData of its super classes.
-     * @since JavaFX 8.0
-     */
-    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
-        return StyleableProperties.STYLEABLES;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since JavaFX 8.0
-     */
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getControlCssMetaData() {
-        return getClassCssMetaData();
+        return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
+                font.getCssMetaData());
     }
 }
