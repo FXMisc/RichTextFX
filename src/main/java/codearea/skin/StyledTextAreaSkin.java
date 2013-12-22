@@ -26,8 +26,7 @@
 
 package codearea.skin;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
@@ -35,7 +34,6 @@ import java.util.function.IntUnaryOperator;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
@@ -44,11 +42,9 @@ import javafx.collections.ListChangeListener;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.css.StyleableProperty;
 import javafx.event.EventHandler;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SkinBase;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -61,8 +57,9 @@ import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;
 import codearea.control.TwoLevelNavigator;
 import codearea.control.TwoLevelNavigator.Position;
+import codearea.skin.CssProperties.HighlightFillProperty;
+import codearea.skin.CssProperties.HighlightTextFillProperty;
 
-import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import com.sun.javafx.scene.text.HitInfo;
 
@@ -74,44 +71,21 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     /**
      * Background fill for highlighted text.
      */
-    final ObjectProperty<Paint> highlightFill = new StyleableObjectProperty<Paint>(Color.DODGERBLUE) {
-        @Override public Object getBean() {
-            return StyledTextAreaSkin.this;
-        }
-
-        @Override public String getName() {
-            return "highlightFill";
-        }
-
-        @Override public CssMetaData<StyledTextArea<?>, Paint> getCssMetaData() {
-            return StyleableProperties.HIGHLIGHT_FILL;
-        }
-    };
+    final StyleableObjectProperty<Paint> highlightFill
+            = new HighlightFillProperty(this, Color.DODGERBLUE);
 
     /**
      * Text color for highlighted text.
      */
-    final ObjectProperty<Paint> highlightTextFill = new StyleableObjectProperty<Paint>(Color.WHITE) {
-
-        @Override public Object getBean() {
-            return StyledTextAreaSkin.this;
-        }
-
-        @Override public String getName() {
-            return "highlightTextFill";
-        }
-
-        @Override public CssMetaData<StyledTextArea<?>,Paint> getCssMetaData() {
-            return StyleableProperties.HIGHLIGHT_TEXT_FILL;
-        }
-    };
+    final StyleableObjectProperty<Paint> highlightTextFill
+            = new HighlightTextFillProperty(this, Color.WHITE);
 
     private final MyListView<Paragraph<S>> listView;
     final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
     private void updateWrapWidth() {
-        if(getSkinnable().isWrapText())
+        if(getSkinnable().isWrapText()) {
             wrapWidth.bind(listView.widthProperty());
-        else {
+        } else {
             wrapWidth.unbind();
             wrapWidth.set(Double.MAX_VALUE); // no wrapping
         }
@@ -304,65 +278,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return (ParagraphCell<S>) listView.getCell(index);
     }
 
-    private static class StyleableProperties {
-        private static final CssMetaData<StyledTextArea<?>, Paint> HIGHLIGHT_FILL =
-            new CssMetaData<StyledTextArea<?>, Paint>("-fx-highlight-fill",
-                PaintConverter.getInstance(), Color.DODGERBLUE) {
-
-            @Override
-            public boolean isSettable(StyledTextArea<?> n) {
-                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
-                return !skin.highlightFill.isBound();
-            }
-
-            @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea<?> n) {
-                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
-                return (StyleableProperty<Paint>)skin.highlightFill;
-            }
-        };
-
-        private static final CssMetaData<StyledTextArea<?>, Paint> HIGHLIGHT_TEXT_FILL =
-            new CssMetaData<StyledTextArea<?>, Paint>("-fx-highlight-text-fill",
-                PaintConverter.getInstance(), Color.WHITE) {
-
-            @Override
-            public boolean isSettable(StyledTextArea<?> n) {
-                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
-                return !skin.highlightTextFill.isBound();
-            }
-
-            @Override @SuppressWarnings("unchecked")
-            public StyleableProperty<Paint> getStyleableProperty(StyledTextArea<?> n) {
-                final StyledTextAreaSkin<?> skin = (StyledTextAreaSkin<?>) n.getSkin();
-                return (StyleableProperty<Paint>)skin.highlightTextFill;
-            }
-        };
-
-        private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
-        static {
-            List<CssMetaData<? extends Styleable, ?>> styleables =
-                new ArrayList<CssMetaData<? extends Styleable, ?>>(SkinBase.getClassCssMetaData());
-            styleables.add(HIGHLIGHT_FILL);
-            styleables.add(HIGHLIGHT_TEXT_FILL);
-
-            STYLEABLES = Collections.unmodifiableList(styleables);
-        }
-    }
-
-    /**
-     * @return The CssMetaData associated with this class, which may include the
-     * CssMetaData of its super classes.
-     */
-    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
-        return StyleableProperties.STYLEABLES;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        return getClassCssMetaData();
+        return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
+                highlightFill.getCssMetaData(),
+                highlightTextFill.getCssMetaData());
     }
 }

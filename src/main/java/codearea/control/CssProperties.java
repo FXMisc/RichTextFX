@@ -1,10 +1,13 @@
 package codearea.control;
 
-import javafx.css.FontCssMetaData;
+import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
 import javafx.css.StyleableObjectProperty;
-import javafx.css.StyleableProperty;
 import javafx.scene.text.Font;
+
+import codearea.skin.PropertyCssMetaData;
+
+import com.sun.javafx.css.converters.FontConverter;
 
 
 /**
@@ -17,23 +20,13 @@ class CssProperties {
 
     static class FontProperty<S> extends StyleableObjectProperty<Font> {
         private final StyledTextArea<S> textArea;
-        private final FontCssMetaData<StyledTextArea<S>> cssMetaData
-                = new FontCssMetaData<StyledTextArea<S>>("-fx-font", Font.getDefault()) {
-                    @Override
-                    public boolean isSettable(StyledTextArea<S> node) {
-                        assert node == textArea;
-                        return !isBound();
-                    }
-
-                    @Override
-                    public StyleableProperty<Font> getStyleableProperty(StyledTextArea<S> node) {
-                        assert node == textArea;
-                        return FontProperty.this;
-                    }
-                };
+        private final CssMetaData<StyledTextArea<S>, Font> cssMetaData;
 
         public FontProperty(StyledTextArea<S> textArea) {
             this.textArea = textArea;
+            this.cssMetaData = new PropertyCssMetaData<StyledTextArea<S>, Font>(
+                    this, "-fx-font", FontConverter.getInstance(),
+                    Font.getDefault());
         }
 
         @Override
@@ -43,7 +36,7 @@ class CssProperties {
         public String getName() { return "font"; }
 
         @Override
-        public FontCssMetaData<StyledTextArea<S>> getCssMetaData() {
+        public CssMetaData<StyledTextArea<S>, Font> getCssMetaData() {
             return cssMetaData;
         }
     }
