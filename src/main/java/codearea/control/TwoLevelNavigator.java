@@ -3,13 +3,13 @@ package codearea.control;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
-public class TwoLevelNavigator {
+public class TwoLevelNavigator implements TwoDimensional {
 
-    public class Position {
+    private class Pos implements Position {
         private final int major;
         private final int minor;
 
-        private Position(int major, int minor) {
+        private Pos(int major, int minor) {
             this.major = major;
             this.minor = minor;
         }
@@ -19,40 +19,60 @@ public class TwoLevelNavigator {
             return "(" + major + ", " + minor + ")";
         }
 
+        @Override
         public boolean sameAs(Position other) {
-            // XXX we should also check that they come from the same navigator
-            return major == other.major && minor == other.minor;
+            return getTargetObject() == other.getTargetObject()
+                    && major == other.getMajor()
+                    && minor == other.getMinor();
         }
 
+        @Override
+        public TwoDimensional getTargetObject() {
+            return TwoLevelNavigator.this;
+        }
+
+        @Override
         public int getMajor() {
             return major;
         }
 
+        @Override
         public int getMinor() {
             return minor;
         }
 
+        @Override
         public Position clamp() {
             if(major == elemCount.getAsInt() - 1) {
                 int elemLen = elemLength.applyAsInt(major);
                 if(minor < elemLen) {
                     return this;
                 } else {
-                    return new Position(major, elemLen-1);
+                    return new Pos(major, elemLen-1);
                 }
             } else {
                 return this;
             }
         }
 
-        public Position offsetBy(int lowLevelOffset) {
-            if(lowLevelOffset > 0) {
-                return forward(lowLevelOffset);
-            } else if(lowLevelOffset < 0) {
-                return backward(-lowLevelOffset);
+        @Override
+        public Position offsetBy(int offset) {
+            if(offset > 0) {
+                return forward(offset);
+            } else if(offset < 0) {
+                return backward(-offset);
             } else {
                 return this;
             }
+        }
+
+        @Override
+        public int toOffset() {
+            int offset = 0;
+            for(int i = 0; i < major; ++i) {
+                offset += elemLength.applyAsInt(i);
+            }
+            return offset + minor;
         }
 
         private Position forward(int offset) {
@@ -63,7 +83,7 @@ public class TwoLevelNavigator {
             int elemCount = TwoLevelNavigator.this.elemCount.getAsInt();
             while(major < elemCount - 1) {
                 if(offset < curElemLength) {
-                    return new Position(major, offset);
+                    return new Pos(major, offset);
                 } else {
                     offset -= curElemLength;
                     major += 1;
@@ -72,7 +92,7 @@ public class TwoLevelNavigator {
             }
 
             // now the position is either in the last high-level element or beyond
-            return new Position(elemCount - 1, offset);
+            return new Pos(elemCount - 1, offset);
         }
 
         private Position backward(int offset) {
@@ -86,10 +106,10 @@ public class TwoLevelNavigator {
             }
 
             if(offset <= minor) {
-                return new Position(major, minor - offset);
+                return new Pos(major, minor - offset);
             } else {
                 // we went beyond the start
-                return new Position(0, 0);
+                return new Pos(0, 0);
             }
         }
     }
@@ -102,11 +122,13 @@ public class TwoLevelNavigator {
         this.elemLength = elemLength;
     }
 
-    public Position position(int highLevel, int lowLevel) {
-        return new Position(highLevel, lowLevel);
+    @Override
+    public Position position(int major, int minor) {
+        return new Pos(major, minor);
     }
 
-    public Position offset(int lowLevelOffset) {
-        return position(0, 0).offsetBy(lowLevelOffset);
+    @Override
+    public Position offsetToPosition(int offset) {
+        return position(0, 0).offsetBy(offset);
     }
 }

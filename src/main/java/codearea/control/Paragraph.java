@@ -34,7 +34,7 @@ import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.IndexRange;
-import codearea.control.TwoLevelNavigator.Position;
+import codearea.control.TwoDimensional.Position;
 
 public final class Paragraph<S> {
     private final List<StyledText<S>> segments = new ArrayList<>();
@@ -113,13 +113,13 @@ public final class Paragraph<S> {
         if(offset < 0 || offset > length())
             throw new IndexOutOfBoundsException(String.valueOf(offset));
 
-        Position pos = navigator.offset(offset);
+        Position pos = navigator.offsetToPosition(offset);
         StyledText<S> seg = segments.get(pos.getMajor());
         segments.set(pos.getMajor(), seg.spliced(pos.getMinor(), pos.getMinor(), str));
     }
 
     public void delete(int start, int end) {
-        Position start2D = navigator.offset(start);
+        Position start2D = navigator.offsetToPosition(start);
         Position end2D = start2D.offsetBy(end - start);
         int firstSegIdx = start2D.getMajor();
         int firstSegStart = start2D.getMinor();
@@ -188,7 +188,7 @@ public final class Paragraph<S> {
         if(charIdx < 0)
             return getLeadingStyle();
 
-        Position pos = navigator.offset(charIdx);
+        Position pos = navigator.offsetToPosition(charIdx);
         return segments.get(pos.getMajor()).getStyle();
     }
 
@@ -204,7 +204,7 @@ public final class Paragraph<S> {
         if(pos == length())
             return segments.size();
 
-        Position pos2D = navigator.offset(pos);
+        Position pos2D = navigator.offsetToPosition(pos);
         int segIdx = pos2D.getMajor();
         int segPos = pos2D.getMinor();
         StyledText<S> segment = segments.get(segIdx);

@@ -55,13 +55,11 @@ import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import codearea.control.CssProperties.FontProperty;
-import codearea.control.TwoLevelNavigator.Position;
 import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
 import codearea.undo.UndoManager;
@@ -79,8 +77,7 @@ import com.sun.javafx.Utils;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S> extends Control
-implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
+public class StyledTextArea<S> extends StyledTextAreaBase<S> {
 
     /***************************************************************************
      *                                                                         *
@@ -88,17 +85,16 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      *                                                                         *
      **************************************************************************/
 
-    /**
-     * Indicates whether this CodeArea can be edited by the user.
-     * Note that this property doesn't affect editing through the API.
-     */
     private final BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true) {
         @Override protected void invalidated() {
             pseudoClassStateChanged(PSEUDO_CLASS_READONLY, ! get());
         }
     };
+    @Override
     public final boolean isEditable() { return editable.get(); }
+    @Override
     public final void setEditable(boolean value) { editable.set(value); }
+    @Override
     public final BooleanProperty editableProperty() { return editable; }
 
     /**
@@ -107,14 +103,17 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      * onto another line.
      */
     private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
+    @Override
     public final boolean isWrapText() { return wrapText.get(); }
+    @Override
     public final void setWrapText(boolean value) { wrapText.set(value); }
+    @Override
     public final BooleanProperty wrapTextProperty() { return wrapText; }
 
     /**
      * The default font to use where font is not specified otherwise.
      */
-    private final StyleableObjectProperty<Font> font = new FontProperty<S>(this);
+    private final StyleableObjectProperty<Font> font = new FontProperty<>(this);
     public final StyleableObjectProperty<Font> fontProperty() { return font; }
     public final void setFont(Font value) { font.setValue(value); }
     public final Font getFont() { return font.getValue(); }
@@ -136,6 +135,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      * Return undo manager that can be used to undo/redo changes
      * of this text area's content.
      */
+    @Override
     public UndoManager getUndoManager() { return undoManager; }
     private final UndoManager undoManager;
 
@@ -202,12 +202,12 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
     @Override public final String getSelectedText() { return selectedText.get(); }
     public final ReadOnlyStringProperty selectedTextProperty() { return selectedText.getReadOnlyProperty(); }
 
-    /**
-     * The row where the caret is positioned.
-     */
-    public final ObservableIntegerValue caretRow;
+    // current paragraph index
+    private final ObservableIntegerValue caretRow;
     @Override
     public final int getCurrentParagraph() { return caretRow.get(); }
+    @Override
+    public final ObservableIntegerValue currentParagraph() { return caretRow; }
 
     /**
      * Caret position relative to the current row.
@@ -250,7 +250,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
 
             @Override
             protected Position computeValue() {
-                return content.position(caretPosition.get());
+                return content.offsetToPosition(caretPosition.get());
             }
         };
 
@@ -321,6 +321,16 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      **************************************************************************/
 
     @Override
+    public Position position(int row, int col) {
+        return content.position(row, col);
+    }
+
+    @Override
+    public Position offsetToPosition(int charOffset) {
+        return content.offsetToPosition(charOffset);
+    }
+
+    @Override
     public String getText(int paragraph) {
         return content.paragraphs.get(paragraph).toString();
     }
@@ -329,6 +339,7 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
      * Returns an unmodifiable list of paragraphs
      * that back this code area's content.
      */
+    @Override
     public ObservableList<Paragraph<S>> getParagraphs() {
         return FXCollections.unmodifiableObservableList(content.paragraphs);
     }
@@ -409,17 +420,6 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
         selectRange(newCaretPos, newCaretPos);
     }
 
-    /**
-     * Returns the character offset of the paragraph with the given index,
-     * i.e. the sum of lengths of all previous paragraphs, including newlines.
-     */
-    public int getParagraphOffset(int paragraph) {
-        int offset = 0;
-        for(int i=0; i<paragraph; ++i)
-            offset += content.paragraphs.get(i).length() + 1;
-        return offset;
-    }
-
     @Override
     public void selectRange(int anchor, int caretPosition) {
         this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
@@ -427,13 +427,8 @@ implements TextEditingArea, EditActions, ClipboardActions, NavigationActions {
         this.selection.set(IndexRange.normalize(getAnchor(), this.caretPosition.get()));
     }
 
-    /**
-     * Positions only the caret. Doesn't move the anchor and doesn't change
-     * the selection. Can be used to achieve the special case of positioning
-     * the caret outside or inside the selection, as opposed to always being
-     * at the boundary. Use with care.
-     */
-    public void positionCaretIndependently(int pos) {
+    @Override
+    public void positionCaret(int pos) {
         caretPosition.set(pos);
     }
 

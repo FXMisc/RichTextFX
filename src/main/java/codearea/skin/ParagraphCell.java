@@ -133,13 +133,14 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         // obtain HitInfo relative to this paragraph
         HitInfo hit = getParagraphGraphic().hit(line, x);
 
-        // add line offset
+        // add paragraph offset
         return toGlobalHit(hit);
     }
 
     private HitInfo toGlobalHit(HitInfo hit) {
-        // add line offset
-        hit.setCharIndex(skin.getSkinnable().getParagraphOffset(getIndex()) + hit.getCharIndex());
+        // add paragraph offset
+        int parOffset = skin.getSkinnable().position(getIndex(), 0).toOffset();
+        hit.setCharIndex(parOffset + hit.getCharIndex());
 
         return hit;
     }

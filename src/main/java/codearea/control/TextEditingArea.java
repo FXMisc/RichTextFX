@@ -25,6 +25,9 @@
 
 package codearea.control;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.ObservableIntegerValue;
+import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
 
 /**
@@ -32,8 +35,16 @@ import javafx.scene.control.IndexRange;
  *
  * Defines the core methods. Other interfaces define default
  * higher-level methods implemented on top of the core methods.
+ *
+ * @param <S> type of style that can be applied to text.
  */
-public interface TextEditingArea {
+public interface TextEditingArea<S> {
+
+    /*******************
+     *                 *
+     *   Observables   *
+     *                 *
+     *******************/
 
     /**
      * Returns the number of characters in this text-editing area.
@@ -56,13 +67,13 @@ public interface TextEditingArea {
     int getCaretPosition();
 
     /**
-     * Returns the index of the current paragraph,
-     * i.e. the paragraph with the caret.
+     * Index of the current paragraph, i.e. the paragraph with the caret.
      */
     int getCurrentParagraph();
+    ObservableIntegerValue currentParagraph();
 
     /**
-     * Returns the caret's position within the current line.
+     * Returns the caret position within the current line.
      */
     int getCaretColumn();
 
@@ -81,6 +92,42 @@ public interface TextEditingArea {
      * Returns the selected text.
      */
     String getSelectedText();
+
+    /**
+     * Unmodifiable observable list of paragraphs in this text area.
+     */
+    ObservableList<Paragraph<S>> getParagraphs();
+
+
+    /******************
+     *                *
+     *   Properties   *
+     *                *
+     ******************/
+
+    /**
+     * Indicates whether this text area can be edited by the user.
+     * Note that this property doesn't affect editing through the API.
+     */
+    boolean isEditable();
+    void setEditable(boolean value);
+    BooleanProperty editableProperty();
+
+    /**
+     * When a run of text exceeds the width of the text region,
+     * then this property indicates whether the text should wrap
+     * onto another line.
+     */
+    boolean isWrapText();
+    void setWrapText(boolean value);
+    BooleanProperty wrapTextProperty();
+
+
+    /***************
+     *             *
+     *   Actions   *
+     *             *
+     ***************/
 
     /**
      * Positions the anchor and caretPosition explicitly,
@@ -114,4 +161,11 @@ public interface TextEditingArea {
         replaceText(range.getStart(), range.getEnd(), text);
     }
 
+    /**
+     * Positions only the caret. Doesn't move the anchor and doesn't change
+     * the selection. Can be used to achieve the special case of positioning
+     * the caret outside or inside the selection, as opposed to always being
+     * at the boundary. Use with care.
+     */
+    public void positionCaret(int pos);
 }

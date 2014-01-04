@@ -2,9 +2,9 @@ package codearea.control;
 
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
+import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.text.Font;
-
 import codearea.skin.PropertyCssMetaData;
 
 import com.sun.javafx.css.converters.FontConverter;
@@ -18,13 +18,13 @@ class CssProperties {
     static final PseudoClass PSEUDO_CLASS_READONLY
             = PseudoClass.getPseudoClass("readonly");
 
-    static class FontProperty<S> extends StyleableObjectProperty<Font> {
-        private final StyledTextArea<S> textArea;
-        private final CssMetaData<StyledTextArea<S>, Font> cssMetaData;
+    static class FontProperty<S extends Styleable> extends StyleableObjectProperty<Font> {
+        private final S textArea;
+        private final CssMetaData<S, Font> cssMetaData;
 
-        public FontProperty(StyledTextArea<S> textArea) {
+        public FontProperty(S textArea) {
             this.textArea = textArea;
-            this.cssMetaData = new PropertyCssMetaData<StyledTextArea<S>, Font>(
+            this.cssMetaData = new PropertyCssMetaData<S, Font>(
                     this, "-fx-font", FontConverter.getInstance(),
                     Font.getDefault());
         }
@@ -36,7 +36,7 @@ class CssProperties {
         public String getName() { return "font"; }
 
         @Override
-        public CssMetaData<StyledTextArea<S>, Font> getCssMetaData() {
+        public CssMetaData<S, Font> getCssMetaData() {
             return cssMetaData;
         }
     }

@@ -35,14 +35,13 @@ import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyStringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import codearea.control.TwoLevelNavigator.Position;
 import codearea.rx.PushSource;
 import codearea.rx.Source;
 
 /**
  * Code area content model.
  */
-final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
+final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implements TwoDimensional {
     final ObservableList<Paragraph<S>> paragraphs =
             FXCollections.observableArrayList();
 
@@ -119,7 +118,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         int length = end - start;
         StringBuilder sb = new StringBuilder(length);
 
-        Position start2D = navigator.offset(start);
+        Position start2D = navigator.offsetToPosition(start);
         Position end2D = start2D.offsetBy(length);
         int p1 = start2D.getMajor();
         int col1 = start2D.getMinor();
@@ -153,7 +152,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         if (replacement == null)
             throw new NullPointerException("replacement text is null");
 
-        Position start2D = navigator.offset(start);
+        Position start2D = navigator.offsetToPosition(start);
         Position end2D = start2D.offsetBy(end - start);
         int leadingLineIndex = start2D.getMajor();
         int leadingLineFrom = start2D.getMinor();
@@ -212,7 +211,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     }
 
     public void setStyle(int from, int to, S style) {
-        Position start = navigator.offset(from);
+        Position start = navigator.offsetToPosition(from);
         Position end = start.offsetBy(to - from);
         int firstLineIndex = start.getMajor();
         int firstLineFrom = start.getMinor();
@@ -248,7 +247,7 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
     }
 
     public S getStyleAt(int pos) {
-        Position pos2D = navigator.offset(pos);
+        Position pos2D = navigator.offsetToPosition(pos);
         int line = pos2D.getMajor();
         int col = pos2D.getMinor();
         return paragraphs.get(line).getStyleAt(col);
@@ -258,8 +257,14 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase {
         return paragraphs.get(paragraph).getStyleAt(column);
     }
 
-    Position position(int pos) {
-        return navigator.offset(pos);
+    @Override
+    public Position offsetToPosition(int offset) {
+        return navigator.offsetToPosition(offset);
+    }
+
+    @Override
+    public Position position(int row, int col) {
+        return navigator.position(row, col);
     }
 
     /**

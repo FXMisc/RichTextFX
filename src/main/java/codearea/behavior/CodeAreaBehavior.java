@@ -43,8 +43,8 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
-import codearea.control.StyledTextArea;
-import codearea.control.TwoLevelNavigator.Position;
+import codearea.control.StyledTextAreaBase;
+import codearea.control.TwoDimensional.Position;
 import codearea.skin.ParagraphCell;
 import codearea.skin.StyledTextAreaSkin;
 
@@ -55,7 +55,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Text area behavior.
  */
-public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
+public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextAreaBase<S>> {
 
     /**
      * Possible dragging states.
@@ -75,7 +75,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
      * Fields                                                                 *
      *************************************************************************/
 
-    protected final StyledTextArea<S> styledTextArea;
+    protected final StyledTextAreaBase<S> styledTextArea;
 
     /**
      * Used to keep track of the most recent key event. This is used when
@@ -108,7 +108,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
      * Constructors                                                           *
      *************************************************************************/
 
-    public CodeAreaBehavior(StyledTextArea<S> styledTextArea) {
+    public CodeAreaBehavior(StyledTextAreaBase<S> styledTextArea) {
         super(styledTextArea, CodeAreaBindings.BINDINGS);
         this.styledTextArea = styledTextArea;
     }
@@ -215,8 +215,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
             case Copy: styledTextArea.copy(); break;
             case Paste: styledTextArea.paste(); break;
 
-            case Undo: styledTextArea.getUndoManager().undo(); break;
-            case Redo: styledTextArea.getUndoManager().redo(); break;
+            case Undo: styledTextArea.undo(); break;
+            case Redo: styledTextArea.redo(); break;
 
             case SelectAll: styledTextArea.selectAll(); break;
             case Unselect: styledTextArea.deselect(); break;
@@ -280,7 +280,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         if(sel.getLength() == 0)
             styledTextArea.previousChar(SelectionPolicy.CLEAR);
         else
-            styledTextArea.positionCaret(sel.getStart(), SelectionPolicy.CLEAR);
+            styledTextArea.moveTo(sel.getStart(), SelectionPolicy.CLEAR);
     }
 
     private void right() {
@@ -288,7 +288,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         if(sel.getLength() == 0)
             styledTextArea.nextChar(SelectionPolicy.CLEAR);
         else
-            styledTextArea.positionCaret(sel.getEnd(), SelectionPolicy.CLEAR);
+            styledTextArea.moveTo(sel.getEnd(), SelectionPolicy.CLEAR);
     }
 
     private void selectLeft() {
@@ -346,7 +346,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         int newCaretPos = hit.getInsertionIndex();
 
         // update model
-        styledTextArea.positionCaret(newCaretPos, selectionPolicy);
+        styledTextArea.moveTo(newCaretPos, selectionPolicy);
     }
 
     private void previousLine(SelectionPolicy selectionPolicy) {
@@ -358,14 +358,14 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void previousPage(SelectionPolicy selectionPolicy) {
-        int currentRow = styledTextArea.caretRow.get();
+        int currentRow = styledTextArea.getCurrentParagraph();
         skin.showAsLast(currentRow);
         int targetRow = skin.getFirstVisibleIndex();
         goToLine(skin.position(targetRow, 0), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        int currentRow = styledTextArea.caretRow.get();
+        int currentRow = styledTextArea.getCurrentParagraph();
         skin.showAsFirst(currentRow);
         int targetRow = skin.getLastVisibleIndex();
         goToLine(skin.position(targetRow, 0), selectionPolicy);
@@ -399,7 +399,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         if(e.isShiftDown()) {
             // On Mac always extend selection,
             // switching anchor and caret if necessary.
-            styledTextArea.positionCaret(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
+            styledTextArea.moveTo(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
         }
         else {
             switch (e.getClickCount()) {
@@ -422,7 +422,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         }
         else {
             dragSelection = DragState.NO_DRAG;
-            styledTextArea.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            styledTextArea.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
         }
     }
 
@@ -475,10 +475,10 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         HitInfo hit = lineCell.hit(e);
 
         if (dragSelection == DragState.DRAG) {
-            styledTextArea.positionCaretIndependently(hit.getInsertionIndex());
+            styledTextArea.positionCaret(hit.getInsertionIndex());
         }
         else {
-            styledTextArea.positionCaret(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+            styledTextArea.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
     }
 
@@ -489,7 +489,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
                 // drag didn't happen, position caret
                 ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
                 HitInfo hit = lineCell.hit(e);
-                styledTextArea.positionCaret(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                styledTextArea.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
                 // do nothing, handled by mouseDragReleased
@@ -544,8 +544,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         } else {
             items.setAll(copyMI, separatorMI, selectAllMI);
         }
-        undoMI.setDisable(!styledTextArea.getUndoManager().canUndo());
-        redoMI.setDisable(!styledTextArea.getUndoManager().canRedo());
+        undoMI.setDisable(!styledTextArea.canUndo());
+        redoMI.setDisable(!styledTextArea.canRedo());
         cutMI.setDisable(!hasSelection);
         copyMI.setDisable(!hasSelection);
         pasteMI.setDisable(!Clipboard.getSystemClipboard().hasString());

@@ -32,7 +32,7 @@ import javafx.scene.control.IndexRange;
 /**
  * Navigation actions for {@link TextEditingArea}.
  */
-public interface NavigationActions extends TextEditingArea {
+public interface NavigationActions<S> extends TextEditingArea<S> {
 
     /**
      * Indicates how to treat selection when caret is moved.
@@ -44,15 +44,15 @@ public interface NavigationActions extends TextEditingArea {
     }
 
     /**
-     * Positions the caret at the given position in the text
+     * Moves the caret to the given position in the text
      * and clears any selection.
      */
-    default void positionCaret(int pos) {
+    default void moveTo(int pos) {
         selectRange(pos, pos);
     }
 
     /**
-     * Positions the caret to the position indicated by {@code pos}.
+     * Moves the caret to the position indicated by {@code pos}.
      * Based on the selection policy, the selection is either <em>cleared</em>
      * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
      * (i.e. anchor is not moved at all), or <em>extended</em>
@@ -60,7 +60,7 @@ public interface NavigationActions extends TextEditingArea {
      * outside the current selection, the far end of the current selection
      * becomes the anchor.
      */
-    default void positionCaret(int pos, SelectionPolicy selectionPolicy) {
+    default void moveTo(int pos, SelectionPolicy selectionPolicy) {
         switch(selectionPolicy) {
             case CLEAR:
                 selectRange(pos, pos);
@@ -90,7 +90,7 @@ public interface NavigationActions extends TextEditingArea {
     default void previousChar(SelectionPolicy selectionPolicy) {
         if (getCaretPosition() > 0) {
             int newCaretPos = Character.offsetByCodePoints(getText(), getCaretPosition(), -1);
-            positionCaret(newCaretPos, selectionPolicy);
+            moveTo(newCaretPos, selectionPolicy);
         }
     }
 
@@ -102,7 +102,7 @@ public interface NavigationActions extends TextEditingArea {
     default void nextChar(SelectionPolicy selectionPolicy) {
         if (getCaretPosition() < getLength()) {
             int newCaretPos = Character.offsetByCodePoints(getText(), getCaretPosition(), 1);
-            positionCaret(newCaretPos, selectionPolicy);
+            moveTo(newCaretPos, selectionPolicy);
         }
     }
 
@@ -129,7 +129,7 @@ public interface NavigationActions extends TextEditingArea {
         }
 
         // move/select
-        positionCaret(wordBreakIterator.current(), selectionPolicy);
+        moveTo(wordBreakIterator.current(), selectionPolicy);
     }
 
     /**
@@ -147,14 +147,14 @@ public interface NavigationActions extends TextEditingArea {
         wordBreakIterator.following(getCaretPosition());
         wordBreakIterator.next();
 
-        positionCaret(wordBreakIterator.current(), selectionPolicy);
+        moveTo(wordBreakIterator.current(), selectionPolicy);
     }
 
     /**
      * Moves the caret to the beginning of the current line.
      */
     default void lineStart(SelectionPolicy selectionPolicy) {
-        positionCaret(getCaretPosition() - getCaretColumn(), selectionPolicy);
+        moveTo(getCaretPosition() - getCaretColumn(), selectionPolicy);
     }
 
     /**
@@ -163,21 +163,21 @@ public interface NavigationActions extends TextEditingArea {
     default void lineEnd(SelectionPolicy selectionPolicy) {
         int lineLen = getText(getCurrentParagraph()).length();
         int newPos = getCaretPosition() - getCaretColumn() + lineLen;
-        positionCaret(newPos, selectionPolicy);
+        moveTo(newPos, selectionPolicy);
     }
 
     /**
      * Moves the caret to the beginning of the text.
      */
     default void start(SelectionPolicy selectionPolicy) {
-        positionCaret(0, selectionPolicy);
+        moveTo(0, selectionPolicy);
     }
 
     /**
      * Moves the caret to the end of the text.
      */
     default void end(SelectionPolicy selectionPolicy) {
-        positionCaret(getLength(), selectionPolicy);
+        moveTo(getLength(), selectionPolicy);
     }
 
     /**

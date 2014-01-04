@@ -30,7 +30,7 @@ import javafx.scene.control.IndexRange;
 /**
  * Extended edit actions for {@link TextEditingArea}.
  */
-public interface EditActions extends TextEditingArea {
+public interface EditActions<S> extends TextEditingArea<S> {
 
     /**
      * Appends the given text to the end of the text content.

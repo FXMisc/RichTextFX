@@ -54,9 +54,9 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
-import codearea.control.StyledTextArea;
+import codearea.control.StyledTextAreaBase;
+import codearea.control.TwoDimensional.Position;
 import codearea.control.TwoLevelNavigator;
-import codearea.control.TwoLevelNavigator.Position;
 import codearea.skin.CssProperties.HighlightFillProperty;
 import codearea.skin.CssProperties.HighlightTextFillProperty;
 
@@ -66,7 +66,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Code area skin.
  */
-public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, CodeAreaBehavior<S>> {
+public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextAreaBase<S>, CodeAreaBehavior<S>> {
 
     /**
      * Background fill for highlighted text.
@@ -102,7 +102,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
 
-    public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
+    public StyledTextAreaSkin(final StyledTextAreaBase<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
@@ -178,7 +178,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         updateWrapWidth();
 
         // selected line reflects the caret row
-        styledTextArea.caretRow.addListener(new ChangeListener<Number>() {
+        styledTextArea.currentParagraph().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable,
                     Number oldRow, Number currentRow) {
@@ -186,7 +186,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 listView.show(currentRow.intValue());
             }
         });
-        listView.getSelectionModel().select(styledTextArea.caretRow.get());
+        listView.getSelectionModel().select(styledTextArea.getCurrentParagraph());
 
         // If the current line changes without changing the current row
         // we need to reselect the corresponding list item.
@@ -198,7 +198,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             @Override
             public void onChanged(
                     javafx.collections.ListChangeListener.Change<? extends Paragraph<S>> arg0) {
-                listView.getSelectionModel().select(styledTextArea.caretRow.get());
+                listView.getSelectionModel().select(styledTextArea.getCurrentParagraph());
             }
         });
 
@@ -258,7 +258,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
      * number is the line number within the paragraph.
      */
     public Position currentLine() {
-        int parIdx = getSkinnable().caretRow.get();
+        int parIdx = getSkinnable().getCurrentParagraph();
         int lineIdx = getCell(parIdx).getCurrentLineIndex();
 
         return position(parIdx, lineIdx);
