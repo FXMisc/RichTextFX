@@ -26,6 +26,7 @@ import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
+import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
@@ -50,7 +51,14 @@ import com.sun.javafx.Utils;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea2<S> extends StyledTextAreaBase<S> {
+public class StyledTextArea2<S> extends Control
+implements
+        TextEditingArea<S>,
+        EditActions<S>,
+        ClipboardActions<S>,
+        NavigationActions<S>,
+        UndoActions<TextChange>,
+        TwoDimensional {
 
     private static final UndoManagerProvider<TextChange> defaultUndoManagerFactory =
             (apply, undo, merge, changeSource) -> new ObservingUndoManager<>(apply, undo, merge, changeSource);
