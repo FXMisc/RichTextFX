@@ -51,7 +51,7 @@ import com.sun.javafx.Utils;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea2<S> extends Control
+public class StyledTextArea<S> extends Control
 implements
         TextEditingArea<S>,
         EditActions<S>,
@@ -209,7 +209,7 @@ implements
      * a style, applies the style to the text node. This function is
      * used by the default skin to apply style to text nodes.
      */
-    public StyledTextArea2(S initialStyle, BiConsumer<Text, S> applyStyle) {
+    public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
         content = new StyledTextAreaContent<>(initialStyle);

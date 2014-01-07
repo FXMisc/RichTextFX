@@ -54,7 +54,7 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
-import codearea.control.StyledTextArea2;
+import codearea.control.StyledTextArea;
 import codearea.control.TwoDimensional.Position;
 import codearea.control.TwoLevelNavigator;
 import codearea.skin.CssProperties.HighlightFillProperty;
@@ -66,7 +66,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Code area skin.
  */
-public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea2<S>, CodeAreaBehavior<S>> {
+public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, CodeAreaBehavior<S>> {
 
     /**
      * Background fill for highlighted text.
@@ -102,7 +102,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea2<S>, 
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
 
-    public StyledTextAreaSkin(final StyledTextArea2<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
+    public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 

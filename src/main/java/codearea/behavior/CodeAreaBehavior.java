@@ -43,7 +43,7 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import codearea.control.NavigationActions.SelectionPolicy;
-import codearea.control.StyledTextArea2;
+import codearea.control.StyledTextArea;
 import codearea.control.TwoDimensional.Position;
 import codearea.skin.ParagraphCell;
 import codearea.skin.StyledTextAreaSkin;
@@ -55,7 +55,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Text area behavior.
  */
-public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea2<S>> {
+public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     /**
      * Possible dragging states.
@@ -75,7 +75,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea2<S>> {
      * Fields                                                                 *
      *************************************************************************/
 
-    protected final StyledTextArea2<S> styledTextArea;
+    protected final StyledTextArea<S> styledTextArea;
 
     /**
      * Used to keep track of the most recent key event. This is used when
@@ -108,7 +108,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea2<S>> {
      * Constructors                                                           *
      *************************************************************************/
 
-    public CodeAreaBehavior(StyledTextArea2<S> styledTextArea) {
+    public CodeAreaBehavior(StyledTextArea<S> styledTextArea) {
         super(styledTextArea, CodeAreaBindings.BINDINGS);
         this.styledTextArea = styledTextArea;
     }

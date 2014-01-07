@@ -8,7 +8,7 @@ import java.util.function.Function;
  *
  * @param <S> type of style information.
  */
-public class InlineStyleTextArea<S> extends StyledTextArea2<S> {
+public class InlineStyleTextArea<S> extends StyledTextArea<S> {
 
     /**
      *
