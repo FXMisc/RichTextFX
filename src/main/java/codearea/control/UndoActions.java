@@ -1,10 +1,20 @@
 package codearea.control;
 
 import codearea.undo.UndoManager;
+import codearea.undo.UndoManagerProvider;
 
-public interface UndoActions {
+/**
+ * Undo/redo actions for {@link TextEditingArea}.
+ *
+ * @param <C> type of undoable changes.
+ */
+public interface UndoActions<C> {
 
+    /**
+     * Undo manager of this text area.
+     */
     UndoManager getUndoManager();
+    void setUndoManager(UndoManagerProvider<C> undoManagerProvider);
 
     default void undo() { getUndoManager().undo(); }
 

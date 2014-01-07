@@ -5,8 +5,11 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import codearea.rx.Source;
+import codearea.rx.Subscription;
 
 public final class ObservingUndoManager<C> extends UndoManagerBase<C> {
+
+    private final Subscription subscription;
 
     private boolean ignoreChanges;
 
@@ -14,7 +17,7 @@ public final class ObservingUndoManager<C> extends UndoManagerBase<C> {
             BiFunction<C, C, Optional<C>> merge, Source<C> changeSource) {
 
         super(apply, undo, merge);
-        changeSource.subscribe(this::changeObserved);
+        subscription = changeSource.subscribe(this::changeObserved);
     }
 
     private void changeObserved(C change) {
@@ -37,5 +40,10 @@ public final class ObservingUndoManager<C> extends UndoManagerBase<C> {
         boolean redone = super.redo();
         ignoreChanges = false;
         return redone;
+    }
+
+    @Override
+    public void close() {
+        subscription.unsubscribe();
     }
 }

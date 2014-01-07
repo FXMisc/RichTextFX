@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Text area that uses style classes to define style of text segments.
  */
-public class StyleClassedTextArea extends StyledTextArea<Collection<String>> {
+public class StyleClassedTextArea extends StyledTextArea2<Collection<String>> {
 
     /**
      * Creates a text area with empty text content.

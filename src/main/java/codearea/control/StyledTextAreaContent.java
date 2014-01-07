@@ -35,6 +35,7 @@ import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyStringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.IndexRange;
 import codearea.rx.PushSource;
 import codearea.rx.Source;
 
@@ -112,6 +113,10 @@ final class StyledTextAreaContent<S> extends ReadOnlyStringPropertyBase implemen
             cachedValue = get(0, contentLength);
 
         return cachedValue;
+    }
+
+    public String get(IndexRange range) {
+        return get(range.getStart(), range.getEnd());
     }
 
     public String get(int start, int end) {

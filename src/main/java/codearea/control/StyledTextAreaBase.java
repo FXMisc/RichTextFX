@@ -8,6 +8,6 @@ import javafx.scene.control.Control;
  * is complete.
  */
 public abstract class StyledTextAreaBase<S> extends Control
-implements TextEditingArea<S>, EditActions<S>, ClipboardActions<S>, NavigationActions<S>, UndoActions, TwoDimensional {
+implements TextEditingArea<S>, EditActions<S>, ClipboardActions<S>, NavigationActions<S>, UndoActions<TextChange>, TwoDimensional {
 
 }

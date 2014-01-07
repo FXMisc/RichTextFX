@@ -63,6 +63,7 @@ import codearea.control.CssProperties.FontProperty;
 import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
 import codearea.undo.UndoManager;
+import codearea.undo.UndoManagerProvider;
 import codearea.undo.impl.ObservingUndoManager;
 
 import com.sun.javafx.Utils;
@@ -123,7 +124,9 @@ public class StyledTextArea<S> extends StyledTextAreaBase<S> {
      */
     private final StyledTextAreaContent<S> content;
     @Override public final String getText() { return content.get(); }
+    @Override
     public final String getText(int start, int end) { return content.get(start, end); }
+    @Override
     public final ObservableStringValue textProperty() { return content; }
 
     /**
@@ -137,6 +140,10 @@ public class StyledTextArea<S> extends StyledTextAreaBase<S> {
      */
     @Override
     public UndoManager getUndoManager() { return undoManager; }
+    @Override
+    public void setUndoManager(UndoManagerProvider<TextChange> undoManagerFactory) {
+        throw new UnsupportedOperationException();
+    }
     private final UndoManager undoManager;
 
     /**

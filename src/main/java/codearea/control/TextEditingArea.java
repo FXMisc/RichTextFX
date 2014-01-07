@@ -26,9 +26,13 @@
 package codearea.control;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ObservableIntegerValue;
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
+import codearea.rx.Source;
 
 /**
  * Interface for a text editing control.
@@ -47,24 +51,50 @@ public interface TextEditingArea<S> {
      *******************/
 
     /**
-     * Returns the number of characters in this text-editing area.
+     * The number of characters in this text-editing area.
      */
     int getLength();
+    ObservableIntegerValue lengthProperty();
 
     /**
-     * Returns text content of this text-editing area.
+     * Text content of this text-editing area.
      */
     String getText();
+    ObservableStringValue textProperty();
 
     /**
-     * Returns text content of the given paragraph.
-     */
-    String getText(int paragraphIndex);
-
-    /**
-     * Returns the current caret position as an offset in the text.
+     * The current position of the caret, as a character offset in the text.
+     *
+     * Most of the time, caret is at the boundary of the selection (if there
+     * is any selection). However, there are circumstances when the caret is
+     * positioned inside or outside the selected text. For example, when the
+     * user is dragging the selected text, the caret moves with the cursor
+     * to point at the position where the selected text moves upon release.
      */
     int getCaretPosition();
+    ReadOnlyIntegerProperty caretPositionProperty();
+
+    /**
+     * The anchor of the selection.
+     * If there is no selection, this is the same as caret position.
+     */
+    int getAnchor();
+    ReadOnlyIntegerProperty anchorProperty();
+
+    /**
+     * The selection range.
+     *
+     * One boundary is always equal to anchor, and the other one is most
+     * of the time equal to caret position.
+     */
+    IndexRange getSelection();
+    ReadOnlyObjectProperty<IndexRange> selectionProperty();
+
+    /**
+     * The selected text.
+     */
+    String getSelectedText();
+    ObservableStringValue selectedTextProperty();
 
     /**
      * Index of the current paragraph, i.e. the paragraph with the caret.
@@ -73,30 +103,43 @@ public interface TextEditingArea<S> {
     ObservableIntegerValue currentParagraph();
 
     /**
-     * Returns the caret position within the current line.
+     * The caret position within the current paragraph.
      */
     int getCaretColumn();
-
-    /**
-     * Returns the selection anchor.
-     * If there is no selection, this is the same as caret position.
-     */
-    int getAnchor();
-
-    /**
-     * Returns the current selection range.
-     */
-    IndexRange getSelection();
-
-    /**
-     * Returns the selected text.
-     */
-    String getSelectedText();
 
     /**
      * Unmodifiable observable list of paragraphs in this text area.
      */
     ObservableList<Paragraph<S>> getParagraphs();
+
+
+    /*********************
+     *                   *
+     *   Event streams   *
+     *                   *
+     *********************/
+
+    /**
+     * Stream of text changes.
+     */
+    Source<TextChange> textChanges();
+
+
+    /***************
+     *             *
+     *   Queries   *
+     *             *
+     ***************/
+
+    /**
+     * Returns text content of the given paragraph.
+     */
+    String getText(int paragraphIndex);
+
+    /**
+     * Returns text content of the given character range.
+     */
+    String getText(int start, int end);
 
 
     /******************
