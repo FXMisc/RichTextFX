@@ -80,5 +80,5 @@ Links
 [API Documentation](http://tomasmikula.github.io/CodeAreaFX/)  
 [Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)  
 [Dropped Features](https://github.com/TomasMikula/CodeAreaFX/wiki/Dropped-Features)  
-[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues) 
+[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues)  
 [Java 8 Development Gotchas](https://github.com/TomasMikula/CodeAreaFX/wiki/Java-8-Development-Gotchas)
