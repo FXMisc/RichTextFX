@@ -6,11 +6,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.function.ToIntFunction;
 
-import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -21,7 +17,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
@@ -119,12 +114,12 @@ implements
      **************************************************************************/
 
     // text
-    @Override public final String getText() { return content.get(); }
-    @Override public final ObservableStringValue textProperty() { return content; }
+    @Override public final String getText() { return content.getText(); }
+    @Override public final ObservableStringValue textProperty() { return content.textProperty(); }
 
     // length
-    @Override public final int getLength() { return content.length().get(); }
-    @Override public final ObservableIntegerValue lengthProperty() { return content.length(); }
+    @Override public final int getLength() { return content.getLength(); }
+    @Override public final ObservableIntegerValue lengthProperty() { return content.lengthProperty(); }
 
     // caret position
     private final ReadOnlyIntegerWrapper caretPosition = new ReadOnlyIntegerWrapper(this, "caretPosition", 0);
@@ -156,8 +151,9 @@ implements
     @Override public final int getCaretColumn() { return caretColumn.get(); }
 
     // paragraphs
+    private final ObservableList<Paragraph<S>> paragraphs;
     @Override public ObservableList<Paragraph<S>> getParagraphs() {
-        return FXCollections.unmodifiableObservableList(content.paragraphs);
+        return paragraphs;
     }
 
 
@@ -181,7 +177,7 @@ implements
     /**
      * content model
      */
-    private final StyledTextAreaContent<S> content;
+    private final StyledTextDocument<S> content;
 
     /**
      * Style used by default when no other style is provided.
@@ -212,27 +208,28 @@ implements
     public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
-        content = new StyledTextAreaContent<>(initialStyle);
+        content = new StyledTextDocument<>(initialStyle);
+        paragraphs = content.getParagraphs();
 
         undoManager = createUndoManager(defaultUndoManagerFactory);
 
-        ObservableValue<Position> caretPosition2D = createBinding(caretPosition, p -> content.offsetToPosition(p));
-        currentParagraph = createIntegerBinding(caretPosition2D, p -> p.getMajor());
-        caretColumn = createIntegerBinding(caretPosition2D, p -> p.getMinor());
+        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p));
+        currentParagraph = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor());
+        caretColumn = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMinor());
 
         // Keep caret position in the current paragraph up to date.
         caretPosition.addListener(obs -> {
             // by the time this listener is called, both currentParagraph and
             // caretColumn have been invalidated, so get()-ing them yields
             // up-to-date values.
-            Paragraph<S> par = content.paragraphs.get(currentParagraph.get());
+            Paragraph<S> par = paragraphs.get(currentParagraph.get());
             par.setCaretPosition(caretColumn.get());
         });
 
         selectedText = new StringBinding() {
             { bind(selection, textProperty()); }
             @Override protected String computeValue() {
-                return content.get(selection.get());
+                return content.getText(selection.get());
             }
         };
 
@@ -250,12 +247,12 @@ implements
 
     @Override
     public final String getText(int start, int end) {
-        return content.get(start, end);
+        return content.getText(start, end);
     }
 
     @Override
     public String getText(int paragraph) {
-        return content.paragraphs.get(paragraph).toString();
+        return paragraphs.get(paragraph).toString();
     }
 
     /**
@@ -358,7 +355,7 @@ implements
         // update selection in paragraphs
         int start = selection.getStart();
         int end = selection.getEnd();
-        for(Paragraph<S> par: content.paragraphs) {
+        for(Paragraph<S> par: paragraphs) {
             int len = par.length();
             if(end > 0 && start < len) {
                 par.setSelection(start, Math.min(end, len));
@@ -407,27 +404,5 @@ implements
         Consumer<TextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<TextChange, TextChange, Optional<TextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.get(apply, undo, merge, textChanges());
-    }
-
-    private static <T> ObjectBinding<T> createBinding(ObservableIntegerValue dep, IntFunction<T> computeValue) {
-        return new ObjectBinding<T>() {
-            { bind(dep); }
-
-            @Override
-            protected T computeValue() {
-                return computeValue.apply(dep.get());
-            }
-        };
-    }
-
-    private static <A> IntegerBinding createIntegerBinding(ObservableValue<A> dep, ToIntFunction<A> computeValue) {
-        return new IntegerBinding() {
-            { bind(dep); }
-
-            @Override
-            protected int computeValue() {
-                return computeValue.applyAsInt(dep.getValue());
-            }
-        };
     }
 }
