@@ -1,0 +1,35 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'de.undercouch:gradle-download-task:0.4'
+    }
+}
+
+apply plugin: 'download-task'
+
+def depDir = new File(projectDir, 'libs')
+
+dependencies {
+    compile files("$depDir/inhibeans-20131216.jar") {
+        builtBy 'fetchDeps'
+    }
+}
+
+task fetchDeps << {
+    depDir.mkdirs()
+    download {
+        src 'https://googledrive.com/host/0B4a5AnNnZhkbX0d4QUZXenRUaVE/inhibeans-20131216.jar'
+        dest depDir
+        overwrite = false
+    }
+}
+
+task fatJar(type: Jar, dependsOn: classes) {
+    appendix = 'fat'
+    from sourceSets.main.output
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+assemble.dependsOn fatJar

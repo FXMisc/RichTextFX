@@ -1,0 +1,22 @@
+import java.text.SimpleDateFormat
+
+subprojects {
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    version = {
+        def fmt = new SimpleDateFormat("yyyyMMdd")
+        fmt.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return fmt.format(new Date())
+    }()
+
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.+'
+    }
+}
