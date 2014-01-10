@@ -1,10 +1,11 @@
 package codearea.control;
 
+import inhibeans.property.ReadOnlyIntegerWrapper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
@@ -224,9 +225,14 @@ final class StyledTextDocument<S> implements TwoDimensional {
             paragraphs.addAll(leadingLineIndex+1, newLines);
         }
 
-        // update length, invalidate text, emit change event
-        length.set(length.get() - (end - start) + replacement.length());
-        text.invalidate(); // TODO invalidate length and text "atomically"
+        // update length, invalidate text
+        int newLength = length.get() - (end - start) + replacement.length();
+        length.blockWhile(() -> { // don't publish length change until text is invalidated
+            length.set(newLength);
+            text.invalidate();
+        });
+
+        // emit change event
         fireTextChange(start, replacedText, replacement);
     }
 
