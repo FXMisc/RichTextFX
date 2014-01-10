@@ -37,17 +37,17 @@ Demos
 
 #### Run using the pre-built JAR
 
-[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built JAR file and run
+[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea.jar codearea.demo.JavaKeywords
+    java -cp codearea-demos-fat.jar codearea.demo.JavaKeywords
 
 #### Run from the source repo
 
-    ant JavaKeywords
+    gradle JavaKeywords
 
 #### Source code
 
-[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/java/codearea/demo/JavaKeywords.java)
+[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/JavaKeywords.java)
 
 
 ### 2. Manual text highlighting
@@ -55,17 +55,17 @@ Demos
 ![Screenshot of the ManualHighlighting demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/manual-highlighting.png)
 
 #### Run using the pre-built JAR
-[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built JAR file and run
+[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea.jar codearea.demo.ManualHighlighting
+    java -cp codearea-demos-fat.jar codearea.demo.ManualHighlighting
 
 #### Run from the source repo
 
-    ant ManualHighlighting
+    gradle ManualHighlighting
 
 #### Source code
 
-[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/src/demo/java/codearea/demo/ManualHighlighting.java)
+[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/ManualHighlighting.java)
 
 
 License
