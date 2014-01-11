@@ -8,7 +8,7 @@ public class StyledTextDocumentTest {
 
     @Test
     public void testConsistencyOfTextWithLength() {
-        StyledTextDocument<String> document = new StyledTextDocument<>("");
+        StyledDocument<String> document = new StyledDocument<>("");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 
@@ -23,7 +23,7 @@ public class StyledTextDocumentTest {
 
     @Test
     public void testConsistencyOfLengthWithText() {
-        StyledTextDocument<String> document = new StyledTextDocument<>("");
+        StyledDocument<String> document = new StyledDocument<>("");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 

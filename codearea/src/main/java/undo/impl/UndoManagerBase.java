@@ -1,10 +1,10 @@
-package codearea.undo.impl;
+package undo.impl;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import codearea.undo.UndoManager;
+import undo.UndoManager;
 
 public abstract class UndoManagerBase<C> implements UndoManager {
 

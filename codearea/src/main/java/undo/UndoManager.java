@@ -1,4 +1,4 @@
-package codearea.undo;
+package undo;
 
 public interface UndoManager {
     boolean undo();

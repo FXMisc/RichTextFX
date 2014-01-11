@@ -1,4 +1,4 @@
-package codearea.rx;
+package reactfx;
 
 import java.util.function.Consumer;
 

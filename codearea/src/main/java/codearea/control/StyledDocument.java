@@ -11,15 +11,15 @@ import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
-import codearea.rx.PushSource;
-import codearea.rx.Source;
+import reactfx.PushSource;
+import reactfx.Source;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class StyledTextDocument<S> implements TwoDimensional {
+final class StyledDocument<S> implements TwoDimensional {
 
     /***************************************************************************
      *                                                                         *
@@ -32,14 +32,14 @@ final class StyledTextDocument<S> implements TwoDimensional {
      **************************************************************************/
 
     /**
-     * Content of this {@code StyledTextDocument}.
+     * Content of this {@code StyledDocument}.
      */
     private final StringBinding text = BindingFactories.createStringBinding(() -> getContent());
     public String getText() { return text.get(); }
     public ObservableStringValue textProperty() { return text; }
 
     /**
-     * Length of this {@code StyledTextDocument}.
+     * Length of this {@code StyledDocument}.
      */
     private final ReadOnlyIntegerWrapper length = new ReadOnlyIntegerWrapper();
     public int getLength() { return length.get(); }
@@ -87,7 +87,7 @@ final class StyledTextDocument<S> implements TwoDimensional {
      *                                                                         *
      ***************************************************************************/
 
-    StyledTextDocument(S initialStyle) {
+    StyledDocument(S initialStyle) {
         paragraphs.add(new Paragraph<S>("", initialStyle));
         length.set(0);
     }

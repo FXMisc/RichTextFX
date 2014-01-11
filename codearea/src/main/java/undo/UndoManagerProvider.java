@@ -1,10 +1,10 @@
-package codearea.undo;
+package undo;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import codearea.rx.Source;
+import reactfx.Source;
 
 public interface UndoManagerProvider<C> {
 

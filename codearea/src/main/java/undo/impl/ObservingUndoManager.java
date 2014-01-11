@@ -1,11 +1,11 @@
-package codearea.undo.impl;
+package undo.impl;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import codearea.rx.Source;
-import codearea.rx.Subscription;
+import reactfx.Source;
+import reactfx.Subscription;
 
 public final class ObservingUndoManager<C> extends UndoManagerBase<C> {
 

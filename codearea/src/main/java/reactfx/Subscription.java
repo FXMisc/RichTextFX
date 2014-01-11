@@ -1,4 +1,4 @@
-package codearea.rx;
+package reactfx;
 
 public interface Subscription {
     void unsubscribe();

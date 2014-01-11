@@ -1,7 +1,7 @@
 package codearea.control;
 
-import codearea.undo.UndoManager;
-import codearea.undo.UndoManagerProvider;
+import undo.UndoManager;
+import undo.UndoManagerProvider;
 
 /**
  * Undo/redo actions for {@link TextEditingArea}.

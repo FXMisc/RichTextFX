@@ -1,4 +1,4 @@
-package codearea.rx;
+package reactfx;
 
 import java.util.ArrayList;
 import java.util.List;

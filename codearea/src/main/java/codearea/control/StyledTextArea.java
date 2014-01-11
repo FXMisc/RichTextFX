@@ -7,6 +7,10 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import reactfx.Source;
+import undo.UndoManager;
+import undo.UndoManagerProvider;
+import undo.impl.ObservingUndoManager;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -28,11 +32,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import codearea.control.CssProperties.EditableProperty;
 import codearea.control.CssProperties.FontProperty;
-import codearea.rx.Source;
 import codearea.skin.StyledTextAreaSkin;
-import codearea.undo.UndoManager;
-import codearea.undo.UndoManagerProvider;
-import codearea.undo.impl.ObservingUndoManager;
 
 import com.sun.javafx.Utils;
 
@@ -177,7 +177,7 @@ implements
     /**
      * content model
      */
-    private final StyledTextDocument<S> content;
+    private final StyledDocument<S> content;
 
     /**
      * Style used by default when no other style is provided.
@@ -208,7 +208,7 @@ implements
     public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
-        content = new StyledTextDocument<>(initialStyle);
+        content = new StyledDocument<>(initialStyle);
         paragraphs = content.getParagraphs();
 
         undoManager = createUndoManager(defaultUndoManagerFactory);

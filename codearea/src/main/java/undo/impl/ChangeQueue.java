@@ -1,4 +1,4 @@
-package codearea.undo.impl;
+package undo.impl;
 
 public interface ChangeQueue<C> {
 

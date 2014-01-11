@@ -25,6 +25,7 @@
 
 package codearea.control;
 
+import reactfx.Source;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -32,7 +33,6 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
-import codearea.rx.Source;
 
 /**
  * Interface for a text editing control.
