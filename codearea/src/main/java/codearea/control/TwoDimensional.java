@@ -1,8 +1,12 @@
 package codearea.control;
 
 
-
 public interface TwoDimensional {
+
+    enum Bias {
+        Forward,
+        Backward,
+    }
 
     interface Position {
 
@@ -21,7 +25,7 @@ public interface TwoDimensional {
 
         public Position clamp();
 
-        public Position offsetBy(int offset);
+        public Position offsetBy(int offset, Bias bias);
 
         int toOffset();
 
@@ -29,5 +33,5 @@ public interface TwoDimensional {
 
     Position position(int major, int minor);
 
-    Position offsetToPosition(int offset);
+    Position offsetToPosition(int offset, Bias bias);
 }

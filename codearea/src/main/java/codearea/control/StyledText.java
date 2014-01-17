@@ -56,6 +56,10 @@ public class StyledText<S> implements CharSequence {
         return new StyledText<S>(text.substring(start, end), style);
     }
 
+    public StyledText<S> subSequence(int start) {
+        return new StyledText<S>(text.substring(start), style);
+    }
+
     @Override
     public IntStream chars() {
         return text.chars();

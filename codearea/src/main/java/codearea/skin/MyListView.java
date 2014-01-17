@@ -25,8 +25,7 @@
 
 package codearea.skin;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.Optional;
 
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -44,33 +43,35 @@ class MyListView<T> extends ListView<T> {
     }
 
     public void show(int index) {
-        withFlow(flow -> flow.show(index));
+        getFlow().ifPresent(flow -> flow.show(index));
     }
 
     public void showAsFirst(int index) {
-        withFlow(flow -> showAsFirst(flow, index));
+        getFlow().ifPresent(flow -> showAsFirst(flow, index));
     }
 
     public void showAsLast(int index) {
-        withFlow(flow -> showAsLast(flow, index));
+        getFlow().ifPresent(flow -> showAsLast(flow, index));
     }
 
     public int getFirstVisibleIndex() {
-        return withFlow(f -> {
+        Optional<Integer> index = getFlow().map(f -> {
             ListCell<T> cell = f.getFirstVisibleCell();
             return cell != null ? cell.getIndex() : -1;
-        }, -1);
+        });
+        return index.orElse(-1);
     }
 
     public int getLastVisibleIndex() {
-        return withFlow(f -> {
+        Optional<Integer> index = getFlow().map(f -> {
             ListCell<T> cell = f.getLastVisibleCell();
             return cell != null ? cell.getIndex() : -1;
-        }, -1);
+        });
+        return index.orElse(-1);
     }
 
     public IndexRange getVisibleRange() {
-        return withFlow(f -> {
+        Optional<IndexRange> range = getFlow().map(f -> {
             ListCell<T> first = f.getFirstVisibleCell();
             ListCell<T> last = f.getLastVisibleCell();
             if(first != null && last != null) {
@@ -78,7 +79,8 @@ class MyListView<T> extends ListView<T> {
             } else {
                 return new IndexRange(0, 0);
             }
-        }, new IndexRange(0, 0));
+        });
+        return range.orElse(new IndexRange(0, 0));
     }
 
     /**
@@ -86,8 +88,9 @@ class MyListView<T> extends ListView<T> {
      * The returned cell shall be used read-only
      * (for measurement purposes) and shall not be stored.
      */
-    public ListCell<T> getCell(int index) {
-        return withFlow(flow -> flow.getCell(index), (ListCell<T>) null);
+    public Optional<ListCell<T>> getCell(int index) {
+        Optional<ListCell<T>> cell = getFlow().map(flow -> flow.getCell(index));
+        return cell;
     }
 
     private static <C extends IndexedCell<?>> void showAsFirst(VirtualFlow<C> flow, int index) {
@@ -104,23 +107,12 @@ class MyListView<T> extends ListView<T> {
         flow.showAsLast(cell);
     }
 
-    private void withFlow(Consumer<VirtualFlow<? extends ListCell<T>>> f) {
-        VirtualFlow<? extends ListCell<T>> flow = getFlow();
-        if(flow != null)
-            f.accept(flow);
-    }
-
-    private <R> R withFlow(Function<VirtualFlow<? extends ListCell<T>>, R> f, R orElse) {
-        VirtualFlow<? extends ListCell<T>> flow = getFlow();
-        return flow != null ? f.apply(flow) : orElse;
-    }
-
     @SuppressWarnings("unchecked")
-    private VirtualFlow<? extends ListCell<T>> getFlow() {
+    private Optional<VirtualFlow<? extends ListCell<T>>> getFlow() {
         for(Node child: getChildren()) {
             if(child instanceof VirtualFlow)
-                return (VirtualFlow<? extends ListCell<T>>) child;
+                return Optional.of((VirtualFlow<? extends ListCell<T>>) child);
         }
-        return null;
+        return Optional.empty();
     }
 }

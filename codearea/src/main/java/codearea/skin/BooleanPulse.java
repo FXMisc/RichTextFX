@@ -27,24 +27,24 @@ package codearea.skin;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.property.ReadOnlyBooleanPropertyBase;
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.value.ChangeListener;
 import javafx.util.Duration;
 
-final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
-    private final Object bean;
-    private final String name;
+import com.sun.javafx.binding.ExpressionHelper;
 
+final class BooleanPulse extends BooleanExpression {
+
+    private ExpressionHelper<Boolean> listenerHelper;
     private final Timeline timeline;
     private boolean currentValue;
 
     public BooleanPulse(Duration duration) {
-        this(duration, null, null, true);
+        this(duration, true);
     }
 
-    public BooleanPulse(Duration duration, Object bean, String name, boolean initialValue) {
-        this.bean = bean;
-        this.name = name;
-
+    public BooleanPulse(Duration duration, boolean initialValue) {
         currentValue = initialValue;
 
         timeline = new Timeline();
@@ -74,21 +74,31 @@ final class BooleanPulse extends ReadOnlyBooleanPropertyBase {
 
     private void toggle() {
         currentValue = !currentValue;
-        fireValueChangedEvent();
-    }
-
-    @Override
-    public Object getBean() {
-        return bean;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+        ExpressionHelper.fireValueChangedEvent(listenerHelper);
     }
 
     @Override
     public boolean get() {
         return currentValue;
+    }
+
+    @Override
+    public void addListener(ChangeListener<? super Boolean> listener) {
+        listenerHelper = ExpressionHelper.addListener(listenerHelper, this, listener);
+    }
+
+    @Override
+    public void removeListener(ChangeListener<? super Boolean> listener) {
+        listenerHelper = ExpressionHelper.removeListener(listenerHelper, listener);
+    }
+
+    @Override
+    public void addListener(InvalidationListener listener) {
+        listenerHelper = ExpressionHelper.addListener(listenerHelper, this, listener);
+    }
+
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        listenerHelper = ExpressionHelper.removeListener(listenerHelper, listener);
     }
 }

@@ -12,7 +12,7 @@ apply plugin: 'download-task'
 def depDir = new File(projectDir, 'libs')
 
 dependencies {
-    compile files("$depDir/inhibeans-20131216.jar") {
+    compile files("$depDir/inhibeans-20140117.jar") {
         builtBy 'fetchDeps'
     }
 }
@@ -20,7 +20,7 @@ dependencies {
 task fetchDeps << {
     depDir.mkdirs()
     download {
-        src 'https://googledrive.com/host/0B4a5AnNnZhkbX0d4QUZXenRUaVE/inhibeans-20131216.jar'
+        src 'https://googledrive.com/host/0B4a5AnNnZhkbX0d4QUZXenRUaVE/inhibeans-20140117.jar'
         dest depDir
         overwrite = false
     }

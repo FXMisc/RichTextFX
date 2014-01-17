@@ -35,7 +35,9 @@ import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import codearea.control.Paragraph;
+import codearea.control.StyledTextArea;
 
+import com.sun.javafx.Utils;
 import com.sun.javafx.scene.text.HitInfo;
 
 public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
@@ -74,6 +76,14 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
             graphic.caretVisibleProperty().bind(caretVisible);
             graphic.highlightFillProperty().bind(skin.highlightFill);
             graphic.highlightTextFillProperty().bind(skin.highlightTextFill);
+
+            StyledTextArea<S> area = skin.getSkinnable();
+            if(getIndex() == area.getCurrentParagraph()) {
+                int col = Utils.clamp(0, area.getCaretColumn(), item.length());
+                graphic.setCaretPosition(col);
+            }
+
+            graphic.setSelection(area.getParagraphSelection(getIndex()));
 
             graphic.setPrefWidth(0);
 
@@ -157,7 +167,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         return graphic != null ? graphic.getCaretOffsetX() : 0;
     }
 
-    private ParagraphGraphic<S> getParagraphGraphic() {
+    ParagraphGraphic<S> getParagraphGraphic() {
         Optional<ParagraphGraphic<S>> graphic = tryGetParagraphGraphic();
         if(graphic.isPresent()) {
             return graphic.get();

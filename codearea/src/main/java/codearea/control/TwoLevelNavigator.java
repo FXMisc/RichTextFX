@@ -1,5 +1,7 @@
 package codearea.control;
 
+import static codearea.control.TwoDimensional.Bias.*;
+
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
@@ -56,11 +58,15 @@ public class TwoLevelNavigator implements TwoDimensional {
         }
 
         @Override
-        public Position offsetBy(int offset) {
+        public Position offsetBy(int offset, Bias bias) {
             if(offset > 0) {
-                return forward(offset);
+                return forward(offset, bias);
             } else if(offset < 0) {
-                return backward(-offset);
+                return backward(-offset, bias);
+            } else if(minor == 0 && major > 1 && bias == Backward) {
+                return new Pos(major - 1, elemLength.applyAsInt(major - 1));
+            } else if(minor == elemLength.applyAsInt(major) && major < elemCount.getAsInt() - 1 && bias == Forward){
+                return new Pos(major + 1, 0);
             } else {
                 return this;
             }
@@ -75,14 +81,14 @@ public class TwoLevelNavigator implements TwoDimensional {
             return offset + minor;
         }
 
-        private Position forward(int offset) {
+        private Position forward(int offset, Bias bias) {
             offset += minor;
             int major = this.major;
             int curElemLength = elemLength.applyAsInt(major);
 
             int elemCount = TwoLevelNavigator.this.elemCount.getAsInt();
             while(major < elemCount - 1) {
-                if(offset < curElemLength) {
+                if(offset < curElemLength || offset == curElemLength && bias == Backward) {
                     return new Pos(major, offset);
                 } else {
                     offset -= curElemLength;
@@ -95,18 +101,22 @@ public class TwoLevelNavigator implements TwoDimensional {
             return new Pos(elemCount - 1, offset);
         }
 
-        private Position backward(int offset) {
+        private Position backward(int offset, Bias bias) {
             int minor = this.minor;
             int major = this.major;
-            while(offset > minor && major > 0) {
-                offset -= minor;
-                major -= 1; // move to the previous element
-                // set inner position to the end of the previous element
-                minor = elemLength.applyAsInt(major);
+            while(major > 0) {
+                if(offset < minor || offset == minor && bias == Forward) {
+                    return new Pos(major, minor - offset);
+                } else {
+                    offset -= minor;
+                    major -= 1; // move to the previous element
+                    // set inner position to the end of the previous element
+                    minor = elemLength.applyAsInt(major);
+                }
             }
 
-            if(offset <= minor) {
-                return new Pos(major, minor - offset);
+            if(offset < minor) {
+                return new Pos(0, minor - offset);
             } else {
                 // we went beyond the start
                 return new Pos(0, 0);
@@ -128,7 +138,7 @@ public class TwoLevelNavigator implements TwoDimensional {
     }
 
     @Override
-    public Position offsetToPosition(int offset) {
-        return position(0, 0).offsetBy(offset);
+    public Position offsetToPosition(int offset, Bias bias) {
+        return position(0, 0).offsetBy(offset, bias);
     }
 }

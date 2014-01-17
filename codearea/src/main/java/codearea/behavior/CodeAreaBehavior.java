@@ -26,8 +26,9 @@
 
 package codearea.behavior;
 
-import static com.sun.javafx.PlatformUtil.isMac;
-import static com.sun.javafx.scene.control.skin.resources.ControlResources.getString;
+import static codearea.control.TwoDimensional.Bias.*;
+import static com.sun.javafx.PlatformUtil.*;
+import static com.sun.javafx.scene.control.skin.resources.ControlResources.*;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -334,7 +335,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     private void downLines(int nLines, SelectionPolicy selectionPolicy) {
         Position currentLine = skin.currentLine();
-        Position targetLine = currentLine.offsetBy(nLines).clamp();
+        Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
             goToLine(targetLine, selectionPolicy);
         }

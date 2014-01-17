@@ -29,8 +29,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -67,23 +65,11 @@ public class ParagraphGraphic<S> extends TextFlow {
     private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
 
     private final Paragraph<S> paragraph;
+    private int caretPosition;
+    private IndexRange selection;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
-
-    private final InvalidationListener updateCaretShape = new InvalidationListener() {
-        @Override
-        public void invalidated(Observable observable) {
-            updateCaretShape();
-        }
-    };
-
-    private final InvalidationListener updateSelectionShape = new InvalidationListener() {
-        @Override
-        public void invalidated(Observable boundsProperty) {
-            updateSelectionShape();
-        }
-    };
 
     public ParagraphGraphic(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
@@ -122,26 +108,40 @@ public class ParagraphGraphic<S> extends TextFlow {
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
             // keep the caret graphic up to date
-            t.fontProperty().addListener(updateCaretShape);
+            t.fontProperty().addListener(obs -> updateCaretShape());
 
             // keep the selection graphic up to date
-            t.fontProperty().addListener(updateSelectionShape);
+            t.fontProperty().addListener(obs -> updateSelectionShape());
 
             getChildren().add(t);
         }
 
-        // keep caret position up to date
-        par.caretPositionProperty().addListener(updateCaretShape);
-        updateCaretShape();
-
-        // keep selection up to date
-        par.selectionProperty().addListener(updateSelectionShape);
-        updateSelectionShape();
+        setCaretPosition(0);
+        setSelection(0, 0);
     }
 
     public void dispose() {
-        paragraph.caretPositionProperty().removeListener(updateCaretShape);
-        paragraph.selectionProperty().removeListener(updateSelectionShape);
+        // do nothing
+    }
+
+    public Paragraph<S> getParagraph() {
+        return paragraph;
+    }
+
+    void setCaretPosition(int pos) {
+        if(pos < 0 || pos > paragraph.length())
+            throw new IndexOutOfBoundsException();
+        caretPosition = pos;
+        updateCaretShape();
+    }
+
+    void setSelection(IndexRange selection) {
+        this.selection = selection;
+        updateSelectionShape();
+    }
+
+    void setSelection(int start, int end) {
+        setSelection(new IndexRange(start, end));
     }
 
     public BooleanProperty caretVisibleProperty() {
@@ -218,7 +218,7 @@ public class ParagraphGraphic<S> extends TextFlow {
     }
 
     public int currentLineIndex() {
-        return getLineSpans(0, paragraph.getCaretPosition()).length - 1;
+        return getLineSpans(0, caretPosition).length - 1;
     }
 
     private TextLayout textLayout() {
@@ -231,13 +231,14 @@ public class ParagraphGraphic<S> extends TextFlow {
     }
 
     private void updateCaretShape() {
-        PathElement[] shape = textLayout().getCaretShape(paragraph.getCaretPosition(), true, 0, 0);
+        PathElement[] shape = textLayout().getCaretShape(caretPosition, true, 0, 0);
         caretShape.getElements().setAll(shape);
     }
 
     private void updateSelectionShape() {
-        IndexRange selection = paragraph.getSelection();
-        PathElement[] shape = textLayout().getRange(selection.getStart(), selection.getEnd(), TextLayout.TYPE_TEXT, 0, 0);
+        int start = selection.getStart();
+        int end = selection.getEnd();
+        PathElement[] shape = textLayout().getRange(start, end, TextLayout.TYPE_TEXT, 0, 0);
         selectionShape.getElements().setAll(shape);
     }
 }

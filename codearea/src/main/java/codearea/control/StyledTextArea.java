@@ -1,5 +1,8 @@
 package codearea.control;
 
+import static codearea.control.TwoDimensional.Bias.*;
+import inhibeans.Impulse;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -7,10 +10,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import reactfx.Source;
-import undo.UndoManager;
-import undo.UndoManagerProvider;
-import undo.impl.ObservingUndoManager;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -30,6 +29,10 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import reactfx.Source;
+import undo.UndoManager;
+import undo.UndoManagerProvider;
+import undo.impl.ObservingUndoManager;
 import codearea.control.CssProperties.EditableProperty;
 import codearea.control.CssProperties.FontProperty;
 import codearea.skin.StyledTextAreaSkin;
@@ -58,17 +61,19 @@ implements
     private static final UndoManagerProvider<TextChange> defaultUndoManagerFactory =
             (apply, undo, merge, changeSource) -> new ObservingUndoManager<>(apply, undo, merge, changeSource);
 
+    private static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
-    /***************************************************************************
-     *                                                                         *
-     * Properties                                                              *
-     *                                                                         *
-     * Properties affect behavior and/or appearance of this control.           *
-     *                                                                         *
-     * They are readable and writable by the client code and never change by   *
-     * other means, i.e. they contain either the default value or the value    *
-     * set by the client code.                                                 *
-     *                                                                         *
+
+    /**************************************************************************
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * Properties affect behavior and/or appearance of this control.          *
+     *                                                                        *
+     * They are readable and writable by the client code and never change by  *
+     * other means, i.e. they contain either the default value or the value   *
+     * set by the client code.                                                *
+     *                                                                        *
      **************************************************************************/
 
     // editable property
@@ -103,14 +108,14 @@ implements
     public final Font getFont() { return font.getValue(); }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Observables                                                             *
-     *                                                                         *
-     * Observables are "dynamic" (i.e. changing) characteristics of this       *
-     * control. They are not directly settable by the client code, but change  *
-     * in response to user input and/or API actions.                           *
-     *                                                                         *
+    /**************************************************************************
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
      **************************************************************************/
 
     // text
@@ -132,7 +137,7 @@ implements
     @Override public final ReadOnlyIntegerProperty anchorProperty() { return anchor.getReadOnlyProperty(); }
 
     // selection
-    private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection", new IndexRange(0, 0));
+    private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection");
     @Override public final IndexRange getSelection() { return selection.getValue(); }
     @Override public final ReadOnlyObjectProperty<IndexRange> selectionProperty() { return selection.getReadOnlyProperty(); }
 
@@ -156,11 +161,15 @@ implements
         return paragraphs;
     }
 
+    // doneUpdating
+    private final Impulse doneUpdating = new Impulse();
+    public inhibeans.Observable doneUpdatingProperty() { return doneUpdating; }
 
-    /***************************************************************************
-     *                                                                         *
-     * Event streams                                                           *
-     *                                                                         *
+
+    /**************************************************************************
+     *                                                                        *
+     * Event streams                                                          *
+     *                                                                        *
      **************************************************************************/
 
     // text changes
@@ -168,11 +177,15 @@ implements
     public final Source<TextChange> textChanges() { return content.textChanges(); }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Private fields                                                          *
-     *                                                                         *
-     ***************************************************************************/
+    /**************************************************************************
+     *                                                                        *
+     * Private fields                                                         *
+     *                                                                        *
+     **************************************************************************/
+
+
+    private Position selectionStart2D;
+    private Position selectionEnd2D;
 
     /**
      * content model
@@ -190,11 +203,11 @@ implements
     private final BiConsumer<Text, S> applyStyle;
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Constructors                                                            *
-     *                                                                         *
-     ***************************************************************************/
+    /**************************************************************************
+     *                                                                        *
+     * Constructors                                                           *
+     *                                                                        *
+     **************************************************************************/
 
     /**
      * Creates a text area with empty text content.
@@ -213,18 +226,16 @@ implements
 
         undoManager = createUndoManager(defaultUndoManagerFactory);
 
-        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p));
+        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p, Forward));
         currentParagraph = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor());
         caretColumn = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMinor());
 
-        // Keep caret position in the current paragraph up to date.
-        caretPosition.addListener(obs -> {
-            // by the time this listener is called, both currentParagraph and
-            // caretColumn have been invalidated, so get()-ing them yields
-            // up-to-date values.
-            Paragraph<S> par = paragraphs.get(currentParagraph.get());
-            par.setCaretPosition(caretColumn.get());
+        selection.addListener(obs -> {
+            IndexRange sel = selection.get();
+            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
+            selectionEnd2D = selectionStart2D.offsetBy(sel.getLength(), Backward);
         });
+        selection.set(EMPTY_RANGE);
 
         selectedText = new StringBinding() {
             { bind(selection, textProperty()); }
@@ -237,13 +248,13 @@ implements
     }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Queries                                                                 *
-     *                                                                         *
-     * Queries are parameterized observables.                                  *
-     *                                                                         *
-     ***************************************************************************/
+    /**************************************************************************
+     *                                                                        *
+     * Queries                                                                *
+     *                                                                        *
+     * Queries are parameterized observables.                                 *
+     *                                                                        *
+     **************************************************************************/
 
     @Override
     public final String getText(int start, int end) {
@@ -253,6 +264,23 @@ implements
     @Override
     public String getText(int paragraph) {
         return paragraphs.get(paragraph).toString();
+    }
+
+    /**
+     * Returns the selection range in the given paragraph.
+     */
+    public IndexRange getParagraphSelection(int paragraph) {
+        int startPar = selectionStart2D.getMajor();
+        int endPar = selectionEnd2D.getMajor();
+
+        if(paragraph < startPar || paragraph > endPar) {
+            return EMPTY_RANGE;
+        }
+
+        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
+        int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
+
+        return new IndexRange(start, end);
     }
 
     /**
@@ -278,18 +306,18 @@ implements
     }
 
     @Override
-    public Position offsetToPosition(int charOffset) {
-        return content.offsetToPosition(charOffset);
+    public Position offsetToPosition(int charOffset, Bias bias) {
+        return content.offsetToPosition(charOffset, bias);
     }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Actions                                                                 *
-     *                                                                         *
-     * Actions change the state of this control. They typically cause a change *
-     * of one or more observables and/or produce an event.                     *
-     *                                                                         *
+    /**************************************************************************
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
      **************************************************************************/
 
     /**
@@ -297,6 +325,7 @@ implements
      */
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
+        doneUpdating.trigger();
     }
 
     /**
@@ -304,6 +333,7 @@ implements
      */
     public void setStyle(int paragraph, S style) {
         content.setStyle(paragraph, style);
+        doneUpdating.trigger();
     }
 
     /**
@@ -311,6 +341,7 @@ implements
      */
     public void setStyle(int paragraph, int from, int to, S style) {
         content.setStyle(paragraph, from, to, style);
+        doneUpdating.trigger();
     }
 
     /**
@@ -350,35 +381,21 @@ implements
     public void selectRange(int anchor, int caretPosition) {
         this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
         this.anchor.set(Utils.clamp(0, anchor, getLength()));
-        IndexRange selection = IndexRange.normalize(getAnchor(), getCaretPosition());
-
-        // update selection in paragraphs
-        int start = selection.getStart();
-        int end = selection.getEnd();
-        for(Paragraph<S> par: paragraphs) {
-            int len = par.length();
-            if(end > 0 && start < len) {
-                par.setSelection(start, Math.min(end, len));
-            } else {
-                par.setSelection(0, 0);
-            }
-            start = start - (len+1);
-            end = end - (len+1);
-        }
-
-        this.selection.set(selection);
+        this.selection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
+        doneUpdating.trigger();
     }
 
     @Override
     public void positionCaret(int pos) {
         caretPosition.set(pos);
+        doneUpdating.trigger();
     }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Look & feel                                                             *
-     *                                                                         *
+    /**************************************************************************
+     *                                                                        *
+     * Look & feel                                                            *
+     *                                                                        *
      **************************************************************************/
 
     @Override
@@ -393,10 +410,10 @@ implements
     }
 
 
-    /***************************************************************************
-     *                                                                         *
-     * Private methods                                                         *
-     *                                                                         *
+    /**************************************************************************
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
      **************************************************************************/
 
     private UndoManager createUndoManager(UndoManagerProvider<TextChange> factory) {

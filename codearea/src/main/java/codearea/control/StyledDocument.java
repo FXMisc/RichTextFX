@@ -1,9 +1,11 @@
 package codearea.control;
 
+import static codearea.control.TwoDimensional.Bias.*;
 import inhibeans.property.ReadOnlyIntegerWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import javafx.beans.binding.StringBinding;
 import javafx.beans.value.ObservableIntegerValue;
@@ -92,6 +94,11 @@ final class StyledDocument<S> implements TwoDimensional {
         length.set(0);
     }
 
+    private StyledDocument(List<Paragraph<S>> pars) {
+        paragraphs.addAll(pars);
+        length.set(pars.stream().mapToInt(p -> p.length()).sum() + (pars.size()-1));
+    };
+
 
     /***************************************************************************
      *                                                                         *
@@ -106,41 +113,27 @@ final class StyledDocument<S> implements TwoDimensional {
     }
 
     public String getText(int start, int end) {
-        int length = end - start;
-        StringBuilder sb = new StringBuilder(length);
+        return sub(
+                start, end,
+                p -> p.toString(),
+                (p, a, b) -> p.substring(a, b),
+                (List<String> ss) -> join(ss, "\n"));
+    }
 
-        Position start2D = navigator.offsetToPosition(start);
-        Position end2D = start2D.offsetBy(length);
-        int p1 = start2D.getMajor();
-        int col1 = start2D.getMinor();
-        int p2 = end2D.getMajor();
-        int col2 = end2D.getMinor();
+    public StyledDocument<S> subDocument(IndexRange range) {
+        return subDocument(range.getStart(), range.getEnd());
+    }
 
-        if(p1 == p2) {
-            sb.append(paragraphs.get(p1).substring(col1, col2));
-        } else {
-            sb.append(paragraphs.get(p1).substring(col1));
-            sb.append('\n');
-
-            for(int i = p1 + 1; i < p2; ++i) {
-                sb.append(paragraphs.get(i).toString());
-                sb.append('\n');
-            }
-
-            sb.append(paragraphs.get(p2).substring(0, col2));
-        }
-
-        // If we were instructed to go beyond the end in a non-last paragraph,
-        // we omitted a newline. Add it back.
-        if(col2 > paragraphs.get(p2).length() && p2 < paragraphs.size() - 1) {
-            sb.append('\n');
-        }
-
-        return sb.toString();
+    public StyledDocument<S> subDocument(int start, int end) {
+        return sub(
+                start, end,
+                p -> p,
+                (p, a, b) -> p.subParagraph(a, b),
+                (List<Paragraph<S>> pars) -> new StyledDocument<S>(pars));
     }
 
     public S getStyleAt(int pos) {
-        Position pos2D = navigator.offsetToPosition(pos);
+        Position pos2D = navigator.offsetToPosition(pos, Forward);
         int line = pos2D.getMajor();
         int col = pos2D.getMinor();
         return paragraphs.get(line).getStyleAt(col);
@@ -151,8 +144,8 @@ final class StyledDocument<S> implements TwoDimensional {
     }
 
     @Override
-    public Position offsetToPosition(int offset) {
-        return navigator.offsetToPosition(offset);
+    public Position offsetToPosition(int offset, Bias bias) {
+        return navigator.offsetToPosition(offset, bias);
     }
 
     @Override
@@ -174,43 +167,41 @@ final class StyledDocument<S> implements TwoDimensional {
         if (replacement == null)
             throw new NullPointerException("replacement text is null");
 
-        Position start2D = navigator.offsetToPosition(start);
-        Position end2D = start2D.offsetBy(end - start);
-        int leadingLineIndex = start2D.getMajor();
-        int leadingLineFrom = start2D.getMinor();
-        int trailingLineIndex = end2D.getMajor();
-        int trailingLineTo = end2D.getMinor();
+        Position start2D = navigator.offsetToPosition(start, Forward);
+        Position end2D = start2D.offsetBy(end - start, Forward);
+        int firstParIdx = start2D.getMajor();
+        int firstParFrom = start2D.getMinor();
+        int lastParIdx = end2D.getMajor();
+        int lastParTo = end2D.getMinor();
 
         replacement = filterInput(replacement);
         String replacedText = getText(start, end);
 
         // Get the leftovers after cutting out the deletion
-        Paragraph<S> leadingLine = paragraphs.get(leadingLineIndex);
-        Paragraph<S> trailingLine = paragraphs.get(trailingLineIndex);
-        Paragraph<S> left = leadingLine.split(leadingLineFrom)[0];
-        Paragraph<S> right = trailingLine.split(trailingLineTo)[1];
+        Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+        Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+        Paragraph<S> left = firstPar.trim(firstParFrom);
+        Paragraph<S> right = lastPar.subParagraph(lastParTo);
 
         String[] replacementLines = replacement.split("\n", -1);
         int n = replacementLines.length;
 
-        S replacementStyle = leadingLine.getStyleAt(leadingLineFrom-1);
+        S replacementStyle = firstPar.getStyleAt(firstParFrom-1);
 
         if(n == 1) {
             // replacement is just a single line,
             // use it to join the two leftover lines
-            left.append(replacementLines[0]);
-            left.appendFrom(right);
+            left = left.append(replacementLines[0]).append(right);
 
             // replace the affected liens with the merger of leftovers and the replacement line
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            paragraphs.remove(leadingLineIndex+1, trailingLineIndex+1);
-        }
-        else {
+            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(firstParIdx+1, lastParIdx+1);
+        } else {
             // append the first replacement line to the left leftover
             // and prepend the last replacement line to the right leftover
-            left.append(replacementLines[0]);
-            right.insert(0, replacementLines[n-1]);
+            left = left.append(replacementLines[0]);
+            right = right.insert(0, replacementLines[n-1]);
 
             // create list of new lines to replace the affected lines
             List<Paragraph<S>> newLines = new ArrayList<>(n-1);
@@ -220,9 +211,9 @@ final class StyledDocument<S> implements TwoDimensional {
 
             // replace the affected lines with the new lines
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(leadingLineIndex, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            paragraphs.remove(leadingLineIndex+1, trailingLineIndex+1);
-            paragraphs.addAll(leadingLineIndex+1, newLines);
+            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(firstParIdx+1, lastParIdx+1);
+            paragraphs.addAll(firstParIdx+1, newLines);
         }
 
         // update length, invalidate text
@@ -237,39 +228,38 @@ final class StyledDocument<S> implements TwoDimensional {
     }
 
     public void setStyle(int from, int to, S style) {
-        Position start = navigator.offsetToPosition(from);
-        Position end = start.offsetBy(to - from);
-        int firstLineIndex = start.getMajor();
-        int firstLineFrom = start.getMinor();
-        int lastLineIndex = end.getMajor();
-        int lastLineTo = end.getMinor();
-
         if(from == to)
             return;
 
-        if(firstLineIndex == lastLineIndex) {
-            setStyle(firstLineIndex, firstLineFrom, lastLineTo, style);
-        }
-        else {
-            int firstLineLen = paragraphs.get(firstLineIndex).length();
-            setStyle(firstLineIndex, firstLineFrom, firstLineLen, style);
-            for(int i=firstLineIndex+1; i<lastLineIndex; ++i) {
+        Position start = navigator.offsetToPosition(from, Forward);
+        Position end = start.offsetBy(to - from, Forward);
+        int firstParIdx = start.getMajor();
+        int firstParFrom = start.getMinor();
+        int lastParIdx = end.getMajor();
+        int lastParTo = end.getMinor();
+
+        if(firstParIdx == lastParIdx) {
+            setStyle(firstParIdx, firstParFrom, lastParTo, style);
+        } else {
+            int firstParLen = paragraphs.get(firstParIdx).length();
+            setStyle(firstParIdx, firstParFrom, firstParLen, style);
+            for(int i=firstParIdx+1; i<lastParIdx; ++i) {
                 setStyle(i, style);
             }
-            setStyle(lastLineIndex, 0, lastLineTo, style);
+            setStyle(lastParIdx, 0, lastParTo, style);
         }
     }
 
     public void setStyle(int paragraph, S style) {
         Paragraph<S> p = paragraphs.get(paragraph);
-        p.setStyle(style);
-        paragraphs.set(paragraph, p); // to generate change event
+        p = p.restyle(style);
+        paragraphs.set(paragraph, p);
     }
 
     public void setStyle(int paragraph, int fromCol, int toCol, S style) {
         Paragraph<S> p = paragraphs.get(paragraph);
-        p.setStyle(fromCol, toCol, style);
-        paragraphs.set(paragraph, p); // to generate change event
+        p = p.restyle(fromCol, toCol, style);
+        paragraphs.set(paragraph, p);
     }
 
 
@@ -281,6 +271,66 @@ final class StyledDocument<S> implements TwoDimensional {
 
     private String getContent() {
         return getText(0, getLength());
+    }
+
+    private interface SubMap<A, B> {
+        B subrange(A par, int start, int end);
+    }
+
+    /**
+     * Returns a subrange of this document.
+     * @param start
+     * @param end
+     * @param map maps a paragraph to an object of type {@code P}.
+     * @param subMap maps a subrange of paragraph to an object of type {@code P}.
+     * @param combine combines mapped paragraphs to form the result.
+     * @param <P> type to which paragraphs are mapped.
+     * @param <R> type of the resulting sub-document.
+     */
+    private <P, R> R sub(
+            int start, int end,
+            Function<Paragraph<S>, P> map,
+            SubMap<Paragraph<S>, P> subMap,
+            Function<List<P>, R> combine) {
+
+        int length = end - start;
+
+        Position start2D = navigator.offsetToPosition(start, Forward);
+        Position end2D = start2D.offsetBy(length, Forward); // Forward to make sure newline is not lost
+        int p1 = start2D.getMajor();
+        int col1 = start2D.getMinor();
+        int p2 = end2D.getMajor();
+        int col2 = end2D.getMinor();
+
+        List<P> pars = new ArrayList<>(p2 - p1 + 1);
+
+        if(p1 == p2) {
+            pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
+        } else {
+            Paragraph<S> par1 = paragraphs.get(p1);
+            pars.add(subMap.subrange(par1, col1, par1.length()));
+
+            for(int i = p1 + 1; i < p2; ++i) {
+                pars.add(map.apply(paragraphs.get(i)));
+            }
+
+            pars.add(subMap.subrange(paragraphs.get(p2), 0, col2));
+        }
+
+        return combine.apply(pars);
+    }
+
+    /**
+     * Joins a list of strings, using the given separator string.
+     */
+    private static String join(List<String> list, String sep) {
+        int len = list.stream().mapToInt(s -> s.length()).sum() + (list.size()-1) * sep.length();
+        StringBuilder sb = new StringBuilder(len);
+        sb.append(list.get(0));
+        for(int i = 1; i < list.size(); ++i) {
+            sb.append(sep).append(list.get(i));
+        }
+        return sb.toString();
     }
 
     private void fireTextChange(int pos, String removedText, String addedText) {

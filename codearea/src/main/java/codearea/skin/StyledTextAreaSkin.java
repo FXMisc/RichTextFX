@@ -1,57 +1,33 @@
-/*
- * Copyright (c) 2011, 2013, Oracle and/or its affiliates and Tomas Mikula.
- * All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package codearea.skin;
+
+import static reactfx.Sources.*;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.event.EventHandler;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.IndexRange;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.util.Callback;
 import javafx.util.Duration;
+import reactfx.Source;
+import reactfx.Subscription;
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;
@@ -68,6 +44,12 @@ import com.sun.javafx.scene.text.HitInfo;
  */
 public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, CodeAreaBehavior<S>> {
 
+    /**************************************************************************
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     **************************************************************************/
+
     /**
      * Background fill for highlighted text.
      */
@@ -80,27 +62,40 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     final StyleableObjectProperty<Paint> highlightTextFill
             = new HighlightTextFillProperty(this, Color.WHITE);
 
-    private final MyListView<Paragraph<S>> listView;
+
+    /**************************************************************************
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     **************************************************************************/
+
     final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
-    private void updateWrapWidth() {
-        if(getSkinnable().isWrapText()) {
-            wrapWidth.bind(listView.widthProperty());
-        } else {
-            wrapWidth.unbind();
-            wrapWidth.set(Double.MAX_VALUE); // no wrapping
-        }
-    }
+
+    final BooleanBinding caretVisible;
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Private fields                                                         *
+     *                                                                        *
+     **************************************************************************/
+
+    private Subscription subscriptions = () -> {};
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
-    final ObservableBooleanValue caretVisible;
 
-    // keeps track of the currently selected cell,
-    // i.e. the cell with the caret
-    private ParagraphCell<S> selectedCell = null;
+    private final MyListView<Paragraph<S>> listView;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Constructors                                                           *
+     *                                                                        *
+     **************************************************************************/
 
     public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
@@ -119,114 +114,64 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         getChildren().add(listView);
 
         // Use LineCell as cell implementation
-        listView.setCellFactory(new Callback<ListView<Paragraph<S>>, ListCell<Paragraph<S>>>() {
-            @Override
-            public ListCell<Paragraph<S>> call(final ListView<Paragraph<S>> listView) {
-                final ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
-
-                cell.selectedProperty().addListener(new ChangeListener<Boolean>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> o, Boolean old, Boolean selected) {
-                        if(selected)
-                            selectedCell = cell;
-                    }
-                });
-
-                // listen to mouse events on lines
-                cell.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-                    @Override public void handle(MouseEvent event) {
-                        getBehavior().mousePressed(event);
-                        event.consume();
-                    }
-                });
-                cell.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        // startFullDrag() causes subsequent drag events to be
-                        // received by corresponding LineCells, instead of all
-                        // events being delivered to the original LineCell.
-                        cell.getScene().startFullDrag();
-                        getBehavior().dragDetected(event);
-                        event.consume();
-                    }
-                });
-                cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, new EventHandler<MouseDragEvent>() {
-                    @Override public void handle(MouseDragEvent event) {
-                        getBehavior().mouseDragOver(event);
-                        event.consume();
-                    }
-                });
-                cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
-                    @Override public void handle(MouseDragEvent event) {
-                        getBehavior().mouseDragReleased(event);
-                        event.consume();
-                    }
-                });
-                cell.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-                    @Override public void handle(MouseEvent event) {
-                        getBehavior().mouseReleased(event);
-                        event.consume();
-                    }
-                });
-
-                return cell;
-            }
+        listView.setCellFactory(lv -> {
+            ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
+            cellCreated(cell);
+            return cell;
         });
 
         // make wrapWidth behave according to the wrapText property
-        styledTextArea.wrapTextProperty().addListener(o -> updateWrapWidth());
+        listenTo(styledTextArea.wrapTextProperty(), o -> updateWrapWidth());
         updateWrapWidth();
 
-        // selected line reflects the caret row
-        styledTextArea.currentParagraph().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable,
-                    Number oldRow, Number currentRow) {
-                listView.getSelectionModel().select(currentRow.intValue());
-                listView.show(currentRow.intValue());
-            }
-        });
-        listView.getSelectionModel().select(styledTextArea.getCurrentParagraph());
+        Source<Void> areaDoneUpdating = fromInvalidations(styledTextArea.doneUpdatingProperty());
 
-        // If the current line changes without changing the current row
-        // we need to reselect the corresponding list item.
-        // We rely on the fact that this listener is called _after_
-        // listViews listener on the same list. For this reason, we cannot
-        // use InvalidationListener, since that one would be called before
-        // change listeners.
-        listView.getItems().addListener(new ListChangeListener<Paragraph<S>>() {
-            @Override
-            public void onChanged(
-                    javafx.collections.ListChangeListener.Change<? extends Paragraph<S>> arg0) {
-                listView.getSelectionModel().select(styledTextArea.getCurrentParagraph());
+        // keep the current paragraph selected
+        Source<Void> caretPosDirty = fromInvalidations(styledTextArea.caretPositionProperty());
+        Source<Void> paragraphsDirty = fromInvalidations(listView.getItems());
+        Source<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
+        subscribeTo(release(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
+        //refreshCaret();
+
+        // update selection in paragraphs
+        Source<Void> selectionDirty = fromInvalidations(styledTextArea.selectionProperty());
+        subscribeTo(release(selectionDirty).on(areaDoneUpdating), x -> {
+            IndexRange visibleRange = listView.getVisibleRange();
+            int startPar = visibleRange.getStart();
+            int endPar = visibleRange.getEnd();
+
+            for(int i = startPar; i < endPar; ++i) {
+                ParagraphGraphic<S> graphic = getCell(i).getParagraphGraphic();
+                graphic.setSelection(styledTextArea.getParagraphSelection(i));
             }
         });
 
-        // blink caret when focused
-        styledTextArea.focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean wasFocused, Boolean focused) {
-                if(focused)
-                    caretPulse.start(true);
-                else
-                    caretPulse.stop(false);
-            }
+        // blink caret only when focused
+        listenTo(styledTextArea.focusedProperty(), (obs, old, isFocused) -> {
+            if(isFocused)
+                caretPulse.start(true);
+            else
+                caretPulse.stop(false);
         });
-        if (styledTextArea.isFocused())
+        if(styledTextArea.isFocused())
             caretPulse.start(true);
+        manageSubscription(() -> caretPulse.stop());
 
-        // The caret is visible when code area is not disabled, focused and editable.
-        caretVisible = new BooleanBinding() {
-            { bind(styledTextArea.focusedProperty(), styledTextArea.disabledProperty(),
-                    styledTextArea.editableProperty(), caretPulse);}
-            @Override protected boolean computeValue() {
-                return caretPulse.get() &&
-                        styledTextArea.isFocused() &&
-                        !styledTextArea.isDisabled() &&
-                        styledTextArea.isEditable();
-            }
-        };
+        // The caret is visible in periodic intervals, but only when
+        // the code area is focused, editable and not disabled.
+        caretVisible = caretPulse
+                .and(styledTextArea.focusedProperty())
+                .and(styledTextArea.editableProperty())
+                .and(styledTextArea.disabledProperty().not());
+        manageSubscription(() -> caretVisible.dispose());
     }
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     **************************************************************************/
 
     public void showAsFirst(int index) {
         listView.showAsFirst(index);
@@ -235,6 +180,18 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     public void showAsLast(int index) {
         listView.showAsLast(index);
     }
+
+    @Override
+    public void dispose() {
+        subscriptions.unsubscribe();
+    }
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Queries                                                                *
+     *                                                                        *
+     **************************************************************************/
 
     public int getFirstVisibleIndex() {
         return listView.getFirstVisibleIndex();
@@ -245,7 +202,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     public double getCaretOffsetX() {
-        return selectedCell != null ? selectedCell.getCaretOffsetX() : 0;
+        int idx = listView.getSelectionModel().getSelectedIndex();
+        return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
     public HitInfo hit(Position targetLine, double x) {
@@ -268,20 +226,92 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return navigator.position(par, line);
     }
 
-    @Override
-    public void dispose() {
-        // TODO Unregister listeners on text editor, line list
-        throw new UnsupportedOperationException();
-    }
 
-    private ParagraphCell<S> getCell(int index) {
-        return (ParagraphCell<S>) listView.getCell(index);
-    }
+    /**************************************************************************
+     *                                                                        *
+     * Look & feel                                                            *
+     *                                                                        *
+     **************************************************************************/
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
         return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
                 highlightFill.getCssMetaData(),
                 highlightTextFill.getCssMetaData());
+    }
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     **************************************************************************/
+
+    private void cellCreated(ParagraphCell<S> cell) {
+        // listen to mouse events on lines
+        cell.addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
+            getBehavior().mousePressed(event);
+            event.consume();
+        });
+        cell.addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
+            // startFullDrag() causes subsequent drag events to be
+            // received by corresponding LineCells, instead of all
+            // events being delivered to the original LineCell.
+            cell.getScene().startFullDrag();
+            getBehavior().dragDetected(event);
+            event.consume();
+        });
+        cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, event -> {
+            getBehavior().mouseDragOver(event);
+            event.consume();
+        });
+        cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, event -> {
+            getBehavior().mouseDragReleased(event);
+            event.consume();
+        });
+        cell.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            getBehavior().mouseReleased(event);
+            event.consume();
+        });
+    }
+
+    private ParagraphCell<S> getCell(int index) {
+        return (ParagraphCell<S>) listView.getCell(index).get();
+    }
+
+    private void updateWrapWidth() {
+        if(getSkinnable().isWrapText()) {
+            wrapWidth.bind(listView.widthProperty());
+        } else {
+            wrapWidth.unbind();
+            wrapWidth.set(Double.MAX_VALUE); // no wrapping
+        }
+    }
+
+    private void refreshCaret() {
+        int par = getSkinnable().getCurrentParagraph();
+        int col = getSkinnable().getCaretColumn();
+
+        listView.getSelectionModel().select(par);
+        getCell(par).getParagraphGraphic().setCaretPosition(col);
+        listView.show(par); // bring the current paragraph to the viewport
+    }
+
+    private void listenTo(Observable observable, InvalidationListener listener) {
+        observable.addListener(listener);
+        manageSubscription(() -> observable.removeListener(listener));
+    }
+
+    private <T> void listenTo(ObservableValue<T> observable, ChangeListener<T> listener) {
+        observable.addListener(listener);
+        manageSubscription(() -> observable.removeListener(listener));
+    }
+
+    private <T> void subscribeTo(Source<T> src, Consumer<T> consumer) {
+        manageSubscription(src.subscribe(consumer));
+    }
+
+    private void manageSubscription(Subscription subscription) {
+        subscriptions = Subscription.multi(subscriptions, subscription);
     }
 }
