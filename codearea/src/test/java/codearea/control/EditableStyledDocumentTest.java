@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class StyledTextDocumentTest {
+public class EditableStyledDocumentTest {
 
     @Test
     public void testConsistencyOfTextWithLength() {
-        StyledDocument<String> document = new StyledDocument<>("");
+        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 
@@ -23,7 +23,7 @@ public class StyledTextDocumentTest {
 
     @Test
     public void testConsistencyOfLengthWithText() {
-        StyledDocument<String> document = new StyledDocument<>("");
+        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 

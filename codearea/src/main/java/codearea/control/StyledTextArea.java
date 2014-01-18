@@ -190,7 +190,7 @@ implements
     /**
      * content model
      */
-    private final StyledDocument<S> content;
+    private final EditableStyledDocument<S> content;
 
     /**
      * Style used by default when no other style is provided.
@@ -221,7 +221,7 @@ implements
     public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
-        content = new StyledDocument<>(initialStyle);
+        content = new EditableStyledDocument<>(initialStyle);
         paragraphs = content.getParagraphs();
 
         undoManager = createUndoManager(defaultUndoManagerFactory);
