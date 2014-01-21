@@ -4,15 +4,14 @@ import java.util.List;
 
 import javafx.scene.control.IndexRange;
 
-public interface StyledDocument<S> extends TwoDimensional {
+public interface StyledDocument<S> extends CharSequence, TwoDimensional {
     String getText();
-    String getText(IndexRange range);
     String getText(int start, int end);
+    String getText(IndexRange range);
 
-    StyledDocument<S> subDocument(IndexRange range);
-    StyledDocument<S> subDocument(int start, int end);
-
-    int getLength();
+    @Override
+    StyledDocument<S> subSequence(int start, int end);
+    StyledDocument<S> subSequence(IndexRange range);
 
     S getStyleAt(int pos);
     S getStyleAt(int paragraph, int column);

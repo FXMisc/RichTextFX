@@ -35,7 +35,7 @@ import java.util.Objects;
 
 import codearea.control.TwoDimensional.Position;
 
-public final class Paragraph<S> {
+public final class Paragraph<S> implements CharSequence {
     private final List<StyledText<S>> segments;
     private final TwoLevelNavigator navigator;
 
@@ -60,11 +60,18 @@ public final class Paragraph<S> {
     }
 
     private int length = -1;
+    @Override
     public int length() {
         if(length == -1) {
             length = segments.stream().mapToInt(s -> s.length()).sum();
         }
         return length;
+    }
+
+    @Override
+    public char charAt(int index) {
+        Position pos = navigator.offsetToPosition(index, Forward);
+        return segments.get(pos.getMajor()).charAt(pos.getMinor());
     }
 
     public String substring(int from, int to) {
@@ -120,8 +127,9 @@ public final class Paragraph<S> {
         return new Paragraph<S>(segs);
     }
 
-    public Paragraph<S> subParagraph(int start, int end) {
-        return trim(end).subParagraph(start);
+    @Override
+    public Paragraph<S> subSequence(int start, int end) {
+        return trim(end).subSequence(start);
     }
 
     public Paragraph<S> trim(int length) {
@@ -137,7 +145,7 @@ public final class Paragraph<S> {
         }
     }
 
-    public Paragraph<S> subParagraph(int start) {
+    public Paragraph<S> subSequence(int start) {
         if(start > 0) {
             Position pos = navigator.offsetToPosition(start, Forward);
             int segIdx = pos.getMajor();
@@ -151,7 +159,7 @@ public final class Paragraph<S> {
     }
 
     public Paragraph<S> delete(int start, int end) {
-        return trim(start).append(subParagraph(end));
+        return trim(start).append(subSequence(end));
     }
 
     public Paragraph<S> restyle(S style) {
@@ -159,9 +167,9 @@ public final class Paragraph<S> {
     }
 
     public Paragraph<S> restyle(int from, int to, S style) {
-        Paragraph<S> left = subParagraph(0, from);
+        Paragraph<S> left = subSequence(0, from);
         Paragraph<S> middle = new Paragraph<S>(substring(from, to), style);
-        Paragraph<S> right = subParagraph(to);
+        Paragraph<S> right = subSequence(to);
         return left.append(middle).append(right);
     }
 
@@ -179,7 +187,7 @@ public final class Paragraph<S> {
     }
 
     /**
-     * Returns the string content of this line.
+     * Returns the string content of this paragraph.
      */
     @Override
     public String toString() {

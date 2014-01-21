@@ -25,7 +25,6 @@
 
 package codearea.control;
 
-import java.util.stream.IntStream;
 
 public class StyledText<S> implements CharSequence {
     private final String text;
@@ -58,16 +57,6 @@ public class StyledText<S> implements CharSequence {
 
     public StyledText<S> subSequence(int start) {
         return new StyledText<S>(text.substring(start), style);
-    }
-
-    @Override
-    public IntStream chars() {
-        return text.chars();
-    }
-
-    @Override
-    public IntStream codePoints() {
-        return text.codePoints();
     }
 
     public StyledText<S> concat(CharSequence str) {

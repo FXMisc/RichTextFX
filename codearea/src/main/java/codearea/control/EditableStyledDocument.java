@@ -38,7 +38,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     /**
      * Content of this {@code StyledDocument}.
      */
-    private final StringBinding text = BindingFactories.createStringBinding(() -> getText(0, getLength()));
+    private final StringBinding text = BindingFactories.createStringBinding(() -> getText(0, length()));
     @Override
     public String getText() { return text.get(); }
     public ObservableStringValue textProperty() { return text; }
@@ -47,9 +47,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Length of this {@code StyledDocument}.
      */
     private final ReadOnlyIntegerWrapper length = new ReadOnlyIntegerWrapper();
-    @Override
     public int getLength() { return length.get(); }
     public ObservableIntegerValue lengthProperty() { return length.getReadOnlyProperty(); }
+    @Override
+    public int length() { return length.get(); }
 
     /**
      * Unmodifiable observable list of styled paragraphs of this document.
@@ -107,13 +108,13 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         Source<String> removedText = Sources.zip(textChangePosition, textRemovalEnd, (a, b) -> getText(a, b));
         Source<Integer> changePosition = Sources.merge(textChangePosition, styleChangePosition);
         Source<Integer> removalEnd = Sources.merge(textRemovalEnd, styleChangeEnd);
-        Source<StyledDocument<S>> removedDocument = Sources.zip(changePosition, removalEnd, (a, b) -> subDocument(a, b));
+        Source<StyledDocument<S>> removedDocument = Sources.zip(changePosition, removalEnd, (a, b) -> subSequence(a, b));
         Source<Integer> insertionEnd = Sources.merge(
                 Sources.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
                 Sources.release(styleChangeEnd).on(styleChangeDone));
         Source<StyledDocument<S>> insertedDocument = Sources.merge(
                 this.insertedDocument,
-                Sources.combine(changePosition).on(insertionEnd).by((a, b) -> subDocument(a, b)));
+                Sources.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));
 
         textChanges = Sources.zip(textChangePosition, removedText, insertedText,
                 (pos, removed, inserted) -> new TextChange(pos, removed, inserted));
@@ -245,7 +246,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         Paragraph<S> firstPar = paragraphs.get(firstParIdx);
         Paragraph<S> lastPar = paragraphs.get(lastParIdx);
         Paragraph<S> left = firstPar.trim(firstParFrom);
-        Paragraph<S> right = lastPar.subParagraph(lastParTo);
+        Paragraph<S> right = lastPar.subSequence(lastParTo);
 
         List<Paragraph<S>> replacementPars = replacementToParagraphs.apply(replacement, start2D);
         int n = replacementPars.size();

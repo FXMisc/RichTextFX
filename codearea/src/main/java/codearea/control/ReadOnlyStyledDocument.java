@@ -14,7 +14,7 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     }
 
     @Override
-    public int getLength() {
+    public int length() {
         if(length == -1) {
             length = computeLength();
         }
@@ -24,7 +24,7 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     @Override
     public String getText() {
         if(text == null) {
-            text = getText(0, getLength());
+            text = getText(0, length());
         }
         return text;
     }

@@ -57,16 +57,27 @@ implements StyledDocument<S> {
     }
 
     @Override
-    public StyledDocument<S> subDocument(IndexRange range) {
-        return subDocument(range.getStart(), range.getEnd());
+    public String toString() {
+        return getText();
     }
 
     @Override
-    public StyledDocument<S> subDocument(int start, int end) {
+    public char charAt(int index) {
+        Position pos = offsetToPosition(index, Forward);
+        return paragraphs.get(pos.getMajor()).charAt(pos.getMinor());
+    }
+
+    @Override
+    public StyledDocument<S> subSequence(IndexRange range) {
+        return subSequence(range.getStart(), range.getEnd());
+    }
+
+    @Override
+    public StyledDocument<S> subSequence(int start, int end) {
         return sub(
                 start, end,
                 p -> p,
-                (p, a, b) -> p.subParagraph(a, b),
+                (p, a, b) -> p.subSequence(a, b),
                 (List<Paragraph<S>> pars) -> new ReadOnlyStyledDocument<S>(pars));
     }
 
