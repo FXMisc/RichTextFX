@@ -5,6 +5,8 @@ import inhibeans.property.ReadOnlyIntegerWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import javafx.beans.binding.StringBinding;
 import javafx.beans.value.ObservableIntegerValue;
@@ -144,67 +146,12 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      **************************************************************************/
 
     public void replaceText(int start, int end, String replacement) {
-        replacement = filterInput(replacement);
-
-        textChangePosition.push(start);
-        textRemovalEnd.push(end);
-
-        Position start2D = navigator.offsetToPosition(start, Forward);
-        Position end2D = start2D.offsetBy(end - start, Forward);
-        int firstParIdx = start2D.getMajor();
-        int firstParFrom = start2D.getMinor();
-        int lastParIdx = end2D.getMajor();
-        int lastParTo = end2D.getMinor();
-
-        // Get the leftovers after cutting out the deletion
-        Paragraph<S> firstPar = paragraphs.get(firstParIdx);
-        Paragraph<S> lastPar = paragraphs.get(lastParIdx);
-        Paragraph<S> left = firstPar.trim(firstParFrom);
-        Paragraph<S> right = lastPar.subParagraph(lastParTo);
-
-        String[] replacementLines = replacement.split("\n", -1);
-        int n = replacementLines.length;
-
-        S replacementStyle = firstPar.getStyleAt(firstParFrom-1);
-
-        if(n == 1) {
-            // replacement is just a single line,
-            // use it to join the two leftover lines
-            left = left.append(replacementLines[0]).append(right);
-
-            // replace the affected liens with the merger of leftovers and the replacement line
-            // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            paragraphs.remove(firstParIdx+1, lastParIdx+1);
-        } else {
-            // append the first replacement line to the left leftover
-            // and prepend the last replacement line to the right leftover
-            left = left.append(replacementLines[0]);
-            right = right.insert(0, replacementLines[n-1]);
-
-            // create list of new lines to replace the affected lines
-            List<Paragraph<S>> newLines = new ArrayList<>(n-1);
-            for(int i = 1; i < n - 1; ++i)
-                newLines.add(new Paragraph<S>(replacementLines[i], replacementStyle));
-            newLines.add(right);
-
-            // replace the affected lines with the new lines
-            // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
-            paragraphs.remove(firstParIdx+1, lastParIdx+1);
-            paragraphs.addAll(firstParIdx+1, newLines);
-        }
-
-        // update length, invalidate text
-        int newLength = length.get() - (end - start) + replacement.length();
-        length.blockWhile(() -> { // don't publish length change until text is invalidated
-            length.set(newLength);
-            text.invalidate();
-        });
-
-        // complete the change events
-        insertedText.push(replacement);
-        insertionLength.push(replacement.length());
+        replace(start, end, filterInput(replacement),
+                (repl, pos) -> stringToParagraphs(repl, getStyleForInsertionAt(pos)),
+                 repl -> {
+                     insertedText.push(repl);
+                     insertionLength.push(repl.length());
+                 });
     }
 
     public void setStyle(int from, int to, S style) {
@@ -264,5 +211,92 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     private static boolean isLegal(char c) {
         return !Character.isISOControl(c) || c == '\n' || c == '\t';
+    }
+
+    /**
+     * Generic implementation for text replacement.
+     * @param start
+     * @param end
+     * @param replacement
+     * @param replacementToParagraphs function to convert the replacement
+     * to paragraphs. In addition to replacement itself, it is also given
+     * the position at which the replacement is going to be inserted. This
+     * position can be used to determine the style of the resulting paragraphs.
+     * @param publishReplacement completes the change events. It has to push
+     * exactly one value {@link #insertedText} and exactly one value to exactly
+     * one of {@link #insertedDocument}, {@link #insertionLength}.
+     */
+    private <D extends CharSequence> void replace(
+            int start, int end, D replacement,
+            BiFunction<D, Position, List<Paragraph<S>>> replacementToParagraphs,
+            Consumer<D> publishReplacement) {
+
+        textChangePosition.push(start);
+        textRemovalEnd.push(end);
+
+        Position start2D = navigator.offsetToPosition(start, Forward);
+        Position end2D = start2D.offsetBy(end - start, Forward);
+        int firstParIdx = start2D.getMajor();
+        int firstParFrom = start2D.getMinor();
+        int lastParIdx = end2D.getMajor();
+        int lastParTo = end2D.getMinor();
+
+        // Get the leftovers after cutting out the deletion
+        Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+        Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+        Paragraph<S> left = firstPar.trim(firstParFrom);
+        Paragraph<S> right = lastPar.subParagraph(lastParTo);
+
+        List<Paragraph<S>> replacementPars = replacementToParagraphs.apply(replacement, start2D);
+        int n = replacementPars.size();
+
+        if(n == 1) {
+            // replacement is just a single line,
+            // use it to join the two leftover lines
+            left = left.append(replacementPars.get(0)).append(right);
+
+            // replace the affected liens with the merger of leftovers and the replacement line
+            // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
+            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(firstParIdx+1, lastParIdx+1);
+        } else {
+            // append the first replacement line to the left leftover
+            // and prepend the last replacement line to the right leftover
+            left = left.append(replacementPars.get(0));
+            right = replacementPars.get(n-1).append(right);
+
+            // replace the affected lines with the new lines
+            // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
+            paragraphs.set(lastParIdx, right); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.remove(firstParIdx, lastParIdx);
+            paragraphs.add(firstParIdx, left);
+            paragraphs.addAll(firstParIdx+1, replacementPars.subList(1, n - 1));
+        }
+
+        // update length, invalidate text
+        int newLength = length.get() - (end - start) + replacement.length();
+        length.blockWhile(() -> { // don't publish length change until text is invalidated
+            length.set(newLength);
+            text.invalidate();
+        });
+
+        // complete the change events
+        publishReplacement.accept(replacement);
+    }
+
+    private S getStyleForInsertionAt(Position insertionPos) {
+        Paragraph<S> par = paragraphs.get(insertionPos.getMajor());
+        int insertionCol = insertionPos.getMinor();
+        int prevCharIdx = insertionCol - 1; // it is OK if prevCharIdx is -1
+        return par.getStyleAt(prevCharIdx);
+    }
+
+    private List<Paragraph<S>> stringToParagraphs(String str, S style) {
+        String[] strings = str.split("\n", -1);
+        List<Paragraph<S>> res = new ArrayList<>(strings.length);
+        for(String s: strings) {
+            res.add(new Paragraph<S>(s, style));
+        }
+        return res;
     }
 }
