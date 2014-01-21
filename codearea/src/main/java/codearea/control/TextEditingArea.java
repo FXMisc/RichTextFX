@@ -122,12 +122,12 @@ public interface TextEditingArea<S> {
     /**
      * Stream of text changes.
      */
-    Source<TextChange> textChanges();
+    Source<PlainTextChange> plainTextChanges();
 
     /**
      * Stream of rich text changes.
      */
-    Source<SequenceChange<StyledDocument<S>>> richChanges();
+    Source<RichTextChange<S>> richChanges();
 
 
     /***************

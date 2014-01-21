@@ -83,6 +83,19 @@ implements StyledDocument<S> {
     }
 
     @Override
+    public final StyledDocument<S> concat(StyledDocument<S> that) {
+        List<Paragraph<S>> pars1 = this.getParagraphs();
+        List<Paragraph<S>> pars2 = that.getParagraphs();
+        int n1 = pars1.size();
+        int n2 = pars2.size();
+        List<Paragraph<S>> pars = new ArrayList<>(n1 + n2 - 1);
+        pars.addAll(pars1.subList(0, n1 - 1));
+        pars.add(pars1.get(n1 - 1).append(pars2.get(0)));
+        pars.addAll(pars2.subList(1, n2));
+        return new ReadOnlyStyledDocument<S>(pars, ADOPT);
+    }
+
+    @Override
     public S getStyleAt(int pos) {
         Position pos2D = navigator.offsetToPosition(pos, Forward);
         int line = pos2D.getMajor();

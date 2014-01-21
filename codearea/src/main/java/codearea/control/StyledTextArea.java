@@ -55,10 +55,10 @@ implements
         EditActions<S>,
         ClipboardActions<S>,
         NavigationActions<S>,
-        UndoActions<TextChange>,
+        UndoActions<PlainTextChange>,
         TwoDimensional {
 
-    private static final UndoManagerProvider<TextChange> defaultUndoManagerFactory =
+    private static final UndoManagerProvider<PlainTextChange> defaultUndoManagerFactory =
             (apply, undo, merge, changeSource) -> new ObservingUndoManager<>(apply, undo, merge, changeSource);
 
     private static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
@@ -93,7 +93,7 @@ implements
     @Override
     public UndoManager getUndoManager() { return undoManager; }
     @Override
-    public void setUndoManager(UndoManagerProvider<TextChange> undoManagerProvider) {
+    public void setUndoManager(UndoManagerProvider<PlainTextChange> undoManagerProvider) {
         undoManager.close();
         undoManager = createUndoManager(undoManagerProvider);
     }
@@ -174,11 +174,11 @@ implements
 
     // text changes
     @Override
-    public final Source<TextChange> textChanges() { return content.textChanges(); }
+    public final Source<PlainTextChange> plainTextChanges() { return content.plainTextChanges(); }
 
     // rich text changes
     @Override
-    public final Source<SequenceChange<StyledDocument<S>>> richChanges() { return content.richChanges(); }
+    public final Source<RichTextChange<S>> richChanges() { return content.richChanges(); }
 
 
     /**************************************************************************
@@ -419,10 +419,10 @@ implements
      *                                                                        *
      **************************************************************************/
 
-    private UndoManager createUndoManager(UndoManagerProvider<TextChange> factory) {
-        Consumer<TextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        Consumer<TextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
-        BiFunction<TextChange, TextChange, Optional<TextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
-        return factory.get(apply, undo, merge, textChanges());
+    private UndoManager createUndoManager(UndoManagerProvider<PlainTextChange> factory) {
+        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<PlainTextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
+        return factory.get(apply, undo, merge, plainTextChanges());
     }
 }

@@ -13,6 +13,8 @@ public interface StyledDocument<S> extends CharSequence, TwoDimensional {
     StyledDocument<S> subSequence(int start, int end);
     StyledDocument<S> subSequence(IndexRange range);
 
+    StyledDocument<S> concat(StyledDocument<S> latter);
+
     S getStyleAt(int pos);
     S getStyleAt(int paragraph, int column);
 

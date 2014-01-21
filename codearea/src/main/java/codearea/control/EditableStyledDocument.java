@@ -99,11 +99,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     private final PushSource<Integer> insertionLength = new PushSource<>();
     private final PushSource<Void> styleChangeDone = new PushSource<>();
 
-    private final Source<TextChange> textChanges;
-    public Source<TextChange> textChanges() { return textChanges; }
+    private final Source<PlainTextChange> plainTextChanges;
+    public Source<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
-    private final Source<SequenceChange<StyledDocument<S>>> richChanges;
-    public Source<SequenceChange<StyledDocument<S>>> richChanges() { return richChanges; }
+    private final Source<RichTextChange<S>> richChanges;
+    public Source<RichTextChange<S>> richChanges() { return richChanges; }
 
     {
         Source<String> removedText = Sources.zip(textChangePosition, textRemovalEnd, (a, b) -> getText(a, b));
@@ -117,11 +117,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 this.insertedDocument,
                 Sources.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));
 
-        textChanges = Sources.zip(textChangePosition, removedText, insertedText,
-                (pos, removed, inserted) -> new TextChange(pos, removed, inserted));
+        plainTextChanges = Sources.zip(textChangePosition, removedText, insertedText,
+                (pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted));
 
         richChanges = Sources.zip(changePosition, removedDocument, insertedDocument,
-                (pos, removed, inserted) -> new SequenceChange<StyledDocument<S>>(pos, removed, inserted));
+                (pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted));
     }
 
 

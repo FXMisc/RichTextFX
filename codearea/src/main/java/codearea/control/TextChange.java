@@ -2,11 +2,25 @@ package codearea.control;
 
 import java.util.Optional;
 
-public class TextChange extends SequenceChange<String> {
+public abstract class TextChange<S extends CharSequence, Self extends TextChange<S, Self>> {
 
-    public TextChange(int position, String removed, String inserted) {
-        super(position, removed, inserted);
+    protected final int position;
+    protected final S removed;
+    protected final S inserted;
+
+    public TextChange(int position, S removed, S inserted) {
+        this.position = position;
+        this.removed = removed;
+        this.inserted = inserted;
     }
+
+    public int getPosition() { return position; };
+    public S getRemoved() { return removed; }
+    public S getInserted() { return inserted; }
+
+    protected abstract S concat(S a, S b);
+    protected abstract S sub(S s, int from, int to);
+    protected abstract Self create(int position, S removed, S inserted);
 
     /**
      * Merges this change with the given change, if possible.
@@ -21,20 +35,20 @@ public class TextChange extends SequenceChange<String> {
      * @return a new merged change if changes can be merged,
      * {@code null} otherwise.
      */
-    public Optional<TextChange> mergeWith(TextChange latter) {
+    public Optional<Self> mergeWith(Self latter) {
         if(latter.position == this.position + this.inserted.length()) {
-            String removedText = this.removed + latter.removed;
-            String addedText = this.inserted + latter.inserted;
-            return Optional.of(new TextChange(this.position, removedText, addedText));
+            S removedText = concat(this.removed, latter.removed);
+            S addedText = concat(this.inserted, latter.inserted);
+            return Optional.of(create(this.position, removedText, addedText));
         }
         else if(latter.position + latter.removed.length() == this.position + this.inserted.length()) {
             if(this.position <= latter.position) {
-                String addedText = this.inserted.substring(0, latter.position - this.position) + latter.inserted;
-                return Optional.of(new TextChange(this.position, this.removed, addedText));
+                S addedText = concat(sub(this.inserted, 0, latter.position - this.position), latter.inserted);
+                return Optional.of(create(this.position, this.removed, addedText));
             }
             else {
-                String removedText = latter.removed.substring(0, this.position - latter.position) + this.removed;
-                return Optional.of(new TextChange(latter.position, removedText, latter.inserted));
+                S removedText = concat(sub(latter.removed, 0, this.position - latter.position), this.removed);
+                return Optional.of(create(latter.position, removedText, latter.inserted));
             }
         }
         else {
