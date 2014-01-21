@@ -13,6 +13,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import reactfx.PushSource;
 import reactfx.Source;
+import reactfx.Sources;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -63,8 +64,61 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      *                                                                        *
      **************************************************************************/
 
-    private final PushSource<TextChange> textChanges = new PushSource<>();
+    // To publish a text change:
+    //   1. push to textChangePosition,
+    //   2. push to textRemovalEnd,
+    //   3. push to insertedText.
+    //
+    // To publish a rich change:
+    //   a)
+    //     1. push to textChangePosition,
+    //     2. push to textRemovalEnd,
+    //     3. push to insertedDocument;
+    //   b)
+    //     1. push to textChangePosition,
+    //     2. push to textRemovalEnd,
+    //     3. push to insertionLength;
+    //   c)
+    //     1. push to styleChangePosition
+    //     2. push to styleChangeEnd
+    //     3. push to styleChangeDone.
+
+    private final PushSource<Integer> textChangePosition = new PushSource<>();
+    private final PushSource<Integer> styleChangePosition = new PushSource<>();
+
+    private final PushSource<Integer> textRemovalEnd = new PushSource<>();
+    private final PushSource<Integer> styleChangeEnd = new PushSource<>();
+
+    private final PushSource<String> insertedText = new PushSource<>();
+
+    private final PushSource<StyledDocument<S>> insertedDocument = new PushSource<>();
+    private final PushSource<Integer> insertionLength = new PushSource<>();
+    private final PushSource<Void> styleChangeDone = new PushSource<>();
+
+    private final Source<TextChange> textChanges;
     public Source<TextChange> textChanges() { return textChanges; }
+
+    private final Source<SequenceChange<StyledDocument<S>>> richChanges;
+    public Source<SequenceChange<StyledDocument<S>>> richChanges() { return richChanges; }
+
+    {
+        Source<String> removedText = Sources.zip(textChangePosition, textRemovalEnd, (a, b) -> getText(a, b));
+        Source<Integer> changePosition = Sources.merge(textChangePosition, styleChangePosition);
+        Source<Integer> removalEnd = Sources.merge(textRemovalEnd, styleChangeEnd);
+        Source<StyledDocument<S>> removedDocument = Sources.zip(changePosition, removalEnd, (a, b) -> subDocument(a, b));
+        Source<Integer> insertionEnd = Sources.merge(
+                Sources.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
+                Sources.release(styleChangeEnd).on(styleChangeDone));
+        Source<StyledDocument<S>> insertedDocument = Sources.merge(
+                this.insertedDocument,
+                Sources.combine(changePosition).on(insertionEnd).by((a, b) -> subDocument(a, b)));
+
+        textChanges = Sources.zip(textChangePosition, removedText, insertedText,
+                (pos, removed, inserted) -> new TextChange(pos, removed, inserted));
+
+        richChanges = Sources.zip(changePosition, removedDocument, insertedDocument,
+                (pos, removed, inserted) -> new SequenceChange<StyledDocument<S>>(pos, removed, inserted));
+    }
 
 
     /**************************************************************************
@@ -73,6 +127,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      *                                                                        *
      **************************************************************************/
 
+    @SuppressWarnings("unchecked")
     EditableStyledDocument(S initialStyle) {
         super(FXCollections.observableArrayList(new Paragraph<S>("", initialStyle)));
         length.set(0);
@@ -89,8 +144,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      **************************************************************************/
 
     public void replaceText(int start, int end, String replacement) {
-        if (replacement == null)
-            throw new NullPointerException("replacement text is null");
+        replacement = filterInput(replacement);
+
+        textChangePosition.push(start);
+        textRemovalEnd.push(end);
 
         Position start2D = navigator.offsetToPosition(start, Forward);
         Position end2D = start2D.offsetBy(end - start, Forward);
@@ -98,9 +155,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int firstParFrom = start2D.getMinor();
         int lastParIdx = end2D.getMajor();
         int lastParTo = end2D.getMinor();
-
-        replacement = filterInput(replacement);
-        String replacedText = getText(start, end);
 
         // Get the leftovers after cutting out the deletion
         Paragraph<S> firstPar = paragraphs.get(firstParIdx);
@@ -148,8 +202,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
             text.invalidate();
         });
 
-        // emit change event
-        fireTextChange(start, replacedText, replacement);
+        // complete the change events
+        insertedText.push(replacement);
+        insertionLength.push(replacement.length());
     }
 
     public void setStyle(int from, int to, S style) {
@@ -193,10 +248,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Private methods                                                        *
      *                                                                        *
      **************************************************************************/
-
-    private void fireTextChange(int pos, String removedText, String addedText) {
-        textChanges.push(new TextChange(pos, removedText, addedText));
-    }
 
     /**
      * Filters out illegal characters.

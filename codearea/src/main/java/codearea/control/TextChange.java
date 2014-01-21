@@ -2,21 +2,11 @@ package codearea.control;
 
 import java.util.Optional;
 
-public class TextChange {
-
-    private final int position;
-    private final String removed;
-    private final String inserted;
+public class TextChange extends SequenceChange<String> {
 
     public TextChange(int position, String removed, String inserted) {
-        this.position = position;
-        this.removed = removed;
-        this.inserted = inserted;
+        super(position, removed, inserted);
     }
-
-    public int getPosition() { return position; };
-    public String getRemoved() { return removed; }
-    public String getInserted() { return inserted; }
 
     /**
      * Merges this change with the given change, if possible.
