@@ -161,16 +161,20 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 (repl, pos) -> repl.getParagraphs(),
                 repl -> {
                     insertedText.push(repl.toString());
-                    insertedDocument.push(
+                    StyledDocument<S> doc =
                             repl instanceof ReadOnlyStyledDocument
                             ? repl
-                            : new ReadOnlyStyledDocument<>(repl.getParagraphs(), COPY));
+                            : new ReadOnlyStyledDocument<>(repl.getParagraphs(), COPY);
+                    insertedDocument.push(doc);
                 });
     }
 
     public void setStyle(int from, int to, S style) {
         if(from == to)
             return;
+
+        styleChangePosition.push(from);
+        styleChangeEnd.push(to);
 
         Position start = navigator.offsetToPosition(from, Forward);
         Position end = start.offsetBy(to - from, Forward);
@@ -180,27 +184,40 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int lastParTo = end.getMinor();
 
         if(firstParIdx == lastParIdx) {
-            setStyle(firstParIdx, firstParFrom, lastParTo, style);
+            setStyleNoPublish(firstParIdx, firstParFrom, lastParTo, style);
         } else {
             int firstParLen = paragraphs.get(firstParIdx).length();
-            setStyle(firstParIdx, firstParFrom, firstParLen, style);
+            setStyleNoPublish(firstParIdx, firstParFrom, firstParLen, style);
             for(int i=firstParIdx+1; i<lastParIdx; ++i) {
-                setStyle(i, style);
+                setStyleNoPublish(i, style);
             }
-            setStyle(lastParIdx, 0, lastParTo, style);
+            setStyleNoPublish(lastParIdx, 0, lastParTo, style);
         }
+
+        styleChangeDone.push(null);
     }
 
     public void setStyle(int paragraph, S style) {
-        Paragraph<S> p = paragraphs.get(paragraph);
-        p = p.restyle(style);
-        paragraphs.set(paragraph, p);
+        int start = position(paragraph, 0).toOffset();
+        int end = start + paragraphs.get(paragraph).length();
+        styleChangePosition.push(start);
+        styleChangeEnd.push(end);
+
+        setStyleNoPublish(paragraph, style);
+
+        styleChangeDone.push(null);
     }
 
     public void setStyle(int paragraph, int fromCol, int toCol, S style) {
-        Paragraph<S> p = paragraphs.get(paragraph);
-        p = p.restyle(fromCol, toCol, style);
-        paragraphs.set(paragraph, p);
+        int parOffset = position(paragraph, 0).toOffset();
+        int start = parOffset + fromCol;
+        int end = parOffset + toCol;
+        styleChangePosition.push(start);
+        styleChangeEnd.push(end);
+
+        setStyleNoPublish(paragraph, fromCol, toCol, style);
+
+        styleChangeDone.push(null);
     }
 
 
@@ -209,6 +226,18 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Private methods                                                        *
      *                                                                        *
      **************************************************************************/
+
+    private void setStyleNoPublish(int paragraph, S style) {
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p = p.restyle(style);
+        paragraphs.set(paragraph, p);
+    }
+
+    private void setStyleNoPublish(int paragraph, int fromCol, int toCol, S style) {
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p = p.restyle(fromCol, toCol, style);
+        paragraphs.set(paragraph, p);
+    }
 
     /**
      * Filters out illegal characters.
