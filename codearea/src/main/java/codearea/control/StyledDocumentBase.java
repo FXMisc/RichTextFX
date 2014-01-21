@@ -1,5 +1,6 @@
 package codearea.control;
 
+import static codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static codearea.control.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ implements StyledDocument<S> {
                 start, end,
                 p -> p,
                 (p, a, b) -> p.subSequence(a, b),
-                (List<Paragraph<S>> pars) -> new ReadOnlyStyledDocument<S>(pars));
+                (List<Paragraph<S>> pars) -> new ReadOnlyStyledDocument<S>(pars, ADOPT));
     }
 
     @Override

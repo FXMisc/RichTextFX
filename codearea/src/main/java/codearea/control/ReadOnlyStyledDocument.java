@@ -1,16 +1,22 @@
 package codearea.control;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragraph<S>>> {
 
+    static enum ParagraphsPolicy {
+        ADOPT,
+        COPY,
+    }
+
     private int length = -1;
 
     private String text = null;
 
-    ReadOnlyStyledDocument(List<Paragraph<S>> paragraphs) {
-        super(paragraphs);
+    ReadOnlyStyledDocument(List<Paragraph<S>> paragraphs, ParagraphsPolicy policy) {
+        super(policy == ParagraphsPolicy.ADOPT ? paragraphs : new ArrayList<Paragraph<S>>(paragraphs));
     }
 
     @Override

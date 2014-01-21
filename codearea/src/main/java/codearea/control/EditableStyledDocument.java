@@ -1,5 +1,6 @@
 package codearea.control;
 
+import static codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static codearea.control.TwoDimensional.Bias.*;
 import inhibeans.property.ReadOnlyIntegerWrapper;
 
@@ -153,6 +154,18 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                      insertedText.push(repl);
                      insertionLength.push(repl.length());
                  });
+    }
+
+    public void replace(int start, int end, StyledDocument<S> replacement) {
+        replace(start, end, replacement,
+                (repl, pos) -> repl.getParagraphs(),
+                repl -> {
+                    insertedText.push(repl.toString());
+                    insertedDocument.push(
+                            repl instanceof ReadOnlyStyledDocument
+                            ? repl
+                            : new ReadOnlyStyledDocument<>(repl.getParagraphs(), COPY));
+                });
     }
 
     public void setStyle(int from, int to, S style) {
