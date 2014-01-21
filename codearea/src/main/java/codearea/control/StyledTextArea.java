@@ -176,13 +176,16 @@ implements
     @Override
     public final Source<TextChange> textChanges() { return content.textChanges(); }
 
+    // rich text changes
+    @Override
+    public final Source<SequenceChange<StyledDocument<S>>> richChanges() { return content.richChanges(); }
+
 
     /**************************************************************************
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
      **************************************************************************/
-
 
     private Position selectionStart2D;
     private Position selectionEnd2D;
