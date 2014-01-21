@@ -1,8 +1,11 @@
 package codearea.control;
 
+import undo.UndoManagerFactory;
+
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
- * with fixed-width font by default.
+ * with fixed-width font and an undo manager that observes
+ * only plain text changes (not styled changes).
  */
 public class CodeArea extends StyleClassedTextArea {
 
@@ -14,11 +17,21 @@ public class CodeArea extends StyleClassedTextArea {
     }
 
     public CodeArea() {
-        super();
+        super(UndoType.plain(), UndoManagerFactory.defaultFactory());
     }
 
+    /**
+     * Creates a text area with initial text content.
+     * Initial caret position is set at the beginning of text content.
+     *
+     * @param text Initial text content.
+     */
     public CodeArea(String text) {
-        super(text);
-    }
+        this();
 
+        appendText(text);
+
+        // position the caret at the beginning
+        selectRange(0, 0);
+    }
 }

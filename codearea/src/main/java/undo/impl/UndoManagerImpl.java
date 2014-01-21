@@ -4,58 +4,58 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import reactfx.Source;
+import reactfx.Subscription;
 import undo.UndoManager;
 
-public abstract class UndoManagerBase<C> implements UndoManager {
-
-    public static interface ChangeMerger<C> {
-        C merge(C c1, C c2);
-    }
+public class UndoManagerImpl<C> implements UndoManager {
 
     private final ChangeQueue<C> queue = new UnlimitedChangeQueue<>();
-    boolean canMerge;
-
     private final Consumer<C> apply;
     private final Consumer<C> undo;
     private final BiFunction<C, C, Optional<C>> merge;
+    private final Subscription subscription;
 
-    protected UndoManagerBase(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge) {
+    boolean canMerge;
+
+    private boolean ignoreChanges;
+
+    public UndoManagerImpl(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge, Source<C> changeSource) {
         this.apply = apply;
         this.undo = undo;
         this.merge = merge;
+        subscription = changeSource.subscribe(this::changeObserved);
     }
 
-    @SuppressWarnings("unchecked")
-    protected void addChange(C change) {
-        if(canMerge && queue.hasPrev()) {
-            C prev = queue.prev();
-            queue.push(merge(prev, change));
-        } else {
-            queue.push(change);
-        }
-        canMerge = true;
+    @Override
+    public void close() {
+        subscription.unsubscribe();
     }
 
     @Override
     public boolean undo() {
+        ignoreChanges = true;
+        boolean undone = false;
         if(canUndo()) {
             undo.accept(queue.prev());
             canMerge = false;
-            return true;
-        } else {
-            return false;
+            undone = true;
         }
+        ignoreChanges = false;
+        return undone;
     }
 
     @Override
     public boolean redo() {
+        ignoreChanges = true;
+        boolean redone = false;
         if(canRedo()) {
             apply.accept(queue.next());
             canMerge = false;
-            return true;
-        } else {
-            return false;
+            redone = true;
         }
+        ignoreChanges = false;
+        return redone;
     }
 
     @Override
@@ -71,6 +71,23 @@ public abstract class UndoManagerBase<C> implements UndoManager {
     @Override
     public void preventMerge() {
         canMerge = false;
+    }
+
+    private void changeObserved(C change) {
+        if(!ignoreChanges) {
+            addChange(change);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addChange(C change) {
+        if(canMerge && queue.hasPrev()) {
+            C prev = queue.prev();
+            queue.push(merge(prev, change));
+        } else {
+            queue.push(change);
+        }
+        canMerge = true;
     }
 
     @SuppressWarnings("unchecked")

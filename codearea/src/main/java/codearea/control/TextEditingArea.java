@@ -195,7 +195,6 @@ public interface TextEditingArea<S> {
      */
     void replaceText(int start, int end, String text);
 
-
     /**
      * Replaces a range of characters with the given text.
      *
@@ -208,6 +207,8 @@ public interface TextEditingArea<S> {
     default void replaceText(IndexRange range, String text) {
         replaceText(range.getStart(), range.getEnd(), text);
     }
+
+    void replace(int start, int end, StyledDocument<S> replacement);
 
     /**
      * Positions only the caret. Doesn't move the anchor and doesn't change

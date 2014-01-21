@@ -6,32 +6,26 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import undo.UndoManagerFactory;
+
 /**
  * Text area that uses style classes to define style of text segments.
  */
 public class StyleClassedTextArea extends StyledTextArea<Collection<String>> {
 
+    public <C> StyleClassedTextArea(
+            UndoType<Collection<String>, C> undoType,
+            UndoManagerFactory<C> undoManagerFactory) {
+        super(Collections.<String>emptyList(),
+                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
+                undoType, undoManagerFactory);
+    }
+
     /**
      * Creates a text area with empty text content.
      */
     public StyleClassedTextArea() {
-        super(Collections.<String>emptyList(),
-                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses));
-    }
-
-    /**
-     * Creates a text area with initial text content.
-     * Initial caret position is set at the beginning of text content.
-     *
-     * @param text Initial text content.
-     */
-    public StyleClassedTextArea(String text) {
-        this();
-
-        replaceText(0, 0, text);
-
-        // position the caret at the beginning
-        selectRange(0, 0);
+        this(UndoType.rich(), UndoManagerFactory.defaultFactory());
     }
 
     /**
