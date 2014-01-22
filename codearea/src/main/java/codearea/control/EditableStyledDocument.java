@@ -177,21 +177,39 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         styleChangeEnd.push(to);
 
         Position start = navigator.offsetToPosition(from, Forward);
-        Position end = start.offsetBy(to - from, Forward);
+        Position end = start.offsetBy(to - from, Forward); // Forward in order not to lose the newline if end points just beyond it
         int firstParIdx = start.getMajor();
         int firstParFrom = start.getMinor();
         int lastParIdx = end.getMajor();
         int lastParTo = end.getMinor();
 
         if(firstParIdx == lastParIdx) {
-            setStyleNoPublish(firstParIdx, firstParFrom, lastParTo, style);
+            Paragraph<S> p = paragraphs.get(firstParIdx);
+            p = p.restyle(firstParFrom, lastParTo, style);
+            paragraphs.set(firstParIdx, p);
         } else {
-            int firstParLen = paragraphs.get(firstParIdx).length();
-            setStyleNoPublish(firstParIdx, firstParFrom, firstParLen, style);
-            for(int i=firstParIdx+1; i<lastParIdx; ++i) {
-                setStyleNoPublish(i, style);
+            int affectedPars = lastParIdx - firstParIdx + 1;
+            List<Paragraph<S>> restyledPars = new ArrayList<>(affectedPars);
+
+            Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+            restyledPars.add(firstPar.restyle(firstParFrom, firstPar.length(), style));
+
+            for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
+                Paragraph<S> p = paragraphs.get(i);
+                restyledPars.add(p.restyle(style));
             }
-            setStyleNoPublish(lastParIdx, 0, lastParTo, style);
+
+            Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+            restyledPars.add(lastPar.restyle(0, lastParTo, style));
+
+            if(affectedPars == paragraphs.size()) {
+                paragraphs.setAll(restyledPars);
+            } else {
+                // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
+                // (and then we don't even need the above `if` branch)
+                paragraphs.remove(firstParIdx, lastParIdx + 1);
+                paragraphs.addAll(firstParIdx, restyledPars);
+            }
         }
 
         styleChangeDone.push(null);
@@ -203,7 +221,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         styleChangePosition.push(start);
         styleChangeEnd.push(end);
 
-        setStyleNoPublish(paragraph, style);
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p = p.restyle(style);
+        paragraphs.set(paragraph, p);
 
         styleChangeDone.push(null);
     }
@@ -215,7 +235,74 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         styleChangePosition.push(start);
         styleChangeEnd.push(end);
 
-        setStyleNoPublish(paragraph, fromCol, toCol, style);
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p = p.restyle(fromCol, toCol, style);
+        paragraphs.set(paragraph, p);
+
+        styleChangeDone.push(null);
+    }
+
+    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
+        int len = styleSpans.length();
+
+        styleChangePosition.push(from);
+        styleChangeEnd.push(from + len);
+
+        Position start = offsetToPosition(from, Forward);
+        Position end = start.offsetBy(len, Forward); // Forward in order not to lose the newline if end points just beyond it
+        int firstParIdx = start.getMajor();
+        int firstParFrom = start.getMinor();
+        int lastParIdx = end.getMajor();
+        int lastParTo = end.getMinor();
+
+        if(firstParIdx == lastParIdx) {
+            Paragraph<S> p = paragraphs.get(firstParIdx);
+            p = p.restyle(firstParFrom, styleSpans);
+            paragraphs.set(firstParIdx, p);
+        } else {
+            int affectedPars = lastParIdx - firstParIdx + 1;
+            List<Paragraph<S>> restyledPars = new ArrayList<>(affectedPars);
+
+            Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+            Position spansFrom = styleSpans.position(0, 0);
+            Position spansTo = spansFrom.offsetBy(firstPar.length() - firstParFrom, Backward);
+            restyledPars.add(firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo)));
+
+            for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
+                Paragraph<S> par = paragraphs.get(i);
+                spansFrom = spansTo.offsetBy(1, Forward); // offset by 1 to skip the newline at the end of the previous paragraph
+                spansTo = spansFrom.offsetBy(par.length(), Backward);
+                restyledPars.add(par.restyle(0, styleSpans.subView(spansFrom, spansTo)));
+            }
+
+            Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+            spansFrom = spansTo.offsetBy(1, Forward); // offset by 1 to skip the newline at the end of the previous paragraph
+            spansTo = spansFrom.offsetBy(lastParTo, Backward);
+            restyledPars.add(lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo)));
+
+            if(affectedPars == paragraphs.size()) {
+                paragraphs.setAll(restyledPars);
+            } else {
+                // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
+                // (and then we don't even need the above `if` branch)
+                paragraphs.remove(firstParIdx, lastParIdx + 1);
+                paragraphs.addAll(firstParIdx, restyledPars);
+            }
+        }
+
+        styleChangeDone.push(null);
+    }
+
+    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
+        int parOffset = position(paragraph, 0).toOffset();
+        int start = parOffset + from;
+        int end = start + styleSpans.length();
+        styleChangePosition.push(start);
+        styleChangeEnd.push(end);
+
+        Paragraph<S> p = paragraphs.get(paragraph);
+        p = p.restyle(from, styleSpans);
+        paragraphs.set(paragraph, p);
 
         styleChangeDone.push(null);
     }
@@ -226,18 +313,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Private methods                                                        *
      *                                                                        *
      **************************************************************************/
-
-    private void setStyleNoPublish(int paragraph, S style) {
-        Paragraph<S> p = paragraphs.get(paragraph);
-        p = p.restyle(style);
-        paragraphs.set(paragraph, p);
-    }
-
-    private void setStyleNoPublish(int paragraph, int fromCol, int toCol, S style) {
-        Paragraph<S> p = paragraphs.get(paragraph);
-        p = p.restyle(fromCol, toCol, style);
-        paragraphs.set(paragraph, p);
-    }
 
     /**
      * Filters out illegal characters.
@@ -278,17 +353,15 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         textRemovalEnd.push(end);
 
         Position start2D = navigator.offsetToPosition(start, Forward);
-        Position end2D = start2D.offsetBy(end - start, Forward);
+        Position end2D = start2D.offsetBy(end - start, Forward); // Forward in order not to lose the newline if end points just beyond it
         int firstParIdx = start2D.getMajor();
         int firstParFrom = start2D.getMinor();
         int lastParIdx = end2D.getMajor();
         int lastParTo = end2D.getMinor();
 
         // Get the leftovers after cutting out the deletion
-        Paragraph<S> firstPar = paragraphs.get(firstParIdx);
-        Paragraph<S> lastPar = paragraphs.get(lastParIdx);
-        Paragraph<S> left = firstPar.trim(firstParFrom);
-        Paragraph<S> right = lastPar.subSequence(lastParTo);
+        Paragraph<S> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
+        Paragraph<S> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
 
         List<Paragraph<S>> replacementPars = replacementToParagraphs.apply(replacement, start2D);
         int n = replacementPars.size();
@@ -296,23 +369,23 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         if(n == 1) {
             // replacement is just a single line,
             // use it to join the two leftover lines
-            left = left.append(replacementPars.get(0)).append(right);
+            Paragraph<S> par = firstPar.append(replacementPars.get(0)).append(lastPar);
 
             // replace the affected liens with the merger of leftovers and the replacement line
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(firstParIdx, left); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.set(firstParIdx, par); // use set() instead of remove and add to make sure the number of lines is never 0
             paragraphs.remove(firstParIdx+1, lastParIdx+1);
         } else {
             // append the first replacement line to the left leftover
             // and prepend the last replacement line to the right leftover
-            left = left.append(replacementPars.get(0));
-            right = replacementPars.get(n-1).append(right);
+            firstPar = firstPar.append(replacementPars.get(0));
+            lastPar = replacementPars.get(n-1).append(lastPar);
 
             // replace the affected lines with the new lines
             // TODO: use setAll(from, to, col) when implemented (see https://javafx-jira.kenai.com/browse/RT-32655)
-            paragraphs.set(lastParIdx, right); // use set() instead of remove and add to make sure the number of lines is never 0
+            paragraphs.set(lastParIdx, lastPar); // use set() instead of remove and add to make sure the number of lines is never 0
             paragraphs.remove(firstParIdx, lastParIdx);
-            paragraphs.add(firstParIdx, left);
+            paragraphs.add(firstParIdx, firstPar);
             paragraphs.addAll(firstParIdx+1, replacementPars.subList(1, n - 1));
         }
 

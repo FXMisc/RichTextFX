@@ -173,6 +173,26 @@ public final class Paragraph<S> implements CharSequence {
         return left.append(middle).append(right);
     }
 
+    public Paragraph<S> restyle(int from, StyleSpans<S> styleSpans) {
+        int len = styleSpans.length();
+
+        Paragraph<S> left = trim(from);
+        Paragraph<S> right = subSequence(from + len);
+
+        String middleString = substring(from, from + len);
+        List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
+        int offset = 0;
+        for(StyleSpan<S> span: styleSpans) {
+            int end = offset + span.getLength();
+            String text = middleString.substring(offset, end);
+            middleSegs.add(new StyledText<>(text, span.getStyle()));
+            offset = end;
+        }
+        Paragraph<S> middle = new Paragraph<>(middleSegs);
+
+        return left.append(middle).append(right);
+    }
+
     /**
      * Returns style at the given character position.
      * If {@code charIdx < 0}, returns the style at the beginning of this line.
@@ -184,6 +204,34 @@ public final class Paragraph<S> implements CharSequence {
 
         Position pos = navigator.offsetToPosition(charIdx, Forward);
         return segments.get(pos.getMajor()).getStyle();
+    }
+
+    public StyleSpans<S> getStyleRanges(int from, int to) {
+        Position start = navigator.offsetToPosition(from, Forward);
+        Position end = start.offsetBy(to - from, Backward);
+        int startSegIdx = start.getMajor();
+        int endSegIdx = end.getMajor();
+
+        int n = endSegIdx - startSegIdx + 1;
+        StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(n);
+
+        if(startSegIdx == endSegIdx) {
+            StyledText<S> seg = segments.get(startSegIdx);
+            builder.add(seg.getStyle(), from - to);
+        } else {
+            StyledText<S> startSeg = segments.get(startSegIdx);
+            builder.add(startSeg.getStyle(), startSeg.length() - start.getMinor());
+
+            for(int i = startSegIdx + 1; i < endSegIdx; ++i) {
+                StyledText<S> seg = segments.get(i);
+                builder.add(seg.getStyle(), seg.length());
+            }
+
+            StyledText<S> endSeg = segments.get(endSegIdx);
+            builder.add(endSeg.getStyle(), end.getMinor());
+        }
+
+        return builder.create();
     }
 
     /**

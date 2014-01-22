@@ -129,12 +129,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 fromChanges(styledTextArea.beingUpdatedProperty())
                 .filter(updating -> !updating);
 
-        // keep the current paragraph selected
+        // update the caret every time the caret position or paragraphs change
         Source<Void> caretPosDirty = fromInvalidations(styledTextArea.caretPositionProperty());
         Source<Void> paragraphsDirty = fromInvalidations(listView.getItems());
         Source<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
         subscribeTo(release(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
-        //refreshCaret();
 
         // update selection in paragraphs
         Source<Void> selectionDirty = fromInvalidations(styledTextArea.selectionProperty());

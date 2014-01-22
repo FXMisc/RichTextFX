@@ -389,6 +389,38 @@ implements
     }
 
     /**
+     * Set multiple style ranges at once. This is equivalent to
+     * <pre>
+     * for(StyleSpan{@code <S>} span: styleSpans) {
+     *     setStyle(from, from + span.getLength(), span.getStyle());
+     *     from += span.getLength();
+     * }
+     * </pre>
+     * but the actual implementation is more efficient.
+     */
+    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
+        try(Hold h = beingUpdated.on()) {
+            content.setStyleSpans(from, styleSpans);
+        }
+    }
+
+    /**
+     * Set multiple style ranges of a paragraph at once. This is equivalent to
+     * <pre>
+     * for(StyleSpan{@code <S>} span: styleSpans) {
+     *     setStyle(paragraph, from, from + span.getLength(), span.getStyle());
+     *     from += span.getLength();
+     * }
+     * </pre>
+     * but the actual implementation is more efficient.
+     */
+    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
+        try(Hold h = beingUpdated.on()) {
+            content.setStyleSpans(paragraph, from, styleSpans);
+        }
+    }
+
+    /**
      * Resets the style of the given range to the initial style.
      */
     public void clearStyle(int from, int to) {

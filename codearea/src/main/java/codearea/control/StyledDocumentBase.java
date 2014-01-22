@@ -108,6 +108,48 @@ implements StyledDocument<S> {
         return paragraphs.get(paragraph).getStyleAt(column);
     }
 
+    @Override
+    public StyleSpans<S> getStyleRanges(int from, int to) {
+        Position start = offsetToPosition(from, Forward);
+        Position end = start.offsetBy(to - from, Backward);
+        int startParIdx = start.getMajor();
+        int endParIdx = end.getMajor();
+
+        int affectedPars = endParIdx - startParIdx + 1;
+        List<StyleSpans<S>> subSpans = new ArrayList<>(affectedPars);
+
+        if(startParIdx == endParIdx) {
+            Paragraph<S> par = paragraphs.get(startParIdx);
+            subSpans.add(par.getStyleRanges(start.getMinor(), end.getMinor()));
+        } else {
+            Paragraph<S> startPar = paragraphs.get(startParIdx);
+            subSpans.add(startPar.getStyleRanges(start.getMinor(), startPar.length() + 1)); // +1 for the newline
+
+            for(int i = startParIdx + 1; i < endParIdx; ++i) {
+                Paragraph<S> par = paragraphs.get(i);
+                subSpans.add(par.getStyleRanges(0, par.length() + 1)); // +1 for the newline
+            }
+
+            Paragraph<S> endPar = paragraphs.get(endParIdx);
+            subSpans.add(endPar.getStyleRanges(0, end.getMinor()));
+        }
+
+        int n = subSpans.stream().mapToInt(sr -> sr.getSpanCount()).sum();
+        StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(n);
+        for(StyleSpans<S> spans: subSpans) {
+            for(StyleSpan<S> span: spans) {
+                builder.add(span);
+            }
+        }
+
+        return builder.create();
+    }
+
+    @Override
+    public StyleSpans<S> getStyleRanges(int paragraph, int from, int to) {
+        return paragraphs.get(paragraph).getStyleRanges(from, to);
+    }
+
 
     /**************************************************************************
      *                                                                        *
