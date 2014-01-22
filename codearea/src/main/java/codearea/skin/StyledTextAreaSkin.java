@@ -124,7 +124,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         listenTo(styledTextArea.wrapTextProperty(), o -> updateWrapWidth());
         updateWrapWidth();
 
-        Source<Void> areaDoneUpdating = fromInvalidations(styledTextArea.doneUpdatingProperty());
+        // emits a value every time the area is done updating
+        Source<?> areaDoneUpdating =
+                fromChanges(styledTextArea.beingUpdatedProperty())
+                .filter(updating -> !updating);
 
         // keep the current paragraph selected
         Source<Void> caretPosDirty = fromInvalidations(styledTextArea.caretPositionProperty());

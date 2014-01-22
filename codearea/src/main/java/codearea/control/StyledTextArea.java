@@ -1,7 +1,8 @@
 package codearea.control;
 
 import static codearea.control.TwoDimensional.Bias.*;
-import inhibeans.Impulse;
+import inhibeans.Hold;
+import inhibeans.value.Indicator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -192,9 +193,10 @@ implements
         return paragraphs;
     }
 
-    // doneUpdating
-    private final Impulse doneUpdating = new Impulse();
-    public inhibeans.Observable doneUpdatingProperty() { return doneUpdating; }
+    // beingUpdated
+    private final Indicator beingUpdated = new Indicator();
+    public Indicator beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.isOn(); }
 
 
     /**************************************************************************
@@ -363,24 +365,27 @@ implements
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        content.setStyle(from, to, style);
-        doneUpdating.trigger();
+        try(Hold h = beingUpdated.on()) {
+            content.setStyle(from, to, style);
+        }
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        content.setStyle(paragraph, style);
-        doneUpdating.trigger();
+        try(Hold h = beingUpdated.on()) {
+            content.setStyle(paragraph, style);
+        }
     }
 
     /**
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        content.setStyle(paragraph, from, to, style);
-        doneUpdating.trigger();
+        try(Hold h = beingUpdated.on()) {
+            content.setStyle(paragraph, from, to, style);
+        }
     }
 
     /**
@@ -407,38 +412,44 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        start = Utils.clamp(0, start, getLength());
-        end = Utils.clamp(0, end, getLength());
+        try(Hold h = beingUpdated.on()) {
+            start = Utils.clamp(0, start, getLength());
+            end = Utils.clamp(0, end, getLength());
 
-        content.replaceText(start, end, text);
+            content.replaceText(start, end, text);
 
-        int newCaretPos = start + text.length();
-        selectRange(newCaretPos, newCaretPos);
+            int newCaretPos = start + text.length();
+            selectRange(newCaretPos, newCaretPos);
+        }
     }
 
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
-        start = Utils.clamp(0, start, getLength());
-        end = Utils.clamp(0, end, getLength());
+        try(Hold h = beingUpdated.on()) {
+            start = Utils.clamp(0, start, getLength());
+            end = Utils.clamp(0, end, getLength());
 
-        content.replace(start, end, replacement);
+            content.replace(start, end, replacement);
 
-        int newCaretPos = start + replacement.length();
-        selectRange(newCaretPos, newCaretPos);
+            int newCaretPos = start + replacement.length();
+            selectRange(newCaretPos, newCaretPos);
+        }
     }
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
-        this.anchor.set(Utils.clamp(0, anchor, getLength()));
-        this.selection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
-        doneUpdating.trigger();
+        try(Hold h = beingUpdated.on()) {
+            this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
+            this.anchor.set(Utils.clamp(0, anchor, getLength()));
+            this.selection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
+        }
     }
 
     @Override
     public void positionCaret(int pos) {
-        caretPosition.set(pos);
-        doneUpdating.trigger();
+        try(Hold h = beingUpdated.on()) {
+            caretPosition.set(pos);
+        }
     }
 
 
