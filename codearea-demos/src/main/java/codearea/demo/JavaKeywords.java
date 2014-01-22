@@ -25,6 +25,8 @@
 
 package codearea.demo;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import codearea.control.CodeArea;
+import codearea.control.StyleSpansBuilder;
 
 public class JavaKeywords extends Application {
 
@@ -86,12 +89,15 @@ public class JavaKeywords extends Application {
                     String oldText, String newText) {
                 Matcher matcher = KEYWORD_PATTERN.matcher(newText);
                 int lastKwEnd = 0;
+                StyleSpansBuilder<Collection<String>> spansBuilder
+                        = new StyleSpansBuilder<>();
                 while(matcher.find()) {
-                    codeArea.clearStyle(lastKwEnd, matcher.start());
-                    codeArea.setStyleClass(matcher.start(), matcher.end(), "keyword");
+                    spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword"), matcher.end() - matcher.start());
                     lastKwEnd = matcher.end();
                 }
-                codeArea.clearStyle(lastKwEnd, newText.length());
+                spansBuilder.add(Collections.emptyList(), newText.length() - lastKwEnd);
+                codeArea.setStyleSpans(0, spansBuilder.create());
             }
         });
         codeArea.replaceText(0, 0, sampleCode);
