@@ -33,6 +33,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;
@@ -110,7 +111,12 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     }
 
     private double getWrapWidth() {
-        return skin.wrapWidth.get() - snappedLeftInset() - snappedRightInset();
+        double skinWrapWidth = skin.wrapWidth.get();
+        if(skinWrapWidth == Region.USE_COMPUTED_SIZE) {
+            return Region.USE_COMPUTED_SIZE;
+        } else {
+            return skinWrapWidth - snappedLeftInset() - snappedRightInset();
+        }
     }
 
     /**
