@@ -25,6 +25,8 @@
 
 package codearea.skin;
 
+import static codearea.control.TwoDimensional.Bias.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
@@ -43,20 +45,26 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import codearea.control.Paragraph;
 import codearea.control.StyledText;
+import codearea.control.TwoLevelNavigator;
 
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
+import com.sun.javafx.text.PrismTextLayout;
+import com.sun.javafx.text.TextLine;
 
 public class ParagraphGraphic<S> extends TextFlow {
 
     private static Method mGetTextLayout;
+    private static Method mGetLines;
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
+            mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
         mGetTextLayout.setAccessible(true);
+        mGetLines.setAccessible(true);
     }
 
     // FIXME: changing it currently has not effect, because
@@ -167,11 +175,6 @@ public class ParagraphGraphic<S> extends TextFlow {
             hit.setLeading(true); // prevent going to the start of the next line
 
         return hit;
-
-    }
-
-    private double getLineCenter(int index) {
-        return verticalCenterOf(getLineSpans()[index]);
     }
 
     public double getCaretOffsetX() {
@@ -180,50 +183,40 @@ public class ParagraphGraphic<S> extends TextFlow {
     }
 
     public int getLineCount() {
-        return getLineSpans().length;
-    }
-
-    private Bounds[] getLineSpans() {
-        return getLineSpans(0, paragraph.length());
-    }
-
-    private Bounds[] getLineSpans(int minPos, int maxPos) {
-        Bounds first = getLineSpanAt(minPos);
-        Bounds last = getLineSpanAt(maxPos);
-
-        if(verticalCenterOf(last) < first.getMaxY()) {
-            return new Bounds[] { first };
-        } else {
-            int midPos = (minPos + maxPos) / 2;
-            if(midPos == minPos) {
-                return new Bounds[] { first, last };
-            } else {
-                Bounds[] left = getLineSpans(minPos, midPos);
-                Bounds[] right = getLineSpans(midPos, maxPos);
-                Bounds[] res = new Bounds[left.length + right.length-1];
-                System.arraycopy(left, 0, res, 0, left.length);
-                System.arraycopy(right, 1, res, left.length, right.length-1);
-                return res;
-            }
-        }
-    }
-
-    private Bounds getLineSpanAt(int position) {
-        Path caretAtPos = new Path(textLayout().getCaretShape(position, true, 0, 0));
-        return caretAtPos.getBoundsInLocal();
-    }
-
-    private static double verticalCenterOf(Bounds bounds) {
-        return (bounds.getMinY() + bounds.getMaxY()) / 2;
+        return getLines().length;
     }
 
     public int currentLineIndex() {
-        return getLineSpans(0, caretPosition).length - 1;
+        TextLine[] lines = getLines();
+        TwoLevelNavigator navigator = new TwoLevelNavigator(() -> lines.length, i -> lines[i].getLength());
+        return navigator.offsetToPosition(caretPosition, Forward).getMajor();
+    }
+
+    private float getLineCenter(int index) {
+        return getLineY(index) + getLines()[index].getBounds().getHeight() / 2;
+    }
+
+    private float getLineY(int index) {
+        TextLine[] lines = getLines();
+        float spacing = (float) getLineSpacing();
+        float lineY = 0;
+        for(int i = 0; i < index; ++i) {
+            lineY += lines[i].getBounds().getHeight() + spacing;
+        }
+        return lineY;
     }
 
     private TextLayout textLayout() {
+        return (TextLayout) invoke(mGetTextLayout, this);
+    }
+
+    private TextLine[] getLines() {
+        return (TextLine[]) invoke(mGetLines, textLayout());
+    }
+
+    private static Object invoke(Method m, Object obj, Object... args) {
         try {
-            return (TextLayout) mGetTextLayout.invoke(this);
+            return m.invoke(obj, args);
         } catch (IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException e) {
             throw new RuntimeException(e);
