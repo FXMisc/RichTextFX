@@ -139,8 +139,10 @@ public class ParagraphGraphic<S> extends TextFlow {
     void setCaretPosition(int pos) {
         if(pos < 0 || pos > paragraph.length())
             throw new IndexOutOfBoundsException();
-        caretPosition = pos;
-        updateCaretShape();
+        if(caretPosition != pos) {
+            caretPosition = pos;
+            updateCaretShape();
+        }
     }
 
     void setSelection(IndexRange selection) {
@@ -233,5 +235,11 @@ public class ParagraphGraphic<S> extends TextFlow {
         int end = selection.getEnd();
         PathElement[] shape = textLayout().getRange(start, end, TextLayout.TYPE_TEXT, 0, 0);
         selectionShape.getElements().setAll(shape);
+    }
+
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+        updateCaretShape();
     }
 }
