@@ -86,8 +86,6 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
             graphic.setSelection(area.getParagraphSelection(getIndex()));
 
-            graphic.setPrefWidth(0);
-
             setGraphic(graphic);
         }
         else {
@@ -107,6 +105,17 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
             return 200;
         } else {
             return getParagraphGraphic().prefHeight(width) + snappedTopInset() + snappedBottomInset();
+        }
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+        if(isEmpty()) {
+            return super.computePrefWidth(height);
+        } else if(skin.wrapWidth.get() == Region.USE_COMPUTED_SIZE) {
+                return getParagraphGraphic().prefWidth(-1.0) + snappedLeftInset() + snappedRightInset();
+        } else {
+            return 0;
         }
     }
 
