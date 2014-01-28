@@ -10,13 +10,14 @@ public class StyleSpansBuilder<S> {
 
     private static class StyleSpansImpl<S> implements StyleSpans<S> {
         private final List<StyleSpan<S>> spans;
-        private final TwoLevelNavigator navigator = new TwoLevelNavigator(
-                () -> spans.size(),
-                i -> spans.get(i).getLength());
+        private final TwoLevelNavigator navigator;
         private int length = -1;
 
         StyleSpansImpl(List<StyleSpan<S>> spans) {
             this.spans = spans;
+            this.navigator = new TwoLevelNavigator(
+                    () -> spans.size(),
+                    i -> spans.get(i).getLength());
         }
 
         @Override
@@ -65,9 +66,7 @@ public class StyleSpansBuilder<S> {
         private final int spanCount;
         private final StyleSpan<S> firstSpan;
         private final StyleSpan<S> lastSpan;
-        private final TwoLevelNavigator navigator = new TwoLevelNavigator(
-                () -> spanCount,
-                i -> getStyleSpan(i).getLength());
+        private final TwoLevelNavigator navigator;
 
         int length = -1;
 
@@ -75,6 +74,9 @@ public class StyleSpansBuilder<S> {
             this.original = original;
             this.firstIdxInOrig = from.getMajor();
             this.spanCount = to.getMajor() - from.getMajor() + 1;
+            this.navigator = new TwoLevelNavigator(
+                    () -> spanCount,
+                    i -> getStyleSpan(i).getLength());
 
             if(spanCount == 1) {
                 StyleSpan<S> span = original.getStyleSpan(firstIdxInOrig);
