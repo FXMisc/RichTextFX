@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.value.ObservableBooleanValue;
 import reactfx.Source;
 import reactfx.Subscription;
 import undo.UndoManager;
@@ -15,6 +17,20 @@ public class UndoManagerImpl<C> implements UndoManager {
     private final Consumer<C> undo;
     private final BiFunction<C, C, Optional<C>> merge;
     private final Subscription subscription;
+
+    private final BooleanBinding undoAvailable = new BooleanBinding() {
+        @Override
+        protected boolean computeValue() {
+            return isUndoAvailable();
+        }
+    };
+
+    private final BooleanBinding redoAvailable = new BooleanBinding() {
+        @Override
+        protected boolean computeValue() {
+            return isRedoAvailable();
+        }
+    };
 
     boolean canMerge;
 
@@ -36,9 +52,11 @@ public class UndoManagerImpl<C> implements UndoManager {
     public boolean undo() {
         ignoreChanges = true;
         boolean undone = false;
-        if(canUndo()) {
+        if(isUndoAvailable()) {
             undo.accept(queue.prev());
             canMerge = false;
+            undoAvailable.invalidate();
+            redoAvailable.invalidate();
             undone = true;
         }
         ignoreChanges = false;
@@ -49,9 +67,11 @@ public class UndoManagerImpl<C> implements UndoManager {
     public boolean redo() {
         ignoreChanges = true;
         boolean redone = false;
-        if(canRedo()) {
+        if(isRedoAvailable()) {
             apply.accept(queue.next());
             canMerge = false;
+            undoAvailable.invalidate();
+            redoAvailable.invalidate();
             redone = true;
         }
         ignoreChanges = false;
@@ -59,13 +79,23 @@ public class UndoManagerImpl<C> implements UndoManager {
     }
 
     @Override
-    public boolean canUndo() {
+    public boolean isUndoAvailable() {
         return queue.hasPrev();
     }
 
     @Override
-    public boolean canRedo() {
+    public ObservableBooleanValue undoAvailableProperty() {
+        return undoAvailable;
+    }
+
+    @Override
+    public boolean isRedoAvailable() {
         return queue.hasNext();
+    }
+
+    @Override
+    public ObservableBooleanValue redoAvailableProperty() {
+        return redoAvailable;
     }
 
     @Override
@@ -88,6 +118,8 @@ public class UndoManagerImpl<C> implements UndoManager {
             queue.push(change);
         }
         canMerge = true;
+        undoAvailable.invalidate();
+        redoAvailable.invalidate();
     }
 
     @SuppressWarnings("unchecked")

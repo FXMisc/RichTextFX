@@ -1,5 +1,6 @@
 package codearea.control;
 
+import javafx.beans.value.ObservableBooleanValue;
 import undo.UndoManager;
 import undo.UndoManagerFactory;
 
@@ -20,7 +21,9 @@ public interface UndoActions<S> {
 
     default void redo() { getUndoManager().redo(); }
 
-    default boolean canUndo() { return getUndoManager().canUndo(); }
+    default boolean isUndoAvailable() { return getUndoManager().isUndoAvailable(); }
+    default ObservableBooleanValue undoAvailableProperty() { return getUndoManager().undoAvailableProperty(); }
 
-    default boolean canRedo() { return getUndoManager().canRedo(); }
+    default boolean isRedoAvailable() { return getUndoManager().isRedoAvailable(); }
+    default ObservableBooleanValue redoAvailableProperty() { return getUndoManager().redoAvailableProperty(); }
 }

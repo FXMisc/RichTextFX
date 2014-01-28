@@ -545,8 +545,8 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         } else {
             items.setAll(copyMI, separatorMI, selectAllMI);
         }
-        undoMI.setDisable(!styledTextArea.canUndo());
-        redoMI.setDisable(!styledTextArea.canRedo());
+        undoMI.setDisable(!styledTextArea.isUndoAvailable());
+        redoMI.setDisable(!styledTextArea.isRedoAvailable());
         cutMI.setDisable(!hasSelection);
         copyMI.setDisable(!hasSelection);
         pasteMI.setDisable(!Clipboard.getSystemClipboard().hasString());

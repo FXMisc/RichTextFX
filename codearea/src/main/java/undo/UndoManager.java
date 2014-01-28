@@ -1,10 +1,17 @@
 package undo;
 
+import javafx.beans.value.ObservableBooleanValue;
+
 public interface UndoManager {
     boolean undo();
+
     boolean redo();
-    boolean canUndo();
-    boolean canRedo();
+
+    ObservableBooleanValue undoAvailableProperty();
+    boolean isUndoAvailable();
+
+    ObservableBooleanValue redoAvailableProperty();
+    boolean isRedoAvailable();
 
     /**
      * Prevents the next change from being merged with the last one.
