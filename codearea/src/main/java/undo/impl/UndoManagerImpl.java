@@ -1,5 +1,8 @@
 package undo.impl;
 
+import inhibeans.Hold;
+import inhibeans.value.Indicator;
+
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -34,7 +37,7 @@ public class UndoManagerImpl<C> implements UndoManager {
 
     boolean canMerge;
 
-    private boolean ignoreChanges;
+    private final Indicator ignoreChanges = new Indicator();
 
     public UndoManagerImpl(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge, Source<C> changeSource) {
         this.apply = apply;
@@ -50,32 +53,32 @@ public class UndoManagerImpl<C> implements UndoManager {
 
     @Override
     public boolean undo() {
-        ignoreChanges = true;
-        boolean undone = false;
         if(isUndoAvailable()) {
-            undo.accept(queue.prev());
+            try(Hold h = ignoreChanges.on()) {
+                undo.accept(queue.prev());
+            }
             canMerge = false;
             undoAvailable.invalidate();
             redoAvailable.invalidate();
-            undone = true;
+            return true;
+        } else {
+            return false;
         }
-        ignoreChanges = false;
-        return undone;
     }
 
     @Override
     public boolean redo() {
-        ignoreChanges = true;
-        boolean redone = false;
         if(isRedoAvailable()) {
-            apply.accept(queue.next());
+            try(Hold h = ignoreChanges.on()) {
+                apply.accept(queue.next());
+            }
             canMerge = false;
             undoAvailable.invalidate();
             redoAvailable.invalidate();
-            redone = true;
+            return true;
+        } else {
+            return false;
         }
-        ignoreChanges = false;
-        return redone;
     }
 
     @Override
@@ -104,7 +107,7 @@ public class UndoManagerImpl<C> implements UndoManager {
     }
 
     private void changeObserved(C change) {
-        if(!ignoreChanges) {
+        if(!ignoreChanges.isOn()) {
             addChange(change);
         }
     }
