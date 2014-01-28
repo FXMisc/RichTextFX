@@ -58,36 +58,6 @@ implements
         UndoActions<S>,
         TwoDimensional {
 
-    public static final class UndoType<S, C> {
-        public static <S> UndoType<S, PlainTextChange> plain() {
-            return new UndoType<>((area, factory) -> {
-                Consumer<PlainTextChange> apply = change -> area.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-                Consumer<PlainTextChange> undo = change -> area.replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
-                BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
-                return factory.create(apply, undo, merge, area.plainTextChanges());
-            });
-        }
-
-        public static <S> UndoType<S, RichTextChange<S>> rich() {
-            return new UndoType<>((area, factory) -> {
-                Consumer<RichTextChange<S>> apply = change -> area.replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-                Consumer<RichTextChange<S>> undo = change -> area.replace(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
-                BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
-                return factory.create(apply, undo, merge, area.richChanges());
-            });
-        }
-
-        private final BiFunction<StyledTextArea<S>, UndoManagerFactory<C>, UndoManager> creator;
-
-        private UndoType(BiFunction<StyledTextArea<S>, UndoManagerFactory<C>, UndoManager> creator) {
-            this.creator = creator;
-        };
-
-        private UndoManager createUndoManagerFor(StyledTextArea<S> area, UndoManagerFactory<C> factory) {
-            return creator.apply(area, factory);
-        }
-    }
-
     private static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
 
@@ -120,14 +90,11 @@ implements
     @Override
     public UndoManager getUndoManager() { return undoManager; }
     @Override
-    public void setPlainUndoManager(UndoManagerFactory<PlainTextChange> undoManagerFactory) {
+    public void setUndoManager(UndoManagerFactory undoManagerFactory) {
         undoManager.close();
-        undoManager = UndoType.<S>plain().createUndoManagerFor(this, undoManagerFactory);
-    }
-    @Override
-    public void setRichUndoManager(UndoManagerFactory<RichTextChange<S>> undoManagerFactory) {
-        undoManager.close();
-        undoManager = UndoType.<S>rich().createUndoManagerFor(this, undoManagerFactory);
+        undoManager = preserveStyle
+                ? createRichUndoManager(undoManagerFactory)
+                : createPlainUndoManager(undoManagerFactory);
     }
 
     // font property
@@ -238,6 +205,13 @@ implements
      */
     private final BiConsumer<Text, S> applyStyle;
 
+    /**
+     * Indicates whether style should be preserved on undo/redo,
+     * copy/paste and text move.
+     * TODO: Currently, only undo/redo respect this flag.
+     */
+    private final boolean preserveStyle;
+
 
     /**************************************************************************
      *                                                                        *
@@ -255,17 +229,20 @@ implements
      * used by the default skin to apply style to text nodes.
      */
     public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
-        this(initialStyle, applyStyle, UndoType.rich(), UndoManagerFactory.defaultFactory());
+        this(initialStyle, applyStyle, true);
     }
 
     public <C> StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle,
-            UndoType<S, C> undoType, UndoManagerFactory<C> undoManagerFactory) {
+            boolean preserveStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;
+        this.preserveStyle = preserveStyle;
         content = new EditableStyledDocument<>(initialStyle);
         paragraphs = content.getParagraphs();
 
-        undoManager = undoType.createUndoManagerFor(this, undoManagerFactory);
+        undoManager = preserveStyle
+                ? createRichUndoManager(UndoManagerFactory.defaultFactory())
+                : createPlainUndoManager(UndoManagerFactory.defaultFactory());
 
         ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p, Forward));
         currentParagraph = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor());
@@ -500,5 +477,26 @@ implements
     public List<CssMetaData<? extends Styleable, ?>> getControlCssMetaData() {
         return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
                 font.getCssMetaData());
+    }
+
+
+    /**************************************************************************
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     **************************************************************************/
+
+    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
+        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<PlainTextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
+        return factory.create(apply, undo, merge, plainTextChanges());
+    }
+
+    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
+        Consumer<RichTextChange<S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<RichTextChange<S>> undo = change -> replace(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
+        BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
+        return factory.create(apply, undo, merge, richChanges());
     }
 }

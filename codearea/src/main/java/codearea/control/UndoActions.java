@@ -14,8 +14,7 @@ public interface UndoActions<S> {
      * Undo manager of this text area.
      */
     UndoManager getUndoManager();
-    void setPlainUndoManager(UndoManagerFactory<PlainTextChange> undoManagerFactory);
-    void setRichUndoManager(UndoManagerFactory<RichTextChange<S>> undoManagerFactory);
+    void setUndoManager(UndoManagerFactory undoManagerFactory);
 
     default void undo() { getUndoManager().undo(); }
 

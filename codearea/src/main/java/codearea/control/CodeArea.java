@@ -1,6 +1,5 @@
 package codearea.control;
 
-import undo.UndoManagerFactory;
 
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
@@ -17,7 +16,7 @@ public class CodeArea extends StyleClassedTextArea {
     }
 
     public CodeArea() {
-        super(UndoType.plain(), UndoManagerFactory.defaultFactory());
+        super(false);
     }
 
     /**

@@ -6,26 +6,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import undo.UndoManagerFactory;
-
 /**
  * Text area that uses style classes to define style of text segments.
  */
 public class StyleClassedTextArea extends StyledTextArea<Collection<String>> {
 
-    public <C> StyleClassedTextArea(
-            UndoType<Collection<String>, C> undoType,
-            UndoManagerFactory<C> undoManagerFactory) {
+    public <C> StyleClassedTextArea(boolean preserveStyle) {
         super(Collections.<String>emptyList(),
                 (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
-                undoType, undoManagerFactory);
+                preserveStyle);
     }
 
     /**
      * Creates a text area with empty text content.
      */
     public StyleClassedTextArea() {
-        this(UndoType.rich(), UndoManagerFactory.defaultFactory());
+        this(true);
     }
 
     /**
