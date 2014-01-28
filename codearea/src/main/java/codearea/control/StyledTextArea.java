@@ -309,6 +309,20 @@ implements
     }
 
     /**
+     * Returns the styles in the given character range.
+     */
+    public StyleSpans<S> getStyleSpans(int from, int to) {
+        return content.getStyleSpans(from, to);
+    }
+
+    /**
+     * Returns the styles in the given character range.
+     */
+    public StyleSpans<S> getStyleSpans(IndexRange range) {
+        return getStyleSpans(range.getStart(), range.getEnd());
+    }
+
+    /**
      * Returns the style of the character at the given position in the given
      * paragraph. If {@code pos} is beyond the end of the paragraph, the style
      * at the end of line is returned. If {@code pos} is negative, it is the
@@ -316,6 +330,20 @@ implements
      */
     public S getStyleAt(int paragraph, int pos) {
         return content.getStyleAt(paragraph, pos);
+    }
+
+    /**
+     * Returns the styles in the given character range of the given paragraph.
+     */
+    public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
+        return content.getStyleSpans(paragraph, from, to);
+    }
+
+    /**
+     * Returns the styles in the given character range of the given paragraph.
+     */
+    public StyleSpans<S> getStyleSpans(int paragraph, IndexRange range) {
+        return getStyleSpans(paragraph, range.getStart(), range.getEnd());
     }
 
     @Override

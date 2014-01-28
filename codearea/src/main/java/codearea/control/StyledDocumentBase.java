@@ -109,7 +109,7 @@ implements StyledDocument<S> {
     }
 
     @Override
-    public StyleSpans<S> getStyleRanges(int from, int to) {
+    public StyleSpans<S> getStyleSpans(int from, int to) {
         Position start = offsetToPosition(from, Forward);
         Position end = start.offsetBy(to - from, Backward);
         int startParIdx = start.getMajor();
@@ -146,7 +146,7 @@ implements StyledDocument<S> {
     }
 
     @Override
-    public StyleSpans<S> getStyleRanges(int paragraph, int from, int to) {
+    public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
         return paragraphs.get(paragraph).getStyleRanges(from, to);
     }
 
