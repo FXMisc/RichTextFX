@@ -6,6 +6,8 @@
 
 package codearea.demo;
 
+import inhibeans.value.Indicator;
+
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -170,11 +172,13 @@ public class RichText extends Application {
 
     private final InlineStyleTextArea<StyleInfo> area =
             new InlineStyleTextArea<StyleInfo>(
-                    StyleInfo.EMPTY.updateFontSize(12).updateTextColor(Color.BLACK).updateFontFamily("Serif"),
+                    StyleInfo.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
                     style -> style.toCss());
     {
         area.setWrapText(true);
     }
+
+    private final Indicator updatingToolbar = new Indicator();
 
     @Override
     public void start(Stage primaryStage) {
@@ -188,11 +192,13 @@ public class RichText extends Application {
         Button underlineBtn = createButton("underline", () -> toggleUnderline());
         Button strikeBtn = createButton("strikethrough", () -> toggleStrikethrough());
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
+        sizeCombo.getSelectionModel().select(Integer.valueOf(12));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
+        familyCombo.getSelectionModel().select("Serif");
         ColorPicker textColorPicker = new ColorPicker(Color.BLACK);
 
-        sizeCombo.getSelectionModel().selectedItemProperty().addListener((o, old, size) -> updateFontSize(size));
-        familyCombo.getSelectionModel().selectedItemProperty().addListener((o, old, family) -> updateFontFamily(family));
+        sizeCombo.setOnAction(evt -> updateFontSize(sizeCombo.getValue()));
+        familyCombo.setOnAction(evt -> updateFontFamily(familyCombo.getValue()));
         textColorPicker.valueProperty().addListener((o, old, color) -> updateTextColor(color));
 
         undoBtn.disableProperty().bind(Bindings.not(area.undoAvailableProperty()));
@@ -243,53 +249,55 @@ public class RichText extends Application {
                     textColor = style.textColor.orElse(null);
                 }
 
-                if(bold) {
-                    if(!boldBtn.getStyleClass().contains("pressed")) {
-                        boldBtn.getStyleClass().add("pressed");
+                updatingToolbar.onWhile(() -> {
+                    if(bold) {
+                        if(!boldBtn.getStyleClass().contains("pressed")) {
+                            boldBtn.getStyleClass().add("pressed");
+                        }
+                    } else {
+                        boldBtn.getStyleClass().remove("pressed");
                     }
-                } else {
-                    boldBtn.getStyleClass().remove("pressed");
-                }
 
-                if(italic) {
-                    if(!italicBtn.getStyleClass().contains("pressed")) {
-                        italicBtn.getStyleClass().add("pressed");
+                    if(italic) {
+                        if(!italicBtn.getStyleClass().contains("pressed")) {
+                            italicBtn.getStyleClass().add("pressed");
+                        }
+                    } else {
+                        italicBtn.getStyleClass().remove("pressed");
                     }
-                } else {
-                    italicBtn.getStyleClass().remove("pressed");
-                }
 
-                if(underline) {
-                    if(!underlineBtn.getStyleClass().contains("pressed")) {
-                        underlineBtn.getStyleClass().add("pressed");
+                    if(underline) {
+                        if(!underlineBtn.getStyleClass().contains("pressed")) {
+                            underlineBtn.getStyleClass().add("pressed");
+                        }
+                    } else {
+                        underlineBtn.getStyleClass().remove("pressed");
                     }
-                } else {
-                    underlineBtn.getStyleClass().remove("pressed");
-                }
 
-                if(strike) {
-                    if(!strikeBtn.getStyleClass().contains("pressed")) {
-                        strikeBtn.getStyleClass().add("pressed");
+                    if(strike) {
+                        if(!strikeBtn.getStyleClass().contains("pressed")) {
+                            strikeBtn.getStyleClass().add("pressed");
+                        }
+                    } else {
+                        strikeBtn.getStyleClass().remove("pressed");
                     }
-                } else {
-                    strikeBtn.getStyleClass().remove("pressed");
-                }
 
-                if(fontSize != -1) {
-                    sizeCombo.getSelectionModel().select(fontSize);
-                } else {
-                    sizeCombo.getSelectionModel().clearSelection();
-                }
+                    if(fontSize != -1) {
+                        sizeCombo.getSelectionModel().select(fontSize);
+                    } else {
+                        sizeCombo.getSelectionModel().clearSelection();
+                    }
 
-                if(fontFamily != null) {
-                    familyCombo.getSelectionModel().select(fontFamily);
-                } else {
-                    familyCombo.getSelectionModel().clearSelection();
-                }
+                    if(fontFamily != null) {
+                        familyCombo.getSelectionModel().select(fontFamily);
+                    } else {
+                        familyCombo.getSelectionModel().clearSelection();
+                    }
 
-                if(textColor != null) {
-                    textColorPicker.setValue(textColor);
-                }
+                    if(textColor != null) {
+                        textColorPicker.setValue(textColor);
+                    }
+                });
             }
         });
 
@@ -354,15 +362,21 @@ public class RichText extends Application {
         }
     }
 
-    private void updateFontSize(int size) {
-        updateStyleInSelection(StyleInfo.fontSize(size));
+    private void updateFontSize(Integer size) {
+        if(!updatingToolbar.isOn()) {
+            updateStyleInSelection(StyleInfo.fontSize(size));
+        }
     }
 
     private void updateFontFamily(String family) {
-        updateStyleInSelection(StyleInfo.fontFamily(family));
+        if(!updatingToolbar.isOn()) {
+            updateStyleInSelection(StyleInfo.fontFamily(family));
+        }
     }
 
     private void updateTextColor(Color color) {
-        updateStyleInSelection(StyleInfo.textColor(color));
+        if(!updatingToolbar.isOn()) {
+            updateStyleInSelection(StyleInfo.textColor(color));
+        }
     }
 }
