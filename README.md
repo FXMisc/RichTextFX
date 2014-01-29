@@ -78,6 +78,8 @@ You appreciate the benefits of this approach over `InlineCssTextArea` when you n
 MyStyleInfo styleInfo = area.getStyleAt(charIndex);
 ```
 
+`InlineStyleTextArea` is used in the [Rich-text demo](#2-rich-text-editor) below.
+
 
 Requirements
 ------------
@@ -96,7 +98,7 @@ Demos
 
 [Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea-demos-fat.jar codearea.demo.JavaKeywords
+    java -cp codearea-demos-fat-yyyymmdd.jar codearea.demo.JavaKeywords
 
 #### Run from the source repo
 
@@ -107,22 +109,24 @@ Demos
 [JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/JavaKeywords.java)
 
 
-### 2. Manual text highlighting
+### 2. Rich-text editor
 
-![Screenshot of the ManualHighlighting demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/manual-highlighting.png)
+![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
 #### Run using the pre-built JAR
 [Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea-demos-fat.jar codearea.demo.ManualHighlighting
+    java -cp codearea-demos-fat-yyyymmdd.jar codearea.demo.RichText
 
 #### Run from the source repo
 
-    gradle ManualHighlighting
+    gradle RichText
 
 #### Source code
 
-[ManualHighlighting.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/ManualHighlighting.java)
+[RichText.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/RichText.java)
+
+Source code of this demo is dedicated to the public domain.
 
 
 License
