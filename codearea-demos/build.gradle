@@ -19,3 +19,8 @@ task ManualHighlighting(type: JavaExec, dependsOn: classes) {
     main = 'codearea.demo.ManualHighlighting'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
+
+task RichText(type: JavaExec, dependsOn: classes) {
+    main = 'codearea.demo.RichText'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}
