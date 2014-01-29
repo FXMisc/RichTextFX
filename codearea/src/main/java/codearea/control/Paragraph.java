@@ -217,7 +217,7 @@ public final class Paragraph<S> implements CharSequence {
 
         if(startSegIdx == endSegIdx) {
             StyledText<S> seg = segments.get(startSegIdx);
-            builder.add(seg.getStyle(), from - to);
+            builder.add(seg.getStyle(), to - from);
         } else {
             StyledText<S> startSeg = segments.get(startSegIdx);
             builder.add(startSeg.getStyle(), startSeg.length() - start.getMinor());
