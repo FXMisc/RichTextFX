@@ -25,7 +25,7 @@ example.css:
 
 This renders the text in the range `[from, to)` in red.
 
-Note that style classes are assigned to instances of [Text](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/Text.html), so you can specify any [CSS properties applicable to a `Text` node](http://docs.oracle.com/javafx/2/api/javafx/scene/doc-files/cssref.html#text).
+Note that the style classes are assigned to instances of [Text](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/Text.html), so you can specify any [CSS properties applicable to a Text node](http://docs.oracle.com/javafx/2/api/javafx/scene/doc-files/cssref.html#text).
 
 #### CodeArea
 
@@ -62,7 +62,7 @@ InlineStyleTextArea<MyStyleInfo> area =
         new InlineStyleTextArea<>(new MyStyleInfo(), styleInfo -> styleInfo.toCss());
 ```
 
-The first constructor argument is the default style to use where you don't set the style explicitly. The second constructor argument is the function to convert the custom style representation to CSS.
+The first constructor argument is the default style to use for ranges of text where you don't set the style explicitly. The second constructor argument is the function to convert the custom style representation to CSS.
 
 You then assign an instance of your custom style representation to a range of text.
 
@@ -84,7 +84,7 @@ MyStyleInfo styleInfo = area.getStyleAt(charIndex);
 Requirements
 ------------
 
-[JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line.
+[JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line. Also, there's a heavy use of lambdas, defender methods and the stream API in the code base.
 
 
 Demos
