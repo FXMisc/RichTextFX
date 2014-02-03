@@ -2,7 +2,6 @@ package codearea.control;
 
 import static codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static codearea.control.TwoDimensional.Bias.*;
-import inhibeans.Hold;
 import inhibeans.property.ReadOnlyIntegerWrapper;
 
 import java.util.ArrayList;
@@ -15,9 +14,10 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import reactfx.PushSource;
-import reactfx.Source;
-import reactfx.Sources;
+import reactfx.EventSource;
+import reactfx.EventStream;
+import reactfx.EventStreams;
+import reactfx.Hold;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -88,41 +88,41 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     //     2. push to styleChangeEnd
     //     3. push to styleChangeDone.
 
-    private final PushSource<Integer> textChangePosition = new PushSource<>();
-    private final PushSource<Integer> styleChangePosition = new PushSource<>();
+    private final EventSource<Integer> textChangePosition = new EventSource<>();
+    private final EventSource<Integer> styleChangePosition = new EventSource<>();
 
-    private final PushSource<Integer> textRemovalEnd = new PushSource<>();
-    private final PushSource<Integer> styleChangeEnd = new PushSource<>();
+    private final EventSource<Integer> textRemovalEnd = new EventSource<>();
+    private final EventSource<Integer> styleChangeEnd = new EventSource<>();
 
-    private final PushSource<String> insertedText = new PushSource<>();
+    private final EventSource<String> insertedText = new EventSource<>();
 
-    private final PushSource<StyledDocument<S>> insertedDocument = new PushSource<>();
-    private final PushSource<Integer> insertionLength = new PushSource<>();
-    private final PushSource<Void> styleChangeDone = new PushSource<>();
+    private final EventSource<StyledDocument<S>> insertedDocument = new EventSource<>();
+    private final EventSource<Integer> insertionLength = new EventSource<>();
+    private final EventSource<Void> styleChangeDone = new EventSource<>();
 
-    private final Source<PlainTextChange> plainTextChanges;
-    public Source<PlainTextChange> plainTextChanges() { return plainTextChanges; }
+    private final EventStream<PlainTextChange> plainTextChanges;
+    public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
-    private final Source<RichTextChange<S>> richChanges;
-    public Source<RichTextChange<S>> richChanges() { return richChanges; }
+    private final EventStream<RichTextChange<S>> richChanges;
+    public EventStream<RichTextChange<S>> richChanges() { return richChanges; }
 
     {
-        Source<String> removedText = Sources.zip(textChangePosition, textRemovalEnd, (a, b) -> getText(a, b));
-        Source<Integer> changePosition = Sources.merge(textChangePosition, styleChangePosition);
-        Source<Integer> removalEnd = Sources.merge(textRemovalEnd, styleChangeEnd);
-        Source<StyledDocument<S>> removedDocument = Sources.zip(changePosition, removalEnd, (a, b) -> subSequence(a, b));
-        Source<Integer> insertionEnd = Sources.merge(
-                Sources.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
-                Sources.release(styleChangeEnd).on(styleChangeDone));
-        Source<StyledDocument<S>> insertedDocument = Sources.merge(
+        EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).by((a, b) -> getText(a, b));
+        EventStream<Integer> changePosition = EventStreams.merge(textChangePosition, styleChangePosition);
+        EventStream<Integer> removalEnd = EventStreams.merge(textRemovalEnd, styleChangeEnd);
+        EventStream<StyledDocument<S>> removedDocument = EventStreams.zip(changePosition, removalEnd).by((a, b) -> subSequence(a, b));
+        EventStream<Integer> insertionEnd = EventStreams.merge(
+                EventStreams.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
+                EventStreams.release(styleChangeEnd).on(styleChangeDone));
+        EventStream<StyledDocument<S>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
-                Sources.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));
+                EventStreams.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));
 
-        plainTextChanges = Sources.zip(textChangePosition, removedText, insertedText,
-                (pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted));
+        plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
+                .by((pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted));
 
-        richChanges = Sources.zip(changePosition, removedDocument, insertedDocument,
-                (pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted));
+        richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
+                .by((pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted));
     }
 
 

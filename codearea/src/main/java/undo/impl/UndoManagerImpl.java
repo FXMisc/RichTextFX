@@ -1,6 +1,5 @@
 package undo.impl;
 
-import inhibeans.Hold;
 import inhibeans.value.Indicator;
 
 import java.util.Optional;
@@ -9,7 +8,8 @@ import java.util.function.Consumer;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ObservableBooleanValue;
-import reactfx.Source;
+import reactfx.EventStream;
+import reactfx.Hold;
 import reactfx.Subscription;
 import undo.UndoManager;
 
@@ -39,7 +39,7 @@ public class UndoManagerImpl<C> implements UndoManager {
 
     private final Indicator ignoreChanges = new Indicator();
 
-    public UndoManagerImpl(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge, Source<C> changeSource) {
+    public UndoManagerImpl(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge, EventStream<C> changeSource) {
         this.apply = apply;
         this.undo = undo;
         this.merge = merge;

@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import reactfx.Source;
+import reactfx.EventStream;
 import undo.impl.UndoManagerImpl;
 
 public interface UndoManagerFactory {
@@ -13,7 +13,7 @@ public interface UndoManagerFactory {
             Consumer<C> apply,
             Consumer<C> undo,
             BiFunction<C, C, Optional<C>> merge,
-            Source<C> changeSource);
+            EventStream<C> changeSource);
 
     public static UndoManagerFactory defaultFactory() {
         return new UndoManagerFactory() {
@@ -22,7 +22,7 @@ public interface UndoManagerFactory {
                     Consumer<C> apply,
                     Consumer<C> undo,
                     BiFunction<C, C, Optional<C>> merge,
-                    Source<C> changeSource) {
+                    EventStream<C> changeSource) {
                 return new UndoManagerImpl<>(apply, undo, merge, changeSource);
             }
 

@@ -1,7 +1,6 @@
 package codearea.control;
 
 import static codearea.control.TwoDimensional.Bias.*;
-import inhibeans.Hold;
 import inhibeans.value.Indicator;
 
 import java.util.Arrays;
@@ -30,7 +29,8 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import reactfx.Source;
+import reactfx.EventStream;
+import reactfx.Hold;
 import undo.UndoManager;
 import undo.UndoManagerFactory;
 import codearea.control.CssProperties.EditableProperty;
@@ -174,11 +174,11 @@ implements
 
     // text changes
     @Override
-    public final Source<PlainTextChange> plainTextChanges() { return content.plainTextChanges(); }
+    public final EventStream<PlainTextChange> plainTextChanges() { return content.plainTextChanges(); }
 
     // rich text changes
     @Override
-    public final Source<RichTextChange<S>> richChanges() { return content.richChanges(); }
+    public final EventStream<RichTextChange<S>> richChanges() { return content.richChanges(); }
 
 
     /**************************************************************************

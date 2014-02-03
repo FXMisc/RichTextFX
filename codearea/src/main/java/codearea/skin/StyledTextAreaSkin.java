@@ -1,6 +1,6 @@
 package codearea.skin;
 
-import static reactfx.Sources.*;
+import static reactfx.EventStreams.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +27,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import reactfx.Source;
+import reactfx.EventStream;
 import reactfx.Subscription;
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
@@ -126,18 +126,18 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         updateWrapWidth();
 
         // emits a value every time the area is done updating
-        Source<?> areaDoneUpdating =
-                fromChanges(styledTextArea.beingUpdatedProperty())
+        EventStream<?> areaDoneUpdating =
+                valuesOf(styledTextArea.beingUpdatedProperty())
                 .filter(updating -> !updating);
 
         // update the caret every time the caret position or paragraphs change
-        Source<Void> caretPosDirty = fromInvalidations(styledTextArea.caretPositionProperty());
-        Source<Void> paragraphsDirty = fromInvalidations(listView.getItems());
-        Source<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
+        EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
+        EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
+        EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
         subscribeTo(release(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
 
         // update selection in paragraphs
-        Source<Void> selectionDirty = fromInvalidations(styledTextArea.selectionProperty());
+        EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
         subscribeTo(release(selectionDirty).on(areaDoneUpdating), x -> {
             IndexRange visibleRange = listView.getVisibleRange();
             int startPar = visibleRange.getStart();
@@ -310,7 +310,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         manageSubscription(() -> observable.removeListener(listener));
     }
 
-    private <T> void subscribeTo(Source<T> src, Consumer<T> consumer) {
+    private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
         manageSubscription(src.subscribe(consumer));
     }
 

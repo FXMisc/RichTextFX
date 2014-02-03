@@ -32,7 +32,7 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
-import reactfx.Source;
+import reactfx.EventStream;
 
 /**
  * Interface for a text editing control.
@@ -122,12 +122,12 @@ public interface TextEditingArea<S> {
     /**
      * Stream of text changes.
      */
-    Source<PlainTextChange> plainTextChanges();
+    EventStream<PlainTextChange> plainTextChanges();
 
     /**
      * Stream of rich text changes.
      */
-    Source<RichTextChange<S>> richChanges();
+    EventStream<RichTextChange<S>> richChanges();
 
 
     /***************
