@@ -241,8 +241,8 @@ implements
         paragraphs = content.getParagraphs();
 
         undoManager = preserveStyle
-                ? createRichUndoManager(UndoManagerFactory.defaultFactory())
-                : createPlainUndoManager(UndoManagerFactory.defaultFactory());
+                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
         ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p, Forward));
         currentParagraph = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor());
@@ -518,13 +518,13 @@ implements
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
         Consumer<PlainTextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
-        return factory.create(apply, undo, merge, plainTextChanges());
+        return factory.create(plainTextChanges(), apply, undo, merge);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
         Consumer<RichTextChange<S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
         Consumer<RichTextChange<S>> undo = change -> replace(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
-        return factory.create(apply, undo, merge, richChanges());
+        return factory.create(richChanges(), apply, undo, merge);
     }
 }

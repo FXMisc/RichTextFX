@@ -11,5 +11,5 @@ public interface ChangeQueue<C> {
     C prev();
 
     @SuppressWarnings({"unchecked"})
-    void push(C... change);
+    void push(C... changes);
 }

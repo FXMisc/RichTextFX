@@ -9,12 +9,12 @@ public class UnlimitedChangeQueue<C> implements ChangeQueue<C> {
 
     @Override
     public final boolean hasNext() {
-        return (currentPosition < changes.size());
+        return currentPosition < changes.size();
     }
 
     @Override
     public final boolean hasPrev() {
-        return (currentPosition > 0);
+        return currentPosition > 0;
     }
 
     @Override
@@ -29,12 +29,12 @@ public class UnlimitedChangeQueue<C> implements ChangeQueue<C> {
 
     @Override
     @SafeVarargs
-    public final void push(C... change) {
-        changes.subList(currentPosition, changes.size()).clear();
-        for(C c: change) {
-            changes.add(c);
+    public final void push(C... changes) {
+        this.changes.subList(currentPosition, this.changes.size()).clear();
+        for(C c: changes) {
+            this.changes.add(c);
         }
-        currentPosition += change.length;
+        currentPosition += changes.length;
     }
 
 }

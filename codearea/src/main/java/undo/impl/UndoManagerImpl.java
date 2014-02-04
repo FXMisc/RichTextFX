@@ -14,7 +14,7 @@ import undo.UndoManager;
 
 public class UndoManagerImpl<C> implements UndoManager {
 
-    private final ChangeQueue<C> queue = new UnlimitedChangeQueue<>();
+    private final ChangeQueue<C> queue;
     private final Consumer<C> apply;
     private final Consumer<C> undo;
     private final BiFunction<C, C, Optional<C>> merge;
@@ -38,7 +38,13 @@ public class UndoManagerImpl<C> implements UndoManager {
 
     private final Indicator ignoreChanges = new Indicator();
 
-    public UndoManagerImpl(Consumer<C> apply, Consumer<C> undo, BiFunction<C, C, Optional<C>> merge, EventStream<C> changeSource) {
+    public UndoManagerImpl(
+            ChangeQueue<C> queue,
+            Consumer<C> apply,
+            Consumer<C> undo,
+            BiFunction<C, C, Optional<C>> merge,
+            EventStream<C> changeSource) {
+        this.queue = queue;
         this.apply = apply;
         this.undo = undo;
         this.merge = merge;
