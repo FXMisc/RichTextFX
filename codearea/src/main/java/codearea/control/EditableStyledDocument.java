@@ -2,7 +2,6 @@ package codearea.control;
 
 import static codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static codearea.control.TwoDimensional.Bias.*;
-import inhibeans.property.ReadOnlyIntegerWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +17,7 @@ import reactfx.EventSource;
 import reactfx.EventStream;
 import reactfx.EventStreams;
 import reactfx.Hold;
+import reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -113,7 +113,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         EventStream<StyledDocument<S>> removedDocument = EventStreams.zip(changePosition, removalEnd).by((a, b) -> subSequence(a, b));
         EventStream<Integer> insertionEnd = EventStreams.merge(
                 EventStreams.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
-                EventStreams.release(styleChangeEnd).on(styleChangeDone));
+                EventStreams.emit(styleChangeEnd).on(styleChangeDone));
         EventStream<StyledDocument<S>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
                 EventStreams.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));

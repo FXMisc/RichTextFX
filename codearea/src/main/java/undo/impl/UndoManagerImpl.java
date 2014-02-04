@@ -1,7 +1,5 @@
 package undo.impl;
 
-import inhibeans.value.Indicator;
-
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -10,6 +8,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ObservableBooleanValue;
 import reactfx.EventStream;
 import reactfx.Hold;
+import reactfx.Indicator;
 import reactfx.Subscription;
 import undo.UndoManager;
 

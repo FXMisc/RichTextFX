@@ -1,7 +1,6 @@
 package codearea.control;
 
 import static codearea.control.TwoDimensional.Bias.*;
-import inhibeans.value.Indicator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +30,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import reactfx.EventStream;
 import reactfx.Hold;
+import reactfx.Indicator;
 import undo.UndoManager;
 import undo.UndoManagerFactory;
 import codearea.control.CssProperties.EditableProperty;

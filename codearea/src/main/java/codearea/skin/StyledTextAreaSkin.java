@@ -134,11 +134,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
-        subscribeTo(release(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
+        subscribeTo(emit(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
 
         // update selection in paragraphs
         EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
-        subscribeTo(release(selectionDirty).on(areaDoneUpdating), x -> {
+        subscribeTo(emit(selectionDirty).on(areaDoneUpdating), x -> {
             IndexRange visibleRange = listView.getVisibleRange();
             int startPar = visibleRange.getStart();
             int endPar = visibleRange.getEnd();
