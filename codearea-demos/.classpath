@@ -3,8 +3,7 @@
 	<classpathentry kind="src" output="build/classes/main" path="src/main/java"/>
 	<classpathentry kind="src" output="build/resources/main" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry exported="true" kind="src" path="/codearea"/>
 	<classpathentry kind="lib" path="../codearea/libs/reactfx-20140204.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="lib" path="../codearea/libs/undofx-20140206.jar"/>
 </classpath>

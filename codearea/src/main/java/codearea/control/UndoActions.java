@@ -1,8 +1,8 @@
 package codearea.control;
 
 import javafx.beans.value.ObservableBooleanValue;
-import undo.UndoManager;
-import undo.UndoManagerFactory;
+import undofx.UndoManager;
+import undofx.UndoManagerFactory;
 
 /**
  * Undo/redo actions for {@link TextEditingArea}.
