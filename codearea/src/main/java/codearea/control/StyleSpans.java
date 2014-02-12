@@ -9,6 +9,15 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
+
+    static <S> StyleSpans<S> singleton(S style, int length) {
+        return singleton(new StyleSpan<>(style, length));
+    }
+
+    static <S> StyleSpans<S> singleton(StyleSpan<S> span) {
+        return new SingletonSpans<>(span);
+    }
+
     int length();
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
@@ -38,6 +47,8 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     default StyleSpans<S> append(StyleSpan<S> span) {
         if(span.getLength() == 0) {
             return this;
+        } else if(length() == 0) {
+            return singleton(span);
         }
 
         int lastIdx = getSpanCount() - 1;
@@ -57,6 +68,8 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     default StyleSpans<S> prepend(StyleSpan<S> span) {
         if(span.getLength() == 0) {
             return this;
+        } else if(length() == 0) {
+            return singleton(span);
         }
 
         StyleSpan<S> myFirstSpan = getStyleSpan(0);
