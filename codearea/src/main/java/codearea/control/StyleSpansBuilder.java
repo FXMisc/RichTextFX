@@ -8,31 +8,17 @@ import java.util.List;
 
 public class StyleSpansBuilder<S> {
 
-    private static class StyleSpansImpl<S> implements StyleSpans<S> {
+    private static class StyleSpansImpl<S> extends StyleSpansBase<S> {
         private final List<StyleSpan<S>> spans;
-        private final TwoLevelNavigator navigator;
         private int length = -1;
 
         StyleSpansImpl(List<StyleSpan<S>> spans) {
             this.spans = spans;
-            this.navigator = new TwoLevelNavigator(
-                    () -> spans.size(),
-                    i -> spans.get(i).getLength());
         }
 
         @Override
         public Iterator<StyleSpan<S>> iterator() {
             return spans.iterator();
-        }
-
-        @Override
-        public Position position(int major, int minor) {
-            return navigator.position(major, minor);
-        }
-
-        @Override
-        public Position offsetToPosition(int offset, Bias bias) {
-            return navigator.offsetToPosition(offset, bias);
         }
 
         @Override
@@ -118,13 +104,29 @@ public class StyleSpansBuilder<S> {
 }
 
 
-class SubSpans<S> implements StyleSpans<S> {
+abstract class StyleSpansBase<S> implements StyleSpans<S> {
+    protected final TwoLevelNavigator navigator = new TwoLevelNavigator(
+            () -> getSpanCount(),
+            i -> getStyleSpan(i).getLength());
+
+    @Override
+    public Position position(int major, int minor) {
+        return navigator.position(major, minor);
+    }
+
+    @Override
+    public Position offsetToPosition(int offset, Bias bias) {
+        return navigator.offsetToPosition(offset, bias);
+    }
+}
+
+
+class SubSpans<S> extends StyleSpansBase<S> {
     private final StyleSpans<S> original;
     private final int firstIdxInOrig;
     private final int spanCount;
     private final StyleSpan<S> firstSpan;
     private final StyleSpan<S> lastSpan;
-    private final TwoLevelNavigator navigator;
 
     int length = -1;
 
@@ -132,9 +134,6 @@ class SubSpans<S> implements StyleSpans<S> {
         this.original = original;
         this.firstIdxInOrig = from.getMajor();
         this.spanCount = to.getMajor() - from.getMajor() + 1;
-        this.navigator = new TwoLevelNavigator(
-                () -> spanCount,
-                i -> getStyleSpan(i).getLength());
 
         if(spanCount == 1) {
             StyleSpan<S> span = original.getStyleSpan(firstIdxInOrig);
@@ -148,16 +147,6 @@ class SubSpans<S> implements StyleSpans<S> {
             StyleSpan<S> endSpan = original.getStyleSpan(to.getMajor());
             lastSpan = new StyleSpan<>(endSpan.getStyle(), to.getMinor());
         }
-    }
-
-    @Override
-    public Position position(int major, int minor) {
-        return navigator.position(major, minor);
-    }
-
-    @Override
-    public Position offsetToPosition(int offset, Bias bias) {
-        return navigator.offsetToPosition(offset, bias);
     }
 
     @Override
