@@ -31,6 +31,43 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         };
     }
 
+    default StyleSpans<S> append(S style, int length) {
+        return append(new StyleSpan<>(style, length));
+    }
+
+    default StyleSpans<S> append(StyleSpan<S> span) {
+        if(span.getLength() == 0) {
+            return this;
+        }
+
+        int lastIdx = getSpanCount() - 1;
+        StyleSpan<S> myLastSpan = getStyleSpan(lastIdx);
+        if(Objects.equals(myLastSpan.getStyle(), span.getStyle())) {
+            StyleSpan<S> newLastSpan = new StyleSpan<>(span.getStyle(), myLastSpan.getLength() + span.getLength());
+            return new UpdatedSpans<>(this, lastIdx, newLastSpan);
+        } else {
+            return new AppendedSpans<>(this, span);
+        }
+    }
+
+    default StyleSpans<S> prepend(S style, int length) {
+        return prepend(new StyleSpan<>(style, length));
+    }
+
+    default StyleSpans<S> prepend(StyleSpan<S> span) {
+        if(span.getLength() == 0) {
+            return this;
+        }
+
+        StyleSpan<S> myFirstSpan = getStyleSpan(0);
+        if(Objects.equals(span.getStyle(), myFirstSpan.getStyle())) {
+            StyleSpan<S> newFirstSpan = new StyleSpan<>(span.getStyle(), span.getLength() + myFirstSpan.getLength());
+            return new UpdatedSpans<>(this, 0, newFirstSpan);
+        } else {
+            return new PrependedSpans<>(this, span);
+        }
+    }
+
     default StyleSpans<S> subView(Position from, Position to) {
         return new SubSpans<>(this, from, to);
     }
