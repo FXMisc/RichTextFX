@@ -157,7 +157,7 @@ public class StyleSpansBuilder<S> {
 
 
     private boolean created = false;
-    private final List<StyleSpan<S>> spans;
+    private final ArrayList<StyleSpan<S>> spans;
 
     public StyleSpansBuilder(int initialCapacity) {
         this.spans = new ArrayList<>(initialCapacity);
@@ -180,6 +180,23 @@ public class StyleSpansBuilder<S> {
     public StyleSpansBuilder<S> addAll(Collection<? extends StyleSpan<S>> styleSpans) {
         ensureNotCreated();
         spans.addAll(styleSpans);
+        return this;
+    }
+
+    public StyleSpansBuilder<S> addAll(Iterable<? extends StyleSpan<S>> styleSpans, int sizeHint) {
+        ensureNotCreated();
+        spans.ensureCapacity(spans.size() + sizeHint);
+        for(StyleSpan<S> span: styleSpans) {
+            spans.add(span);
+        }
+        return this;
+    }
+
+    public StyleSpansBuilder<S> addAll(Iterable<? extends StyleSpan<S>> styleSpans) {
+        ensureNotCreated();
+        for(StyleSpan<S> span: styleSpans) {
+            spans.add(span);
+        }
         return this;
     }
 

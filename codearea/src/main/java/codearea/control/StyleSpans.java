@@ -1,6 +1,7 @@
 package codearea.control;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -12,6 +13,38 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
     StyleSpans<S> subView(Position from, Position to);
+
+    default StyleSpans<S> concat(StyleSpans<S> that) {
+        if(that.length() == 0) {
+            return this;
+        } else if(this.length() == 0) {
+            return that;
+        }
+
+        int n1 = this.getSpanCount();
+        int n2 = that.getSpanCount();
+
+        StyleSpan<S> myLast = this.getStyleSpan(n1 - 1);
+        StyleSpan<S> theirFirst = that.getStyleSpan(0);
+
+        StyleSpansBuilder<S> builder;
+        if(Objects.equals(myLast.getStyle(), theirFirst.getStyle())) {
+            builder = new StyleSpansBuilder<>(n1 + n2 - 1);
+            for(int i = 0; i < n1 - 1; ++i) {
+                builder.add(this.getStyleSpan(i));
+            }
+            builder.add(myLast.getStyle(), myLast.getLength() + theirFirst.getLength());
+            for(int i = 1; i < n2; ++i) {
+                builder.add(that.getStyleSpan(i));
+            }
+        } else {
+            builder = new StyleSpansBuilder<>(n1 + n2);
+            builder.addAll(this, n1);
+            builder.addAll(that, n2);
+        }
+
+        return builder.create();
+    }
 
     default StyleSpans<S> mapStyles(UnaryOperator<S> mapper) {
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(getSpanCount());
