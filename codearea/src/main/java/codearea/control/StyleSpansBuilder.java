@@ -151,23 +151,6 @@ class SubSpans<S> implements StyleSpans<S> {
     }
 
     @Override
-    public Iterator<StyleSpan<S>> iterator() {
-        return new Iterator<StyleSpan<S>>() {
-            private int nextToReturn = 0;
-
-            @Override
-            public boolean hasNext() {
-                return nextToReturn < spanCount;
-            }
-
-            @Override
-            public StyleSpan<S> next() {
-                return getStyleSpan(nextToReturn++);
-            }
-        };
-    }
-
-    @Override
     public Position position(int major, int minor) {
         return navigator.position(major, minor);
     }

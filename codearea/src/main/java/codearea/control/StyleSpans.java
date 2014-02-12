@@ -13,6 +13,24 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
 
+    @Override
+    default Iterator<StyleSpan<S>> iterator() {
+        return new Iterator<StyleSpan<S>>() {
+            private int nextToReturn = 0;
+            private final int spanCount = getSpanCount();
+
+            @Override
+            public boolean hasNext() {
+                return nextToReturn < spanCount;
+            }
+
+            @Override
+            public StyleSpan<S> next() {
+                return getStyleSpan(nextToReturn++);
+            }
+        };
+    }
+
     default StyleSpans<S> subView(Position from, Position to) {
         return new SubSpans<>(this, from, to);
     }
