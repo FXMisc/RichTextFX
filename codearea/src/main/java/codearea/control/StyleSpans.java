@@ -12,7 +12,10 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     int length();
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
-    StyleSpans<S> subView(Position from, Position to);
+
+    default StyleSpans<S> subView(Position from, Position to) {
+        return new SubSpans<>(this, from, to);
+    }
 
     default StyleSpans<S> concat(StyleSpans<S> that) {
         if(that.length() == 0) {

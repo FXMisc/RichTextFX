@@ -53,106 +53,6 @@ public class StyleSpansBuilder<S> {
         public StyleSpan<S> getStyleSpan(int index) {
             return spans.get(index);
         }
-
-        @Override
-        public StyleSpans<S> subView(Position from, Position to) {
-            return new SubSpans<>(this, from, to);
-        }
-    }
-
-    private static class SubSpans<S> implements StyleSpans<S> {
-        private final StyleSpans<S> original;
-        private final int firstIdxInOrig;
-        private final int spanCount;
-        private final StyleSpan<S> firstSpan;
-        private final StyleSpan<S> lastSpan;
-        private final TwoLevelNavigator navigator;
-
-        int length = -1;
-
-        public SubSpans(StyleSpans<S> original, Position from, Position to) {
-            this.original = original;
-            this.firstIdxInOrig = from.getMajor();
-            this.spanCount = to.getMajor() - from.getMajor() + 1;
-            this.navigator = new TwoLevelNavigator(
-                    () -> spanCount,
-                    i -> getStyleSpan(i).getLength());
-
-            if(spanCount == 1) {
-                StyleSpan<S> span = original.getStyleSpan(firstIdxInOrig);
-                int len = to.getMinor() - from.getMinor();
-                firstSpan = lastSpan = new StyleSpan<>(span.getStyle(), len);
-            } else {
-                StyleSpan<S> startSpan = original.getStyleSpan(firstIdxInOrig);
-                int len = startSpan.getLength() - from.getMinor();
-                firstSpan = new StyleSpan<>(startSpan.getStyle(), len);
-
-                StyleSpan<S> endSpan = original.getStyleSpan(to.getMajor());
-                lastSpan = new StyleSpan<>(endSpan.getStyle(), to.getMinor());
-            }
-        }
-
-        @Override
-        public Iterator<StyleSpan<S>> iterator() {
-            return new Iterator<StyleSpan<S>>() {
-                private int nextToReturn = 0;
-
-                @Override
-                public boolean hasNext() {
-                    return nextToReturn < spanCount;
-                }
-
-                @Override
-                public StyleSpan<S> next() {
-                    return getStyleSpan(nextToReturn++);
-                }
-            };
-        }
-
-        @Override
-        public Position position(int major, int minor) {
-            return navigator.position(major, minor);
-        }
-
-        @Override
-        public Position offsetToPosition(int offset, Bias bias) {
-            return navigator.offsetToPosition(offset, bias);
-        }
-
-        @Override
-        public int length() {
-            if(length == -1) {
-                length = 0;
-                for(StyleSpan<S> span: this) {
-                    length += span.getLength();
-                }
-            }
-
-            return length;
-        }
-
-        @Override
-        public int getSpanCount() {
-            return spanCount;
-        }
-
-        @Override
-        public StyleSpan<S> getStyleSpan(int index) {
-            if(index == 0) {
-                return firstSpan;
-            } else if(index == spanCount - 1) {
-                return lastSpan;
-            } else if(index < 0 || index >= spanCount) {
-                throw new IndexOutOfBoundsException(String.valueOf(index));
-            } else {
-                return original.getStyleSpan(firstIdxInOrig + index);
-            }
-        }
-
-        @Override
-        public StyleSpans<S> subView(Position from, Position to) {
-            return new SubSpans<>(this, from, to);
-        }
     }
 
 
@@ -213,6 +113,97 @@ public class StyleSpansBuilder<S> {
     private void ensureNotCreated() {
         if(created) {
             throw new IllegalStateException("Cannot reus StyleRangesBuilder after StyleRanges have been created.");
+        }
+    }
+}
+
+
+class SubSpans<S> implements StyleSpans<S> {
+    private final StyleSpans<S> original;
+    private final int firstIdxInOrig;
+    private final int spanCount;
+    private final StyleSpan<S> firstSpan;
+    private final StyleSpan<S> lastSpan;
+    private final TwoLevelNavigator navigator;
+
+    int length = -1;
+
+    public SubSpans(StyleSpans<S> original, Position from, Position to) {
+        this.original = original;
+        this.firstIdxInOrig = from.getMajor();
+        this.spanCount = to.getMajor() - from.getMajor() + 1;
+        this.navigator = new TwoLevelNavigator(
+                () -> spanCount,
+                i -> getStyleSpan(i).getLength());
+
+        if(spanCount == 1) {
+            StyleSpan<S> span = original.getStyleSpan(firstIdxInOrig);
+            int len = to.getMinor() - from.getMinor();
+            firstSpan = lastSpan = new StyleSpan<>(span.getStyle(), len);
+        } else {
+            StyleSpan<S> startSpan = original.getStyleSpan(firstIdxInOrig);
+            int len = startSpan.getLength() - from.getMinor();
+            firstSpan = new StyleSpan<>(startSpan.getStyle(), len);
+
+            StyleSpan<S> endSpan = original.getStyleSpan(to.getMajor());
+            lastSpan = new StyleSpan<>(endSpan.getStyle(), to.getMinor());
+        }
+    }
+
+    @Override
+    public Iterator<StyleSpan<S>> iterator() {
+        return new Iterator<StyleSpan<S>>() {
+            private int nextToReturn = 0;
+
+            @Override
+            public boolean hasNext() {
+                return nextToReturn < spanCount;
+            }
+
+            @Override
+            public StyleSpan<S> next() {
+                return getStyleSpan(nextToReturn++);
+            }
+        };
+    }
+
+    @Override
+    public Position position(int major, int minor) {
+        return navigator.position(major, minor);
+    }
+
+    @Override
+    public Position offsetToPosition(int offset, Bias bias) {
+        return navigator.offsetToPosition(offset, bias);
+    }
+
+    @Override
+    public int length() {
+        if(length == -1) {
+            length = 0;
+            for(StyleSpan<S> span: this) {
+                length += span.getLength();
+            }
+        }
+
+        return length;
+    }
+
+    @Override
+    public int getSpanCount() {
+        return spanCount;
+    }
+
+    @Override
+    public StyleSpan<S> getStyleSpan(int index) {
+        if(index == 0) {
+            return firstSpan;
+        } else if(index == spanCount - 1) {
+            return lastSpan;
+        } else if(index < 0 || index >= spanCount) {
+            throw new IndexOutOfBoundsException(String.valueOf(index));
+        } else {
+            return original.getStyleSpan(firstIdxInOrig + index);
         }
     }
 }
