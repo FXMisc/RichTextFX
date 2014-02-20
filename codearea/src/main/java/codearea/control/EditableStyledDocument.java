@@ -236,7 +236,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         }
     }
 
-    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         try(Hold commitOnClose = beginStyleChange(from, from + len)) {
             Position start = offsetToPosition(from, Forward);
@@ -283,7 +283,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         }
     }
 
-    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         int parOffset = position(paragraph, 0).toOffset();
         int start = parOffset + from;
         int end = start + styleSpans.length();

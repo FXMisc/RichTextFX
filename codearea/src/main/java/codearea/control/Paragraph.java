@@ -173,7 +173,7 @@ public final class Paragraph<S> implements CharSequence {
         return left.append(middle).append(right);
     }
 
-    public Paragraph<S> restyle(int from, StyleSpans<S> styleSpans) {
+    public Paragraph<S> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
 
         Paragraph<S> left = trim(from);
@@ -182,7 +182,7 @@ public final class Paragraph<S> implements CharSequence {
         String middleString = substring(from, from + len);
         List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
         int offset = 0;
-        for(StyleSpan<S> span: styleSpans) {
+        for(StyleSpan<? extends S> span: styleSpans) {
             int end = offset + span.getLength();
             String text = middleString.substring(offset, end);
             middleSegs.add(new StyledText<>(text, span.getStyle()));

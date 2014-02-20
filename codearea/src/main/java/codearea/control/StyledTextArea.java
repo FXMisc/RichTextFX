@@ -403,7 +403,7 @@ implements
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         try(Hold h = beingUpdated.on()) {
             content.setStyleSpans(from, styleSpans);
         }
@@ -419,7 +419,7 @@ implements
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         try(Hold h = beingUpdated.on()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
