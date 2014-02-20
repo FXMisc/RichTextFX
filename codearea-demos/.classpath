@@ -4,6 +4,6 @@
 	<classpathentry kind="src" output="build/resources/main" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="src" path="/codearea"/>
-	<classpathentry kind="lib" path="../codearea/libs/reactfx-20140204.jar"/>
+	<classpathentry kind="lib" path="../codearea/libs/reactfx-20140220.jar"/>
 	<classpathentry kind="lib" path="../codearea/libs/undofx-20140206.jar"/>
 </classpath>

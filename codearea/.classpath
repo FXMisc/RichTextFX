@@ -5,6 +5,6 @@
 	<classpathentry kind="src" output="build/classes/test" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="libs/reactfx-20140204.jar"/>
+	<classpathentry kind="lib" path="libs/reactfx-20140220.jar"/>
 	<classpathentry kind="lib" path="libs/undofx-20140206.jar"/>
 </classpath>
