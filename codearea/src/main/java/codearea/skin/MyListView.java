@@ -26,6 +26,7 @@
 package codearea.skin;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,7 +34,6 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.control.IndexedCell;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 
@@ -52,23 +52,27 @@ class MyListView<T, C extends ListCell<T>> extends ListView<T> {
     }
 
     public void show(int index, Consumer<C> whenShown) {
+        show(index, (flow, cell) -> whenShown.accept(cell));
+    }
+
+    public void show(int index, BiConsumer<VirtualFlow<C>, C> whenShown) {
         getFlow().ifPresent(flow -> {
             flow.show(index);
             Platform.runLater(() -> { // runLater to allow layout after show()
                 C cell = flow.getCell(index);
                 if(cell.getIndex() == index) { // true only if cell was cached
-                    whenShown.accept(cell);
+                    whenShown.accept(flow, cell);
                 }
             });
         });
     }
 
     public void showAsFirst(int index) {
-        getFlow().ifPresent(flow -> showAsFirst(flow, index));
+        show(index, (flow, cell) -> flow.showAsFirst(cell));
     }
 
     public void showAsLast(int index) {
-        getFlow().ifPresent(flow -> showAsLast(flow, index));
+        show(index, (flow, cell) -> flow.showAsLast(cell));
     }
 
     public int getFirstVisibleIndex() {
@@ -106,21 +110,12 @@ class MyListView<T, C extends ListCell<T>> extends ListView<T> {
      * (for measurement purposes) and shall not be stored.
      */
     public Optional<C> getCell(int index) {
-        return getFlow().map(flow -> flow.getCell(index));
-    }
-
-    private static <C extends IndexedCell<?>> void showAsFirst(VirtualFlow<C> flow, int index) {
-        flow.show(index);
-        C cell = flow.getVisibleCell(index);
-        assert cell != null;
-        flow.showAsFirst(cell);
-    }
-
-    private static <C extends IndexedCell<?>> void showAsLast(VirtualFlow<C> flow, int index) {
-        flow.show(index);
-        C cell = flow.getVisibleCell(index);
-        assert cell != null;
-        flow.showAsLast(cell);
+        // If the cell for the given index is not available (~visible),
+        // VirtualFlow may return some arbitrary cell. Therefore we
+        // check that the returned cell has the desired index.
+        return getFlow()
+                .map(flow -> flow.getCell(index))
+                .filter(cell -> cell.getIndex() == index);
     }
 
     @SuppressWarnings("unchecked")
