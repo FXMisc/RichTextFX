@@ -27,6 +27,7 @@ package codearea.skin;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -38,21 +39,23 @@ import javafx.scene.control.ListView;
 
 import com.sun.javafx.scene.control.skin.VirtualFlow;
 
-class MyListView<T> extends ListView<T> {
+class MyListView<T, C extends ListCell<T>> extends ListView<T> {
 
-    public MyListView(ObservableList<T> items) {
+    @SuppressWarnings("unchecked")
+    public MyListView(ObservableList<T> items, Function<? super MyListView<T, C>, C> cellFactory) {
         super(items);
+        super.setCellFactory(lv -> cellFactory.apply((MyListView<T, C>) lv));
     }
 
     public void show(int index) {
         getFlow().ifPresent(flow -> flow.show(index));
     }
 
-    public void show(int index, Consumer<ListCell<T>> whenShown) {
+    public void show(int index, Consumer<C> whenShown) {
         getFlow().ifPresent(flow -> {
             flow.show(index);
             Platform.runLater(() -> { // runLater to allow layout after show()
-                ListCell<T> cell = flow.getCell(index);
+                C cell = flow.getCell(index);
                 if(cell.getIndex() == index) { // true only if cell was cached
                     whenShown.accept(cell);
                 }
@@ -102,7 +105,7 @@ class MyListView<T> extends ListView<T> {
      * The returned cell shall be used read-only
      * (for measurement purposes) and shall not be stored.
      */
-    public Optional<ListCell<T>> getCell(int index) {
+    public Optional<C> getCell(int index) {
         return getFlow().map(flow -> flow.getCell(index));
     }
 
@@ -121,10 +124,10 @@ class MyListView<T> extends ListView<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private Optional<VirtualFlow<? extends ListCell<T>>> getFlow() {
+    private Optional<VirtualFlow<C>> getFlow() {
         for(Node child: getChildren()) {
             if(child instanceof VirtualFlow)
-                return Optional.of((VirtualFlow<? extends ListCell<T>>) child);
+                return Optional.of((VirtualFlow<C>) child);
         }
         return Optional.empty();
     }

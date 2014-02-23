@@ -85,7 +85,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
 
-    private final MyListView<Paragraph<S>> listView;
+    private final MyListView<Paragraph<S>, ParagraphCell<S>> listView;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -111,15 +111,14 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
         // Initialize content
-        listView = new MyListView<Paragraph<S>>(styledTextArea.getParagraphs());
+        listView = new MyListView<>(
+                styledTextArea.getParagraphs(),
+                lv -> { // Use ParagraphCell as cell implementation
+                    ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
+                    cellCreated(cell);
+                    return cell;
+                });
         getChildren().add(listView);
-
-        // Use LineCell as cell implementation
-        listView.setCellFactory(lv -> {
-            ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
-            cellCreated(cell);
-            return cell;
-        });
 
         // make wrapWidth behave according to the wrapText property
         listenTo(styledTextArea.wrapTextProperty(), o -> updateWrapWidth());
@@ -277,7 +276,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private ParagraphCell<S> getCell(int index) {
-        return (ParagraphCell<S>) listView.getCell(index).get();
+        return listView.getCell(index).get();
     }
 
     private void updateWrapWidth() {
@@ -297,9 +296,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
         // bring the current paragraph to the viewport,
         // then update the caret
-        listView.show(par, cell -> {
-            ((ParagraphCell<S>) cell).getParagraphGraphic().setCaretPosition(col);
-        });
+        listView.show(par, c -> c.getParagraphGraphic().setCaretPosition(col));
     }
 
     private void listenTo(Observable observable, InvalidationListener listener) {
