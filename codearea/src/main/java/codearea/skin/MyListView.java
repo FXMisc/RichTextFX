@@ -26,7 +26,9 @@
 package codearea.skin;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
@@ -44,6 +46,18 @@ class MyListView<T> extends ListView<T> {
 
     public void show(int index) {
         getFlow().ifPresent(flow -> flow.show(index));
+    }
+
+    public void show(int index, Consumer<ListCell<T>> whenShown) {
+        getFlow().ifPresent(flow -> {
+            flow.show(index);
+            Platform.runLater(() -> { // runLater to allow layout after show()
+                ListCell<T> cell = flow.getCell(index);
+                if(cell.getIndex() == index) { // true only if cell was cached
+                    whenShown.accept(cell);
+                }
+            });
+        });
     }
 
     public void showAsFirst(int index) {
