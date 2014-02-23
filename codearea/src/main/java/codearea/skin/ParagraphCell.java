@@ -62,15 +62,13 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     protected void updateItem(Paragraph<S> item, boolean empty) {
         super.updateItem(item, empty);
 
-        // dispose old LineNode (unregister listeners etc.)
-        Optional<ParagraphGraphic<S>> oldGraphicOpt = tryGetParagraphGraphic();
-        if(oldGraphicOpt.isPresent()) {
-            ParagraphGraphic<S> oldGraphic = oldGraphicOpt.get();
+        // dispose old ParagraphGraphic (unregister listeners etc.)
+        tryGetParagraphGraphic().ifPresent(oldGraphic -> {
             oldGraphic.caretVisibleProperty().unbind();
             oldGraphic.highlightFillProperty().unbind();
             oldGraphic.highlightTextFillProperty().unbind();
             oldGraphic.dispose();
-        }
+        });
 
         if(!empty) {
             ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
@@ -87,8 +85,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
             graphic.setSelection(area.getParagraphSelection(getIndex()));
 
             setGraphic(graphic);
-        }
-        else {
+        } else {
             setGraphic(null);
         }
     }

@@ -126,9 +126,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         updateWrapWidth();
 
         // emits a value every time the area is done updating
-        EventStream<?> areaDoneUpdating =
-                valuesOf(styledTextArea.beingUpdatedProperty())
-                .filter(updating -> !updating);
+        EventStream<?> areaDoneUpdating = styledTextArea.beingUpdatedProperty().offs();
 
         // update the caret every time the caret position or paragraphs change
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());

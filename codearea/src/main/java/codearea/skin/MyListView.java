@@ -89,8 +89,7 @@ class MyListView<T> extends ListView<T> {
      * (for measurement purposes) and shall not be stored.
      */
     public Optional<ListCell<T>> getCell(int index) {
-        Optional<ListCell<T>> cell = getFlow().map(flow -> flow.getCell(index));
-        return cell;
+        return getFlow().map(flow -> flow.getCell(index));
     }
 
     private static <C extends IndexedCell<?>> void showAsFirst(VirtualFlow<C> flow, int index) {
