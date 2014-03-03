@@ -18,6 +18,7 @@ import reactfx.EventStream;
 import reactfx.EventStreams;
 import reactfx.Hold;
 import reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
+import codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -60,6 +61,13 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     @Override
     public ObservableList<Paragraph<S>> getParagraphs() {
         return FXCollections.unmodifiableObservableList(paragraphs);
+    }
+
+    /**
+     * Read-only snapshot of the current state of this document.
+     */
+    public ReadOnlyStyledDocument<S> snapshot() {
+        return new ReadOnlyStyledDocument<>(paragraphs, ParagraphsPolicy.COPY);
     }
 
 

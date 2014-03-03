@@ -40,6 +40,13 @@ public interface EditActions<S> extends TextEditingArea<S> {
     }
 
     /**
+     * Appends the given rich-text content to the end of this text-editing area.
+     */
+    default void append(StyledDocument<S> document) {
+        insert(getLength(), document);
+    }
+
+    /**
      * Inserts the given text at the given position.
      *
      * @param index The location to insert the text.
@@ -47,6 +54,16 @@ public interface EditActions<S> extends TextEditingArea<S> {
      */
     default void insertText(int index, String text) {
         replaceText(index, index, text);
+    }
+
+    /**
+     * Inserts the given rich-text content at the given position.
+     *
+     * @param index The location to insert the text.
+     * @param text The rich-text content to insert.
+     */
+    default void insert(int index, StyledDocument<S> document) {
+        replace(index, index, document);
     }
 
     /**
@@ -104,10 +121,17 @@ public interface EditActions<S> extends TextEditingArea<S> {
     }
 
     /**
-     * Replaces the entire text content with the given text.
+     * Replaces the entire content with the given text.
      */
     default void replaceText(String replacement) {
         replaceText(0,  getLength(), replacement);
+    }
+
+    /**
+     * Replaces the entire content with the given rich-text content.
+     */
+    default void replace(StyledDocument<S> replacement) {
+        replace(0, getLength(), replacement);
     }
 
     /**
@@ -120,14 +144,23 @@ public interface EditActions<S> extends TextEditingArea<S> {
         replaceText(getSelection(), replacement);
     }
 
+    /**
+     * Replaces the selection with the given rich-text replacement. If there is
+     * no selection, then the replacement is simply inserted at the current
+     * caret position. If there was a selection, then the selection is cleared
+     * and the given replacement text is inserted.
+     */
+    default void replaceSelection(StyledDocument<S> replacement) {
+        replace(getSelection(), replacement);
+    }
+
     default void moveSelectedText(int pos) {
         IndexRange sel = getSelection();
 
         if(pos >= sel.getStart() && pos <= sel.getEnd()) {
             // no move, just position the caret
             selectRange(pos, pos);
-        }
-        else {
+        } else {
             String text = getSelectedText();
             if(pos > sel.getEnd())
                 pos -= sel.getLength();

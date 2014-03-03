@@ -4,6 +4,7 @@ import static codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static codearea.control.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -80,6 +81,11 @@ implements StyledDocument<S> {
                 p -> p,
                 (p, a, b) -> p.subSequence(a, b),
                 (List<Paragraph<S>> pars) -> new ReadOnlyStyledDocument<S>(pars, ADOPT));
+    }
+
+    @Override
+    public StyledDocument<S> subDocument(int paragraphIndex) {
+        return new ReadOnlyStyledDocument<>(Arrays.asList(paragraphs.get(paragraphIndex)), ADOPT);
     }
 
     @Override

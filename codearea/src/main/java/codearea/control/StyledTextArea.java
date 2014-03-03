@@ -121,6 +121,9 @@ implements
     @Override public final String getText() { return content.getText(); }
     @Override public final ObservableStringValue textProperty() { return content.textProperty(); }
 
+    // rich text
+    @Override public final StyledDocument<S> getDocument() { return content.snapshot(); };
+
     // length
     @Override public final int getLength() { return content.getLength(); }
     @Override public final ObservableIntegerValue lengthProperty() { return content.lengthProperty(); }
@@ -282,6 +285,16 @@ implements
     @Override
     public String getText(int paragraph) {
         return paragraphs.get(paragraph).toString();
+    }
+
+    @Override
+    public StyledDocument<S> subDocument(int start, int end) {
+        return content.subSequence(start, end);
+    }
+
+    @Override
+    public StyledDocument<S> subDocument(int paragraphIndex) {
+        return content.subDocument(paragraphIndex);
     }
 
     /**

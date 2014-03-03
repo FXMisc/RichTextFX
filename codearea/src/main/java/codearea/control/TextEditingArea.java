@@ -63,6 +63,13 @@ public interface TextEditingArea<S> {
     ObservableStringValue textProperty();
 
     /**
+     * Rich-text content of this text-editing area.
+     * The returned document is immutable, it does not reflect
+     * subsequent edits of this text-editing area.
+     */
+    StyledDocument<S> getDocument();
+
+    /**
      * The current position of the caret, as a character offset in the text.
      *
      * Most of the time, caret is at the boundary of the selection (if there
@@ -146,6 +153,16 @@ public interface TextEditingArea<S> {
      */
     String getText(int start, int end);
 
+    /**
+     * Returns rich-text content of the given paragraph.
+     */
+    StyledDocument<S> subDocument(int paragraphIndex);
+
+    /**
+     * Returns rich-text content of the given character range.
+     */
+    StyledDocument<S> subDocument(int start, int end);
+
 
     /******************
      *                *
@@ -196,6 +213,11 @@ public interface TextEditingArea<S> {
     void replaceText(int start, int end, String text);
 
     /**
+     * Replaces a range of characters with the given rich-text document.
+     */
+    void replace(int start, int end, StyledDocument<S> replacement);
+
+    /**
      * Replaces a range of characters with the given text.
      *
      * @param range The range to replace. It must not be null.
@@ -208,7 +230,13 @@ public interface TextEditingArea<S> {
         replaceText(range.getStart(), range.getEnd(), text);
     }
 
-    void replace(int start, int end, StyledDocument<S> replacement);
+    /**
+     * Equivalent to
+     * {@code replace(range.getStart(), range.getEnd(), replacement)}.
+     */
+    default void replace(IndexRange range, StyledDocument<S> replacement) {
+        replace(range.getStart(), range.getEnd(), replacement);
+    }
 
     /**
      * Positions only the caret. Doesn't move the anchor and doesn't change
