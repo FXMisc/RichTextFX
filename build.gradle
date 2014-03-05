@@ -5,6 +5,9 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/' 
+        }
     }
 
     sourceCompatibility = '1.8'
@@ -15,8 +18,4 @@ subprojects {
         fmt.setTimeZone(TimeZone.getTimeZone("UTC"))
         return fmt.format(new Date())
     }()
-
-    dependencies {
-        testCompile group: 'junit', name: 'junit', version: '4.+'
-    }
 }

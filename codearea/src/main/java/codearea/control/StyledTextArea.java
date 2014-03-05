@@ -28,9 +28,11 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import reactfx.EventStream;
-import reactfx.Hold;
-import reactfx.Indicator;
+
+import org.reactfx.EventStream;
+import org.reactfx.Hold;
+import org.reactfx.Indicator;
+
 import undofx.UndoManager;
 import undofx.UndoManagerFactory;
 import codearea.control.CssProperties.EditableProperty;

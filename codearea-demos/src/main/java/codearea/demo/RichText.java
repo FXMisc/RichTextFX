@@ -24,7 +24,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import reactfx.Indicator;
+
+import org.reactfx.Indicator;
+
 import codearea.control.InlineStyleTextArea;
 import codearea.control.StyleSpans;
 

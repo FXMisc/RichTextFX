@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Tomas Mikula. All rights reserved.
+ * Copyright (c) 2013-2014, Tomas Mikula. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,8 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
-import reactfx.EventStream;
+
+import org.reactfx.EventStream;
 
 /**
  * Interface for a text editing control.

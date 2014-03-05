@@ -1,6 +1,6 @@
 package codearea.skin;
 
-import static reactfx.EventStreams.*;
+import static org.reactfx.EventStreams.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +27,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import reactfx.EventStream;
-import reactfx.Subscription;
+
+import org.reactfx.EventStream;
+import org.reactfx.Subscription;
+
 import codearea.behavior.CodeAreaBehavior;
 import codearea.control.Paragraph;
 import codearea.control.StyledTextArea;

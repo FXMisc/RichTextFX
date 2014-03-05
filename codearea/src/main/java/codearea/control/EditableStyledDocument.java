@@ -13,11 +13,13 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import reactfx.EventSource;
-import reactfx.EventStream;
-import reactfx.EventStreams;
-import reactfx.Hold;
-import reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
+
+import org.reactfx.EventSource;
+import org.reactfx.EventStream;
+import org.reactfx.EventStreams;
+import org.reactfx.Hold;
+import org.reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
+
 import codearea.control.ReadOnlyStyledDocument.ParagraphsPolicy;
 
 /**
