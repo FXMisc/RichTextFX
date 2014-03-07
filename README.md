@@ -141,7 +141,7 @@ License
 Links
 -----
 
-[API Documentation](http://tomasmikula.github.io/RichTextFX/)  
+[API Documentation](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/javadoc/)  
 [Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)  
 [Dropped Features](https://github.com/TomasMikula/RichTextFX/wiki/Dropped-Features)  
 [Known Issues](https://github.com/TomasMikula/RichTextFX/wiki/Known-Issues)  
