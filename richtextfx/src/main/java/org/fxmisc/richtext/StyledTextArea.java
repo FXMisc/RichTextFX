@@ -32,12 +32,11 @@ import javafx.scene.text.Text;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaSkin;
+import org.fxmisc.undo.UndoManager;
+import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.Hold;
 import org.reactfx.Indicator;
-
-import undofx.UndoManager;
-import undofx.UndoManagerFactory;
 
 import com.sun.javafx.Utils;
 

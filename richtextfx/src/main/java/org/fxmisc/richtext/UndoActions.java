@@ -1,8 +1,9 @@
 package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableBooleanValue;
-import undofx.UndoManager;
-import undofx.UndoManagerFactory;
+
+import org.fxmisc.undo.UndoManager;
+import org.fxmisc.undo.UndoManagerFactory;
 
 /**
  * Undo/redo actions for {@link TextEditingArea}.

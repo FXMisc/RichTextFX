@@ -4,7 +4,7 @@
 	<classpathentry kind="src" output="build/resources/main" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="src" path="/RichTextFX"/>
-	<classpathentry kind="lib" path="../richtextfx/libs/undofx-20140305.jar"/>
 	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.reactfx/reactfx/1.0.0-SNAPSHOT/46a12e85a34599aeb1d13d9451e53dd5ca9aa434/reactfx-1.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.fxmisc.undo/undofx/1.0.0-SNAPSHOT/ca71d178288153bf9d8b55282ca9a2cdb1be9d95/undofx-1.0.0-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

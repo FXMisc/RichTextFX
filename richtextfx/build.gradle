@@ -1,29 +1,7 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'de.undercouch:gradle-download-task:0.4'
-    }
-}
-
-apply plugin: 'download-task'
-
-def depDir = new File(projectDir, 'libs')
-
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '1.0.0-SNAPSHOT'
-    compile files("$depDir/undofx-20140305.jar") { builtBy 'fetchDeps' }
+    compile group: 'org.fxmisc.undo', name: 'undofx', version: '1.0.0-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.+'
-}
-
-task fetchDeps << {
-    depDir.mkdirs()
-    download {
-        src 'https://googledrive.com/host/0B4a5AnNnZhkbVDRiZmxiMW1OYk0/downloads/undofx-20140305.jar'
-        dest depDir
-        overwrite = false
-    }
 }
 
 task fatJar(type: Jar, dependsOn: classes) {
