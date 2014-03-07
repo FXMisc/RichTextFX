@@ -1,0 +1,26 @@
+dependencies {
+    compile project(":richtextfx")
+}
+
+task fatJar(type: Jar, dependsOn: classes) {
+    appendix = 'fat'
+    from sourceSets.main.output
+    from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+assemble.dependsOn fatJar
+
+task JavaKeywords(type: JavaExec, dependsOn: classes) {
+    main = 'org.fxmisc.richtext.demo.JavaKeywords'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}
+
+task ManualHighlighting(type: JavaExec, dependsOn: classes) {
+    main = 'org.fxmisc.richtext.demo.ManualHighlighting'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}
+
+task RichText(type: JavaExec, dependsOn: classes) {
+    main = 'org.fxmisc.richtext.demo.RichText'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}

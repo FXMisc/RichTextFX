@@ -1,7 +1,10 @@
-CodeAreaFX
+:boom: **NEW:** As of March 7, 2014, CodeAreaFX has been renamed to RichTextFX, to reflect the fact that the project now supports much more than just syntax highlighting.  
+:boom: **IMPORTANT:** Package `codearea.control` has been renamed to `org.fxmisc.richtext` in the HEAD of the master branch. All builds starting from March 7, 2014 will reflect this change. Please, update your source code.
+
+RichTextFX
 ==========
 
-CodeAreaFX is a text area for JavaFX with API to style ranges of text. It is intended as a base for rich-text editors and code editors with syntax highlighting.
+RichTextFX provides a text area for JavaFX with API to style ranges of text. It is intended as a base for rich-text editors and code editors with syntax highlighting.
 
 
 Flavors
@@ -98,7 +101,7 @@ Demos
 
 [Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea-demos-fat-yyyymmdd.jar codearea.demo.JavaKeywords
+    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.JavaKeywords
 
 #### Run from the source repo
 
@@ -106,7 +109,7 @@ Demos
 
 #### Source code
 
-[JavaKeywords.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/JavaKeywords.java)
+[JavaKeywords.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywords.java)
 
 
 ### 2. Rich-text editor
@@ -116,7 +119,7 @@ Demos
 #### Run using the pre-built JAR
 [Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
 
-    java -cp codearea-demos-fat-yyyymmdd.jar codearea.demo.RichText
+    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.RichText
 
 #### Run from the source repo
 
@@ -124,7 +127,7 @@ Demos
 
 #### Source code
 
-[RichText.java](https://github.com/TomasMikula/CodeAreaFX/blob/master/codearea-demos/src/main/java/codearea/demo/RichText.java)
+[RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/RichText.java)
 
 Source code of this demo is dedicated to the public domain.
 
@@ -138,8 +141,8 @@ License
 Links
 -----
 
-[API Documentation](http://tomasmikula.github.io/CodeAreaFX/)  
+[API Documentation](http://tomasmikula.github.io/RichTextFX/)  
 [Downloads](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/)  
-[Dropped Features](https://github.com/TomasMikula/CodeAreaFX/wiki/Dropped-Features)  
-[Known Issues](https://github.com/TomasMikula/CodeAreaFX/wiki/Known-Issues)  
-[Java 8 Development Gotchas](https://github.com/TomasMikula/CodeAreaFX/wiki/Java-8-Development-Gotchas)
+[Dropped Features](https://github.com/TomasMikula/RichTextFX/wiki/Dropped-Features)  
+[Known Issues](https://github.com/TomasMikula/RichTextFX/wiki/Known-Issues)  
+[Java 8 Development Gotchas](https://github.com/TomasMikula/RichTextFX/wiki/Java-8-Development-Gotchas)

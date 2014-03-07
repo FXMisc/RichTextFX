@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="src" output="build/classes/main" path="src/main/java"/>
-	<classpathentry kind="src" output="build/resources/main" path="src/main/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" kind="src" path="/codearea"/>
-	<classpathentry kind="lib" path="../codearea/libs/undofx-20140305.jar"/>
-	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.reactfx/reactfx/1.0.0-SNAPSHOT/46a12e85a34599aeb1d13d9451e53dd5ca9aa434/reactfx-1.0.0-SNAPSHOT.jar"/>
-</classpath>
