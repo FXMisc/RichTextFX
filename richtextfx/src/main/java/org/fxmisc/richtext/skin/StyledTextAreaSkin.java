@@ -30,8 +30,8 @@ import javafx.util.Duration;
 
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.TwoDimensional.Position;
+import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.behavior.CodeAreaBehavior;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
@@ -230,7 +230,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     /**************************************************************************
      *                                                                        *
-     * Look & feel                                                            *
+     * Look &amp; feel                                                        *
      *                                                                        *
      **************************************************************************/
 

@@ -60,7 +60,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
      * Inserts the given rich-text content at the given position.
      *
      * @param index The location to insert the text.
-     * @param text The rich-text content to insert.
+     * @param document The rich-text content to insert.
      */
     default void insert(int index, StyledDocument<S> document) {
         replace(index, index, document);

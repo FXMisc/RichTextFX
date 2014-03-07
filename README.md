@@ -1,5 +1,6 @@
 :boom: **NEW:** As of March 7, 2014, CodeAreaFX has been renamed to RichTextFX, to reflect the fact that the project now supports much more than just syntax highlighting.  
-:boom: **IMPORTANT:** Package `codearea.control` has been renamed to `org.fxmisc.richtext` in the HEAD of the master branch. All builds starting from March 7, 2014 will reflect this change. Please, update your source code.
+:boom: **IMPORTANT:** Package `codearea.control` has been renamed to `org.fxmisc.richtext` in the HEAD of the master branch. All builds starting from March 7, 2014 will reflect this change. Please, update your source code.  
+:boom: **NEW:** RichTextFX snapshots are now deployed to the Sonatype repository. [See below](#use-richtextfx-in-your-project)
 
 RichTextFX
 ==========
@@ -130,6 +131,45 @@ Demos
 [RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/RichText.java)
 
 Source code of this demo is dedicated to the public domain.
+
+
+Use RichTextFX in your project
+------------------------------
+
+### Method 1: as a managed dependency
+
+Snapshot releases are deployed to Sonatype snapshot repository with these Maven coordinates
+
+| Group ID            | Artifact ID | Version        |
+| :-----------------: | :---------: | :------------: |
+| org.fxmisc.richtext | richtextfx  | 1.0.0-SNAPSHOT |
+
+#### Gradle example
+
+```groovy
+repositories {
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots/' 
+    }
+}
+
+dependencies {
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '1.0.0-SNAPSHOT'
+}
+```
+
+#### Sbt example
+
+```scala
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
+```
+
+
+### Method 2: as an unmanaged dependency
+
+Download the latest [JAR](https://oss.sonatype.org/content/repositories/snapshots/org/fxmisc/richtext/richtextfx/1.0.0-SNAPSHOT/) or [fat JAR (including dependencies)](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) and place it on your classpath.
 
 
 License
