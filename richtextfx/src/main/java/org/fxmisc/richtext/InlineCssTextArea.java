@@ -19,6 +19,8 @@ public class InlineCssTextArea extends InlineStyleTextArea<String> {
         this();
 
         replaceText(0, 0, text);
+        getUndoManager().forgetHistory();
+        getUndoManager().mark();
 
         // position the caret at the beginning
         selectRange(0, 0);

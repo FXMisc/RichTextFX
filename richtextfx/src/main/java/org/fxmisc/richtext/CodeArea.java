@@ -29,6 +29,8 @@ public class CodeArea extends StyleClassedTextArea {
         this();
 
         appendText(text);
+        getUndoManager().forgetHistory();
+        getUndoManager().mark();
 
         // position the caret at the beginning
         selectRange(0, 0);
