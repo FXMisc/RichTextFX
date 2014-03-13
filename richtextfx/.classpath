@@ -5,7 +5,7 @@
 	<classpathentry kind="src" output="build/classes/test" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.reactfx/reactfx/1.0.0-SNAPSHOT/492cda58f40e4e70b64ca4af63d822124be28dfa/reactfx-1.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.reactfx/reactfx/1.0.0-SNAPSHOT/23366e574729c3a3c2c96c15bb53fcc3c5adddf9/reactfx-1.0.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/home/tomas/.gradle/caches/modules-2/files-2.1/org.fxmisc.undo/undofx/1.0.0-SNAPSHOT/4d2a8ffa0648fe85d49ccfa89c809a270119dd98/undofx-1.0.0-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

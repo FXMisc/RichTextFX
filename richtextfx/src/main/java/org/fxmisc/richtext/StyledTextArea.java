@@ -9,13 +9,12 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
@@ -37,6 +36,7 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.Hold;
 import org.reactfx.Indicator;
+import org.reactfx.InterceptableEventStream;
 
 import com.sun.javafx.Utils;
 
@@ -119,44 +119,52 @@ implements
      **************************************************************************/
 
     // text
-    @Override public final String getText() { return content.getText(); }
-    @Override public final ObservableStringValue textProperty() { return content.textProperty(); }
+    private final org.reactfx.inhibeans.binding.StringBinding text;
+    @Override public final String getText() { return text.get(); }
+    @Override public final ObservableStringValue textProperty() { return text; }
 
     // rich text
     @Override public final StyledDocument<S> getDocument() { return content.snapshot(); };
 
     // length
-    @Override public final int getLength() { return content.getLength(); }
-    @Override public final ObservableIntegerValue lengthProperty() { return content.lengthProperty(); }
+    private final org.reactfx.inhibeans.binding.IntegerBinding length;
+    @Override public final int getLength() { return length.get(); }
+    @Override public final ObservableIntegerValue lengthProperty() { return length; }
 
     // caret position
-    private final ReadOnlyIntegerWrapper caretPosition = new ReadOnlyIntegerWrapper(this, "caretPosition", 0);
+    private final IntegerProperty internalCaretPosition = new SimpleIntegerProperty(0);
+    private final org.reactfx.inhibeans.binding.IntegerBinding caretPosition =
+            org.reactfx.inhibeans.binding.IntegerBinding.wrap(internalCaretPosition);
     @Override public final int getCaretPosition() { return caretPosition.get(); }
-    @Override public final ReadOnlyIntegerProperty caretPositionProperty() { return caretPosition.getReadOnlyProperty(); }
+    @Override public final ObservableIntegerValue caretPositionProperty() { return caretPosition; }
 
     // selection anchor
-    private final ReadOnlyIntegerWrapper anchor = new ReadOnlyIntegerWrapper(this, "anchor", 0);
+    private final org.reactfx.inhibeans.property.SimpleIntegerProperty anchor =
+            new org.reactfx.inhibeans.property.SimpleIntegerProperty(0);
     @Override public final int getAnchor() { return anchor.get(); }
-    @Override public final ReadOnlyIntegerProperty anchorProperty() { return anchor.getReadOnlyProperty(); }
+    @Override public final ObservableIntegerValue anchorProperty() { return anchor; }
 
     // selection
-    private final ReadOnlyObjectWrapper<IndexRange> selection = new ReadOnlyObjectWrapper<IndexRange>(this, "selection");
+    private final ObjectProperty<IndexRange> internalSelection = new SimpleObjectProperty<>(null);
+    private final org.reactfx.inhibeans.binding.ObjectBinding<IndexRange> selection =
+            org.reactfx.inhibeans.binding.ObjectBinding.wrap(internalSelection);
     @Override public final IndexRange getSelection() { return selection.getValue(); }
-    @Override public final ReadOnlyObjectProperty<IndexRange> selectionProperty() { return selection.getReadOnlyProperty(); }
+    @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
 
     // selected text
-    private final ObservableStringValue selectedText;
+    private final org.reactfx.inhibeans.binding.StringBinding selectedText;
     @Override public final String getSelectedText() { return selectedText.get(); }
     @Override public final ObservableStringValue selectedTextProperty() { return selectedText; }
 
     // current paragraph index
-    private final ObservableIntegerValue currentParagraph;
+    private final org.reactfx.inhibeans.binding.IntegerBinding currentParagraph;
     @Override public final int getCurrentParagraph() { return currentParagraph.get(); }
-    @Override public final ObservableIntegerValue currentParagraph() { return currentParagraph; }
+    @Override public final ObservableIntegerValue currentParagraphProperty() { return currentParagraph; }
 
     // caret column
-    private final ObservableIntegerValue caretColumn;
+    private final org.reactfx.inhibeans.binding.IntegerBinding caretColumn;
     @Override public final int getCaretColumn() { return caretColumn.get(); }
+    @Override public final ObservableIntegerValue caretColumnProperty() { return caretColumn; }
 
     // paragraphs
     private final ObservableList<Paragraph<S>> paragraphs;
@@ -177,12 +185,14 @@ implements
      **************************************************************************/
 
     // text changes
+    private final InterceptableEventStream<PlainTextChange> plainTextChanges;
     @Override
-    public final EventStream<PlainTextChange> plainTextChanges() { return content.plainTextChanges(); }
+    public final EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
     // rich text changes
+    private final InterceptableEventStream<RichTextChange<S>> richTextChanges;
     @Override
-    public final EventStream<RichTextChange<S>> richChanges() { return content.richChanges(); }
+    public final EventStream<RichTextChange<S>> richChanges() { return richTextChanges; }
 
 
     /**************************************************************************
@@ -244,25 +254,32 @@ implements
         content = new EditableStyledDocument<>(initialStyle);
         paragraphs = content.getParagraphs();
 
+        text = org.reactfx.inhibeans.binding.StringBinding.wrap(content.textProperty());
+        length = org.reactfx.inhibeans.binding.IntegerBinding.wrap(content.lengthProperty());
+        plainTextChanges = content.plainTextChanges().interceptable();
+        richTextChanges = content.richChanges().interceptable();
+
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(caretPosition, p -> content.offsetToPosition(p, Forward));
-        currentParagraph = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor());
-        caretColumn = BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMinor());
+        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(internalCaretPosition, p -> content.offsetToPosition(p, Forward));
+        currentParagraph = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
+                BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor()));
+        caretColumn = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
+                BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMinor()));
 
-        selection.addListener(obs -> {
-            IndexRange sel = selection.get();
+        internalSelection.addListener(obs -> {
+            IndexRange sel = internalSelection.get();
             selectionStart2D = offsetToPosition(sel.getStart(), Forward);
             selectionEnd2D = selectionStart2D.offsetBy(sel.getLength(), Backward);
         });
-        selection.set(EMPTY_RANGE);
+        internalSelection.set(EMPTY_RANGE);
 
-        selectedText = new StringBinding() {
-            { bind(selection, textProperty()); }
+        selectedText = new org.reactfx.inhibeans.binding.StringBinding() {
+            { bind(internalSelection, textProperty()); }
             @Override protected String computeValue() {
-                return content.getText(selection.get());
+                return content.getText(internalSelection.get());
             }
         };
 
@@ -384,7 +401,7 @@ implements
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             content.setStyle(from, to, style);
         }
     }
@@ -393,7 +410,7 @@ implements
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -402,7 +419,7 @@ implements
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -418,7 +435,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -434,7 +451,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -463,7 +480,7 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -476,7 +493,7 @@ implements
 
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
-        try(Hold h = beingUpdated.on()) {
+        try(Hold h = guardAll()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -489,17 +506,17 @@ implements
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        try(Hold h = beingUpdated.on()) {
-            this.caretPosition.set(Utils.clamp(0, caretPosition, getLength()));
+        try(Hold h = guard(this.caretPosition, currentParagraph, caretColumn, this.anchor, selection, selectedText)) {
+            this.internalCaretPosition.set(Utils.clamp(0, caretPosition, getLength()));
             this.anchor.set(Utils.clamp(0, anchor, getLength()));
-            this.selection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
+            this.internalSelection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
         }
     }
 
     @Override
     public void positionCaret(int pos) {
-        try(Hold h = beingUpdated.on()) {
-            caretPosition.set(pos);
+        try(Hold h = guard(caretPosition, currentParagraph, caretColumn)) {
+            internalCaretPosition.set(pos);
         }
     }
 
@@ -540,5 +557,31 @@ implements
         Consumer<RichTextChange<S>> undo = change -> replace(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(richChanges(), apply, undo, merge);
+    }
+
+    private Hold guardAll() {
+        return Hold.multi(
+                beingUpdated.on(), // must be first, to be the last one to release
+                text.block(),
+                length.block(),
+                caretPosition.block(),
+                anchor.block(),
+                selection.block(),
+                selectedText.block(),
+                currentParagraph.block(),
+                caretColumn.block(),
+
+                // add streams as last ones, to be the first ones to release
+                plainTextChanges.pause(),
+                richTextChanges.pause());
+    }
+
+    private Hold guard(org.reactfx.inhibeans.Observable... observables) {
+        Hold[] holds = new Hold[1 + observables.length];
+        holds[0] = beingUpdated.on();
+        for(int i = 0; i < observables.length; ++i) {
+            holds[1+i] = observables[i].block();
+        }
+        return Hold.multi(holds);
     }
 }

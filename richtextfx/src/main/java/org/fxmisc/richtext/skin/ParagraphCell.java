@@ -40,7 +40,6 @@ import javafx.scene.text.Text;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
 
-import com.sun.javafx.Utils;
 import com.sun.javafx.scene.text.HitInfo;
 
 public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
@@ -91,7 +90,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
             StyledTextArea<S> area = skin.getSkinnable();
             if(getIndex() == area.getCurrentParagraph()) {
-                int col = Utils.clamp(0, area.getCaretColumn(), item.length());
+                int col = Math.min(area.getCaretColumn(), item.length());
                 graphic.setCaretPosition(col);
             }
 

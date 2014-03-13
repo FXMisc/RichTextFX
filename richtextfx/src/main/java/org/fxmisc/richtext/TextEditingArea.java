@@ -26,10 +26,9 @@
 package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
 
@@ -80,14 +79,14 @@ public interface TextEditingArea<S> {
      * to point at the position where the selected text moves upon release.
      */
     int getCaretPosition();
-    ReadOnlyIntegerProperty caretPositionProperty();
+    ObservableIntegerValue caretPositionProperty();
 
     /**
      * The anchor of the selection.
      * If there is no selection, this is the same as caret position.
      */
     int getAnchor();
-    ReadOnlyIntegerProperty anchorProperty();
+    ObservableIntegerValue anchorProperty();
 
     /**
      * The selection range.
@@ -96,7 +95,7 @@ public interface TextEditingArea<S> {
      * of the time equal to caret position.
      */
     IndexRange getSelection();
-    ReadOnlyObjectProperty<IndexRange> selectionProperty();
+    ObservableValue<IndexRange> selectionProperty();
 
     /**
      * The selected text.
@@ -108,12 +107,13 @@ public interface TextEditingArea<S> {
      * Index of the current paragraph, i.e. the paragraph with the caret.
      */
     int getCurrentParagraph();
-    ObservableIntegerValue currentParagraph();
+    ObservableIntegerValue currentParagraphProperty();
 
     /**
      * The caret position within the current paragraph.
      */
     int getCaretColumn();
+    ObservableIntegerValue caretColumnProperty();
 
     /**
      * Unmodifiable observable list of paragraphs in this text area.

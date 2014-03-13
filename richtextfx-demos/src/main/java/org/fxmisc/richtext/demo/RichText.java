@@ -15,6 +15,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.IndexRange;
@@ -182,6 +183,9 @@ public class RichText extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        CheckBox wrapToggle = new CheckBox("Wrap");
+        wrapToggle.setSelected(true);
+        area.wrapTextProperty().bind(wrapToggle.selectedProperty());
         Button undoBtn = createButton("undo", () -> area.undo());
         Button redoBtn = createButton("redo", () -> area.redo());
         Button cutBtn = createButton("cut", () -> area.cut());
@@ -302,7 +306,7 @@ public class RichText extends Application {
         });
 
         HBox panel = new HBox(3.0);
-        panel.getChildren().addAll(undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn, boldBtn, italicBtn, underlineBtn, strikeBtn, sizeCombo, familyCombo, textColorPicker);
+        panel.getChildren().addAll(wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn, boldBtn, italicBtn, underlineBtn, strikeBtn, sizeCombo, familyCombo, textColorPicker);
 
         VBox vbox = new VBox();
         VBox.setVgrow(area, Priority.ALWAYS);
