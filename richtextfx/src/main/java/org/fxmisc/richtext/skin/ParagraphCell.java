@@ -28,9 +28,7 @@ package org.fxmisc.richtext.skin;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyledTextArea;
-
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.scene.Node;
@@ -38,6 +36,9 @@ import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+
+import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.StyledTextArea;
 
 import com.sun.javafx.Utils;
 import com.sun.javafx.scene.text.HitInfo;
@@ -50,6 +51,8 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     private final BiConsumer<Text, S> applyStyle;
 
+    private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
+
     public ParagraphCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
         this.skin = skin;
         this.applyStyle = applyStyle;
@@ -61,15 +64,24 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     @Override
     protected void updateItem(Paragraph<S> item, boolean empty) {
-        super.updateItem(item, empty);
+        boolean wasEmpty = this.isEmpty();
 
-        // dispose old ParagraphGraphic (unregister listeners etc.)
-        tryGetParagraphGraphic().ifPresent(oldGraphic -> {
+        if(!wasEmpty) {
+            // dispose old ParagraphGraphic (unregister listeners etc.)
+            ParagraphGraphic<S> oldGraphic = getParagraphGraphic();
             oldGraphic.caretVisibleProperty().unbind();
             oldGraphic.highlightFillProperty().unbind();
             oldGraphic.highlightTextFillProperty().unbind();
             oldGraphic.dispose();
-        });
+        }
+
+        super.updateItem(item, empty);
+
+        if(wasEmpty && !empty) {
+            startListening();
+        } else if(!wasEmpty && empty) {
+            stopListening();
+        }
 
         if(!empty) {
             ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
@@ -110,7 +122,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     protected double computePrefWidth(double height) {
         if(isEmpty()) {
             return super.computePrefWidth(height);
-        } else if(skin.wrapWidth.get() == Region.USE_COMPUTED_SIZE) {
+        } else if(getWrapWidth() == Region.USE_COMPUTED_SIZE) {
                 return getParagraphGraphic().prefWidth(-1.0) + snappedLeftInset() + snappedRightInset();
         } else {
             return 0;
@@ -124,6 +136,14 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         } else {
             return skinWrapWidth - snappedLeftInset() - snappedRightInset();
         }
+    }
+
+    private void startListening() {
+        skin.wrapWidth.addListener(onWrapWidthChange);
+    }
+
+    private void stopListening() {
+        skin.wrapWidth.removeListener(onWrapWidthChange);
     }
 
     /**
