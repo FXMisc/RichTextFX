@@ -132,11 +132,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
-        subscribeTo(emit(caretDirty).on(areaDoneUpdating), x -> refreshCaret());
+        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> refreshCaret());
 
         // update selection in paragraphs
         EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
-        subscribeTo(emit(selectionDirty).on(areaDoneUpdating), x -> {
+        subscribeTo(selectionDirty.emitOn(areaDoneUpdating), x -> {
             IndexRange visibleRange = listView.getVisibleRange();
             int startPar = visibleRange.getStart();
             int endPar = visibleRange.getEnd();
@@ -145,6 +145,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 ParagraphGraphic<S> graphic = getCell(i).getParagraphGraphic();
                 graphic.setSelection(styledTextArea.getParagraphSelection(i));
             }
+
+            // force selectionProperty() to be valid to make sure
+            // we get invalidation notification on its next change
+            styledTextArea.selectionProperty().getValue();
         });
 
         // blink caret only when focused

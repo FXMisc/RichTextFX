@@ -277,7 +277,7 @@ implements
         internalSelection.set(EMPTY_RANGE);
 
         selectedText = new org.reactfx.inhibeans.binding.StringBinding() {
-            { bind(internalSelection, textProperty()); }
+            { bind(internalSelection, content.textProperty()); }
             @Override protected String computeValue() {
                 return content.getText(internalSelection.get());
             }
