@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -11,6 +12,26 @@ import javafx.beans.value.ObservableValue;
  * Methods for easy creation of bindings.
  */
 class EasyBind {
+
+    @FunctionalInterface
+    public interface TriFunction<A, B, C, R> {
+        R apply(A a, B b, C c);
+    }
+
+    @FunctionalInterface
+    public interface TetraFunction<A, B, C, D, R> {
+        R apply(A a, B b, C c, D d);
+    }
+
+    @FunctionalInterface
+    public interface PentaFunction<A, B, C, D, E, R> {
+        R apply(A a, B b, C c, D d, E e);
+    }
+
+    @FunctionalInterface
+    public interface HexaFunction<A, B, C, D, E, F, R> {
+        R apply(A a, B b, C c, D d, E e, F f);
+    }
 
     /**
      * Returns a binding that recomputes its value using the given function.
@@ -28,15 +49,103 @@ class EasyBind {
         };
     }
 
-    public static <T, U> Binding<U> map(ObservableValue<T> dep, Function<T, U> f) {
+    public static <T, U> Binding<U> map(
+            ObservableValue<T> src,
+            Function<T, U> f) {
         return new ObjectBinding<U>() {
-            { bind(dep); }
+            { bind(src); }
 
             @Override
             protected U computeValue() {
-                return f.apply(dep.getValue());
+                return f.apply(src.getValue());
             }
         };
     }
 
+    public static <A, B, R> Binding<R> combine(
+            ObservableValue<A> src1,
+            ObservableValue<B> src2,
+            BiFunction<A, B, R> f) {
+        return new ObjectBinding<R>() {
+            { bind(src1, src2); }
+
+            @Override
+            protected R computeValue() {
+                return f.apply(src1.getValue(), src2.getValue());
+            }
+        };
+    }
+
+    public static <A, B, C, R> Binding<R> combine(
+            ObservableValue<A> src1,
+            ObservableValue<B> src2,
+            ObservableValue<C> src3,
+            TriFunction<A, B, C, R> f) {
+        return new ObjectBinding<R>() {
+            { bind(src1, src2, src3); }
+
+            @Override
+            protected R computeValue() {
+                return f.apply(
+                        src1.getValue(), src2.getValue(), src3.getValue());
+            }
+        };
+    }
+
+    public static <A, B, C, D, R> Binding<R> combine(
+            ObservableValue<A> src1,
+            ObservableValue<B> src2,
+            ObservableValue<C> src3,
+            ObservableValue<D> src4,
+            TetraFunction<A, B, C, D, R> f) {
+        return new ObjectBinding<R>() {
+            { bind(src1, src2, src3, src4); }
+
+            @Override
+            protected R computeValue() {
+                return f.apply(
+                        src1.getValue(), src2.getValue(),
+                        src3.getValue(), src4.getValue());
+            }
+        };
+    }
+
+    public static <A, B, C, D, E, R> Binding<R> combine(
+            ObservableValue<A> src1,
+            ObservableValue<B> src2,
+            ObservableValue<C> src3,
+            ObservableValue<D> src4,
+            ObservableValue<E> src5,
+            PentaFunction<A, B, C, D, E, R> f) {
+        return new ObjectBinding<R>() {
+            { bind(src1, src2, src3, src4, src5); }
+
+            @Override
+            protected R computeValue() {
+                return f.apply(
+                        src1.getValue(), src2.getValue(), src3.getValue(),
+                        src4.getValue(), src5.getValue());
+            }
+        };
+    }
+
+    public static <A, B, C, D, E, F, R> Binding<R> combine(
+            ObservableValue<A> src1,
+            ObservableValue<B> src2,
+            ObservableValue<C> src3,
+            ObservableValue<D> src4,
+            ObservableValue<E> src5,
+            ObservableValue<F> src6,
+            HexaFunction<A, B, C, D, E, F, R> f) {
+        return new ObjectBinding<R>() {
+            { bind(src1, src2, src3, src4, src5, src6); }
+
+            @Override
+            protected R computeValue() {
+                return f.apply(
+                        src1.getValue(), src2.getValue(), src3.getValue(),
+                        src4.getValue(), src5.getValue(), src6.getValue());
+            }
+        };
+    }
 }
