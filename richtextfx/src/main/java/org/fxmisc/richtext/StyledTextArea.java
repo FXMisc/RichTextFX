@@ -119,9 +119,9 @@ implements
      **************************************************************************/
 
     // text
-    private final org.reactfx.inhibeans.binding.StringBinding text;
-    @Override public final String getText() { return text.get(); }
-    @Override public final ObservableStringValue textProperty() { return text; }
+    private final org.reactfx.inhibeans.binding.Binding<String> text;
+    @Override public final String getText() { return text.getValue(); }
+    @Override public final ObservableValue<String> textProperty() { return text; }
 
     // rich text
     @Override public final StyledDocument<S> getDocument() { return content.snapshot(); };
@@ -254,7 +254,7 @@ implements
         content = new EditableStyledDocument<>(initialStyle);
         paragraphs = content.getParagraphs();
 
-        text = org.reactfx.inhibeans.binding.StringBinding.wrap(content.textProperty());
+        text = org.reactfx.inhibeans.binding.Binding.wrap(content.textProperty());
         length = org.reactfx.inhibeans.binding.IntegerBinding.wrap(content.lengthProperty());
         plainTextChanges = content.plainTextChanges().interceptable();
         richTextChanges = content.richChanges().interceptable();
@@ -263,11 +263,11 @@ implements
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        ObservableValue<Position> caretPosition2D = BindingFactories.createBinding(internalCaretPosition, p -> content.offsetToPosition(p, Forward));
+        ObservableValue<Position> caretPosition2D = EasyBind.map(internalCaretPosition, p -> content.offsetToPosition(p.intValue(), Forward));
         currentParagraph = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
-                BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMajor()));
+                EasyBind.map(caretPosition2D, p -> p.getMajor()));
         caretColumn = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
-                BindingFactories.createIntegerBinding(caretPosition2D, p -> p.getMinor()));
+                EasyBind.map(caretPosition2D, p -> p.getMinor()));
 
         internalSelection.addListener(obs -> {
             IndexRange sel = internalSelection.get();

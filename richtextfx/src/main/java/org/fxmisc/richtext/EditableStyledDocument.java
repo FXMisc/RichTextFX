@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.Binding;
 import javafx.beans.value.ObservableIntegerValue;
-import javafx.beans.value.ObservableStringValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -42,10 +42,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     /**
      * Content of this {@code StyledDocument}.
      */
-    private final StringBinding text = BindingFactories.createStringBinding(() -> getText(0, length()));
+    private final Binding<String> text = EasyBind.supply(() -> getText(0, length()));
     @Override
-    public String getText() { return text.get(); }
-    public ObservableStringValue textProperty() { return text; }
+    public String getText() { return text.getValue(); }
+    public ObservableValue<String> textProperty() { return text; }
 
     /**
      * Length of this {@code StyledDocument}.

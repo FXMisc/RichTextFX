@@ -60,7 +60,7 @@ public interface TextEditingArea<S> {
      * Text content of this text-editing area.
      */
     String getText();
-    ObservableStringValue textProperty();
+    ObservableValue<String> textProperty();
 
     /**
      * Rich-text content of this text-editing area.
