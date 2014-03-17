@@ -9,6 +9,8 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.Binding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -263,7 +265,10 @@ implements
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        ObservableValue<Position> caretPosition2D = EasyBind.map(internalCaretPosition, p -> content.offsetToPosition(p.intValue(), Forward));
+        Binding<Position> caretPosition2D = EasyBind.map(internalCaretPosition,
+                p -> content.offsetToPosition(p.intValue(), Forward));
+        paragraphs.addListener((InvalidationListener) (obs -> caretPosition2D.invalidate()));
+
         currentParagraph = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
                 EasyBind.map(caretPosition2D, p -> p.getMajor()));
         caretColumn = org.reactfx.inhibeans.binding.IntegerBinding.wrap(

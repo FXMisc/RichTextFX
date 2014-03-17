@@ -299,9 +299,15 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
         listView.getSelectionModel().select(par);
 
-        // bring the current paragraph to the viewport,
-        // then update the caret
-        listView.show(par, c -> c.getParagraphGraphic().setCaretPosition(col));
+        // Bring the current paragraph to the viewport, then update the caret.
+        Paragraph<S> paragraph = getSkinnable().getParagraphs().get(par);
+        listView.show(par, cell -> {
+            // Since this callback is executed on the next pulse,
+            // make sure the item (paragraph) hasn't changed in the meantime.
+            if(cell.getItem() == paragraph) {
+                cell.getParagraphGraphic().setCaretPosition(col);
+            }
+        });
     }
 
     private void listenTo(Observable observable, InvalidationListener listener) {

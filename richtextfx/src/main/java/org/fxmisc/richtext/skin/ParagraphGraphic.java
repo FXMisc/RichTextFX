@@ -25,15 +25,12 @@
 
 package org.fxmisc.richtext.skin;
 
+import static java.lang.String.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
-
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyledText;
-import org.fxmisc.richtext.TwoLevelNavigator;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -47,6 +44,10 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+
+import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.StyledText;
+import org.fxmisc.richtext.TwoLevelNavigator;
 
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
@@ -138,8 +139,11 @@ public class ParagraphGraphic<S> extends TextFlow {
     }
 
     void setCaretPosition(int pos) {
-        if(pos < 0 || pos > paragraph.length())
-            throw new IndexOutOfBoundsException();
+        if(pos < 0 || pos > paragraph.length()) {
+            throw new IndexOutOfBoundsException(
+                    format("%d not in [0, %d]", pos, paragraph.length()));
+        }
+
         if(caretPosition != pos) {
             caretPosition = pos;
             updateCaretShape();
