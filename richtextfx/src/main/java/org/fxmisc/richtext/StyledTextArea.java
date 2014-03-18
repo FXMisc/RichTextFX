@@ -30,6 +30,7 @@ import javafx.scene.control.Skin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaSkin;

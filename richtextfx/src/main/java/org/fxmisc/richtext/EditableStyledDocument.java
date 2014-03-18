@@ -14,6 +14,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;

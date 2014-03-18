@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.easybind;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -11,7 +11,7 @@ import javafx.beans.value.ObservableValue;
 /**
  * Methods for easy creation of bindings.
  */
-class EasyBind {
+public class EasyBind {
 
     @FunctionalInterface
     public interface TriFunction<A, B, C, R> {
