@@ -8,6 +8,8 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ObservableValue;
 
+import org.fxmisc.easybind.select.SelectBuilder;
+
 /**
  * Methods for easy creation of bindings.
  */
@@ -147,5 +149,9 @@ public class EasyBind {
                         src4.getValue(), src5.getValue(), src6.getValue());
             }
         };
+    }
+
+    public static <T> SelectBuilder<T> select(ObservableValue<T> selectionRoot) {
+        return SelectBuilder.startAt(selectionRoot);
     }
 }
