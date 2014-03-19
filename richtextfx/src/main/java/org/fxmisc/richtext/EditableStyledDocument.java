@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
@@ -43,7 +43,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     /**
      * Content of this {@code StyledDocument}.
      */
-    private final Binding<String> text = EasyBind.supply(() -> getText(0, length()));
+    private final StringBinding text = Bindings.createStringBinding(() -> getText(0, length()));
     @Override
     public String getText() { return text.getValue(); }
     public ObservableValue<String> textProperty() { return text; }
