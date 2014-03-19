@@ -181,7 +181,7 @@ License
 Links
 -----
 
-[API Documentation](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/javadoc/)  
+[API Documentation](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)  
 [Dropped Features](https://github.com/TomasMikula/RichTextFX/wiki/Dropped-Features)  
 [Known Issues](https://github.com/TomasMikula/RichTextFX/wiki/Known-Issues)  
 [Java 8 Development Gotchas](https://github.com/TomasMikula/RichTextFX/wiki/Java-8-Development-Gotchas)
