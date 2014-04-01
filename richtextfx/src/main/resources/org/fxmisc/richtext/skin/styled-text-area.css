@@ -2,6 +2,10 @@
     -fx-cursor: text;
 }
 
+.styled-text-area .list-view {
+    -fx-background-color: transparent!important;
+}
+
 .styled-text-area .list-view .list-cell {
     -fx-padding: 0 2px;
     -fx-background-color: transparent!important;

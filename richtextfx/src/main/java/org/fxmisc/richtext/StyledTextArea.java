@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -540,8 +541,13 @@ implements
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getControlCssMetaData() {
-        return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
+        List<CssMetaData<? extends Styleable, ?>> superMetaData = super.getControlCssMetaData();
+        List<CssMetaData<? extends Styleable, ?>> myMetaData = Arrays.<CssMetaData<? extends Styleable, ?>>asList(
                 font.getCssMetaData());
+        List<CssMetaData<? extends Styleable, ?>> res = new ArrayList<>(superMetaData.size() + myMetaData.size());
+        res.addAll(superMetaData);
+        res.addAll(myMetaData);
+        return res;
     }
 
 
