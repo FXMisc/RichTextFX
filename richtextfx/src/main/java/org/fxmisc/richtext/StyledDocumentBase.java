@@ -20,11 +20,7 @@ implements StyledDocument<S> {
         this.paragraphs = paragraphs;
         navigator = new TwoLevelNavigator(
                 () -> paragraphs.size(),
-                i -> {
-                    int len = paragraphs.get(i).length();
-                    // add 1 for newline to every paragraph except last
-                    return i == paragraphs.size()-1 ? len : len + 1;
-                });
+                i -> paragraphs.get(i).fullLength());
     }
 
 
@@ -53,9 +49,9 @@ implements StyledDocument<S> {
     public String getText(int start, int end) {
         return sub(
                 start, end,
-                p -> p.toString(),
+                p -> p.fullText(),
                 (p, a, b) -> p.substring(a, b),
-                (List<String> ss) -> join(ss, "\n"));
+                (List<String> ss) -> concat(ss));
     }
 
     @Override
@@ -94,10 +90,18 @@ implements StyledDocument<S> {
         List<Paragraph<S>> pars2 = that.getParagraphs();
         int n1 = pars1.size();
         int n2 = pars2.size();
-        List<Paragraph<S>> pars = new ArrayList<>(n1 + n2 - 1);
-        pars.addAll(pars1.subList(0, n1 - 1));
-        pars.add(pars1.get(n1 - 1).append(pars2.get(0)));
-        pars.addAll(pars2.subList(1, n2));
+        Paragraph<S> pars1last = pars1.get(n1 - 1);
+        List<Paragraph<S>> pars;
+        if(pars1last.isTerminated()) {
+            pars = new ArrayList<>(n1 + n2);
+            pars.addAll(pars1);
+            pars.addAll(pars2);
+        } else {
+            pars = new ArrayList<>(n1 + n2 - 1);
+            pars.addAll(pars1.subList(0, n1 - 1));
+            pars.add(pars1last.concat(pars2.get(0)));
+            pars.addAll(pars2.subList(1, n2));
+        }
         return new ReadOnlyStyledDocument<S>(pars, ADOPT);
     }
 
@@ -188,7 +192,7 @@ implements StyledDocument<S> {
         int length = end - start;
 
         Position start2D = navigator.offsetToPosition(start, Forward);
-        Position end2D = start2D.offsetBy(length, Forward); // Forward to make sure newline is not lost
+        Position end2D = start2D.offsetBy(length, Backward);
         int p1 = start2D.getMajor();
         int col1 = start2D.getMinor();
         int p2 = end2D.getMajor();
@@ -200,7 +204,7 @@ implements StyledDocument<S> {
             pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
         } else {
             Paragraph<S> par1 = paragraphs.get(p1);
-            pars.add(subMap.subrange(par1, col1, par1.length()));
+            pars.add(subMap.subrange(par1, col1, par1.fullLength()));
 
             for(int i = p1 + 1; i < p2; ++i) {
                 pars.add(map.apply(paragraphs.get(i)));
@@ -215,12 +219,11 @@ implements StyledDocument<S> {
     /**
      * Joins a list of strings, using the given separator string.
      */
-    private static String join(List<String> list, String sep) {
-        int len = list.stream().mapToInt(s -> s.length()).sum() + (list.size()-1) * sep.length();
+    private static String concat(List<String> list) {
+        int len = list.stream().mapToInt(String::length).sum();
         StringBuilder sb = new StringBuilder(len);
-        sb.append(list.get(0));
-        for(int i = 1; i < list.size(); ++i) {
-            sb.append(sep).append(list.get(i));
+        for(String s: list){
+            sb.append(s);
         }
         return sb.toString();
     }

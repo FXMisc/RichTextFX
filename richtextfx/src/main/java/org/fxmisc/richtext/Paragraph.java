@@ -32,11 +32,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
 
 public final class Paragraph<S> implements CharSequence {
     private final List<StyledText<S>> segments;
+    private final Optional<LineTerminator> terminator;
     private final TwoLevelNavigator navigator;
 
     public Paragraph(String text, S style) {
@@ -44,12 +46,29 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public Paragraph(StyledText<S> text) {
-        this(Arrays.asList(text));
+        this(text, Optional.empty());
     }
 
-    private Paragraph(List<StyledText<S>> segments) {
+    private Paragraph(String text, S style, LineTerminator terminator) {
+        this(text, style, Optional.of(terminator));
+    }
+
+    private Paragraph(String text, S style, Optional<LineTerminator> terminator) {
+        this(new StyledText<>(text, style), terminator);
+    }
+
+    private Paragraph(StyledText<S> text, Optional<LineTerminator> terminator) {
+        this(Arrays.asList(text), terminator);
+    }
+
+    private Paragraph(List<StyledText<S>> segments, LineTerminator terminator) {
+        this(segments, Optional.of(terminator));
+    }
+
+    private Paragraph(List<StyledText<S>> segments, Optional<LineTerminator> terminator) {
         assert !segments.isEmpty();
         this.segments = segments;
+        this.terminator = terminator;
         navigator = new TwoLevelNavigator(
                 () -> segments.size(),
                 i -> segments.get(i).length());
@@ -57,6 +76,10 @@ public final class Paragraph<S> implements CharSequence {
 
     public List<StyledText<S>> getSegments() {
         return Collections.unmodifiableList(segments);
+    }
+
+    public Optional<LineTerminator> getLineTerminator() {
+        return terminator;
     }
 
     private int length = -1;
@@ -68,6 +91,26 @@ public final class Paragraph<S> implements CharSequence {
         return length;
     }
 
+    private int fullLength = -1;
+    public int fullLength() {
+        if(fullLength == -1) {
+            fullLength = length() + terminator.map(LineTerminator::length).orElse(0);
+        }
+        return fullLength;
+    }
+
+    public boolean isTerminated() {
+        return terminator.isPresent();
+    }
+
+    public Paragraph<S> terminate(LineTerminator terminator) {
+        if(isTerminated()) {
+            throw new IllegalStateException("Paragraph alread terminated.");
+        }
+
+        return new Paragraph<>(segments, terminator);
+    }
+
     @Override
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
@@ -75,19 +118,25 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public String substring(int from, int to) {
-        return toString().substring(from, Math.min(to, length()));
+        return fullText().substring(from, Math.min(to, fullLength()));
     }
 
     public String substring(int from) {
-        return toString().substring(from);
+        return fullText().substring(from);
     }
 
-    public Paragraph<S> append(Paragraph<S> p) {
-        if(p.length() == 0)
-            return this;
+    public Paragraph<S> concat(Paragraph<S> p) {
+        if(isTerminated()) {
+            throw new IllegalStateException("Cannot append to a paragraph with line terminator.");
+        }
 
-        if(length() == 0)
+        if(length() == 0) {
             return p;
+        }
+
+        if(p.fullLength() == 0) {
+            return this;
+        }
 
         StyledText<S> left = segments.get(segments.size()-1);
         StyledText<S> right = p.segments.get(0);
@@ -97,20 +146,28 @@ public final class Paragraph<S> implements CharSequence {
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
             segs.addAll(p.segments.subList(1, p.segments.size()));
-            return new Paragraph<S>(segs);
+            return new Paragraph<S>(segs, p.terminator);
         } else {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
             segs.addAll(segments);
             segs.addAll(p.segments);
-            return new Paragraph<S>(segs);
+            return new Paragraph<S>(segs, p.terminator);
         }
     }
 
-    public Paragraph<S> append(CharSequence str) {
+    public Paragraph<S> concat(CharSequence str) {
+        if(isTerminated()) {
+            throw new IllegalStateException("Cannot append to a paragraph with line terminator.");
+        }
+
+        if(str.length() == 0) {
+            return this;
+        }
+
         List<StyledText<S>> segs = new ArrayList<>(segments);
         int lastIdx = segments.size() - 1;
         segs.set(lastIdx, segments.get(lastIdx).concat(str));
-        return new Paragraph<S>(segs);
+        return new Paragraph<S>(segs, Optional.empty());
     }
 
     public Paragraph<S> insert(int offset, CharSequence str) {
@@ -124,7 +181,7 @@ public final class Paragraph<S> implements CharSequence {
         StyledText<S> replacement = seg.spliced(segPos, segPos, str);
         List<StyledText<S>> segs = new ArrayList<>(segments);
         segs.set(segIdx, replacement);
-        return new Paragraph<S>(segs);
+        return new Paragraph<S>(segs, terminator);
     }
 
     @Override
@@ -133,44 +190,62 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public Paragraph<S> trim(int length) {
-        if(length < length()) {
+        if(length >= fullLength()) {
+            return this;
+        } else if(length > length()) { // slicing the line terminator
+            LineTerminator newTerminator = terminator.get().trim(length - length());
+            return new Paragraph<>(segments, newTerminator);
+        } else if(length == length()) { // cut off the line terminator
+            return new Paragraph<>(segments, Optional.empty());
+        } else { // length < length()
             Position pos = navigator.offsetToPosition(length, Backward);
             int segIdx = pos.getMajor();
             List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<S>(segs);
-        } else {
-            return this;
+            return new Paragraph<S>(segs, Optional.empty());
         }
     }
 
     public Paragraph<S> subSequence(int start) {
-        if(start > 0) {
+        if(start < 0) {
+            throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
+        } else if(start == 0) {
+            return this;
+        } else if(start < length()) {
             Position pos = navigator.offsetToPosition(start, Forward);
             int segIdx = pos.getMajor();
             List<StyledText<S>> segs = new ArrayList<>(segments.size() - segIdx);
             segs.add(segments.get(segIdx).subSequence(pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            return new Paragraph<S>(segs);
+            return new Paragraph<S>(segs, terminator);
+        } else if(start < fullLength()) {
+            LineTerminator newTerminator = terminator.get().subSequence(start - length());
+            S lastStyle = segments.get(segments.size() - 1).getStyle();
+            return new Paragraph<>("", lastStyle, newTerminator);
+        } else if(isTerminated()) {
+            throw new IndexOutOfBoundsException(start + " not in [0, " + fullLength() + ")");
+        } else if(start == fullLength()) { // == length()
+            S lastStyle = segments.get(segments.size() - 1).getStyle();
+            return new Paragraph<>("", lastStyle);
         } else {
-            return this;
+            throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
         }
     }
 
     public Paragraph<S> delete(int start, int end) {
-        return trim(start).append(subSequence(end));
+        return trim(start).concat(subSequence(end));
     }
 
     public Paragraph<S> restyle(S style) {
-        return new Paragraph<S>(toString(), style);
+        return new Paragraph<S>(toString(), style, terminator);
     }
 
     public Paragraph<S> restyle(int from, int to, S style) {
         Paragraph<S> left = subSequence(0, from);
         Paragraph<S> middle = new Paragraph<S>(substring(from, to), style);
         Paragraph<S> right = subSequence(to);
-        return left.append(middle).append(right);
+        return left.concat(middle).concat(right);
     }
 
     public Paragraph<S> restyle(int from, StyleSpans<? extends S> styleSpans) {
@@ -188,15 +263,15 @@ public final class Paragraph<S> implements CharSequence {
             middleSegs.add(new StyledText<>(text, span.getStyle()));
             offset = end;
         }
-        Paragraph<S> middle = new Paragraph<>(middleSegs);
+        Paragraph<S> middle = new Paragraph<>(middleSegs, Optional.empty());
 
-        return left.append(middle).append(right);
+        return left.concat(middle).concat(right);
     }
 
     /**
      * Returns style at the given character position.
-     * If {@code charIdx < 0}, returns the style at the beginning of this line.
-     * If {@code charIdx >= this.length()}, returns the style at the end of this line.
+     * If {@code charIdx < 0}, returns the style at the beginning of this paragraph.
+     * If {@code charIdx >= this.length()}, returns the style at the end of this paragraph.
      */
     public S getStyleAt(int charIdx) {
         if(charIdx < 0)
@@ -234,14 +309,35 @@ public final class Paragraph<S> implements CharSequence {
         return builder.create();
     }
 
+    private String text = null;
     /**
-     * Returns the string content of this paragraph.
+     * Returns the string content of this paragraph,
+     * excluding the line terminator.
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(length());
-        for(StyledText<S> seg: segments)
-            sb.append(seg);
-        return sb.toString();
+        if(text == null) {
+            StringBuilder sb = new StringBuilder(length());
+            for(StyledText<S> seg: segments)
+                sb.append(seg);
+            text = sb.toString();
+        }
+        return text;
+    }
+
+    private String fullText = null;
+    /**
+     * Returns the string content of this paragraph,
+     * including the line terminator.
+     */
+    public String fullText() {
+        if(fullText == null) {
+            if(isTerminated()) {
+                fullText = toString() + terminator.get().asString();
+            } else {
+                fullText = toString();
+            }
+        }
+        return fullText;
     }
 }
