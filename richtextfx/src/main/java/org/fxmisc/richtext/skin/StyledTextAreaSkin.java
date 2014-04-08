@@ -103,11 +103,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
         getBehavior().setCodeAreaSkin(this);
 
-        // initialize navigator
-        IntSupplier cellCount = () -> getSkinnable().getParagraphs().size();
-        IntUnaryOperator cellLength = i -> getCell(i).getLineCount();
-        navigator = new TwoLevelNavigator(cellCount, cellLength);
-
         // load the default style
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
@@ -120,6 +115,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                     return cell;
                 });
         getChildren().add(listView);
+
+        // initialize navigator
+        IntSupplier cellCount = () -> getSkinnable().getParagraphs().size();
+        IntUnaryOperator cellLength = i -> listView.mapCell(i, c -> c.getLineCount());
+        navigator = new TwoLevelNavigator(cellCount, cellLength);
 
         // make wrapWidth behave according to the wrapText property
         listenTo(styledTextArea.wrapTextProperty(), o -> updateWrapWidth());
@@ -212,7 +212,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     public HitInfo hit(Position targetLine, double x) {
-        return getCell(targetLine.getMajor()).hit(targetLine.getMinor(), x);
+        return listView.mapCell(targetLine.getMajor(), c -> c.hit(targetLine.getMinor(), x));
     }
 
     /**
@@ -281,7 +281,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private ParagraphCell<S> getCell(int index) {
-        return listView.getCell(index).get();
+        return listView.getVisibleCell(index).get();
     }
 
     private void updateWrapWidth() {

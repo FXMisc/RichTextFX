@@ -32,6 +32,7 @@ import java.util.function.Function;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListCell;
@@ -40,10 +41,12 @@ import javafx.scene.control.ListView;
 import com.sun.javafx.scene.control.skin.VirtualFlow;
 
 class MyListView<T, C extends ListCell<T>> extends ListView<T> {
+    private final Function<? super MyListView<T, C>, C> cellFactory;
 
     @SuppressWarnings("unchecked")
     public MyListView(ObservableList<T> items, Function<? super MyListView<T, C>, C> cellFactory) {
         super(items);
+        this.cellFactory = cellFactory;
         super.setCellFactory(lv -> cellFactory.apply((MyListView<T, C>) lv));
     }
 
@@ -105,17 +108,70 @@ class MyListView<T, C extends ListCell<T>> extends ListView<T> {
     }
 
     /**
-     * Returns the cell for the given index.
+     * Returns the cell for the given index, if visible.
      * The returned cell shall be used read-only
      * (for measurement purposes) and shall not be stored.
      */
-    public Optional<C> getCell(int index) {
+    public Optional<C> getVisibleCell(int index) {
         // If the cell for the given index is not available (~visible),
         // VirtualFlow may return some arbitrary cell. Therefore we
         // check that the returned cell has the desired index.
         return getFlow()
                 .map(flow -> flow.getCell(index))
                 .filter(cell -> cell.getIndex() == index);
+    }
+
+    /**
+     * Performs an action on the cell for the given index.
+     * If the cell with the given index is visible, the actual cell displayed
+     * in the ListView is used. If there is no visible cell with the given
+     * index, an artificial cell is created, laid out and used.
+     * {@code action} shall use the cell read-only (for measurement purposes)
+     * and shall not store it.
+     */
+    public void withCell(int index, Consumer<C> action) {
+        mapCell(index, cell -> { action.accept(cell); return null; });
+    }
+
+    /**
+     * Invokes the given function on the cell with the given index.
+     * If the cell with the given index is visible, the actual cell displayed
+     * in the ListView is used. If there is no visible cell with the given
+     * index, an artificial cell is created, laid out and used.
+     * {@code f} shall use the cell read-only (for measurement purposes)
+     * and shall not store it.
+     */
+    public <U> U mapCell(int index, Function<C, U> f) {
+        Optional<C> optCell = getVisibleCell(index);
+        if(optCell.isPresent()) {
+            return f.apply(optCell.get());
+        } else {
+            C cell = cellFactory.apply(this);
+
+            // assign cell's item
+            cell.updateListView(this);
+            cell.updateIndex(index);
+
+            // layout the cell
+            double cellWidth, cellHeight;
+            if(getOrientation() == Orientation.VERTICAL) {
+                cellWidth = getWidth() - snappedLeftInset() - snappedRightInset();
+                cellHeight = cell.prefHeight(cellWidth);
+            } else {
+                cellHeight = getHeight() - snappedTopInset() - snappedBottomInset();
+                cellWidth = cell.prefWidth(cellHeight);
+            }
+            cell.resize(cellWidth, cellHeight);
+            cell.layout();
+
+            // perform action
+            U res = f.apply(cell);
+
+            // clean up cell
+            cell.updateIndex(-1);
+
+            return res;
+        }
     }
 
     @SuppressWarnings("unchecked")
