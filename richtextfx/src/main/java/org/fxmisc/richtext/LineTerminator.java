@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 // is also a valid line terminator, because we support splicing text at any
 // position, even within line terminators.
 
-enum LineTerminator {
+public enum LineTerminator {
     CR("\r"),
     LF("\n"),
     CRLF("\r\n");
