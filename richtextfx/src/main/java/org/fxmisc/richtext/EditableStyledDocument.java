@@ -264,18 +264,16 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 Position spansFrom = styleSpans.position(0, 0);
                 Position spansTo = spansFrom.offsetBy(firstPar.length() - firstParFrom, Backward);
                 restyledPars.add(firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo)));
-                spansTo.offsetBy(firstPar.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
+                spansFrom = spansTo.offsetBy(firstPar.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
                     Paragraph<S> par = paragraphs.get(i);
-                    spansFrom = spansTo;
                     spansTo = spansFrom.offsetBy(par.length(), Backward);
                     restyledPars.add(par.restyle(0, styleSpans.subView(spansFrom, spansTo)));
-                    spansTo.offsetBy(par.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
+                    spansFrom = spansTo.offsetBy(par.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
                 }
 
                 Paragraph<S> lastPar = paragraphs.get(lastParIdx);
-                spansFrom = spansTo;
                 spansTo = spansFrom.offsetBy(lastParTo, Backward);
                 restyledPars.add(lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo)));
 
