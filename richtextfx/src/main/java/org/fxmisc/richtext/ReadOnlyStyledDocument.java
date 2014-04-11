@@ -41,6 +41,6 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     }
 
     private int computeLength() {
-        return paragraphs.stream().mapToInt(p -> p.length()).sum() + (paragraphs.size()-1);
+        return paragraphs.stream().mapToInt(p -> p.fullLength()).sum();
     }
 }
