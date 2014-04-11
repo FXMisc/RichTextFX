@@ -164,10 +164,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     public void replaceText(int start, int end, String replacement) {
         replace(start, end, filterInput(replacement),
                 (repl, pos) -> stringToParagraphs(repl, getStyleForInsertionAt(pos)),
-                 repl -> {
-                     insertedText.push(repl);
-                     insertionLength.push(repl.length());
-                 });
+                repl -> {
+                    insertedText.push(repl);
+                    insertionLength.push(repl.length());
+                });
     }
 
     public void replace(int start, int end, StyledDocument<S> replacement) {
