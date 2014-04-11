@@ -332,6 +332,13 @@ implements
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
+        if(isBeingUpdated()) {
+            // internalSelection, and hence selectionStart2D and selectionEnd2D
+            // might not have been updated yet. This can happen if this method
+            // is called from paragraphs' change listener.
+            clampInternalSelection();
+        }
+
         int startPar = selectionStart2D.getMajor();
         int endPar = selectionEnd2D.getMajor();
 
@@ -601,5 +608,18 @@ implements
             holds[1+i] = observables[i].block();
         }
         return Hold.multi(holds);
+    }
+
+    /**
+     * Ensures that internalSelection (and hence selection, selectionStart2D,
+     * selectionEnd2D) is within current document bounds.
+     */
+    private void clampInternalSelection() {
+        int l = getLength();
+        IndexRange sel = internalSelection.get();
+        int selStart = Math.min(sel.getStart(), l);
+        int selEnd = Math.min(sel.getEnd(), l);
+        IndexRange clampedSelection = new IndexRange(selStart, selEnd);
+        internalSelection.set(clampedSelection);
     }
 }
