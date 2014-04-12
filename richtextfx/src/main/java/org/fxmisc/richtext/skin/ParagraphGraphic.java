@@ -36,6 +36,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
@@ -187,6 +188,12 @@ public class ParagraphGraphic<S> extends TextFlow {
     public double getCaretOffsetX() {
         Bounds bounds = caretShape.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
+    }
+
+    public Point2D getCaretLocationOnScreen() {
+        Bounds bounds = caretShape.getBoundsInLocal();
+        // XXX: shift 4 pixels to the right in order not to hide the caret
+        return caretShape.localToScreen(bounds.getMaxX() + 4, bounds.getMinY());
     }
 
     public int getLineCount() {

@@ -35,6 +35,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.PopupWindow;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
@@ -115,6 +116,11 @@ implements
     public final StyleableObjectProperty<Font> fontProperty() { return font; }
     public final void setFont(Font value) { font.setValue(value); }
     public final Font getFont() { return font.getValue(); }
+
+    private final ObjectProperty<PopupWindow> popupAtCaret = new SimpleObjectProperty<>();
+    public void setPopupAtCaret(PopupWindow popup) { popupAtCaret.set(popup); }
+    public PopupWindow getPopupAtCaret() { return popupAtCaret.get(); }
+    public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupAtCaret; }
 
 
     /**************************************************************************

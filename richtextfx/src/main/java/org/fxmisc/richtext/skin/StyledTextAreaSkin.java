@@ -4,6 +4,7 @@ import static org.reactfx.EventStreams.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -19,6 +20,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
+import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
@@ -26,6 +28,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
+import javafx.stage.PopupWindow;
 import javafx.util.Duration;
 
 import org.fxmisc.richtext.Paragraph;
@@ -169,6 +172,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 .and(styledTextArea.editableProperty())
                 .and(styledTextArea.disabledProperty().not());
         manageSubscription(() -> caretVisible.dispose());
+
+        // position popup window whenever it changes
+        listenTo(styledTextArea.popupAtCaretProperty(), (obs, old, popup) -> positionPopup());
+        positionPopup();
     }
 
 
@@ -306,8 +313,24 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             // make sure the item (paragraph) hasn't changed in the meantime.
             if(cell.getItem() == paragraph) {
                 cell.getParagraphGraphic().setCaretPosition(col);
+                positionPopup();
             }
         });
+    }
+
+    private void positionPopup() {
+        PopupWindow popup = getSkinnable().getPopupAtCaret();
+        if(popup != null) {
+            getCaretLocationOnScreen().ifPresent(screenPos -> {
+                popup.setAnchorX(screenPos.getX());
+                popup.setAnchorY(screenPos.getY());
+            });
+        }
+    }
+
+    private Optional<Point2D> getCaretLocationOnScreen() {
+        return listView.getVisibleCell(getSkinnable().getCurrentParagraph())
+                .map(cell -> cell.getParagraphGraphic().getCaretLocationOnScreen());
     }
 
     private void listenTo(Observable observable, InvalidationListener listener) {
