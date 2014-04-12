@@ -2,3 +2,4 @@
 /gradle.properties
 .project
 .classpath
+.settings/
