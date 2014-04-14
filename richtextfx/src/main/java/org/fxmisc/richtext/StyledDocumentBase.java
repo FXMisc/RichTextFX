@@ -106,16 +106,16 @@ implements StyledDocument<S> {
     }
 
     @Override
-    public S getStyleAt(int pos) {
-        Position pos2D = navigator.offsetToPosition(pos, Forward);
+    public S getStyleOfChar(int index) {
+        Position pos2D = navigator.offsetToPosition(index, Forward);
         int line = pos2D.getMajor();
         int col = pos2D.getMinor();
-        return paragraphs.get(line).getStyleAt(col);
+        return paragraphs.get(line).getStyleOfChar(col);
     }
 
     @Override
-    public S getStyleAt(int paragraph, int column) {
-        return paragraphs.get(paragraph).getStyleAt(column);
+    public S getStyleOfChar(int paragraph, int column) {
+        return paragraphs.get(paragraph).getStyleOfChar(column);
     }
 
     @Override

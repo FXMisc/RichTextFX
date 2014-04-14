@@ -359,10 +359,13 @@ implements
     }
 
     /**
-     * Returns the style of the character at the given position.
+     * Returns the style of the character with the given index.
+     * If {@code index} points to a line terminator character,
+     * the last style used in the paragraph terminated by that
+     * line terminator is returned.
      */
-    public S getStyleAt(int pos) {
-        return content.getStyleAt(pos);
+    public S getStyleOfChar(int index) {
+        return content.getStyleOfChar(index);
     }
 
     /**
@@ -380,13 +383,13 @@ implements
     }
 
     /**
-     * Returns the style of the character at the given position in the given
-     * paragraph. If {@code pos} is beyond the end of the paragraph, the style
-     * at the end of line is returned. If {@code pos} is negative, it is the
-     * same as if it was 0.
+     * Returns the style of the character with the given index in the given
+     * paragraph. If {@code index} is beyond the end of the paragraph, the
+     * style at the end of line is returned. If {@code index} is negative, it
+     * is the same as if it was 0.
      */
-    public S getStyleAt(int paragraph, int pos) {
-        return content.getStyleAt(paragraph, pos);
+    public S getStyleOfChar(int paragraph, int index) {
+        return content.getStyleOfChar(paragraph, index);
     }
 
     /**

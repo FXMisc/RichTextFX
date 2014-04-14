@@ -269,11 +269,11 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     /**
-     * Returns style at the given character position.
+     * Returns the style of character with the given index.
      * If {@code charIdx < 0}, returns the style at the beginning of this paragraph.
      * If {@code charIdx >= this.length()}, returns the style at the end of this paragraph.
      */
-    public S getStyleAt(int charIdx) {
+    public S getStyleOfChar(int charIdx) {
         if(charIdx < 0)
             return segments.get(0).getStyle();
 
