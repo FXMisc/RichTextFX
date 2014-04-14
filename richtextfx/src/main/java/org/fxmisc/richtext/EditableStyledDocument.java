@@ -442,8 +442,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     private S getStyleForInsertionAt(Position insertionPos) {
         Paragraph<S> par = paragraphs.get(insertionPos.getMajor());
-        int insertionCol = insertionPos.getMinor();
-        int prevCharIdx = insertionCol - 1; // it is OK if prevCharIdx is -1
-        return par.getStyleOfChar(prevCharIdx);
+        return par.getStyleAtPosition(insertionPos.getMinor());
     }
 }

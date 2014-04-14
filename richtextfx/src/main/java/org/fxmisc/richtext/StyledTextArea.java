@@ -369,6 +369,21 @@ implements
     }
 
     /**
+     * Returns the style at the given position. That is the style of the
+     * character immediately preceding {@code position}, except when
+     * {@code position} points to a paragraph boundary, in which case it
+     * is the style at the beginning of the latter paragraph.
+     *
+     * <p>In other words, most of the time {@code getStyleAtPosition(p)}
+     * is equivalent to {@code getStyleOfChar(p-1)}, except when {@code p}
+     * points to a paragraph boundary, in which case it is equivalent to
+     * {@code getStyleOfChar(p)}.
+     */
+    public S getStyleAtPosition(int position) {
+        return content.getStyleAtPosition(position);
+    }
+
+    /**
      * Returns the styles in the given character range.
      */
     public StyleSpans<S> getStyleSpans(int from, int to) {
@@ -390,6 +405,14 @@ implements
      */
     public S getStyleOfChar(int paragraph, int index) {
         return content.getStyleOfChar(paragraph, index);
+    }
+
+    /**
+     * Returns the style at the given position in the given paragraph.
+     * This is equivalent to {@code getStyleOfChar(paragraph, position-1)}.
+     */
+    public S getStyleAtPosition(int paragraph, int position) {
+        return content.getStyleOfChar(paragraph, position);
     }
 
     /**

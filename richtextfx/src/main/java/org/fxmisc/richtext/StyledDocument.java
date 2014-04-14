@@ -19,6 +19,9 @@ public interface StyledDocument<S> extends CharSequence, TwoDimensional {
     S getStyleOfChar(int index);
     S getStyleOfChar(int paragraph, int column);
 
+    S getStyleAtPosition(int position);
+    S getStyleAtPosition(int paragraph, int position);
+
     StyleSpans<S> getStyleSpans(int from, int to);
     StyleSpans<S> getStyleSpans(int paragraph, int from, int to);
 

@@ -274,10 +274,32 @@ public final class Paragraph<S> implements CharSequence {
      * If {@code charIdx >= this.length()}, returns the style at the end of this paragraph.
      */
     public S getStyleOfChar(int charIdx) {
-        if(charIdx < 0)
+        if(charIdx < 0) {
             return segments.get(0).getStyle();
+        }
 
         Position pos = navigator.offsetToPosition(charIdx, Forward);
+        return segments.get(pos.getMajor()).getStyle();
+    }
+
+    /**
+     * Returns the style at the given position. That is the style of the
+     * character immediately preceding {@code position}. If {@code position}
+     * is 0, then the style of the first character (index 0) in this paragraph
+     * is returned. If this paragraph is empty, then some style previously used
+     * in this paragraph is returned.
+     * If {@code position > this.length()}, then it is equivalent to
+     * {@code position == this.length()}.
+     *
+     * <p>In other words, {@code getStyleAtPosition(p)} is equivalent to
+     * {@code getStyleOfChar(p-1)}.
+     */
+    public S getStyleAtPosition(int position) {
+        if(position < 0) {
+            throw new IllegalArgumentException("Paragraph position cannot be negative (" + position + ")");
+        }
+
+        Position pos = navigator.offsetToPosition(position, Backward);
         return segments.get(pos.getMajor()).getStyle();
     }
 

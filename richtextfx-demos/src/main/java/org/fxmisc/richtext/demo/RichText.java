@@ -243,7 +243,7 @@ public class RichText extends Application {
                 } else {
                     int p = area.getCurrentParagraph();
                     int col = area.getCaretColumn();
-                    StyleInfo style = area.getStyleOfChar(p, col - 1);
+                    StyleInfo style = area.getStyleAtPosition(p, col);
                     bold = style.bold.orElse(false);
                     italic = style.italic.orElse(false);
                     underline = style.underline.orElse(false);
