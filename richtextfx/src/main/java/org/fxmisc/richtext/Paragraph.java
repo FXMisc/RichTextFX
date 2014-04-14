@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javafx.scene.control.IndexRange;
+
 import org.fxmisc.richtext.TwoDimensional.Position;
 
 public final class Paragraph<S> implements CharSequence {
@@ -301,6 +303,18 @@ public final class Paragraph<S> implements CharSequence {
 
         Position pos = navigator.offsetToPosition(position, Backward);
         return segments.get(pos.getMajor()).getStyle();
+    }
+
+    /**
+     * Returns the range of homogeneous style that includes the given position.
+     * If {@code position} points to a boundary between two styled ranges,
+     * then the range preceding {@code position} is returned.
+     */
+    public IndexRange getStyleRangeAtPosition(int position) {
+        Position pos = navigator.offsetToPosition(position, Backward);
+        int start = position - pos.getMinor();
+        int end = start + segments.get(pos.getMajor()).length();
+        return new IndexRange(start, end);
     }
 
     public StyleSpans<S> getStyleRanges(int from, int to) {

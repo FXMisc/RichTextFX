@@ -132,6 +132,19 @@ implements StyledDocument<S> {
     }
 
     @Override
+    public IndexRange getStyleRangeAtPosition(int position) {
+        Position pos2D = navigator.offsetToPosition(position, Forward);
+        int paragraph = pos2D.getMajor();
+        int col = pos2D.getMinor();
+        return paragraphs.get(paragraph).getStyleRangeAtPosition(col);
+    }
+
+    @Override
+    public IndexRange getStyleRangeAtPosition(int paragraph, int position) {
+        return paragraphs.get(paragraph).getStyleRangeAtPosition(position);
+    }
+
+    @Override
     public StyleSpans<S> getStyleSpans(int from, int to) {
         Position start = offsetToPosition(from, Forward);
         Position end = start.offsetBy(to - from, Backward);

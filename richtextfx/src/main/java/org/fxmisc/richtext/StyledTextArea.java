@@ -384,6 +384,17 @@ implements
     }
 
     /**
+     * Returns the range of homogeneous style that includes the given position.
+     * If {@code position} points to a boundary between two styled ranges, then
+     * the range preceding {@code position} is returned. If {@code position}
+     * points to a boundary between two paragraphs, then the first styled range
+     * of the latter paragraph is returned.
+     */
+    public IndexRange getStyleRangeAtPosition(int position) {
+        return content.getStyleRangeAtPosition(position);
+    }
+
+    /**
      * Returns the styles in the given character range.
      */
     public StyleSpans<S> getStyleSpans(int from, int to) {
@@ -413,6 +424,15 @@ implements
      */
     public S getStyleAtPosition(int paragraph, int position) {
         return content.getStyleOfChar(paragraph, position);
+    }
+
+    /**
+     * Returns the range of homogeneous style that includes the given position
+     * in the given paragraph. If {@code position} points to a boundary between
+     * two styled ranges, then the range preceding {@code position} is returned.
+     */
+    public IndexRange getStyleRangeAtPosition(int paragraph, int position) {
+        return content.getStyleRangeAtPosition(paragraph, position);
     }
 
     /**
