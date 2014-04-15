@@ -244,10 +244,15 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public Paragraph<S> restyle(int from, int to, S style) {
-        Paragraph<S> left = subSequence(0, from);
-        Paragraph<S> middle = new Paragraph<S>(substring(from, to), style);
-        Paragraph<S> right = subSequence(to);
-        return left.concat(middle).concat(right);
+        if(from >= length()) {
+            return this;
+        } else {
+            to = Math.min(to, length());
+            Paragraph<S> left = subSequence(0, from);
+            Paragraph<S> middle = new Paragraph<S>(substring(from, to), style);
+            Paragraph<S> right = subSequence(to);
+            return left.concat(middle).concat(right);
+        }
     }
 
     public Paragraph<S> restyle(int from, StyleSpans<? extends S> styleSpans) {
