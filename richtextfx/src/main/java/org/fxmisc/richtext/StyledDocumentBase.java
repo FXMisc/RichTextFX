@@ -182,6 +182,11 @@ implements StyledDocument<S> {
     }
 
     @Override
+    public StyleSpans<S> getStyleSpans(int paragraph) {
+        return paragraphs.get(paragraph).getStyleRanges();
+    }
+
+    @Override
     public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
         return paragraphs.get(paragraph).getStyleRanges(from, to);
     }

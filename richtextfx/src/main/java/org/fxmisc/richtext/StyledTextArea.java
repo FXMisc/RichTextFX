@@ -324,6 +324,10 @@ implements
         return paragraphs.get(paragraph).toString();
     }
 
+    public Paragraph<S> getParagraph(int index) {
+        return paragraphs.get(index);
+    }
+
     @Override
     public StyledDocument<S> subDocument(int start, int end) {
         return content.subSequence(start, end);
@@ -433,6 +437,13 @@ implements
      */
     public IndexRange getStyleRangeAtPosition(int paragraph, int position) {
         return content.getStyleRangeAtPosition(paragraph, position);
+    }
+
+    /**
+     * Returns styles of the whole paragraph.
+     */
+    public StyleSpans<S> getStyleSpans(int paragraph) {
+        return content.getStyleSpans(paragraph);
     }
 
     /**

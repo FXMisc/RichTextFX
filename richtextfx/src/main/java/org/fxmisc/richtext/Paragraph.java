@@ -322,6 +322,14 @@ public final class Paragraph<S> implements CharSequence {
         return new IndexRange(start, end);
     }
 
+    public StyleSpans<S> getStyleRanges() {
+        StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(segments.size());
+        for(StyledText<S> seg: segments) {
+            builder.add(seg.getStyle(), seg.length());
+        }
+        return builder.create();
+    }
+
     public StyleSpans<S> getStyleRanges(int from, int to) {
         Position start = navigator.offsetToPosition(from, Forward);
         Position end = start.offsetBy(to - from, Backward);
