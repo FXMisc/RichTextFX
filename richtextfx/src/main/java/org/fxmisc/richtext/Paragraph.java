@@ -332,7 +332,9 @@ public final class Paragraph<S> implements CharSequence {
 
     public StyleSpans<S> getStyleRanges(int from, int to) {
         Position start = navigator.offsetToPosition(from, Forward);
-        Position end = start.offsetBy(to - from, Backward);
+        Position end = to == from
+                ? start
+                : start.offsetBy(to - from, Backward);
         int startSegIdx = start.getMajor();
         int endSegIdx = end.getMajor();
 

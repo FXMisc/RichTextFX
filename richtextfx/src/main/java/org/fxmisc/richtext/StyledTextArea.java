@@ -290,7 +290,9 @@ implements
         internalSelection.addListener(obs -> {
             IndexRange sel = internalSelection.get();
             selectionStart2D = offsetToPosition(sel.getStart(), Forward);
-            selectionEnd2D = selectionStart2D.offsetBy(sel.getLength(), Backward);
+            selectionEnd2D = sel.getLength() == 0
+                    ? selectionStart2D
+                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
         });
         internalSelection.set(EMPTY_RANGE);
 

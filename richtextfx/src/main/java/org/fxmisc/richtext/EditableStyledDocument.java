@@ -189,7 +189,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
         try(Hold commitOnClose = beginStyleChange(from, to)) {
             Position start = navigator.offsetToPosition(from, Forward);
-            Position end = start.offsetBy(to - from, Backward);
+            Position end = to == from
+                    ? start
+                    : start.offsetBy(to - from, Backward);
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();
@@ -246,7 +248,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int len = styleSpans.length();
         try(Hold commitOnClose = beginStyleChange(from, from + len)) {
             Position start = offsetToPosition(from, Forward);
-            Position end = start.offsetBy(len, Backward);
+            Position end = len == 0
+                    ? start
+                    : start.offsetBy(len, Backward);
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();

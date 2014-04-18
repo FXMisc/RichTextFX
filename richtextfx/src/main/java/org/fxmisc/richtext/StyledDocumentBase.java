@@ -147,7 +147,9 @@ implements StyledDocument<S> {
     @Override
     public StyleSpans<S> getStyleSpans(int from, int to) {
         Position start = offsetToPosition(from, Forward);
-        Position end = start.offsetBy(to - from, Backward);
+        Position end = to == from
+                ? start
+                : start.offsetBy(to - from, Backward);
         int startParIdx = start.getMajor();
         int endParIdx = end.getMajor();
 
@@ -220,10 +222,10 @@ implements StyledDocument<S> {
             SubMap<Paragraph<S>, P> subMap,
             Function<List<P>, R> combine) {
 
-        int length = end - start;
-
         Position start2D = navigator.offsetToPosition(start, Forward);
-        Position end2D = start2D.offsetBy(length, Backward);
+        Position end2D = end == start
+                ? start2D
+                : start2D.offsetBy(end - start, Backward);
         int p1 = start2D.getMajor();
         int col1 = start2D.getMinor();
         int p2 = end2D.getMajor();
