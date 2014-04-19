@@ -244,13 +244,37 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         }
     }
 
+    private int terminatorLengthToSkip(Position pos) {
+        Paragraph<S> par = paragraphs.get(pos.getMajor());
+        return pos.getMinor() >= par.length()
+            ? par.fullLength() - pos.getMinor()
+            : 0;
+    }
+
+    private int terminatorLengthToTrim(Position pos) {
+        Paragraph<S> par = paragraphs.get(pos.getMajor());
+        return pos.getMinor() > par.length()
+                ? pos.getMinor() - par.length()
+                : 0;
+    }
+
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
+        Position start = offsetToPosition(from, Forward);
+        Position end = start.offsetBy(len, Backward);
+        int skip = terminatorLengthToSkip(start);
+        int trim = terminatorLengthToTrim(end);
+        if(skip + trim >= len) {
+            return;
+        } else if(skip + trim > 0) {
+            styleSpans = styleSpans.subView(skip, len - trim);
+            len -= skip + trim;
+            from += skip;
+            start = start.offsetBy(skip, Forward);
+            end = end.offsetBy(-trim, Backward);
+        }
+
         try(Hold commitOnClose = beginStyleChange(from, from + len)) {
-            Position start = offsetToPosition(from, Forward);
-            Position end = len == 0
-                    ? start
-                    : start.offsetBy(len, Backward);
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();

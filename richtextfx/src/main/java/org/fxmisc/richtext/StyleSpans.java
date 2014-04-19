@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Spliterator;
@@ -79,6 +81,14 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         } else {
             return new PrependedSpans<>(this, span);
         }
+    }
+
+    default StyleSpans<S> subView(int from, int to) {
+        Position start = offsetToPosition(from, Forward);
+        Position end = to > from
+                ? start.offsetBy(to - from, Backward)
+                : start;
+        return subView(start, end);
     }
 
     default StyleSpans<S> subView(Position from, Position to) {
