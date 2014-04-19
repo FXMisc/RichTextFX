@@ -162,6 +162,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      **************************************************************************/
 
     public void replaceText(int start, int end, String replacement) {
+        ensureValidRange(start, end);
         replace(start, end, filterInput(replacement),
                 (repl, pos) -> stringToParagraphs(repl, getStyleForInsertionAt(pos)),
                 repl -> {
@@ -171,6 +172,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void replace(int start, int end, StyledDocument<S> replacement) {
+        ensureValidRange(start, end);
         replace(start, end, replacement,
                 (repl, pos) -> repl.getParagraphs(),
                 repl -> {
@@ -184,13 +186,13 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void setStyle(int from, int to, S style) {
-        if(from >= to) {
-            return;
-        }
+        ensureValidRange(from, to);
 
         try(Hold commitOnClose = beginStyleChange(from, to)) {
             Position start = navigator.offsetToPosition(from, Forward);
-            Position end = start.offsetBy(to - from, Backward); // we know that to > from
+            Position end = to == from
+                    ? start
+                    : start.offsetBy(to - from, Backward);
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();
@@ -232,6 +234,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void setStyle(int paragraph, int fromCol, int toCol, S style) {
+        ensureValidParagraphRange(paragraph, fromCol, toCol);
         int parOffset = position(paragraph, 0).toOffset();
         int start = parOffset + fromCol;
         int end = parOffset + toCol;
@@ -245,6 +248,8 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
+        ensureValidRange(from, from + len);
+
         Position start = offsetToPosition(from, Forward);
         Position end = start.offsetBy(len, Backward);
         int skip = terminatorLengthToSkip(start);
@@ -296,9 +301,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
+        int len = styleSpans.length();
+        ensureValidParagraphRange(paragraph, from, len);
         int parOffset = position(paragraph, 0).toOffset();
         int start = parOffset + from;
-        int end = start + styleSpans.length();
+        int end = start + len;
 
         try(Hold commitOnClose = beginStyleChange(start, end)) {
             Paragraph<S> p = paragraphs.get(paragraph);
@@ -352,6 +359,29 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         res.add(new Paragraph<>(last, style));
 
         return res;
+    }
+
+    private void ensureValidRange(int start, int end) {
+        ensureValidRange(start, end, length());
+    }
+
+    private void ensureValidParagraphRange(int par, int start, int end) {
+        if(par < 0 || par >= paragraphs.size()) {
+            throw new IllegalArgumentException(par + " is not a valid paragraph index. Must be from [0, " + paragraphs.size() + ")");
+        }
+        ensureValidRange(start, end, paragraphs.get(par).fullLength());
+    }
+
+    private void ensureValidRange(int start, int end, int len) {
+        if(start < 0) {
+            throw new IllegalArgumentException("start cannot be negative: " + start);
+        }
+        if(end > len) {
+            throw new IllegalArgumentException("end is greater than length: " + end + " > " + len);
+        }
+        if(start > end) {
+            throw new IllegalArgumentException("start is greater than end: " + start + " > " + end);
+        }
     }
 
     private int terminatorLengthToSkip(Position pos) {
