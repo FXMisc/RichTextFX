@@ -184,14 +184,13 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void setStyle(int from, int to, S style) {
-        if(from == to)
+        if(from >= to) {
             return;
+        }
 
         try(Hold commitOnClose = beginStyleChange(from, to)) {
             Position start = navigator.offsetToPosition(from, Forward);
-            Position end = to == from
-                    ? start
-                    : start.offsetBy(to - from, Backward);
+            Position end = start.offsetBy(to - from, Backward); // we know that to > from
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();
@@ -242,20 +241,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
             p = p.restyle(fromCol, toCol, style);
             paragraphs.set(paragraph, p);
         }
-    }
-
-    private int terminatorLengthToSkip(Position pos) {
-        Paragraph<S> par = paragraphs.get(pos.getMajor());
-        return pos.getMinor() >= par.length()
-            ? par.fullLength() - pos.getMinor()
-            : 0;
-    }
-
-    private int terminatorLengthToTrim(Position pos) {
-        Paragraph<S> par = paragraphs.get(pos.getMajor());
-        return pos.getMinor() > par.length()
-                ? pos.getMinor() - par.length()
-                : 0;
     }
 
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
@@ -367,6 +352,20 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         res.add(new Paragraph<>(last, style));
 
         return res;
+    }
+
+    private int terminatorLengthToSkip(Position pos) {
+        Paragraph<S> par = paragraphs.get(pos.getMajor());
+        return pos.getMinor() >= par.length()
+            ? par.fullLength() - pos.getMinor()
+            : 0;
+    }
+
+    private int terminatorLengthToTrim(Position pos) {
+        Paragraph<S> par = paragraphs.get(pos.getMajor());
+        return pos.getMinor() > par.length()
+                ? pos.getMinor() - par.length()
+                : 0;
     }
 
     private Hold beginStyleChange(int start, int end) {
