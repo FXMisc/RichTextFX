@@ -45,6 +45,7 @@ import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.Guard;
+import org.reactfx.Guardian;
 import org.reactfx.Indicator;
 import org.reactfx.InterceptableEventStream;
 
@@ -241,6 +242,8 @@ implements
      */
     private final boolean preserveStyle;
 
+    private final Guardian omniGuardian;
+
 
     /**************************************************************************
      *                                                                        *
@@ -302,6 +305,21 @@ implements
                 return content.getText(internalSelection.get());
             }
         };
+
+        omniGuardian = Guardian.combine(
+                beingUpdated, // must be first, to be the last one to release
+                text,
+                length,
+                caretPosition,
+                anchor,
+                selection,
+                selectedText,
+                currentParagraph,
+                caretColumn,
+
+                // add streams as last ones, to be the first ones to release
+                plainTextChanges::pause,
+                richTextChanges::pause);
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
@@ -486,7 +504,7 @@ implements
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             content.setStyle(from, to, style);
         }
     }
@@ -495,7 +513,7 @@ implements
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -504,7 +522,7 @@ implements
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -520,7 +538,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -536,7 +554,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -565,7 +583,7 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -578,7 +596,7 @@ implements
 
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
-        try(Guard g = guardAll()) {
+        try(Guard g = omniGuardian.guard()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -649,30 +667,8 @@ implements
         return factory.create(richChanges(), apply, undo, merge);
     }
 
-    private Guard guardAll() {
-        return Guard.multi(
-                beingUpdated.on(), // must be first, to be the last one to release
-                text.block(),
-                length.block(),
-                caretPosition.block(),
-                anchor.block(),
-                selection.block(),
-                selectedText.block(),
-                currentParagraph.block(),
-                caretColumn.block(),
-
-                // add streams as last ones, to be the first ones to release
-                plainTextChanges.pause(),
-                richTextChanges.pause());
-    }
-
-    private Guard guard(org.reactfx.inhibeans.Observable... observables) {
-        Guard[] guards = new Guard[1 + observables.length];
-        guards[0] = beingUpdated.on();
-        for(int i = 0; i < observables.length; ++i) {
-            guards[1+i] = observables[i].block();
-        }
-        return Guard.multi(guards);
+    private Guard guard(Guardian... guardians) {
+        return Guardian.combine(beingUpdated, Guardian.combine(guardians)).guard();
     }
 
     /**
