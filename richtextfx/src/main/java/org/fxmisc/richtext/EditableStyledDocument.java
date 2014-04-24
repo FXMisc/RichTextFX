@@ -22,7 +22,7 @@ import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
-import org.reactfx.Hold;
+import org.reactfx.Guard;
 import org.reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
 
 /**
@@ -188,7 +188,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     public void setStyle(int from, int to, S style) {
         ensureValidRange(from, to);
 
-        try(Hold commitOnClose = beginStyleChange(from, to)) {
+        try(Guard commitOnClose = beginStyleChange(from, to)) {
             Position start = navigator.offsetToPosition(from, Forward);
             Position end = to == from
                     ? start
@@ -227,7 +227,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int start = position(paragraph, 0).toOffset();
         int end = start + p.length();
 
-        try(Hold commitOnClose = beginStyleChange(start, end)) {
+        try(Guard commitOnClose = beginStyleChange(start, end)) {
             p = p.restyle(style);
             paragraphs.set(paragraph, p);
         }
@@ -239,7 +239,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int start = parOffset + fromCol;
         int end = parOffset + toCol;
 
-        try(Hold commitOnClose = beginStyleChange(start, end)) {
+        try(Guard commitOnClose = beginStyleChange(start, end)) {
             Paragraph<S> p = paragraphs.get(paragraph);
             p = p.restyle(fromCol, toCol, style);
             paragraphs.set(paragraph, p);
@@ -264,7 +264,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
             end = end.offsetBy(-trim, Backward);
         }
 
-        try(Hold commitOnClose = beginStyleChange(from, from + len)) {
+        try(Guard commitOnClose = beginStyleChange(from, from + len)) {
             int firstParIdx = start.getMajor();
             int firstParFrom = start.getMinor();
             int lastParIdx = end.getMajor();
@@ -307,7 +307,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int start = parOffset + from;
         int end = start + len;
 
-        try(Hold commitOnClose = beginStyleChange(start, end)) {
+        try(Guard commitOnClose = beginStyleChange(start, end)) {
             Paragraph<S> p = paragraphs.get(paragraph);
             p = p.restyle(from, styleSpans);
             paragraphs.set(paragraph, p);
@@ -398,7 +398,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 : 0;
     }
 
-    private Hold beginStyleChange(int start, int end) {
+    private Guard beginStyleChange(int start, int end) {
         styleChangePosition.push(start);
         styleChangeEnd.push(end);
         return () -> styleChangeDone.push(null);

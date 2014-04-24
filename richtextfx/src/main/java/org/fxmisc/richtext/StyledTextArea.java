@@ -44,7 +44,7 @@ import org.fxmisc.richtext.skin.StyledTextAreaSkin;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
-import org.reactfx.Hold;
+import org.reactfx.Guard;
 import org.reactfx.Indicator;
 import org.reactfx.InterceptableEventStream;
 
@@ -486,7 +486,7 @@ implements
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             content.setStyle(from, to, style);
         }
     }
@@ -495,7 +495,7 @@ implements
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -504,7 +504,7 @@ implements
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -520,7 +520,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -536,7 +536,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -565,7 +565,7 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -578,7 +578,7 @@ implements
 
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
-        try(Hold h = guardAll()) {
+        try(Guard g = guardAll()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -591,7 +591,7 @@ implements
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        try(Hold h = guard(this.caretPosition, currentParagraph, caretColumn, this.anchor, selection, selectedText)) {
+        try(Guard g = guard(this.caretPosition, currentParagraph, caretColumn, this.anchor, selection, selectedText)) {
             this.internalCaretPosition.set(Utils.clamp(0, caretPosition, getLength()));
             this.anchor.set(Utils.clamp(0, anchor, getLength()));
             this.internalSelection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
@@ -600,7 +600,7 @@ implements
 
     @Override
     public void positionCaret(int pos) {
-        try(Hold h = guard(caretPosition, currentParagraph, caretColumn)) {
+        try(Guard g = guard(caretPosition, currentParagraph, caretColumn)) {
             internalCaretPosition.set(pos);
         }
     }
@@ -649,8 +649,8 @@ implements
         return factory.create(richChanges(), apply, undo, merge);
     }
 
-    private Hold guardAll() {
-        return Hold.multi(
+    private Guard guardAll() {
+        return Guard.multi(
                 beingUpdated.on(), // must be first, to be the last one to release
                 text.block(),
                 length.block(),
@@ -666,13 +666,13 @@ implements
                 richTextChanges.pause());
     }
 
-    private Hold guard(org.reactfx.inhibeans.Observable... observables) {
-        Hold[] holds = new Hold[1 + observables.length];
-        holds[0] = beingUpdated.on();
+    private Guard guard(org.reactfx.inhibeans.Observable... observables) {
+        Guard[] guards = new Guard[1 + observables.length];
+        guards[0] = beingUpdated.on();
         for(int i = 0; i < observables.length; ++i) {
-            holds[1+i] = observables[i].block();
+            guards[1+i] = observables[i].block();
         }
-        return Hold.multi(holds);
+        return Guard.multi(guards);
     }
 
     /**
