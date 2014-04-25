@@ -86,20 +86,19 @@ public class JavaKeywordsAsync extends Application {
         launch(args);
     }
 
+    private CodeArea codeArea;
     private ExecutorService executor;
 
     @Override
     public void start(Stage primaryStage) {
         executor = Executors.newSingleThreadExecutor();
-        CodeArea codeArea = new CodeArea();
+        codeArea = new CodeArea();
         EventStream<PlainTextChange> textChanges = codeArea.plainTextChanges();
         textChanges
-                .reduceCloseSuccessions((a, b) -> b, Duration.ofMillis(500))
-                .mapToTask(ch -> computeHighlightingAsync(codeArea.getText()))
+                .successionEnds(Duration.ofMillis(500))
+                .supplyTask(this::computeHighlightingAsync)
                 .awaitLatest(textChanges)
-                .subscribe(highlighting -> {
-                    codeArea.setStyleSpans(0, highlighting);
-                });
+                .subscribe(this::applyHighlighting);
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(codeArea), 600, 400);
@@ -113,7 +112,8 @@ public class JavaKeywordsAsync extends Application {
         executor.shutdown();
     }
 
-    private Task<StyleSpans<Collection<String>>> computeHighlightingAsync(String text) {
+    private Task<StyleSpans<Collection<String>>> computeHighlightingAsync() {
+        String text = codeArea.getText();
         Task<StyleSpans<Collection<String>>> task = new Task<StyleSpans<Collection<String>>>() {
             @Override
             protected StyleSpans<Collection<String>> call() throws Exception {
@@ -122,6 +122,10 @@ public class JavaKeywordsAsync extends Application {
         };
         executor.execute(task);
         return task;
+    }
+
+    private void applyHighlighting(StyleSpans<Collection<String>> highlighting) {
+        codeArea.setStyleSpans(0, highlighting);
     }
 
     private static StyleSpans<Collection<String>> computeHighlighting(String text) {
