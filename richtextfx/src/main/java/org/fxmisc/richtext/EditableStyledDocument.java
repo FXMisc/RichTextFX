@@ -386,16 +386,26 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     private int terminatorLengthToSkip(Position pos) {
         Paragraph<S> par = paragraphs.get(pos.getMajor());
-        return pos.getMinor() >= par.length()
-            ? par.fullLength() - pos.getMinor()
-            : 0;
+        int skipSum = 0;
+        while(pos.getMinor() >= par.length() && pos.getMinor() < par.fullLength()) {
+            int skipLen = par.fullLength() - pos.getMinor();
+            skipSum += skipLen;
+            pos = pos.offsetBy(skipLen, Forward); // will jump to the next paragraph, if not at the end
+            par = paragraphs.get(pos.getMajor());
+        }
+        return skipSum;
     }
 
     private int terminatorLengthToTrim(Position pos) {
-        Paragraph<S> par = paragraphs.get(pos.getMajor());
-        return pos.getMinor() > par.length()
-                ? pos.getMinor() - par.length()
-                : 0;
+        int parLen = paragraphs.get(pos.getMajor()).length();
+        int trimSum = 0;
+        while(pos.getMinor() > parLen) {
+            int trimLen = pos.getMinor() - parLen;
+            trimSum += trimLen;
+            pos = pos.offsetBy(-trimLen, Backward); // may jump to the end of previous paragraph, if parLen was 0
+            parLen = paragraphs.get(pos.getMajor()).length();
+        }
+        return trimSum;
     }
 
     private Guard beginStyleChange(int start, int end) {
