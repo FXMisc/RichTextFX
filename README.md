@@ -104,13 +104,25 @@ Demos
 
     java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.JavaKeywords
 
+or
+
+    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
+
 #### Run from the source repo
 
     gradle JavaKeywords
 
+or
+
+    gradle JavaKeywordsAsync
+
 #### Source code
 
 [JavaKeywords.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywords.java)
+
+[JavaKeywordsAsync.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywordsAsync.java)
+
+The former computes highlighting on the JavaFX application thread, while the latter computes highlighting on a background thread.
 
 
 ### 2. Rich-text editor
