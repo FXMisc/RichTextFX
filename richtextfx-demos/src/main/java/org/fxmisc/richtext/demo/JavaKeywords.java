@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Tomas Mikula. All rights reserved.
+ * Copyright (c) 2013, 2014, Tomas Mikula. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,15 +30,14 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.StyleSpansBuilder;
-
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.StyleSpans;
+import org.fxmisc.richtext.StyleSpansBuilder;
 
 public class JavaKeywords extends Application {
 
@@ -83,33 +82,29 @@ public class JavaKeywords extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        final CodeArea codeArea = new CodeArea();
-        codeArea.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable,
-                    String oldText, String newText) {
-                Matcher matcher = KEYWORD_PATTERN.matcher(newText);
-                int lastKwEnd = 0;
-                StyleSpansBuilder<Collection<String>> spansBuilder
-                        = new StyleSpansBuilder<>();
-                while(matcher.find()) {
-                    spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword"), matcher.end() - matcher.start());
-                    lastKwEnd = matcher.end();
-                }
-                spansBuilder.add(Collections.emptyList(), newText.length() - lastKwEnd);
-                codeArea.setStyleSpans(0, spansBuilder.create());
-            }
+        CodeArea codeArea = new CodeArea();
+        codeArea.textProperty().addListener((obs, oldText, newText) -> {
+            codeArea.setStyleSpans(0, computeHighlighting(newText));
         });
         codeArea.replaceText(0, 0, sampleCode);
 
-        StackPane root = new StackPane();
-        root.getChildren().add(codeArea);
-        Scene scene = new Scene(root, 600, 400);
+        Scene scene = new Scene(new StackPane(codeArea), 600, 400);
         scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
-        codeArea.requestFocus();
         primaryStage.show();
     }
 
+    private static StyleSpans<Collection<String>> computeHighlighting(String text) {
+        Matcher matcher = KEYWORD_PATTERN.matcher(text);
+        int lastKwEnd = 0;
+        StyleSpansBuilder<Collection<String>> spansBuilder
+                = new StyleSpansBuilder<>();
+        while(matcher.find()) {
+            spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
+            spansBuilder.add(Collections.singleton("keyword"), matcher.end() - matcher.start());
+            lastKwEnd = matcher.end();
+        }
+        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
+        return spansBuilder.create();
+    }
 }
