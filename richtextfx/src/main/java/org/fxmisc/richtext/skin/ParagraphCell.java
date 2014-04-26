@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2013, Tomas Mikula. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package org.fxmisc.richtext.skin;
 
 import java.util.Optional;
@@ -46,8 +21,6 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     private final StyledTextAreaSkin<S> skin;
 
-    private final ObservableBooleanValue caretVisible;
-
     private final BiConsumer<Text, S> applyStyle;
 
     private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
@@ -58,35 +31,39 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
         // Caret is visible only on the selected line,
         // but only if the owner StyledTextArea has visible caret.
-        caretVisible = Bindings.and(this.selectedProperty(), skin.caretVisible);
+        ObservableBooleanValue caretVisible = Bindings.and(this.selectedProperty(), skin.caretVisible);
+
+        graphicProperty().addListener((obs, oldGraphic, newGraphic) -> {
+            if(oldGraphic != null) {
+                ParagraphGraphic<S> og = (ParagraphGraphic<S>) oldGraphic;
+                og.caretVisibleProperty().unbind();
+                og.highlightFillProperty().unbind();
+                og.highlightTextFillProperty().unbind();
+            }
+
+            if(newGraphic != null) {
+                ParagraphGraphic<S> ng = (ParagraphGraphic<S>) newGraphic;
+                ng.caretVisibleProperty().bind(caretVisible);
+                ng.highlightFillProperty().bind(skin.highlightFill);
+                ng.highlightTextFillProperty().bind(skin.highlightTextFill);
+            }
+        });
+
+        emptyProperty().addListener((obs, wasEmpty, isEmpty) -> {
+            if(wasEmpty && !isEmpty) {
+                startListening();
+            } else if(!wasEmpty && isEmpty) {
+                stopListening();
+            }
+        });
     }
 
     @Override
     protected void updateItem(Paragraph<S> item, boolean empty) {
-        boolean wasEmpty = this.isEmpty();
-
-        if(!wasEmpty) {
-            // dispose old ParagraphGraphic (unregister listeners etc.)
-            ParagraphGraphic<S> oldGraphic = getParagraphGraphic();
-            oldGraphic.caretVisibleProperty().unbind();
-            oldGraphic.highlightFillProperty().unbind();
-            oldGraphic.highlightTextFillProperty().unbind();
-            oldGraphic.dispose();
-        }
-
         super.updateItem(item, empty);
-
-        if(wasEmpty && !empty) {
-            startListening();
-        } else if(!wasEmpty && empty) {
-            stopListening();
-        }
 
         if(!empty) {
             ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
-            graphic.caretVisibleProperty().bind(caretVisible);
-            graphic.highlightFillProperty().bind(skin.highlightFill);
-            graphic.highlightTextFillProperty().bind(skin.highlightTextFill);
 
             StyledTextArea<S> area = skin.getSkinnable();
             if(getIndex() == area.getCurrentParagraph()) {

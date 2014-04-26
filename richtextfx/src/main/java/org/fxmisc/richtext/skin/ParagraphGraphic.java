@@ -131,10 +131,6 @@ public class ParagraphGraphic<S> extends TextFlow {
         setSelection(0, 0);
     }
 
-    public void dispose() {
-        // do nothing
-    }
-
     public Paragraph<S> getParagraph() {
         return paragraph;
     }
