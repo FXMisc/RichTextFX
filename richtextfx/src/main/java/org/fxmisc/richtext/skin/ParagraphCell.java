@@ -4,50 +4,41 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.property.Property;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
 
 import com.sun.javafx.scene.text.HitInfo;
 
 public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
-
     private final StyledTextAreaSkin<S> skin;
-
     private final BiConsumer<Text, S> applyStyle;
-
     private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
+
+    @SuppressWarnings("unchecked")
+    private final MonadicObservableValue<ParagraphGraphic<S>> graphic = EasyBind.monadic(graphicProperty()).map(g -> (ParagraphGraphic<S>) g);
+
+    private final Property<Boolean> caretVisible = graphic.selectProperty(ParagraphGraphic::caretVisibleProperty);
+    public Property<Boolean> caretVisibleProperty() { return caretVisible; }
+
+    private final Property<Paint> highlightFill = graphic.selectProperty(ParagraphGraphic::highlightFillProperty);
+    public Property<Paint> highlightFillProperty() { return highlightFill; }
+
+    private final Property<Paint> highlightTextFill = graphic.selectProperty(ParagraphGraphic::highlightTextFillProperty);
+    public Property<Paint> highlightTextFillProperty() { return highlightTextFill; }
 
     public ParagraphCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
         this.skin = skin;
         this.applyStyle = applyStyle;
-
-        // Caret is visible only on the selected line,
-        // but only if the owner StyledTextArea has visible caret.
-        ObservableBooleanValue caretVisible = Bindings.and(this.selectedProperty(), skin.caretVisible);
-
-        graphicProperty().addListener((obs, oldGraphic, newGraphic) -> {
-            if(oldGraphic != null) {
-                ParagraphGraphic<S> og = (ParagraphGraphic<S>) oldGraphic;
-                og.caretVisibleProperty().unbind();
-                og.highlightFillProperty().unbind();
-                og.highlightTextFillProperty().unbind();
-            }
-
-            if(newGraphic != null) {
-                ParagraphGraphic<S> ng = (ParagraphGraphic<S>) newGraphic;
-                ng.caretVisibleProperty().bind(caretVisible);
-                ng.highlightFillProperty().bind(skin.highlightFill);
-                ng.highlightTextFillProperty().bind(skin.highlightTextFill);
-            }
-        });
 
         emptyProperty().addListener((obs, wasEmpty, isEmpty) -> {
             if(wasEmpty && !isEmpty) {

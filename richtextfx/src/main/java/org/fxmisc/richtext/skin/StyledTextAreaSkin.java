@@ -12,6 +12,7 @@ import java.util.function.IntUnaryOperator;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -58,13 +59,13 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     /**
      * Background fill for highlighted text.
      */
-    final StyleableObjectProperty<Paint> highlightFill
+    private final StyleableObjectProperty<Paint> highlightFill
             = new HighlightFillProperty(this, Color.DODGERBLUE);
 
     /**
      * Text color for highlighted text.
      */
-    final StyleableObjectProperty<Paint> highlightTextFill
+    private final StyleableObjectProperty<Paint> highlightTextFill
             = new HighlightTextFillProperty(this, Color.WHITE);
 
 
@@ -76,8 +77,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
 
-    final BooleanBinding caretVisible;
-
 
     /**************************************************************************
      *                                                                        *
@@ -88,6 +87,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     private Subscription subscriptions = () -> {};
 
     private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
+
+    private final BooleanBinding caretVisible;
 
     private final MyListView<Paragraph<S>, ParagraphCell<S>> listView;
 
@@ -260,6 +261,12 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
      **************************************************************************/
 
     private void cellCreated(ParagraphCell<S> cell) {
+        // caret is visible only on the selected line
+        cell.caretVisibleProperty().bind(Bindings.and(cell.selectedProperty(), caretVisible));
+
+        cell.highlightFillProperty().bind(highlightFill);
+        cell.highlightTextFillProperty().bind(highlightTextFill);
+
         // listen to mouse events on lines
         cell.addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
             getBehavior().mousePressed(event);
