@@ -24,6 +24,14 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
 
+    /**
+     * Two {@code StyleSpans} objects are considered equal if they contain equal
+     * number of {@code StyleSpan}s and the {@code StyleSpan}s are pairwise
+     * equal.
+     */
+    @Override
+    public boolean equals(Object other);
+
     @Override
     default Iterator<StyleSpan<S>> iterator() {
         return new Iterator<StyleSpan<S>>() {

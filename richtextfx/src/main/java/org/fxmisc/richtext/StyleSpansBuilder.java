@@ -118,6 +118,36 @@ abstract class StyleSpansBase<S> implements StyleSpans<S> {
     public Position offsetToPosition(int offset, Bias bias) {
         return navigator.offsetToPosition(offset, bias);
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other instanceof StyleSpans) {
+            StyleSpans<?> that = (StyleSpans<?>) other;
+
+            if(this.getSpanCount() != that.getSpanCount()) {
+                return false;
+            }
+
+            for(int i = 0; i < this.getSpanCount(); ++i) {
+                if(!this.getStyleSpan(i).equals(that.getStyleSpan(i))) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        for(StyleSpan<S> span: this) {
+            result = 31 * result + span.hashCode();
+        }
+        return result;
+    }
 }
 
 
