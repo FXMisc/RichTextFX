@@ -32,6 +32,7 @@ import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
 import javafx.util.Duration;
 
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
@@ -136,7 +137,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
-        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> refreshCaret());
+        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> refreshPopup());
 
         // update selection in paragraphs
         EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
@@ -162,8 +163,9 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             else
                 caretPulse.stop(false);
         });
-        if(styledTextArea.isFocused())
+        if(styledTextArea.isFocused()) {
             caretPulse.start(true);
+        }
         manageSubscription(() -> caretPulse.stop());
 
         // The caret is visible in periodic intervals, but only when
@@ -215,7 +217,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     public double getCaretOffsetX() {
-        int idx = listView.getSelectionModel().getSelectedIndex();
+        int idx = getSkinnable().getCurrentParagraph();
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
@@ -261,11 +263,22 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
      **************************************************************************/
 
     private void cellCreated(ParagraphCell<S> cell) {
-        // caret is visible only on the selected line
-        cell.caretVisibleProperty().bind(Bindings.and(cell.selectedProperty(), caretVisible));
+        BooleanBinding hasCaret = Bindings.equal(
+                cell.indexProperty(),
+                getSkinnable().currentParagraphProperty());
+
+        // caret is visible only in the paragraph with the caret
+        cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
 
         cell.highlightFillProperty().bind(highlightFill);
         cell.highlightTextFillProperty().bind(highlightTextFill);
+
+        // bind cell's caret position to area's caret column,
+        // when the cell is the one with the caret
+        EasyBind.bindConditionally(
+                cell.caretPositionProperty(),
+                getSkinnable().caretColumnProperty(),
+                hasCaret);
 
         // listen to mouse events on lines
         cell.addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
@@ -307,11 +320,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     }
 
-    private void refreshCaret() {
+    private void refreshPopup() {
         int par = getSkinnable().getCurrentParagraph();
-        int col = getSkinnable().getCaretColumn();
-
-        listView.getSelectionModel().select(par);
 
         // Bring the current paragraph to the viewport, then update the caret.
         Paragraph<S> paragraph = getSkinnable().getParagraphs().get(par);
@@ -319,7 +329,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             // Since this callback is executed on the next pulse,
             // make sure the item (paragraph) hasn't changed in the meantime.
             if(cell.getItem() == paragraph) {
-                cell.getParagraphGraphic().setCaretPosition(col);
                 positionPopup();
             }
         });

@@ -36,6 +36,9 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     private final Property<Paint> highlightTextFill = graphic.selectProperty(ParagraphGraphic::highlightTextFillProperty);
     public Property<Paint> highlightTextFillProperty() { return highlightTextFill; }
 
+    private final Property<Number> caretPosition = graphic.selectProperty(ParagraphGraphic::caretPositionProperty);
+    public Property<Number> caretPositionProperty() { return caretPosition; }
+
     public ParagraphCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
         this.skin = skin;
         this.applyStyle = applyStyle;
@@ -57,11 +60,6 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
             ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
 
             StyledTextArea<S> area = skin.getSkinnable();
-            if(getIndex() == area.getCurrentParagraph()) {
-                int col = Math.min(area.getCaretColumn(), item.length());
-                graphic.setCaretPosition(col);
-            }
-
             graphic.setSelection(area.getParagraphSelection(getIndex()));
 
             setGraphic(graphic);
@@ -163,8 +161,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     }
 
     public double getCaretOffsetX() {
-        ParagraphGraphic<S> graphic = getParagraphGraphic();
-        return graphic != null ? graphic.getCaretOffsetX() : 0;
+        return getParagraphGraphic().getCaretOffsetX();
     }
 
     ParagraphGraphic<S> getParagraphGraphic() {

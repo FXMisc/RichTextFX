@@ -25,15 +25,18 @@
 
 package org.fxmisc.richtext.skin;
 
-import static java.lang.String.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -74,9 +77,16 @@ public class ParagraphGraphic<S> extends TextFlow {
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
     private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
+    public ObjectProperty<Paint> highlightTextFillProperty() {
+        return highlightTextFill;
+    }
+
+    private final IntegerProperty caretPosition = new SimpleIntegerProperty(0);
+    public IntegerProperty caretPositionProperty() { return caretPosition; }
+    public void setCaretPosition(int pos) { caretPosition.set(pos); }
+    private final NumberBinding clampedCaretPosition;
 
     private final Paragraph<S> paragraph;
-    private int caretPosition;
     private IndexRange selection;
 
     private final Path caretShape = new Path();
@@ -84,6 +94,9 @@ public class ParagraphGraphic<S> extends TextFlow {
 
     public ParagraphGraphic(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
+
+        clampedCaretPosition = Bindings.min(caretPosition, paragraph.length());
+        clampedCaretPosition.addListener((obs, oldPos, newPos) -> updateCaretShape());
 
         // selection highlight
         selectionShape.setManaged(false);
@@ -135,18 +148,6 @@ public class ParagraphGraphic<S> extends TextFlow {
         return paragraph;
     }
 
-    void setCaretPosition(int pos) {
-        if(pos < 0 || pos > paragraph.length()) {
-            throw new IndexOutOfBoundsException(
-                    format("%d not in [0, %d]", pos, paragraph.length()));
-        }
-
-        if(caretPosition != pos) {
-            caretPosition = pos;
-            updateCaretShape();
-        }
-    }
-
     void setSelection(IndexRange selection) {
         this.selection = selection;
         updateSelectionShape();
@@ -162,10 +163,6 @@ public class ParagraphGraphic<S> extends TextFlow {
 
     public ObjectProperty<Paint> highlightFillProperty() {
         return selectionShape.fillProperty();
-    }
-
-    public ObjectProperty<Paint> highlightTextFillProperty() {
-        return highlightTextFill;
     }
 
     HitInfo hit(int lineIndex, double x) {
@@ -199,7 +196,7 @@ public class ParagraphGraphic<S> extends TextFlow {
     public int currentLineIndex() {
         TextLine[] lines = getLines();
         TwoLevelNavigator navigator = new TwoLevelNavigator(() -> lines.length, i -> lines[i].getLength());
-        return navigator.offsetToPosition(caretPosition, Forward).getMajor();
+        return navigator.offsetToPosition(clampedCaretPosition.intValue(), Forward).getMajor();
     }
 
     private float getLineCenter(int index) {
@@ -234,7 +231,7 @@ public class ParagraphGraphic<S> extends TextFlow {
     }
 
     private void updateCaretShape() {
-        PathElement[] shape = textLayout().getCaretShape(caretPosition, true, 0, 0);
+        PathElement[] shape = textLayout().getCaretShape(clampedCaretPosition.intValue(), true, 0, 0);
         caretShape.getElements().setAll(shape);
     }
 
