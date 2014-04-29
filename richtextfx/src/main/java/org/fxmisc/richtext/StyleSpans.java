@@ -135,11 +135,35 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         return builder.create();
     }
 
+    /**
+     * Returns a new {@code StyleSpans} object that has the same total length
+     * as this StyleSpans and style of every span is mapped by the given
+     * function. Adjacent style spans whose style mapped to the same value are
+     * merged into one. As a consequence, the returned StyleSpans might have
+     * fewer style spans than this StyleSpans.
+     * @param mapper function to calculate new style
+     * @return StyleSpans with replaced styles.
+     */
     default StyleSpans<S> mapStyles(UnaryOperator<S> mapper) {
-        StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(getSpanCount());
-        for(StyleSpan<S> span: this) {
-            builder.add(mapper.apply(span.getStyle()), span.getLength());
+        int n = getSpanCount();
+        StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(n);
+
+        StyleSpan<S> firstSpan = getStyleSpan(0); // there should always be at least one span
+        int prevLen = firstSpan.getLength();
+        S prevStyle = mapper.apply(firstSpan.getStyle());
+        for(int i = 1; i < n; ++i) {
+            StyleSpan<S> span = getStyleSpan(i);
+            S style = mapper.apply(span.getStyle());
+            if(Objects.equals(prevStyle, style)) {
+                prevLen += span.getLength();
+            } else {
+                builder.add(prevStyle, prevLen);
+                prevLen = span.getLength();
+                prevStyle = style;
+            }
         }
+        builder.add(prevStyle, prevLen);
+
         return builder.create();
     }
 
