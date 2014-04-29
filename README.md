@@ -1,11 +1,11 @@
-:boom: **NEW:** As of March 7, 2014, CodeAreaFX has been renamed to RichTextFX, to reflect the fact that the project now supports much more than just syntax highlighting.  
-:boom: **IMPORTANT:** Package `codearea.control` has been renamed to `org.fxmisc.richtext` in the HEAD of the master branch. All builds starting from March 7, 2014 will reflect this change. Please, update your source code.  
-:boom: **NEW:** RichTextFX snapshots are now deployed to the Sonatype repository. [See below](#use-richtextfx-in-your-project)
-
 RichTextFX
 ==========
 
 RichTextFX provides a text area for JavaFX with API to style ranges of text. It is intended as a base for rich-text editors and code editors with syntax highlighting.
+
+Scroll down to [Demos](#demos) to see it in action.
+
+There is plenty of room for enhancements, e.g. displaying line numbers, support for paragraph-level styles (#6), placing arbitrary nodes in the text, copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
 
 
 Flavors
