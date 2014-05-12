@@ -21,7 +21,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
@@ -48,6 +47,8 @@ import org.reactfx.Guard;
 import org.reactfx.Guardian;
 import org.reactfx.Indicator;
 import org.reactfx.InterceptableEventStream;
+import org.reactfx.inhibeans.collection.Collections;
+import org.reactfx.inhibeans.collection.ObservableList;
 
 import com.sun.javafx.Utils;
 
@@ -270,7 +271,7 @@ implements
         this.applyStyle = applyStyle;
         this.preserveStyle = preserveStyle;
         content = new EditableStyledDocument<>(initialStyle);
-        paragraphs = content.getParagraphs();
+        paragraphs = Collections.wrap(content.getParagraphs());
 
         text = org.reactfx.inhibeans.binding.Binding.wrap(content.textProperty());
         length = org.reactfx.inhibeans.binding.IntegerBinding.wrap(content.lengthProperty());
@@ -317,9 +318,12 @@ implements
                 currentParagraph,
                 caretColumn,
 
-                // add streams as last ones, to be the first ones to release
+                // add streams after properties, to be released before them
                 plainTextChanges::pause,
-                richTextChanges::pause);
+                richTextChanges::pause,
+
+                // paragraphs to be released first
+                paragraphs);
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
