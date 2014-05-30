@@ -100,13 +100,13 @@ Demos
 
 #### Run using the pre-built JAR
 
-[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-demos-fat-0.1.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.JavaKeywords
+    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.JavaKeywords
 
 or
 
-    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
+    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
 
 #### Run from the source repo
 
@@ -130,9 +130,9 @@ The former computes highlighting on the JavaFX application thread, while the lat
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
 #### Run using the pre-built JAR
-[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-demos-fat-0.1.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-yyyymmdd.jar org.fxmisc.richtext.demo.RichText
+    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.RichText
 
 #### Run from the source repo
 
@@ -148,9 +148,40 @@ Source code of this demo is dedicated to the public domain.
 Use RichTextFX in your project
 ------------------------------
 
-### Method 1: as a managed dependency
+### Stable release
 
-Snapshot releases are deployed to Sonatype snapshot repository with these Maven coordinates
+Current stable release is 0.1.
+
+#### Maven coordinates
+
+| Group ID            | Artifact ID | Version |
+| :-----------------: | :---------: | :-----: |
+| org.fxmisc.richtext | richtextfx  | 0.1     |
+
+#### Gradle example
+
+```groovy
+dependencies {
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.1'
+}
+```
+
+#### Sbt example
+
+```scala
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.1"
+```
+
+#### Manual download
+
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-0.1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-fat-0.1.jar) and place it on your classpath.
+
+
+### Snapshot releases
+
+Snapshot releases are deployed to Sonatype snapshot repository.
+
+#### Maven coordinates
 
 | Group ID            | Artifact ID | Version        |
 | :-----------------: | :---------: | :------------: |
@@ -177,11 +208,6 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
 ```
-
-
-### Method 2: as an unmanaged dependency
-
-Download the latest [JAR](https://oss.sonatype.org/content/repositories/snapshots/org/fxmisc/richtext/richtextfx/1.0.0-SNAPSHOT/) or [fat JAR (including dependencies)](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) and place it on your classpath.
 
 
 License
