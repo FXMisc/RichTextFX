@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -33,6 +34,7 @@ import javafx.stage.PopupWindow;
 import javafx.util.Duration;
 
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
@@ -93,6 +95,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     private final MyListView<Paragraph<S>, ParagraphCell<S>> listView;
 
+    private final ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment;
+
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
@@ -137,7 +141,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
-        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> refreshPopup());
+        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret());
 
         // update selection in paragraphs
         EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
@@ -176,8 +180,21 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                 .and(styledTextArea.disabledProperty().not());
         manageSubscription(() -> caretVisible.dispose());
 
-        // position popup window whenever it changes
-        listenTo(styledTextArea.popupAtCaretProperty(), (obs, old, popup) -> positionPopup());
+        // Adjust popup anchor by either a user-provided function,
+        // or user-provided offset, or don't adjust at all.
+        MonadicObservableValue<UnaryOperator<Point2D>> userFunction =
+                EasyBind.monadic(styledTextArea.popupWindowAnchorAdjustmentProperty());
+        MonadicObservableValue<UnaryOperator<Point2D>> userOffset =
+                EasyBind.monadic(styledTextArea.popupWindowAnchorOffsetProperty())
+                        .map(offset -> anchor -> anchor.add(offset));
+        popupAnchorAdjustment = userFunction
+                .orElse(userOffset)
+                .orElse(UnaryOperator.identity());
+
+        // Position popup window whenever the window itself
+        // or the position adjustment function changes.
+        listenTo(styledTextArea.popupWindowProperty(), (obs, old, popup) -> positionPopup());
+        listenTo(popupAnchorAdjustment, (obs, old, f) -> positionPopup());
         positionPopup();
     }
 
@@ -320,27 +337,29 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     }
 
-    private void refreshPopup() {
+    private void followCaret() {
         int par = getSkinnable().getCurrentParagraph();
 
-        // Bring the current paragraph to the viewport, then update the caret.
+        // Bring the current paragraph to the viewport, then update the popup.
         Paragraph<S> paragraph = getSkinnable().getParagraphs().get(par);
-        listView.show(par, cell -> {
+        listView.show(par, item -> {
             // Since this callback is executed on the next pulse,
             // make sure the item (paragraph) hasn't changed in the meantime.
-            if(cell.getItem() == paragraph) {
+            if(item == paragraph) {
                 positionPopup();
             }
         });
     }
 
     private void positionPopup() {
-        PopupWindow popup = getSkinnable().getPopupAtCaret();
+        PopupWindow popup = getSkinnable().getPopupWindow();
         if(popup != null) {
-            getCaretLocationOnScreen().ifPresent(screenPos -> {
-                popup.setAnchorX(screenPos.getX());
-                popup.setAnchorY(screenPos.getY());
-            });
+            getCaretLocationOnScreen()
+                    .map(popupAnchorAdjustment.getValue())
+                    .ifPresent(screenPos -> {
+                        popup.setAnchorX(screenPos.getX());
+                        popup.setAnchorY(screenPos.getY());
+                    });
         }
     }
 

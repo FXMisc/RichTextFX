@@ -54,11 +54,11 @@ class MyListView<T, C extends ListCell<T>> extends ListView<T> {
         getFlow().ifPresent(flow -> flow.show(index));
     }
 
-    public void show(int index, Consumer<C> whenShown) {
-        show(index, (flow, cell) -> whenShown.accept(cell));
+    public void show(int index, Consumer<T> whenShown) {
+        show(index, (flow, cell) -> whenShown.accept(cell.getItem()));
     }
 
-    public void show(int index, BiConsumer<VirtualFlow<C>, C> whenShown) {
+    private void show(int index, BiConsumer<VirtualFlow<C>, C> whenShown) {
         getFlow().ifPresent(flow -> {
             flow.show(index);
             Platform.runLater(() -> { // runLater to allow layout after show()

@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Binding;
@@ -25,6 +26,7 @@ import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
@@ -119,10 +121,27 @@ implements
     public final void setFont(Font value) { font.setValue(value); }
     public final Font getFont() { return font.getValue(); }
 
-    private final ObjectProperty<PopupWindow> popupAtCaret = new SimpleObjectProperty<>();
-    public void setPopupAtCaret(PopupWindow popup) { popupAtCaret.set(popup); }
-    public PopupWindow getPopupAtCaret() { return popupAtCaret.get(); }
-    public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupAtCaret; }
+    private final ObjectProperty<PopupWindow> popupWindow = new SimpleObjectProperty<>();
+    public void setPopupWindow(PopupWindow popup) { popupWindow.set(popup); }
+    public PopupWindow getPopupWindow() { return popupWindow.get(); }
+    public ObjectProperty<PopupWindow> popupWindowProperty() { return popupWindow; }
+
+    @Deprecated
+    public void setPopupAtCaret(PopupWindow popup) { popupWindow.set(popup); }
+    @Deprecated
+    public PopupWindow getPopupAtCaret() { return popupWindow.get(); }
+    @Deprecated
+    public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupWindow; }
+
+    private final ObjectProperty<Point2D> popupWindowAnchorOffset = new SimpleObjectProperty<>();
+    public void setPopupWindowAnchorOffset(Point2D offset) { popupWindowAnchorOffset.set(offset); }
+    public Point2D getPopupWindowAnchorOffset() { return popupWindowAnchorOffset.get(); }
+    public ObjectProperty<Point2D> popupWindowAnchorOffsetProperty() { return popupWindowAnchorOffset; }
+
+    private final ObjectProperty<UnaryOperator<Point2D>> popupWindowAnchorAdjustment = new SimpleObjectProperty<>();
+    public void setPopupWindowAnchorAdjustment(UnaryOperator<Point2D> f) { popupWindowAnchorAdjustment.set(f); }
+    public UnaryOperator<Point2D> getPopupWindowAnchorAdjustment() { return popupWindowAnchorAdjustment.get(); }
+    public ObjectProperty<UnaryOperator<Point2D>> popupWindowAnchorAdjustmentProperty() { return popupWindowAnchorAdjustment; }
 
 
     /**************************************************************************

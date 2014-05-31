@@ -185,8 +185,7 @@ public class ParagraphGraphic<S> extends TextFlow {
 
     public Point2D getCaretLocationOnScreen() {
         Bounds bounds = caretShape.getBoundsInLocal();
-        // XXX: shift 4 pixels to the right in order not to hide the caret
-        return caretShape.localToScreen(bounds.getMaxX() + 4, bounds.getMinY());
+        return caretShape.localToScreen(bounds.getMaxX(), bounds.getMinY());
     }
 
     public int getLineCount() {

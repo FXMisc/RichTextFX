@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
@@ -22,7 +23,8 @@ public class PopupDemo extends Application {
 
         Popup popup = new Popup();
         popup.getContent().add(new Button("I am a popup button!"));
-        area.setPopupAtCaret(popup);
+        area.setPopupWindow(popup);
+        area.setPopupWindowAnchorOffset(new Point2D(4, 0));
 
         primaryStage.setScene(new Scene(new StackPane(area), 200, 200));
         primaryStage.show();
