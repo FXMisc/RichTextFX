@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.skin;
 
 import static org.reactfx.EventStreams.*;
+import static org.reactfx.util.Tuples.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,9 @@ import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.behavior.CodeAreaBehavior;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
+import org.reactfx.EventSource;
 import org.reactfx.EventStream;
+import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
@@ -95,8 +98,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     private final MyListView<Paragraph<S>, ParagraphCell<S>> listView;
 
-    private final ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment;
-
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
@@ -137,11 +138,12 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // emits a value every time the area is done updating
         EventStream<?> areaDoneUpdating = styledTextArea.beingUpdatedProperty().offs();
 
-        // update the caret every time the caret position or paragraphs change
+        // follow the caret every time the caret position or paragraphs change
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
-        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret());
+        EventSource<Void> positionPopupImpulse = new EventSource<>();
+        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret(() -> positionPopupImpulse.push(null)));
 
         // update selection in paragraphs
         EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
@@ -187,15 +189,19 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         MonadicObservableValue<UnaryOperator<Point2D>> userOffset =
                 EasyBind.monadic(styledTextArea.popupWindowAnchorOffsetProperty())
                         .map(offset -> anchor -> anchor.add(offset));
-        popupAnchorAdjustment = userFunction
+        ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment = userFunction
                 .orElse(userOffset)
                 .orElse(UnaryOperator.identity());
 
         // Position popup window whenever the window itself
         // or the position adjustment function changes.
-        listenTo(styledTextArea.popupWindowProperty(), (obs, old, popup) -> positionPopup());
-        listenTo(popupAnchorAdjustment, (obs, old, f) -> positionPopup());
-        positionPopup();
+        manageSubscription(EventStreams.combine(
+                EventStreams.valuesOf(styledTextArea.popupWindowProperty()),
+                EventStreams.valuesOf(popupAnchorAdjustment))
+            .by((popup, adjustment) -> t(popup, adjustment))
+            .repeatOn(positionPopupImpulse)
+            .filter(t -> t._1 != null)
+            .subscribe(t -> positionPopup(t._1, t._2)));
     }
 
 
@@ -337,7 +343,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         }
     }
 
-    private void followCaret() {
+    private void followCaret(Runnable callback) {
         int par = getSkinnable().getCurrentParagraph();
 
         // Bring the current paragraph to the viewport, then update the popup.
@@ -346,21 +352,18 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             // Since this callback is executed on the next pulse,
             // make sure the item (paragraph) hasn't changed in the meantime.
             if(item == paragraph) {
-                positionPopup();
+                callback.run();
             }
         });
     }
 
-    private void positionPopup() {
-        PopupWindow popup = getSkinnable().getPopupWindow();
-        if(popup != null) {
-            getCaretLocationOnScreen()
-                    .map(popupAnchorAdjustment.getValue())
-                    .ifPresent(screenPos -> {
-                        popup.setAnchorX(screenPos.getX());
-                        popup.setAnchorY(screenPos.getY());
-                    });
-        }
+    private void positionPopup(PopupWindow popup, UnaryOperator<Point2D> adjustment) {
+        getCaretLocationOnScreen()
+                .map(adjustment)
+                .ifPresent(screenPos -> {
+                    popup.setAnchorX(screenPos.getX());
+                    popup.setAnchorY(screenPos.getY());
+                });
     }
 
     private Optional<Point2D> getCaretLocationOnScreen() {
@@ -383,6 +386,6 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private void manageSubscription(Subscription subscription) {
-        subscriptions = Subscription.multi(subscriptions, subscription);
+        subscriptions = subscriptions.and(subscription);
     }
 }
