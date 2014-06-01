@@ -120,22 +120,22 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     public EventStream<RichTextChange<S>> richChanges() { return richChanges; }
 
     {
-        EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).by((a, b) -> getText(a, b));
+        EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).map((a, b) -> getText(a, b));
         EventStream<Integer> changePosition = EventStreams.merge(textChangePosition, styleChangePosition);
         EventStream<Integer> removalEnd = EventStreams.merge(textRemovalEnd, styleChangeEnd);
-        EventStream<StyledDocument<S>> removedDocument = EventStreams.zip(changePosition, removalEnd).by((a, b) -> subSequence(a, b));
+        EventStream<StyledDocument<S>> removedDocument = EventStreams.zip(changePosition, removalEnd).map((a, b) -> subSequence(a, b));
         EventStream<Integer> insertionEnd = EventStreams.merge(
-                EventStreams.combine(changePosition).on(insertionLength).by((start, len) -> start + len),
-                EventStreams.emit(styleChangeEnd).on(styleChangeDone));
+                changePosition.emitBothOnEach(insertionLength).map((start, len) -> start + len),
+                styleChangeEnd.emitOn(styleChangeDone));
         EventStream<StyledDocument<S>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
-                EventStreams.combine(changePosition).on(insertionEnd).by((a, b) -> subSequence(a, b)));
+                changePosition.emitBothOnEach(insertionEnd).map((a, b) -> subSequence(a, b)));
 
         plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
-                .by((pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted));
+                .map((pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted));
 
         richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
-                .by((pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted));
+                .map((pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted));
     }
 
 

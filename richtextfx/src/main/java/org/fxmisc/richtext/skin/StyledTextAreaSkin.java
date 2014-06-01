@@ -1,7 +1,6 @@
 package org.fxmisc.richtext.skin;
 
 import static org.reactfx.EventStreams.*;
-import static org.reactfx.util.Tuples.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -198,10 +197,9 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         manageSubscription(EventStreams.combine(
                 EventStreams.valuesOf(styledTextArea.popupWindowProperty()),
                 EventStreams.valuesOf(popupAnchorAdjustment))
-            .by((popup, adjustment) -> t(popup, adjustment))
             .repeatOn(positionPopupImpulse)
-            .filter(t -> t._1 != null)
-            .subscribe(t -> positionPopup(t._1, t._2)));
+            .filter((p, f) -> p != null)
+            .subscribe((p, f) -> positionPopup(p, f)));
     }
 
 
