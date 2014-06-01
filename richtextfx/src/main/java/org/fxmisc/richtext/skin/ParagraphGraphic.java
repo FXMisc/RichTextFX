@@ -29,6 +29,7 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javafx.beans.binding.Bindings;
@@ -39,7 +40,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
@@ -183,9 +183,18 @@ public class ParagraphGraphic<S> extends TextFlow {
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
 
-    public Point2D getCaretLocationOnScreen() {
-        Bounds bounds = caretShape.getBoundsInLocal();
-        return caretShape.localToScreen(bounds.getMaxX(), bounds.getMinY());
+    public Bounds getCaretBoundsOnScreen() {
+        Bounds localBounds = caretShape.getBoundsInLocal();
+        return caretShape.localToScreen(localBounds);
+    }
+
+    public Optional<Bounds> getSelectionBoundsOnScreen() {
+        if(selection.getLength() == 0) {
+            return Optional.empty();
+        } else {
+            Bounds localBounds = selectionShape.getBoundsInLocal();
+            return Optional.of(selectionShape.localToScreen(localBounds));
+        }
     }
 
     public int getLineCount() {

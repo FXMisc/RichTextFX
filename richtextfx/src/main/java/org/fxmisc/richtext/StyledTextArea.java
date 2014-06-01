@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
@@ -133,15 +134,20 @@ implements
     @Deprecated
     public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupWindow; }
 
-    private final ObjectProperty<Point2D> popupWindowAnchorOffset = new SimpleObjectProperty<>();
-    public void setPopupWindowAnchorOffset(Point2D offset) { popupWindowAnchorOffset.set(offset); }
-    public Point2D getPopupWindowAnchorOffset() { return popupWindowAnchorOffset.get(); }
-    public ObjectProperty<Point2D> popupWindowAnchorOffsetProperty() { return popupWindowAnchorOffset; }
+    private final ObjectProperty<Point2D> popupAnchorOffset = new SimpleObjectProperty<>();
+    public void setPopupAnchorOffset(Point2D offset) { popupAnchorOffset.set(offset); }
+    public Point2D getPopupAnchorOffset() { return popupAnchorOffset.get(); }
+    public ObjectProperty<Point2D> popupAnchorOffsetProperty() { return popupAnchorOffset; }
 
-    private final ObjectProperty<UnaryOperator<Point2D>> popupWindowAnchorAdjustment = new SimpleObjectProperty<>();
-    public void setPopupWindowAnchorAdjustment(UnaryOperator<Point2D> f) { popupWindowAnchorAdjustment.set(f); }
-    public UnaryOperator<Point2D> getPopupWindowAnchorAdjustment() { return popupWindowAnchorAdjustment.get(); }
-    public ObjectProperty<UnaryOperator<Point2D>> popupWindowAnchorAdjustmentProperty() { return popupWindowAnchorAdjustment; }
+    private final ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustment = new SimpleObjectProperty<>();
+    public void setPopupAnchorAdjustment(UnaryOperator<Point2D> f) { popupAnchorAdjustment.set(f); }
+    public UnaryOperator<Point2D> getPopupAnchorAdjustment() { return popupAnchorAdjustment.get(); }
+    public ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustmentProperty() { return popupAnchorAdjustment; }
+
+    private final ObjectProperty<PopupAlignment> popupAlignment = new SimpleObjectProperty<>(CARET_TOP);
+    public void setPopupAlignment(PopupAlignment pos) { popupAlignment.set(pos); }
+    public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
+    public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
 
 
     /**************************************************************************

@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -22,6 +24,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.MouseDragEvent;
@@ -36,6 +40,7 @@ import javafx.util.Duration;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.PopupAlignment;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
@@ -140,12 +145,13 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // follow the caret every time the caret position or paragraphs change
         EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
-        EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty);
+        EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
+        // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
+        EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         EventSource<Void> positionPopupImpulse = new EventSource<>();
         subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret(() -> positionPopupImpulse.push(null)));
 
         // update selection in paragraphs
-        EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
         subscribeTo(selectionDirty.emitOn(areaDoneUpdating), x -> {
             IndexRange visibleRange = listView.getVisibleRange();
             int startPar = visibleRange.getStart();
@@ -184,22 +190,23 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
         MonadicObservableValue<UnaryOperator<Point2D>> userFunction =
-                EasyBind.monadic(styledTextArea.popupWindowAnchorAdjustmentProperty());
+                EasyBind.monadic(styledTextArea.popupAnchorAdjustmentProperty());
         MonadicObservableValue<UnaryOperator<Point2D>> userOffset =
-                EasyBind.monadic(styledTextArea.popupWindowAnchorOffsetProperty())
+                EasyBind.monadic(styledTextArea.popupAnchorOffsetProperty())
                         .map(offset -> anchor -> anchor.add(offset));
         ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment = userFunction
                 .orElse(userOffset)
                 .orElse(UnaryOperator.identity());
 
-        // Position popup window whenever the window itself
+        // Position popup window whenever the window itself, its alignment,
         // or the position adjustment function changes.
         manageSubscription(EventStreams.combine(
                 EventStreams.valuesOf(styledTextArea.popupWindowProperty()),
+                EventStreams.valuesOf(styledTextArea.popupAlignmentProperty()),
                 EventStreams.valuesOf(popupAnchorAdjustment))
             .repeatOn(positionPopupImpulse)
-            .filter((p, f) -> p != null)
-            .subscribe((p, f) -> positionPopup(p, f)));
+            .filter((w, al, adj) -> w != null)
+            .subscribe((w, al, adj) -> positionPopup(w, al, adj)));
     }
 
 
@@ -355,18 +362,57 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         });
     }
 
-    private void positionPopup(PopupWindow popup, UnaryOperator<Point2D> adjustment) {
-        getCaretLocationOnScreen()
-                .map(adjustment)
-                .ifPresent(screenPos -> {
-                    popup.setAnchorX(screenPos.getX());
-                    popup.setAnchorY(screenPos.getY());
-                });
+    private void positionPopup(PopupWindow popup, PopupAlignment alignment, UnaryOperator<Point2D> adjustment) {
+        Optional<Bounds> bounds = null;
+        switch(alignment.getAnchorObject()) {
+            case CARET: bounds = getCaretBoundsOnScreen(); break;
+            case SELECTION: bounds = getSelectionBoundsOnScreen(); break;
+        }
+        bounds.ifPresent(b -> {
+            double x = 0, y = 0;
+            switch(alignment.getHorizontalAlignment()) {
+                case LEFT: x = b.getMinX(); break;
+                case H_CENTER: x = (b.getMinX() + b.getMaxX()) / 2; break;
+                case RIGHT: x = b.getMaxX(); break;
+            }
+            switch(alignment.getVerticalAlignment()) {
+                case TOP: y = b.getMinY();
+                case V_CENTER: y = (b.getMinY() + b.getMaxY()) / 2; break;
+                case BOTTOM: y = b.getMaxY(); break;
+            }
+            Point2D anchor = adjustment.apply(new Point2D(x, y));
+            popup.setAnchorX(anchor.getX());
+            popup.setAnchorY(anchor.getY());
+        });
     }
 
-    private Optional<Point2D> getCaretLocationOnScreen() {
+    private Optional<Bounds> getCaretBoundsOnScreen() {
         return listView.getVisibleCell(getSkinnable().getCurrentParagraph())
-                .map(cell -> cell.getParagraphGraphic().getCaretLocationOnScreen());
+                .map(cell -> cell.getParagraphGraphic().getCaretBoundsOnScreen());
+    }
+
+    private Optional<Bounds> getSelectionBoundsOnScreen() {
+        IndexRange selection = getSkinnable().getSelection();
+        if(selection.getLength() == 0) {
+            return getCaretBoundsOnScreen();
+        }
+
+        IndexRange visibleRange = listView.getVisibleRange();
+        Bounds[] bounds = IntStream.range(visibleRange.getStart(), visibleRange.getEnd())
+                .<Optional<Bounds>>mapToObj(i -> listView.getVisibleCell(i)
+                        .flatMap(cell -> cell.getParagraphGraphic().getSelectionBoundsOnScreen()))
+                .filter(opt -> opt.isPresent())
+                .map(opt -> opt.get())
+                .toArray(n -> new Bounds[n]);
+
+        if(bounds.length == 0) {
+            return Optional.empty();
+        }
+        double minX = Stream.of(bounds).mapToDouble(Bounds::getMinX).min().getAsDouble();
+        double maxX = Stream.of(bounds).mapToDouble(Bounds::getMaxX).max().getAsDouble();
+        double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
+        double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
+        return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
     }
 
     private void listenTo(Observable observable, InvalidationListener listener) {

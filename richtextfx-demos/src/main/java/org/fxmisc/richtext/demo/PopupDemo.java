@@ -9,6 +9,7 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 import org.fxmisc.richtext.InlineCssTextArea;
+import org.fxmisc.richtext.PopupAlignment;
 
 public class PopupDemo extends Application {
 
@@ -24,7 +25,8 @@ public class PopupDemo extends Application {
         Popup popup = new Popup();
         popup.getContent().add(new Button("I am a popup button!"));
         area.setPopupWindow(popup);
-        area.setPopupWindowAnchorOffset(new Point2D(4, 0));
+        area.setPopupAlignment(PopupAlignment.SELECTION_BOTTOM_CENTER);
+        area.setPopupAnchorOffset(new Point2D(4, 4));
 
         primaryStage.setScene(new Scene(new StackPane(area), 200, 200));
         primaryStage.show();
