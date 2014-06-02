@@ -209,6 +209,10 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
 ```
 
+#### Manual download
+
+[Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the fat JAR file (including dependencies) and place it on your classpath.
+
 
 License
 -------
