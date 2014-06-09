@@ -10,6 +10,11 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '[4.0,)'
 }
 
+javadoc {
+    // ignore missing Javadoc comments or tags
+    options.addStringOption('Xdoclint:all,-missing', '-quiet')
+}
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'

@@ -78,7 +78,7 @@ implements
     private static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Properties                                                             *
      *                                                                        *
@@ -88,7 +88,7 @@ implements
      * other means, i.e. they contain either the default value or the value   *
      * set by the client code.                                                *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     // editable property
     private final BooleanProperty editable = new EditableProperty<>(this);
@@ -164,7 +164,7 @@ implements
     public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *
      *                                                                        *
@@ -172,7 +172,7 @@ implements
      * control. They are not directly settable by the client code, but change *
      * in response to user input and/or API actions.                          *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     // text
     private final org.reactfx.inhibeans.binding.Binding<String> text;
@@ -234,11 +234,11 @@ implements
     public boolean isBeingUpdated() { return beingUpdated.isOn(); }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Event streams                                                          *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     // text changes
     private final InterceptableEventStream<PlainTextChange> plainTextChanges;
@@ -251,11 +251,11 @@ implements
     public final EventStream<RichTextChange<S>> richChanges() { return richTextChanges; }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     private Position selectionStart2D;
     private Position selectionEnd2D;
@@ -285,11 +285,11 @@ implements
     private final Guardian omniGuardian;
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Constructors                                                           *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     /**
      * Creates a text area with empty text content.
@@ -369,13 +369,13 @@ implements
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Queries                                                                *
      *                                                                        *
      * Queries are parameterized observables.                                 *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     @Override
     public final String getText(int start, int end) {
@@ -534,14 +534,14 @@ implements
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Actions                                                                *
      *                                                                        *
      * Actions change the state of this control. They typically cause a       *
      * change of one or more observables and/or produce an event.             *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     /**
      * Sets style for the given character range.
@@ -667,11 +667,11 @@ implements
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Look &amp; feel                                                        *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     @Override
     protected Skin<?> createDefaultSkin() {
@@ -690,11 +690,11 @@ implements
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Private methods                                                        *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());

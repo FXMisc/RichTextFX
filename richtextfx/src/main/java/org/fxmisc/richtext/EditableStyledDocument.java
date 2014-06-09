@@ -33,7 +33,7 @@ import org.reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
 final class EditableStyledDocument<S>
 extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *
      *                                                                        *
@@ -41,7 +41,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * They are not directly settable by the client code, but change in       *
      * response to user input and/or API actions.                             *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     /**
      * Content of this {@code StyledDocument}.
@@ -76,11 +76,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Event streams                                                          *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     // To publish a text change:
     //   1. push to textChangePosition,
@@ -139,11 +139,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Constructors                                                           *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
     EditableStyledDocument(S initialStyle) {
@@ -152,14 +152,14 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Actions                                                                *
      *                                                                        *
      * Actions change the state of the object. They typically cause a change  *
      * of one or more observables and/or produce an event.                    *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     public void replaceText(int start, int end, String replacement) {
         ensureValidRange(start, end);
@@ -315,11 +315,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Private methods                                                        *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     /**
      * Filters out illegal characters.

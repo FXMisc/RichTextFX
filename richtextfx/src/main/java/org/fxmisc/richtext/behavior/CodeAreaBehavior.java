@@ -126,7 +126,6 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     /**
      * Records the last KeyEvent we saw.
-     * @param e
      */
     @Override protected void callActionForEvent(KeyEvent e) {
         lastEvent = e;
