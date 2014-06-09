@@ -142,7 +142,25 @@ The former computes highlighting on the JavaFX application thread, while the lat
 
 [RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/RichText.java)
 
-Source code of this demo is dedicated to the public domain.
+
+### 3. Custom tooltips
+
+When the mouse pauses over the text area, you can get index of the character under the mouse. This allows you to implement, for example, custom tooltips whose content depends on the text under the mouse.
+
+![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/tooltip-demo.png)
+
+#### Run using the pre-built JAR
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.2/richtextfx-demos-fat-0.2.jar) the pre-built "fat" JAR file and run
+
+    java -cp richtextfx-demos-fat-0.2.jar org.fxmisc.richtext.demo.TooltipDemo
+
+#### Run from the source repo
+
+    gradle TooltipDemo
+
+#### Source code
+
+[TooltipDemo.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
 
 
 Use RichTextFX in your project
