@@ -94,7 +94,7 @@ Requirements
 Demos
 -----
 
-### 1. Automatic highlighting of Java keywords
+### Automatic highlighting of Java keywords
 
 ![Screenshot of the JavaKeywords demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/java-keywords.png)
 
@@ -125,7 +125,7 @@ or
 The former computes highlighting on the JavaFX application thread, while the latter computes highlighting on a background thread.
 
 
-### 2. Rich-text editor
+### Rich-text editor
 
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
@@ -143,7 +143,7 @@ The former computes highlighting on the JavaFX application thread, while the lat
 [RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/RichText.java)
 
 
-### 3. Custom tooltips
+### Custom tooltips
 
 When the mouse pauses over the text area, you can get index of the character under the mouse. This allows you to implement, for example, custom tooltips whose content depends on the text under the mouse.
 
