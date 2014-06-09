@@ -29,13 +29,6 @@ package org.fxmisc.richtext.behavior;
 import static com.sun.javafx.PlatformUtil.*;
 import static com.sun.javafx.scene.control.skin.resources.ControlResources.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
-import org.fxmisc.richtext.TwoDimensional.Position;
-import org.fxmisc.richtext.skin.ParagraphCell;
-import org.fxmisc.richtext.skin.StyledTextAreaSkin;
-
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -50,6 +43,12 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
+
+import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TwoDimensional.Position;
+import org.fxmisc.richtext.skin.ParagraphCell;
+import org.fxmisc.richtext.skin.StyledTextAreaSkin;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.text.HitInfo;
@@ -345,8 +344,7 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
     private void goToLine(Position targetLine, SelectionPolicy selectionPolicy) {
         // compute new caret position
-        HitInfo hit = skin.hit(targetLine, getTargetCaretOffset());
-        int newCaretPos = hit.getInsertionIndex();
+        int newCaretPos = skin.getInsertionIndex(targetLine, getTargetCaretOffset());
 
         // update model
         styledTextArea.moveTo(newCaretPos, selectionPolicy);
@@ -396,8 +394,9 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
     }
 
     private void leftPress(MouseEvent e) {
-        ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
-        HitInfo hit = lineCell.hit(e);
+        @SuppressWarnings("unchecked")
+        ParagraphCell<S> cell = (ParagraphCell<S>) e.getSource();
+        HitInfo hit = hitCell(cell, e);
 
         if(e.isShiftDown()) {
             // On Mac always extend selection,
@@ -474,8 +473,9 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
             return;
 
         // get the position within text
-        ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
-        HitInfo hit = lineCell.hit(e);
+        @SuppressWarnings("unchecked")
+        ParagraphCell<S> cell = (ParagraphCell<S>) e.getSource();
+        HitInfo hit = hitCell(cell, e);
 
         if (dragSelection == DragState.DRAG) {
             styledTextArea.positionCaret(hit.getInsertionIndex());
@@ -490,8 +490,9 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
-                HitInfo hit = lineCell.hit(e);
+                @SuppressWarnings("unchecked")
+                ParagraphCell<S> cell = (ParagraphCell<S>) e.getSource();
+                HitInfo hit = hitCell(cell, e);
                 styledTextArea.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
@@ -509,11 +510,32 @@ public class CodeAreaBehavior<S> extends BehaviorBase<StyledTextArea<S>> {
 
         if(dragSelection == DragState.DRAG) {
             // get the position within text
-            ParagraphCell<S> lineCell = (ParagraphCell<S>) e.getSource();
-            HitInfo hit = lineCell.hit(e);
+            @SuppressWarnings("unchecked")
+            ParagraphCell<S> cell = (ParagraphCell<S>) e.getSource();
+            HitInfo hit = hitCell(cell, e);
 
             styledTextArea.moveSelectedText(hit.getInsertionIndex());
         }
+    }
+
+    private HitInfo hitCell(ParagraphCell<S> cell, MouseEvent e) {
+        if(cell.isEmpty()) {
+            return leadingEdgeOf(styledTextArea.getLength());
+        } else {
+            int cellIdx = cell.getIndex();
+            int cellOffset = styledTextArea.position(cellIdx, 0).toOffset();
+            return cell.hit(e).map(hit -> {
+                hit.setCharIndex(hit.getCharIndex() + cellOffset);
+                return hit;
+            }).orElseGet(() -> leadingEdgeOf(cellOffset + cell.getItem().length()));
+        }
+    }
+
+    private HitInfo leadingEdgeOf(int charIdx) {
+        HitInfo hit = new HitInfo();
+        hit.setCharIndex(charIdx);
+        hit.setLeading(true);
+        return hit;
     }
 
     class ContextMenuItem extends MenuItem {

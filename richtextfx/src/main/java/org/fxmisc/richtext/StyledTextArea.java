@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -148,6 +149,19 @@ implements
     public void setPopupAlignment(PopupAlignment pos) { popupAlignment.set(pos); }
     public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
     public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
+
+    /**
+     * Defines how long the mouse has to stay still over the text before a
+     * {@link MouseOverTextEvent} of type {@code MOUSE_OVER_TEXT_BEGIN} is
+     * fired on this text area. When set to {@code null}, no
+     * {@code MouseOverTextEvent}s are fired on this text area.
+     *
+     * <p>Default value is {@code null}.
+     */
+    private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
+    public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
+    public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
+    public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
 
     /**************************************************************************

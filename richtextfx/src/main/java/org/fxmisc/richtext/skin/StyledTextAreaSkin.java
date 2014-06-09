@@ -2,6 +2,7 @@ package org.fxmisc.richtext.skin;
 
 import static org.reactfx.EventStreams.*;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -21,9 +22,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
+import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -35,10 +39,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
-import javafx.util.Duration;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
+import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.PopupAlignment;
 import org.fxmisc.richtext.StyledTextArea;
@@ -96,7 +100,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     private Subscription subscriptions = () -> {};
 
-    private final BooleanPulse caretPulse = new BooleanPulse(Duration.seconds(.5));
+    private final BooleanPulse caretPulse = new BooleanPulse(javafx.util.Duration.seconds(.5));
 
     private final BooleanBinding caretVisible;
 
@@ -120,12 +124,23 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // load the default style
         styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
 
+        // will keep track of currently used non-empty cells
+        @SuppressWarnings("unchecked")
+        ObservableSet<ParagraphCell<S>> nonEmptyCells = FXCollections.observableSet();
+
         // Initialize content
         listView = new MyListView<>(
                 styledTextArea.getParagraphs(),
                 lv -> { // Use ParagraphCell as cell implementation
                     ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
                     cellCreated(cell);
+                    valuesOf(cell.emptyProperty()).subscribe(empty -> {
+                        if(empty) {
+                            nonEmptyCells.remove(cell);
+                        } else {
+                            nonEmptyCells.add(cell);
+                        }
+                    });
                     return cell;
                 });
         getChildren().add(listView);
@@ -207,6 +222,14 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             .repeatOn(positionPopupImpulse)
             .filter((w, al, adj) -> w != null)
             .subscribe((w, al, adj) -> positionPopup(w, al, adj)));
+
+        // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
+        EventStreams.valuesOf(styledTextArea.mouseOverTextDelayProperty())
+                .flatMap(delay -> delay != null
+                        ? mouseOverTextEvents(nonEmptyCells, delay)
+                        : EventStreams.never())
+                .hook(evt -> Event.fireEvent(styledTextArea, evt))
+                .pin();
     }
 
 
@@ -249,8 +272,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
-    public HitInfo hit(Position targetLine, double x) {
-        return listView.mapCell(targetLine.getMajor(), c -> c.hit(targetLine.getMinor(), x));
+    public int getInsertionIndex(Position targetLine, double x) {
+        int parIdx = targetLine.getMajor();
+        int parInsertionIndex = listView.mapCell(parIdx, c -> getCellInsertionIndex(c, targetLine.getMinor(), x));
+        return getParagraphOffset(parIdx) + parInsertionIndex;
     }
 
     /**
@@ -337,6 +362,22 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
 
     private ParagraphCell<S> getCell(int index) {
         return listView.getVisibleCell(index).get();
+    }
+
+    private int getCellInsertionIndex(ParagraphCell<S> cell, int line, double x) {
+        return cell.hitGraphic(line, x)
+                .map(HitInfo::getInsertionIndex)
+                .orElse(cell.getItem().length());
+    }
+
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphCell<S>> cells, Duration delay) {
+        return merge(cells, c -> c.stationaryIndices(delay).unify(
+                l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
+                r -> MouseOverTextEvent.end()));
+    }
+
+    private int getParagraphOffset(int parIdx) {
+        return getSkinnable().position(parIdx, 0).toOffset();
     }
 
     private void updateWrapWidth() {

@@ -165,17 +165,18 @@ public class ParagraphGraphic<S> extends TextFlow {
         return selectionShape.fillProperty();
     }
 
-    HitInfo hit(int lineIndex, double x) {
+    Optional<HitInfo> hit(int lineIndex, double x) {
         return hit(x, getLineCenter(lineIndex));
     }
 
-    HitInfo hit(double x, double y) {
+    Optional<HitInfo> hit(double x, double y) {
         HitInfo hit = textLayout().getHitInfo((float)x, (float)y);
 
-        if(hit.getCharIndex() == paragraph.length()) // clicked beyond the end of line
-            hit.setLeading(true); // prevent going to the start of the next line
-
-        return hit;
+        if(hit.getCharIndex() == paragraph.length()) { // clicked beyond the end of line
+            return Optional.empty();
+        } else {
+            return Optional.of(hit);
+        }
     }
 
     public double getCaretOffsetX() {

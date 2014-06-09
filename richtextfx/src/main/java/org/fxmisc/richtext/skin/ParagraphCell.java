@@ -1,10 +1,14 @@
 package org.fxmisc.richtext.skin;
 
+import static org.reactfx.util.Tuples.*;
+
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
@@ -16,6 +20,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.util.MouseStationaryHelper;
+import org.reactfx.EitherEventStream;
+import org.reactfx.util.Either;
+import org.reactfx.util.Tuple2;
 
 import com.sun.javafx.scene.text.HitInfo;
 
@@ -50,6 +58,14 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
                 stopListening();
             }
         });
+    }
+
+    public EitherEventStream<Tuple2<Point2D, Integer>, Void> stationaryIndices(Duration delay) {
+        return new MouseStationaryHelper(this)
+                .events(delay)
+                .mapLeft(pos -> hit(pos).<Tuple2<Point2D, Integer>>map(hit -> t(pos, hit.getCharIndex())))
+                .<Tuple2<Point2D, Integer>>splitLeft(Either::leftOrNull)
+                .distinct();
     }
 
     @Override
@@ -113,51 +129,38 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     /**
      * Returns a HitInfo for the given mouse event.
-     * The returned character index is an index within the whole text content
-     * of the code area, not relative to this cell.
      *
-     * If this cell is empty, then the position at the end of text content
-     * is returned.
+     * Empty optional is returned if this cell is empty, or if clicked beyond
+     * the end of this cell's text,
      */
-    public HitInfo hit(MouseEvent e) {
+    public Optional<HitInfo> hit(MouseEvent e) {
+        return hit(e.getX(), e.getY());
+    }
+
+    private Optional<HitInfo> hit(Point2D pos) {
+        return hit(pos.getX(), pos.getY());
+    }
+
+    private Optional<HitInfo> hit(double x, double y) {
         if(isEmpty()) { // hit beyond the last line
-            return hitEnd();
+            return Optional.empty();
         } else {
             ParagraphGraphic<S> textFlow = getParagraphGraphic();
-            HitInfo hit = textFlow.hit(e.getX() - textFlow.getLayoutX(), e.getY());
-            return toGlobalHit(hit);
+            return textFlow.hit(x - textFlow.getLayoutX(), y);
         }
     }
 
     /**
      * Hits the embedded TextFlow at the given line and x offset.
-     * The returned character index is an index within the whole text
-     * content of the code area rather than relative to this cell.
+     * Assumes this cell is non-empty.
      *
-     * If this cell is empty, then the position at the end of text content
-     * is returned.
+     * @param x x coordinate relative to the graphic (TextFlow),
+     * not relative to the cell.
+     * @return HitInfo for the given line and x coordinate, or an empty
+     * optional if hit beyond the end.
      */
-    HitInfo hit(int line, double x) {
-        // obtain HitInfo relative to this paragraph
-        HitInfo hit = getParagraphGraphic().hit(line, x);
-
-        // add paragraph offset
-        return toGlobalHit(hit);
-    }
-
-    private HitInfo toGlobalHit(HitInfo hit) {
-        // add paragraph offset
-        int parOffset = skin.getSkinnable().position(getIndex(), 0).toOffset();
-        hit.setCharIndex(parOffset + hit.getCharIndex());
-
-        return hit;
-    }
-
-    private HitInfo hitEnd() {
-        HitInfo hit = new HitInfo();
-        hit.setCharIndex(skin.getSkinnable().getLength());
-        hit.setLeading(true);
-        return hit;
+    Optional<HitInfo> hitGraphic(int line, double x) {
+        return getParagraphGraphic().hit(line, x);
     }
 
     public double getCaretOffsetX() {
