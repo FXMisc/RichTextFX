@@ -100,13 +100,13 @@ Demos
 
 #### Run using the pre-built JAR
 
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-demos-fat-0.1.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.2/richtextfx-demos-fat-0.2.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.JavaKeywords
+    java -cp richtextfx-demos-fat-0.2.jar org.fxmisc.richtext.demo.JavaKeywords
 
 or
 
-    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
+    java -cp richtextfx-demos-fat-0.2.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
 
 #### Run from the source repo
 
@@ -130,9 +130,9 @@ The former computes highlighting on the JavaFX application thread, while the lat
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
 #### Run using the pre-built JAR
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-demos-fat-0.1.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.2/richtextfx-demos-fat-0.2.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.1.jar org.fxmisc.richtext.demo.RichText
+    java -cp richtextfx-demos-fat-0.2.jar org.fxmisc.richtext.demo.RichText
 
 #### Run from the source repo
 
@@ -168,31 +168,31 @@ Use RichTextFX in your project
 
 ### Stable release
 
-Current stable release is 0.1.
+Current stable release is 0.2.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.1     |
+| org.fxmisc.richtext | richtextfx  | 0.2     |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.1'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.2'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.1"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.2"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-0.1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.1/richtextfx-fat-0.1.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.2/richtextfx-0.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.2/richtextfx-fat-0.2.jar) and place it on your classpath.
 
 
 ### Snapshot releases
