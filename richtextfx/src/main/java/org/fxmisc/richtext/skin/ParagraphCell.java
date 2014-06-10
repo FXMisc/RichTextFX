@@ -27,7 +27,7 @@ import org.reactfx.util.Tuple2;
 
 import com.sun.javafx.scene.text.HitInfo;
 
-public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
+class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     private final StyledTextAreaVisual<S> visual;
     private final BiConsumer<Text, S> applyStyle;
     private final InvalidationListener onWrapWidthChange = obs -> requestLayout();

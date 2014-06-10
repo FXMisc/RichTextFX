@@ -58,7 +58,7 @@ import com.sun.javafx.scene.text.TextLayout;
 import com.sun.javafx.text.PrismTextLayout;
 import com.sun.javafx.text.TextLine;
 
-public class ParagraphGraphic<S> extends TextFlow {
+class ParagraphGraphic<S> extends TextFlow {
 
     private static Method mGetTextLayout;
     private static Method mGetLines;

@@ -24,7 +24,7 @@
  * questions.
  */
 
-package org.fxmisc.richtext.behavior;
+package org.fxmisc.richtext.skin;
 
 import java.util.function.Function;
 

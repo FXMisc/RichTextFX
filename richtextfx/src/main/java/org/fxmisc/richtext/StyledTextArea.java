@@ -43,7 +43,7 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
-import org.fxmisc.richtext.behavior.StyledTextAreaBehavior;
+import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
 import org.fxmisc.richtext.skin.StyledTextAreaVisual;
 import org.fxmisc.richtext.util.skin.BehaviorSkin;
 import org.fxmisc.undo.UndoManager;

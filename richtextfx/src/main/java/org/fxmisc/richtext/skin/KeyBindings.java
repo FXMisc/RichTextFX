@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.behavior;
+package org.fxmisc.richtext.skin;
 
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyEvent.*;
@@ -9,7 +9,7 @@ import java.util.List;
 
 import javafx.scene.input.KeyCode;
 
-import org.fxmisc.richtext.behavior.StyledTextAreaBehavior.Actions;
+import org.fxmisc.richtext.skin.StyledTextAreaBehavior.Actions;
 
 import com.sun.javafx.PlatformUtil;
 

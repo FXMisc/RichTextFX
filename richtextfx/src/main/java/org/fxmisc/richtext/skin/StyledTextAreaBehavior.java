@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.behavior;
+package org.fxmisc.richtext.skin;
 
 import static com.sun.javafx.PlatformUtil.*;
 import static javafx.scene.input.MouseDragEvent.*;
@@ -19,8 +19,6 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
-import org.fxmisc.richtext.skin.ParagraphCell;
-import org.fxmisc.richtext.skin.StyledTextAreaVisual;
 import org.fxmisc.richtext.util.skin.Behavior;
 import org.reactfx.Subscription;
 
@@ -53,7 +51,7 @@ interface VerticalNavigation extends Action {
  */
 public class StyledTextAreaBehavior implements Behavior {
 
-    public static final class Actions {
+    static final class Actions {
         public static final Action Left = StyledTextAreaBehavior::left;
         public static final Action Right = StyledTextAreaBehavior::right;
         public static final Action SelectLeft = StyledTextAreaBehavior::selectLeft;
