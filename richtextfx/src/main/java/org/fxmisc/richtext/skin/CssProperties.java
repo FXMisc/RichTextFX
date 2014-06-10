@@ -10,13 +10,13 @@ import com.sun.javafx.css.converters.PaintConverter;
 class CssProperties {
 
     static class HighlightFillProperty extends StyleableObjectProperty<Paint> {
-        private final StyledTextAreaSkin<?> skin;
+        private final Object bean;
 
         private final CssMetaData<? extends Styleable, Paint> cssMetaData;
 
-        public HighlightFillProperty(StyledTextAreaSkin<?> skin, Paint initialValue) {
+        public HighlightFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
-            this.skin = skin;
+            this.bean = bean;
             cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
                     this, "-fx-highlight-fill", PaintConverter.getInstance(),
                     initialValue);
@@ -24,7 +24,7 @@ class CssProperties {
 
         @Override
         public Object getBean() {
-            return skin;
+            return bean;
         }
 
         @Override
@@ -39,13 +39,13 @@ class CssProperties {
     };
 
     static class HighlightTextFillProperty extends StyleableObjectProperty<Paint> {
-        private final StyledTextAreaSkin<?> skin;
+        private final Object bean;
 
         private final CssMetaData<? extends Styleable, Paint> cssMetaData;
 
-        public HighlightTextFillProperty(StyledTextAreaSkin<?> skin, Paint initialValue) {
+        public HighlightTextFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
-            this.skin = skin;
+            this.bean = bean;
             cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
                     this, "-fx-highlight-text-fill",
                     PaintConverter.getInstance(), initialValue);
@@ -53,7 +53,7 @@ class CssProperties {
 
         @Override
         public Object getBean() {
-            return skin;
+            return bean;
         }
 
         @Override

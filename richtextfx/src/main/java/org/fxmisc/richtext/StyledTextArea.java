@@ -43,7 +43,9 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
-import org.fxmisc.richtext.skin.StyledTextAreaSkin;
+import org.fxmisc.richtext.behavior.StyledTextAreaBehavior;
+import org.fxmisc.richtext.skin.StyledTextAreaVisual;
+import org.fxmisc.richtext.util.skin.BehaviorSkin;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -626,6 +628,7 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
+        text = filterInput(text);
         try(Guard g = omniGuardian.guard()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
@@ -675,7 +678,10 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new StyledTextAreaSkin<S>(this, applyStyle);
+        return new BehaviorSkin<>(
+                this,
+                area -> new StyledTextAreaVisual<>(area, applyStyle),
+                (area, visual) -> new StyledTextAreaBehavior(area, visual));
     }
 
     @Override
@@ -695,6 +701,25 @@ implements
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
+
+    /**
+     * Filters out illegal characters.
+     */
+    private static String filterInput(String txt) {
+        if(txt.chars().allMatch(c -> isLegal((char) c))) {
+            return txt;
+        } else {
+            StringBuilder sb = new StringBuilder(txt.length());
+            txt.chars().filter(c -> isLegal((char) c)).forEach(c -> sb.append((char) c));
+            return sb.toString();
+        }
+    }
+
+    private static boolean isLegal(char c) {
+        return !Character.isISOControl(c)
+                || LineTerminator.isLineTerminatorChar(c)
+                || c == '\t';
+    }
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());

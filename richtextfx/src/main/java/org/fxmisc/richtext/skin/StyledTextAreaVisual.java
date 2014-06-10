@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.skin;
 
 import static org.reactfx.EventStreams.*;
+import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -31,8 +32,8 @@ import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
@@ -48,27 +49,27 @@ import org.fxmisc.richtext.PopupAlignment;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
-import org.fxmisc.richtext.behavior.CodeAreaBehavior;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
+import org.fxmisc.richtext.util.skin.VisualBase;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
+import org.reactfx.util.Tuple2;
 
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import com.sun.javafx.scene.text.HitInfo;
 
 /**
  * Code area skin.
  */
-public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, CodeAreaBehavior<S>> {
+public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Properties                                                             *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     /**
      * Background fill for highlighted text.
@@ -83,20 +84,35 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
             = new HighlightTextFillProperty(this, Color.WHITE);
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
+     *                                                                        *
+     * Event streams                                                          *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Stream of all mouse events on all cells. May be used by behavior.
+     */
+    private final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents;
+    public final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents() {
+        return cellMouseEvents;
+    }
+
+
+    /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     private Subscription subscriptions = () -> {};
 
@@ -111,20 +127,25 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     private final TwoLevelNavigator navigator;
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Constructors                                                           *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
-    public StyledTextAreaSkin(final StyledTextArea<S> styledTextArea, BiConsumer<Text, S> applyStyle) {
-        super(styledTextArea, new CodeAreaBehavior<S>(styledTextArea));
-        getBehavior().setCodeAreaSkin(this);
+    public StyledTextAreaVisual(
+            StyledTextArea<S> styledTextArea,
+            BiConsumer<Text, S> applyStyle) {
+        super(styledTextArea);
 
         // load the default style
-        styledTextArea.getStylesheets().add(StyledTextAreaSkin.class.getResource("styled-text-area.css").toExternalForm());
+        styledTextArea.getStylesheets().add(StyledTextAreaVisual.class.getResource("styled-text-area.css").toExternalForm());
 
-        // will keep track of currently used non-empty cells
+        // keeps track of all cells
+        @SuppressWarnings("unchecked")
+        ObservableSet<ParagraphCell<S>> cells = FXCollections.observableSet();
+
+        // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
         ObservableSet<ParagraphCell<S>> nonEmptyCells = FXCollections.observableSet();
 
@@ -132,8 +153,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         listView = new MyListView<>(
                 styledTextArea.getParagraphs(),
                 lv -> { // Use ParagraphCell as cell implementation
-                    ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaSkin.this, applyStyle);
-                    cellCreated(cell);
+                    ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaVisual.this, applyStyle);
+                    cells.add(cell);
                     valuesOf(cell.emptyProperty()).subscribe(empty -> {
                         if(empty) {
                             nonEmptyCells.remove(cell);
@@ -141,12 +162,12 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                             nonEmptyCells.add(cell);
                         }
                     });
+                    cellCreated(cell);
                     return cell;
                 });
-        getChildren().add(listView);
 
         // initialize navigator
-        IntSupplier cellCount = () -> getSkinnable().getParagraphs().size();
+        IntSupplier cellCount = () -> getControl().getParagraphs().size();
         IntUnaryOperator cellLength = i -> listView.mapCell(i, c -> c.getLineCount());
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
@@ -230,14 +251,31 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
                         : EventStreams.never())
                 .hook(evt -> Event.fireEvent(styledTextArea, evt))
                 .pin();
+
+        // initialize stream of all mouse events on all cells
+        cellMouseEvents = merge(
+                cells,
+                c -> eventsOf(c, MouseEvent.ANY).map(e -> t(c, e)));
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
+     *                                                                        *
+     * Public API (from Visual)                                               *
+     *                                                                        *
+     * ********************************************************************** */
+
+    @Override
+    public Node getNode() {
+        return listView;
+    }
+
+
+    /* ********************************************************************** *
      *                                                                        *
      * Actions                                                                *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     public void showAsFirst(int index) {
         listView.showAsFirst(index);
@@ -253,11 +291,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Queries                                                                *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     public int getFirstVisibleIndex() {
         return listView.getFirstVisibleIndex();
@@ -268,7 +306,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     public double getCaretOffsetX() {
-        int idx = getSkinnable().getCurrentParagraph();
+        int idx = getControl().getCurrentParagraph();
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
@@ -284,7 +322,7 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
      * number is the line number within the paragraph.
      */
     public Position currentLine() {
-        int parIdx = getSkinnable().getCurrentParagraph();
+        int parIdx = getControl().getCurrentParagraph();
         int lineIdx = getCell(parIdx).getCurrentLineIndex();
 
         return position(parIdx, lineIdx);
@@ -295,11 +333,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
      *                                                                        *
      * Look &amp; feel                                                        *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
@@ -309,16 +347,32 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
 
-    /**************************************************************************
+    /* ********************************************************************** *
+     *                                                                        *
+     * Package private methods                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Used by ParagraphCell, but should refactor so that ParagraphCell doesn't
+     * need it.
+     */
+    @Deprecated
+    StyledTextArea<S> getArea() {
+        return getControl();
+    }
+
+
+    /* ********************************************************************** *
      *                                                                        *
      * Private methods                                                        *
      *                                                                        *
-     **************************************************************************/
+     * ********************************************************************** */
 
     private void cellCreated(ParagraphCell<S> cell) {
         BooleanBinding hasCaret = Bindings.equal(
                 cell.indexProperty(),
-                getSkinnable().currentParagraphProperty());
+                getControl().currentParagraphProperty());
 
         // caret is visible only in the paragraph with the caret
         cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
@@ -330,34 +384,8 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
         // when the cell is the one with the caret
         EasyBind.bindConditionally(
                 cell.caretPositionProperty(),
-                getSkinnable().caretColumnProperty(),
+                getControl().caretColumnProperty(),
                 hasCaret);
-
-        // listen to mouse events on lines
-        cell.addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
-            getBehavior().mousePressed(event);
-            event.consume();
-        });
-        cell.addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
-            // startFullDrag() causes subsequent drag events to be
-            // received by corresponding LineCells, instead of all
-            // events being delivered to the original LineCell.
-            cell.getScene().startFullDrag();
-            getBehavior().dragDetected(event);
-            event.consume();
-        });
-        cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_OVER, event -> {
-            getBehavior().mouseDragOver(event);
-            event.consume();
-        });
-        cell.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, event -> {
-            getBehavior().mouseDragReleased(event);
-            event.consume();
-        });
-        cell.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
-            getBehavior().mouseReleased(event);
-            event.consume();
-        });
     }
 
     private ParagraphCell<S> getCell(int index) {
@@ -377,11 +405,11 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private int getParagraphOffset(int parIdx) {
-        return getSkinnable().position(parIdx, 0).toOffset();
+        return getControl().position(parIdx, 0).toOffset();
     }
 
     private void updateWrapWidth() {
-        if(getSkinnable().isWrapText()) {
+        if(getControl().isWrapText()) {
             wrapWidth.bind(listView.widthProperty());
         } else {
             wrapWidth.unbind();
@@ -390,10 +418,10 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private void followCaret(Runnable callback) {
-        int par = getSkinnable().getCurrentParagraph();
+        int par = getControl().getCurrentParagraph();
 
         // Bring the current paragraph to the viewport, then update the popup.
-        Paragraph<S> paragraph = getSkinnable().getParagraphs().get(par);
+        Paragraph<S> paragraph = getControl().getParagraphs().get(par);
         listView.show(par, item -> {
             // Since this callback is executed on the next pulse,
             // make sure the item (paragraph) hasn't changed in the meantime.
@@ -428,12 +456,12 @@ public class StyledTextAreaSkin<S> extends BehaviorSkinBase<StyledTextArea<S>, C
     }
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
-        return listView.getVisibleCell(getSkinnable().getCurrentParagraph())
+        return listView.getVisibleCell(getControl().getCurrentParagraph())
                 .map(cell -> cell.getParagraphGraphic().getCaretBoundsOnScreen());
     }
 
     private Optional<Bounds> getSelectionBoundsOnScreen() {
-        IndexRange selection = getSkinnable().getSelection();
+        IndexRange selection = getControl().getSelection();
         if(selection.getLength() == 0) {
             return getCaretBoundsOnScreen();
         }

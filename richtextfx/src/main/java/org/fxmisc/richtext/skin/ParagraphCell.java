@@ -28,7 +28,7 @@ import org.reactfx.util.Tuple2;
 import com.sun.javafx.scene.text.HitInfo;
 
 public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
-    private final StyledTextAreaSkin<S> skin;
+    private final StyledTextAreaVisual<S> visual;
     private final BiConsumer<Text, S> applyStyle;
     private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
 
@@ -47,8 +47,8 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     private final Property<Number> caretPosition = graphic.selectProperty(ParagraphGraphic::caretPositionProperty);
     public Property<Number> caretPositionProperty() { return caretPosition; }
 
-    public ParagraphCell(StyledTextAreaSkin<S> skin, BiConsumer<Text, S> applyStyle) {
-        this.skin = skin;
+    public ParagraphCell(StyledTextAreaVisual<S> visual, BiConsumer<Text, S> applyStyle) {
+        this.visual = visual;
         this.applyStyle = applyStyle;
 
         emptyProperty().addListener((obs, wasEmpty, isEmpty) -> {
@@ -75,7 +75,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         if(!empty) {
             ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
 
-            StyledTextArea<S> area = skin.getSkinnable();
+            StyledTextArea<S> area = visual.getArea();
             graphic.setSelection(area.getParagraphSelection(getIndex()));
 
             setGraphic(graphic);
@@ -111,7 +111,7 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     }
 
     private double getWrapWidth() {
-        double skinWrapWidth = skin.wrapWidth.get();
+        double skinWrapWidth = visual.wrapWidth.get();
         if(skinWrapWidth == Region.USE_COMPUTED_SIZE) {
             return Region.USE_COMPUTED_SIZE;
         } else {
@@ -120,11 +120,11 @@ public class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     }
 
     private void startListening() {
-        skin.wrapWidth.addListener(onWrapWidthChange);
+        visual.wrapWidth.addListener(onWrapWidthChange);
     }
 
     private void stopListening() {
-        skin.wrapWidth.removeListener(onWrapWidthChange);
+        visual.wrapWidth.removeListener(onWrapWidthChange);
     }
 
     /**

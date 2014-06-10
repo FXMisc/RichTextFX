@@ -163,7 +163,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     public void replaceText(int start, int end, String replacement) {
         ensureValidRange(start, end);
-        replace(start, end, filterInput(replacement),
+        replace(start, end, replacement,
                 (repl, pos) -> stringToParagraphs(repl, getStyleForInsertionAt(pos)),
                 repl -> {
                     insertedText.push(repl);
@@ -320,25 +320,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
-
-    /**
-     * Filters out illegal characters.
-     */
-    private static String filterInput(String txt) {
-        if(txt.chars().allMatch(c -> isLegal((char) c))) {
-            return txt;
-        } else {
-            StringBuilder sb = new StringBuilder(txt.length());
-            txt.chars().filter(c -> isLegal((char) c)).forEach(c -> sb.append((char) c));
-            return sb.toString();
-        }
-    }
-
-    private static boolean isLegal(char c) {
-        return !Character.isISOControl(c)
-                || LineTerminator.isLineTerminatorChar(c)
-                || c == '\t';
-    }
 
     private static <S> List<Paragraph<S>> stringToParagraphs(String str, S style) {
         Matcher m = LineTerminator.regex().matcher(str);
