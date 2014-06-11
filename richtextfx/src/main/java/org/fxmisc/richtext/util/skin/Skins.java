@@ -27,7 +27,6 @@ public final class Skins {
      *
      * <pre>
      * {@code
-     * {@literal @}Override
      * protected Skin<?> createDefaultSkin() {
      *     return Skins.createSimpleSkin(
      *             this,
@@ -41,7 +40,6 @@ public final class Skins {
      *
      * <pre>
      * {@code
-     * {@literal @}Override
      * protected Skin<?> createDefaultSkin() {
      *     return Skins.createSimpleSkin(this, FooVisual::new, FooBehavior::new);
      * }
@@ -91,7 +89,6 @@ public final class Skins {
      *
      * <pre>
      * {@code
-     * {@literal @}Override
      * protected Skin<?> createDefaultSkin() {
      *     return Skins.createComplexSkin(
      *             this,
@@ -105,7 +102,6 @@ public final class Skins {
      *
      * <pre>
      * {@code
-     * {@literal @}Override
      * protected Skin<?> createDefaultSkin() {
      *     return Skins.createComplexSkin(this, FooVisual::new, FooBehavior::new);
      * }
