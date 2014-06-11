@@ -678,7 +678,7 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return Skins.simpleSkin(
+        return Skins.createSimpleSkin(
                 this,
                 area -> new StyledTextAreaVisual<>(area, applyStyle),
                 StyledTextAreaBehavior::new);
