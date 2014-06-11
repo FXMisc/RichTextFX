@@ -29,6 +29,7 @@ import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -51,7 +52,7 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
-import org.fxmisc.richtext.util.skin.VisualBase;
+import org.fxmisc.richtext.util.skin.SimpleVisual;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -63,7 +64,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Code area skin.
  */
-public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
+public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -107,12 +108,21 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
         return cellMouseEvents;
     }
 
+    /**
+     * Convenient way to subscribe to events on the control.
+     */
+    public <E extends Event> EventStream<E> events(EventType<E> eventType) {
+        return EventStreams.eventsOf(area, eventType);
+    }
+
 
     /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
      * ********************************************************************** */
+
+    private final StyledTextArea<S> area;
 
     private Subscription subscriptions = () -> {};
 
@@ -136,10 +146,10 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     public StyledTextAreaVisual(
             StyledTextArea<S> styledTextArea,
             BiConsumer<Text, S> applyStyle) {
-        super(styledTextArea);
+        this.area = styledTextArea;
 
         // load the default style
-        styledTextArea.getStylesheets().add(StyledTextAreaVisual.class.getResource("styled-text-area.css").toExternalForm());
+        area.getStylesheets().add(StyledTextAreaVisual.class.getResource("styled-text-area.css").toExternalForm());
 
         // keeps track of all cells
         @SuppressWarnings("unchecked")
@@ -151,7 +161,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
 
         // Initialize content
         listView = new MyListView<>(
-                styledTextArea.getParagraphs(),
+                area.getParagraphs(),
                 lv -> { // Use ParagraphCell as cell implementation
                     ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaVisual.this, applyStyle);
                     cells.add(cell);
@@ -167,21 +177,21 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
                 });
 
         // initialize navigator
-        IntSupplier cellCount = () -> getControl().getParagraphs().size();
+        IntSupplier cellCount = () -> area.getParagraphs().size();
         IntUnaryOperator cellLength = i -> listView.mapCell(i, c -> c.getLineCount());
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
         // make wrapWidth behave according to the wrapText property
-        listenTo(styledTextArea.wrapTextProperty(), o -> updateWrapWidth());
+        listenTo(area.wrapTextProperty(), o -> updateWrapWidth());
         updateWrapWidth();
 
         // emits a value every time the area is done updating
-        EventStream<?> areaDoneUpdating = styledTextArea.beingUpdatedProperty().offs();
+        EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().offs();
 
         // follow the caret every time the caret position or paragraphs change
-        EventStream<Void> caretPosDirty = invalidationsOf(styledTextArea.caretPositionProperty());
+        EventStream<Void> caretPosDirty = invalidationsOf(area.caretPositionProperty());
         EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
-        EventStream<Void> selectionDirty = invalidationsOf(styledTextArea.selectionProperty());
+        EventStream<Void> selectionDirty = invalidationsOf(area.selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         EventSource<Void> positionPopupImpulse = new EventSource<>();
@@ -195,22 +205,22 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
 
             for(int i = startPar; i < endPar; ++i) {
                 ParagraphGraphic<S> graphic = getCell(i).getParagraphGraphic();
-                graphic.setSelection(styledTextArea.getParagraphSelection(i));
+                graphic.setSelection(area.getParagraphSelection(i));
             }
 
             // force selectionProperty() to be valid to make sure
             // we get invalidation notification on its next change
-            styledTextArea.selectionProperty().getValue();
+            area.selectionProperty().getValue();
         });
 
         // blink caret only when focused
-        listenTo(styledTextArea.focusedProperty(), (obs, old, isFocused) -> {
+        listenTo(area.focusedProperty(), (obs, old, isFocused) -> {
             if(isFocused)
                 caretPulse.start(true);
             else
                 caretPulse.stop(false);
         });
-        if(styledTextArea.isFocused()) {
+        if(area.isFocused()) {
             caretPulse.start(true);
         }
         manageSubscription(() -> caretPulse.stop());
@@ -218,17 +228,17 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
         // The caret is visible in periodic intervals, but only when
         // the code area is focused, editable and not disabled.
         caretVisible = caretPulse
-                .and(styledTextArea.focusedProperty())
-                .and(styledTextArea.editableProperty())
-                .and(styledTextArea.disabledProperty().not());
+                .and(area.focusedProperty())
+                .and(area.editableProperty())
+                .and(area.disabledProperty().not());
         manageSubscription(() -> caretVisible.dispose());
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
         MonadicObservableValue<UnaryOperator<Point2D>> userFunction =
-                EasyBind.monadic(styledTextArea.popupAnchorAdjustmentProperty());
+                EasyBind.monadic(area.popupAnchorAdjustmentProperty());
         MonadicObservableValue<UnaryOperator<Point2D>> userOffset =
-                EasyBind.monadic(styledTextArea.popupAnchorOffsetProperty())
+                EasyBind.monadic(area.popupAnchorOffsetProperty())
                         .map(offset -> anchor -> anchor.add(offset));
         ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment = userFunction
                 .orElse(userOffset)
@@ -237,19 +247,19 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
         // Position popup window whenever the window itself, its alignment,
         // or the position adjustment function changes.
         manageSubscription(EventStreams.combine(
-                EventStreams.valuesOf(styledTextArea.popupWindowProperty()),
-                EventStreams.valuesOf(styledTextArea.popupAlignmentProperty()),
+                EventStreams.valuesOf(area.popupWindowProperty()),
+                EventStreams.valuesOf(area.popupAlignmentProperty()),
                 EventStreams.valuesOf(popupAnchorAdjustment))
             .repeatOn(positionPopupImpulse)
             .filter((w, al, adj) -> w != null)
             .subscribe((w, al, adj) -> positionPopup(w, al, adj)));
 
         // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
-        EventStreams.valuesOf(styledTextArea.mouseOverTextDelayProperty())
+        EventStreams.valuesOf(area.mouseOverTextDelayProperty())
                 .flatMap(delay -> delay != null
                         ? mouseOverTextEvents(nonEmptyCells, delay)
                         : EventStreams.never())
-                .hook(evt -> Event.fireEvent(styledTextArea, evt))
+                .hook(evt -> Event.fireEvent(area, evt))
                 .pin();
 
         // initialize stream of all mouse events on all cells
@@ -306,7 +316,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     }
 
     public double getCaretOffsetX() {
-        int idx = getControl().getCurrentParagraph();
+        int idx = area.getCurrentParagraph();
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
@@ -322,7 +332,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
      * number is the line number within the paragraph.
      */
     public Position currentLine() {
-        int parIdx = getControl().getCurrentParagraph();
+        int parIdx = area.getCurrentParagraph();
         int lineIdx = getCell(parIdx).getCurrentLineIndex();
 
         return position(parIdx, lineIdx);
@@ -359,7 +369,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
      */
     @Deprecated
     StyledTextArea<S> getArea() {
-        return getControl();
+        return area;
     }
 
 
@@ -372,7 +382,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     private void cellCreated(ParagraphCell<S> cell) {
         BooleanBinding hasCaret = Bindings.equal(
                 cell.indexProperty(),
-                getControl().currentParagraphProperty());
+                area.currentParagraphProperty());
 
         // caret is visible only in the paragraph with the caret
         cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
@@ -384,7 +394,7 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
         // when the cell is the one with the caret
         EasyBind.bindConditionally(
                 cell.caretPositionProperty(),
-                getControl().caretColumnProperty(),
+                area.caretColumnProperty(),
                 hasCaret);
     }
 
@@ -405,11 +415,11 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     }
 
     private int getParagraphOffset(int parIdx) {
-        return getControl().position(parIdx, 0).toOffset();
+        return area.position(parIdx, 0).toOffset();
     }
 
     private void updateWrapWidth() {
-        if(getControl().isWrapText()) {
+        if(area.isWrapText()) {
             wrapWidth.bind(listView.widthProperty());
         } else {
             wrapWidth.unbind();
@@ -418,10 +428,10 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     }
 
     private void followCaret(Runnable callback) {
-        int par = getControl().getCurrentParagraph();
+        int par = area.getCurrentParagraph();
 
         // Bring the current paragraph to the viewport, then update the popup.
-        Paragraph<S> paragraph = getControl().getParagraphs().get(par);
+        Paragraph<S> paragraph = area.getParagraphs().get(par);
         listView.show(par, item -> {
             // Since this callback is executed on the next pulse,
             // make sure the item (paragraph) hasn't changed in the meantime.
@@ -456,12 +466,12 @@ public class StyledTextAreaVisual<S> extends VisualBase<StyledTextArea<S>> {
     }
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
-        return listView.getVisibleCell(getControl().getCurrentParagraph())
+        return listView.getVisibleCell(area.getCurrentParagraph())
                 .map(cell -> cell.getParagraphGraphic().getCaretBoundsOnScreen());
     }
 
     private Optional<Bounds> getSelectionBoundsOnScreen() {
-        IndexRange selection = getControl().getSelection();
+        IndexRange selection = area.getSelection();
         if(selection.getLength() == 0) {
             return getCaretBoundsOnScreen();
         }

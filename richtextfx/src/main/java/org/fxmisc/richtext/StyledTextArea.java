@@ -45,7 +45,7 @@ import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
 import org.fxmisc.richtext.skin.StyledTextAreaVisual;
-import org.fxmisc.richtext.util.skin.BehaviorSkin;
+import org.fxmisc.richtext.util.skin.Skins;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -678,10 +678,10 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new BehaviorSkin<>(
+        return Skins.simpleSkin(
                 this,
                 area -> new StyledTextAreaVisual<>(area, applyStyle),
-                (area, visual) -> new StyledTextAreaBehavior(area, visual));
+                StyledTextAreaBehavior::new);
     }
 
     @Override
