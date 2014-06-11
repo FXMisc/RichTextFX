@@ -31,7 +31,7 @@ public final class Skins {
      *     return Skins.createSimpleSkin(
      *             this,
      *             control -> new FooVisual<>(control),
-     *             (control, visual) -> new FooBehavior(control, visual);
+     *             (control, visual) -> new FooBehavior(control, visual));
      * }
      * }
      * </pre>
@@ -93,7 +93,7 @@ public final class Skins {
      *     return Skins.createComplexSkin(
      *             this,
      *             control -> new FooVisual<>(control),
-     *             (control, visual) -> new FooBehavior(control, visual);
+     *             (control, visual) -> new FooBehavior(control, visual));
      * }
      * }
      * </pre>
