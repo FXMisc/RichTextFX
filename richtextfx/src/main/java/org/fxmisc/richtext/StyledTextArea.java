@@ -77,7 +77,10 @@ implements
         UndoActions<S>,
         TwoDimensional {
 
-    private static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
+    /**
+     * Index range [0, 0).
+     */
+    public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
 
     /* ********************************************************************** *
@@ -203,7 +206,7 @@ implements
     @Override public final ObservableIntegerValue anchorProperty() { return anchor; }
 
     // selection
-    private final ObjectProperty<IndexRange> internalSelection = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<IndexRange> internalSelection = new SimpleObjectProperty<>(EMPTY_RANGE);
     private final org.reactfx.inhibeans.binding.ObjectBinding<IndexRange> selection =
             org.reactfx.inhibeans.binding.ObjectBinding.wrap(internalSelection);
     @Override public final IndexRange getSelection() { return selection.getValue(); }
@@ -332,6 +335,8 @@ implements
         caretColumn = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
                 EasyBind.map(caretPosition2D, p -> p.getMinor()));
 
+        selectionStart2D = position(0, 0);
+        selectionEnd2D = position(0, 0);
         internalSelection.addListener(obs -> {
             IndexRange sel = internalSelection.get();
             selectionStart2D = offsetToPosition(sel.getStart(), Forward);
@@ -339,7 +344,6 @@ implements
                     ? selectionStart2D
                     : selectionStart2D.offsetBy(sel.getLength(), Backward);
         });
-        internalSelection.set(EMPTY_RANGE);
 
         selectedText = new org.reactfx.inhibeans.binding.StringBinding() {
             { bind(internalSelection, content.textProperty()); }
@@ -423,6 +427,9 @@ implements
 
         int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
         int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
+
+        // force selectionProperty() to be valid
+        getSelection();
 
         return new IndexRange(start, end);
     }

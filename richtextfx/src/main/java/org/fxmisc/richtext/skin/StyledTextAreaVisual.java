@@ -19,6 +19,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -189,21 +190,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         EventSource<Void> positionPopupImpulse = new EventSource<>();
         subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret(() -> positionPopupImpulse.push(null)));
 
-        // update selection in paragraphs
-        subscribeTo(selectionDirty.emitOn(areaDoneUpdating), x -> {
-            IndexRange visibleRange = listView.getVisibleRange();
-            int startPar = visibleRange.getStart();
-            int endPar = visibleRange.getEnd();
-
-            for(int i = startPar; i < endPar; ++i) {
-                getCell(i).setSelection(area.getParagraphSelection(i));
-            }
-
-            // force selectionProperty() to be valid to make sure
-            // we get invalidation notification on its next change
-            area.selectionProperty().getValue();
-        });
-
         // blink caret only when focused
         listenTo(area.focusedProperty(), (obs, old, isFocused) -> {
             if(isFocused)
@@ -350,22 +336,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     /* ********************************************************************** *
      *                                                                        *
-     * Package private methods                                                *
-     *                                                                        *
-     * ********************************************************************** */
-
-    /**
-     * Used by ParagraphCell, but should refactor so that ParagraphCell doesn't
-     * need it.
-     */
-    @Deprecated
-    StyledTextArea<S> getArea() {
-        return area;
-    }
-
-
-    /* ********************************************************************** *
-     *                                                                        *
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
@@ -387,6 +357,16 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
                 cell.caretPositionProperty(),
                 area.caretColumnProperty(),
                 hasCaret);
+
+        // keep paragraph selection updated
+        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
+            int idx = cell.getIndex();
+            return idx != -1
+                    ? area.getParagraphSelection(idx)
+                    : StyledTextArea.EMPTY_RANGE;
+        }, area.selectionProperty(), cell.indexProperty());
+        cell.selectionProperty().bind(cellSelection);
+        manageSubscription(() -> cellSelection.dispose());
     }
 
     private ParagraphCell<S> getCell(int index) {

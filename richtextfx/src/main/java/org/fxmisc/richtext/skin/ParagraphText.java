@@ -26,6 +26,7 @@ import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
+import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoLevelNavigator;
 
 import com.sun.javafx.scene.text.HitInfo;
@@ -61,8 +62,11 @@ class ParagraphText<S> extends TextFlow {
     public void setCaretPosition(int pos) { caretPosition.set(pos); }
     private final NumberBinding clampedCaretPosition;
 
+    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
+    public ObjectProperty<IndexRange> selectionProperty() { return selection; }
+    public void setSelection(IndexRange sel) { selection.set(sel); }
+
     private final Paragraph<S> paragraph;
-    private IndexRange selection;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -106,30 +110,14 @@ class ParagraphText<S> extends TextFlow {
             // see the note at highlightTextFill
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
-            // keep the caret graphic up to date
-            t.fontProperty().addListener(obs -> updateCaretShape());
-
-            // keep the selection graphic up to date
-            t.fontProperty().addListener(obs -> updateSelectionShape());
-
             getChildren().add(t);
         }
 
-        setCaretPosition(0);
-        setSelection(0, 0);
+        selection.addListener((obs, old, sel) -> updateSelectionShape());
     }
 
     public Paragraph<S> getParagraph() {
         return paragraph;
-    }
-
-    void setSelection(IndexRange selection) {
-        this.selection = selection;
-        updateSelectionShape();
-    }
-
-    void setSelection(int start, int end) {
-        setSelection(new IndexRange(start, end));
     }
 
     public BooleanProperty caretVisibleProperty() {
@@ -165,7 +153,7 @@ class ParagraphText<S> extends TextFlow {
     }
 
     public Optional<Bounds> getSelectionBoundsOnScreen() {
-        if(selection.getLength() == 0) {
+        if(selection.get().getLength() == 0) {
             return Optional.empty();
         } else {
             Bounds localBounds = selectionShape.getBoundsInLocal();
@@ -220,8 +208,8 @@ class ParagraphText<S> extends TextFlow {
     }
 
     private void updateSelectionShape() {
-        int start = selection.getStart();
-        int end = selection.getEnd();
+        int start = selection.get().getStart();
+        int end = selection.get().getEnd();
         PathElement[] shape = textLayout().getRange(start, end, TextLayout.TYPE_TEXT, 0, 0);
         selectionShape.getElements().setAll(shape);
     }
@@ -230,5 +218,6 @@ class ParagraphText<S> extends TextFlow {
     protected void layoutChildren() {
         super.layoutChildren();
         updateCaretShape();
+        updateSelectionShape();
     }
 }

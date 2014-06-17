@@ -20,7 +20,6 @@ import javafx.scene.text.Text;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
 import org.reactfx.EitherEventStream;
 import org.reactfx.util.Either;
@@ -48,6 +47,9 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     private final Property<Number> caretPosition = textFlow.selectProperty(ParagraphText::caretPositionProperty);
     public Property<Number> caretPositionProperty() { return caretPosition; }
 
+    private final Property<IndexRange> selection = textFlow.selectProperty(ParagraphText::selectionProperty);
+    public Property<IndexRange> selectionProperty() { return selection; }
+
     public ParagraphCell(StyledTextAreaVisual<S> visual, BiConsumer<Text, S> applyStyle) {
         this.visual = visual;
         this.applyStyle = applyStyle;
@@ -74,12 +76,7 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         super.updateItem(item, empty);
 
         if(!empty) {
-            ParagraphText<S> textFlow = new ParagraphText<S>(item, applyStyle);
-
-            StyledTextArea<S> area = visual.getArea();
-            textFlow.setSelection(area.getParagraphSelection(getIndex()));
-
-            setGraphic(textFlow);
+            setGraphic(new ParagraphText<S>(item, applyStyle));
         } else {
             setGraphic(null);
         }
@@ -167,10 +164,6 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
 
     public int getCurrentLineIndex() {
         return textFlow.getOpt().map(ParagraphText::currentLineIndex).orElse(0);
-    }
-
-    public void setSelection(IndexRange selection) {
-        textFlow.ifPresent(t -> t.setSelection(selection));
     }
 
     public Optional<Bounds> getCaretBoundsOnScreen() {
