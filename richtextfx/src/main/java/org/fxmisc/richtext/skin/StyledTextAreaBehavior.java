@@ -20,6 +20,7 @@ import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.util.skin.Behavior;
+import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 
 import com.sun.javafx.scene.text.HitInfo;
@@ -166,7 +167,7 @@ public class StyledTextAreaBehavior implements Behavior {
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
                         .subscribe(pair -> handleMouseEvent(pair._1, pair._2)),
-                visual.events(KeyEvent.ANY)
+                EventStreams.eventsOf(area, KeyEvent.ANY)
                         .subscribe(e -> handleKeyEvent(e)));
     }
 

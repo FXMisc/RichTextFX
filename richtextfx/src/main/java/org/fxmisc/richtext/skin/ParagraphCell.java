@@ -104,7 +104,7 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         if(isEmpty()) {
             return super.computePrefWidth(height);
         } else if(getWrapWidth() == Region.USE_COMPUTED_SIZE) {
-                return getParagraphGraphic().prefWidth(-1.0) + snappedLeftInset() + snappedRightInset();
+            return getParagraphGraphic().prefWidth(-1.0) + snappedLeftInset() + snappedRightInset();
         } else {
             return 0;
         }

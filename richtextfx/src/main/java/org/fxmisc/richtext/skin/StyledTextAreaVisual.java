@@ -29,7 +29,6 @@ import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.Event;
-import javafx.event.EventType;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -104,15 +103,8 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      * Stream of all mouse events on all cells. May be used by behavior.
      */
     private final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents;
-    public final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents() {
+    final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents() {
         return cellMouseEvents;
-    }
-
-    /**
-     * Convenient way to subscribe to events on the control.
-     */
-    public <E extends Event> EventStream<E> events(EventType<E> eventType) {
-        return EventStreams.eventsOf(area, eventType);
     }
 
 
@@ -280,66 +272,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         return listView;
     }
 
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Actions                                                                *
-     *                                                                        *
-     * ********************************************************************** */
-
-    public void showAsFirst(int index) {
-        listView.showAsFirst(index);
-    }
-
-    public void showAsLast(int index) {
-        listView.showAsLast(index);
-    }
-
     @Override
     public void dispose() {
         subscriptions.unsubscribe();
-    }
-
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Queries                                                                *
-     *                                                                        *
-     * ********************************************************************** */
-
-    public int getFirstVisibleIndex() {
-        return listView.getFirstVisibleIndex();
-    }
-
-    public int getLastVisibleIndex() {
-        return listView.getLastVisibleIndex();
-    }
-
-    public double getCaretOffsetX() {
-        int idx = area.getCurrentParagraph();
-        return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
-    }
-
-    public int getInsertionIndex(Position targetLine, double x) {
-        int parIdx = targetLine.getMajor();
-        int parInsertionIndex = listView.mapCell(parIdx, c -> getCellInsertionIndex(c, targetLine.getMinor(), x));
-        return getParagraphOffset(parIdx) + parInsertionIndex;
-    }
-
-    /**
-     * Returns the current line as a two-level index.
-     * The major number is the paragraph index, the minor
-     * number is the line number within the paragraph.
-     */
-    public Position currentLine() {
-        int parIdx = area.getCurrentParagraph();
-        int lineIdx = getCell(parIdx).getCurrentLineIndex();
-
-        return position(parIdx, lineIdx);
-    }
-
-    public Position position(int par, int line) {
-        return navigator.position(par, line);
     }
 
 
@@ -354,6 +289,63 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
                 highlightFill.getCssMetaData(),
                 highlightTextFill.getCssMetaData());
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    void showAsFirst(int index) {
+        listView.showAsFirst(index);
+    }
+
+    void showAsLast(int index) {
+        listView.showAsLast(index);
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Queries                                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    int getFirstVisibleIndex() {
+        return listView.getFirstVisibleIndex();
+    }
+
+    int getLastVisibleIndex() {
+        return listView.getLastVisibleIndex();
+    }
+
+    double getCaretOffsetX() {
+        int idx = area.getCurrentParagraph();
+        return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
+    }
+
+    int getInsertionIndex(Position targetLine, double x) {
+        int parIdx = targetLine.getMajor();
+        int parInsertionIndex = listView.mapCell(parIdx, c -> getCellInsertionIndex(c, targetLine.getMinor(), x));
+        return getParagraphOffset(parIdx) + parInsertionIndex;
+    }
+
+    /**
+     * Returns the current line as a two-level index.
+     * The major number is the paragraph index, the minor
+     * number is the line number within the paragraph.
+     */
+    Position currentLine() {
+        int parIdx = area.getCurrentParagraph();
+        int lineIdx = getCell(parIdx).getCurrentLineIndex();
+
+        return position(parIdx, lineIdx);
+    }
+
+    Position position(int par, int line) {
+        return navigator.position(par, line);
     }
 
 
