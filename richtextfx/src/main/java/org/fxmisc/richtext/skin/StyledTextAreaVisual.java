@@ -196,8 +196,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
             int endPar = visibleRange.getEnd();
 
             for(int i = startPar; i < endPar; ++i) {
-                ParagraphGraphic<S> graphic = getCell(i).getParagraphGraphic();
-                graphic.setSelection(area.getParagraphSelection(i));
+                getCell(i).setSelection(area.getParagraphSelection(i));
             }
 
             // force selectionProperty() to be valid to make sure
@@ -395,7 +394,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     }
 
     private int getCellInsertionIndex(ParagraphCell<S> cell, int line, double x) {
-        return cell.hitGraphic(line, x)
+        return cell.hitText(line, x)
                 .map(HitInfo::getInsertionIndex)
                 .orElse(cell.getItem().length());
     }
@@ -459,7 +458,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
         return listView.getVisibleCell(area.getCurrentParagraph())
-                .map(cell -> cell.getParagraphGraphic().getCaretBoundsOnScreen());
+                .flatMap(ParagraphCell::getCaretBoundsOnScreen);
     }
 
     private Optional<Bounds> getSelectionBoundsOnScreen() {
@@ -471,7 +470,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         IndexRange visibleRange = listView.getVisibleRange();
         Bounds[] bounds = IntStream.range(visibleRange.getStart(), visibleRange.getEnd())
                 .<Optional<Bounds>>mapToObj(i -> listView.getVisibleCell(i)
-                        .flatMap(cell -> cell.getParagraphGraphic().getSelectionBoundsOnScreen()))
+                        .flatMap(ParagraphCell::getSelectionBoundsOnScreen))
                 .filter(opt -> opt.isPresent())
                 .map(opt -> opt.get())
                 .toArray(n -> new Bounds[n]);

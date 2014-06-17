@@ -8,8 +8,9 @@ import java.util.function.BiConsumer;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
@@ -33,18 +34,18 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
     private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
 
     @SuppressWarnings("unchecked")
-    private final MonadicObservableValue<ParagraphGraphic<S>> graphic = EasyBind.monadic(graphicProperty()).map(g -> (ParagraphGraphic<S>) g);
+    private final MonadicObservableValue<ParagraphText<S>> textFlow = EasyBind.monadic(graphicProperty()).map(g -> (ParagraphText<S>) g);
 
-    private final Property<Boolean> caretVisible = graphic.selectProperty(ParagraphGraphic::caretVisibleProperty);
+    private final Property<Boolean> caretVisible = textFlow.selectProperty(ParagraphText::caretVisibleProperty);
     public Property<Boolean> caretVisibleProperty() { return caretVisible; }
 
-    private final Property<Paint> highlightFill = graphic.selectProperty(ParagraphGraphic::highlightFillProperty);
+    private final Property<Paint> highlightFill = textFlow.selectProperty(ParagraphText::highlightFillProperty);
     public Property<Paint> highlightFillProperty() { return highlightFill; }
 
-    private final Property<Paint> highlightTextFill = graphic.selectProperty(ParagraphGraphic::highlightTextFillProperty);
+    private final Property<Paint> highlightTextFill = textFlow.selectProperty(ParagraphText::highlightTextFillProperty);
     public Property<Paint> highlightTextFillProperty() { return highlightTextFill; }
 
-    private final Property<Number> caretPosition = graphic.selectProperty(ParagraphGraphic::caretPositionProperty);
+    private final Property<Number> caretPosition = textFlow.selectProperty(ParagraphText::caretPositionProperty);
     public Property<Number> caretPositionProperty() { return caretPosition; }
 
     public ParagraphCell(StyledTextAreaVisual<S> visual, BiConsumer<Text, S> applyStyle) {
@@ -73,12 +74,12 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         super.updateItem(item, empty);
 
         if(!empty) {
-            ParagraphGraphic<S> graphic = new ParagraphGraphic<S>(item, applyStyle);
+            ParagraphText<S> textFlow = new ParagraphText<S>(item, applyStyle);
 
             StyledTextArea<S> area = visual.getArea();
-            graphic.setSelection(area.getParagraphSelection(getIndex()));
+            textFlow.setSelection(area.getParagraphSelection(getIndex()));
 
-            setGraphic(graphic);
+            setGraphic(textFlow);
         } else {
             setGraphic(null);
         }
@@ -89,25 +90,20 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         // XXX we cannot rely on the given width, because ListView does not pass
         // the correct width (https://javafx-jira.kenai.com/browse/RT-35041)
         // So we have to get the width by our own means.
-        width = getWrapWidth();
+        double w = getWrapWidth();
 
-        if(isEmpty()) {
-            // go big so that we don't need to construct too many empty cells
-            return 200;
-        } else {
-            return getParagraphGraphic().prefHeight(width) + snappedTopInset() + snappedBottomInset();
-        }
+        return textFlow.getOpt()
+                .map(t -> t.prefHeight(w) + snappedTopInset() + snappedBottomInset())
+                .orElse(200.0); // go big so that we don't need to construct too many empty cells
     }
 
     @Override
     protected double computePrefWidth(double height) {
-        if(isEmpty()) {
-            return super.computePrefWidth(height);
-        } else if(getWrapWidth() == Region.USE_COMPUTED_SIZE) {
-            return getParagraphGraphic().prefWidth(-1.0) + snappedLeftInset() + snappedRightInset();
-        } else {
-            return 0;
-        }
+        return textFlow.getOpt()
+                .map(t -> getWrapWidth() == Region.USE_COMPUTED_SIZE
+                        ? t.prefWidth(-1.0) + snappedLeftInset() + snappedRightInset()
+                        : 0)
+                .orElse(super.computePrefWidth(height));
     }
 
     private double getWrapWidth() {
@@ -145,8 +141,7 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         if(isEmpty()) { // hit beyond the last line
             return Optional.empty();
         } else {
-            ParagraphGraphic<S> textFlow = getParagraphGraphic();
-            return textFlow.hit(x - textFlow.getLayoutX(), y);
+            return textFlow.getOpt().flatMap(t -> t.hit(x - t.getLayoutX(), y));
         }
     }
 
@@ -154,43 +149,35 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
      * Hits the embedded TextFlow at the given line and x offset.
      * Assumes this cell is non-empty.
      *
-     * @param x x coordinate relative to the graphic (TextFlow),
-     * not relative to the cell.
+     * @param x x coordinate relative to the TextFlow, not relative to the cell.
      * @return HitInfo for the given line and x coordinate, or an empty
      * optional if hit beyond the end.
      */
-    Optional<HitInfo> hitGraphic(int line, double x) {
-        return getParagraphGraphic().hit(line, x);
+    Optional<HitInfo> hitText(int line, double x) {
+        return textFlow.getOpt().flatMap(t -> t.hit(line, x));
     }
 
     public double getCaretOffsetX() {
-        return getParagraphGraphic().getCaretOffsetX();
-    }
-
-    ParagraphGraphic<S> getParagraphGraphic() {
-        Optional<ParagraphGraphic<S>> graphic = tryGetParagraphGraphic();
-        if(graphic.isPresent()) {
-            return graphic.get();
-        } else {
-            throw new AssertionError("There's no graphic in this cell");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Optional<ParagraphGraphic<S>> tryGetParagraphGraphic() {
-        Node graphic = getGraphic();
-        if(graphic != null) {
-            return Optional.of((ParagraphGraphic<S>) graphic);
-        } else {
-            return Optional.empty();
-        }
+        return textFlow.getOpt().map(ParagraphText::getCaretOffsetX).orElse(0.);
     }
 
     public int getLineCount() {
-        return getParagraphGraphic().getLineCount();
+        return textFlow.getOpt().map(ParagraphText::getLineCount).orElse(0);
     }
 
     public int getCurrentLineIndex() {
-        return getParagraphGraphic().currentLineIndex();
+        return textFlow.getOpt().map(ParagraphText::currentLineIndex).orElse(0);
+    }
+
+    public void setSelection(IndexRange selection) {
+        textFlow.ifPresent(t -> t.setSelection(selection));
+    }
+
+    public Optional<Bounds> getCaretBoundsOnScreen() {
+        return textFlow.getOpt().map(ParagraphText::getCaretBoundsOnScreen);
+    }
+
+    public Optional<Bounds> getSelectionBoundsOnScreen() {
+        return textFlow.getOpt().flatMap(ParagraphText::getSelectionBoundsOnScreen);
     }
 }
