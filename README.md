@@ -5,7 +5,16 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
 
 Scroll down to [Demos](#demos) to see it in action.
 
-There is plenty of room for enhancements, e.g. displaying line numbers, support for paragraph-level styles (#6), placing arbitrary nodes in the text, copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
+There is plenty of room for enhancements, e.g. support for paragraph-level styles (#6), placing arbitrary nodes in the text, copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
+
+
+Features
+--------
+
+* Assign arbitrary styles to arbitrary ranges of text.
+* Display line numbers or, more generally, any graphic in front of each paragraph. Can be used to show breakpoint toggles on each line of code.
+* Positioning a popup window relative to the caret or selection. Useful e.g. to position an autocompletion box.
+* Getting the character index under the mouse when the mouse stays still over the text for a specified period of time. Useful for displaying tooltips depending on the word under the mouse.
 
 
 Flavors
