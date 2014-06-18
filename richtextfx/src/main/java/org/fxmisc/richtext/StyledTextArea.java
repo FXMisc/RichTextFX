@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
 import javafx.beans.InvalidationListener;
@@ -29,6 +30,7 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Skin;
@@ -167,6 +169,11 @@ implements
     public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
     public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
     public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
+
+    private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
+    public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
+    public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
+    public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
 
     /* ********************************************************************** *

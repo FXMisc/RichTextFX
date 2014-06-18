@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
+import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.BooleanProperty;
@@ -24,6 +25,7 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
@@ -74,19 +76,28 @@ class ParagraphText<S> extends TextFlow {
     public ParagraphText(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
 
+        getStyleClass().add("paragraph-text");
+
         clampedCaretPosition = Bindings.min(caretPosition, paragraph.length());
         clampedCaretPosition.addListener((obs, oldPos, newPos) -> updateCaretShape());
+
+        Binding<Double> leftInset = EasyBind.map(insetsProperty(), ins -> ins.getLeft());
+        Binding<Double> rightInset = EasyBind.map(insetsProperty(), ins -> ins.getTop());
 
         // selection highlight
         selectionShape.setManaged(false);
         selectionShape.setVisible(true);
         selectionShape.setFill(Color.DODGERBLUE);
         selectionShape.setStrokeWidth(0);
+        selectionShape.layoutXProperty().bind(leftInset);
+        selectionShape.layoutYProperty().bind(rightInset);
         getChildren().add(selectionShape);
 
         // caret
         caretShape.setManaged(false);
         caretShape.setStrokeWidth(1);
+        caretShape.layoutXProperty().bind(leftInset);
+        caretShape.layoutYProperty().bind(rightInset);
         getChildren().add(caretShape);
 
         // XXX: see the note at highlightTextFill

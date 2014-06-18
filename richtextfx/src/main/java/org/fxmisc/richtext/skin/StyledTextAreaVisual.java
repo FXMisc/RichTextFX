@@ -11,17 +11,18 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -84,14 +85,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     private final StyleableObjectProperty<Paint> highlightTextFill
             = new HighlightTextFillProperty(this, Color.WHITE);
 
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Observables                                                            *
-     *                                                                        *
-     * ********************************************************************** */
-
-    final DoubleProperty wrapWidth = new SimpleDoubleProperty(this, "wrapWidth");
+    private final DoubleBinding wrapWidth;
 
 
     /* ********************************************************************** *
@@ -156,7 +150,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         listView = new MyListView<>(
                 area.getParagraphs(),
                 lv -> { // Use ParagraphCell as cell implementation
-                    ParagraphCell<S> cell = new ParagraphCell<S>(StyledTextAreaVisual.this, applyStyle);
+                    ParagraphCell<S> cell = new ParagraphCell<S>(applyStyle);
                     cells.add(cell);
                     valuesOf(cell.emptyProperty()).subscribe(empty -> {
                         if(empty) {
@@ -175,8 +169,10 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
         // make wrapWidth behave according to the wrapText property
-        listenTo(area.wrapTextProperty(), o -> updateWrapWidth());
-        updateWrapWidth();
+        wrapWidth = Bindings.when(area.wrapTextProperty())
+                .then(listView.widthProperty())
+                .otherwise(Region.USE_COMPUTED_SIZE);
+        manageBinding(wrapWidth);
 
         // emits a value every time the area is done updating
         EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().offs();
@@ -208,7 +204,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
                 .and(area.focusedProperty())
                 .and(area.editableProperty())
                 .and(area.disabledProperty().not());
-        manageSubscription(() -> caretVisible.dispose());
+        manageBinding(caretVisible);
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
@@ -366,7 +362,21 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
                     : StyledTextArea.EMPTY_RANGE;
         }, area.selectionProperty(), cell.indexProperty());
         cell.selectionProperty().bind(cellSelection);
-        manageSubscription(() -> cellSelection.dispose());
+        manageBinding(cellSelection);
+
+        // keep cell's wrap width updated
+        cell.wrapWidthProperty().bind(wrapWidth);
+
+        // Respond to changes in paragraphGraphicFactory.
+        // Use event stream because it is unbound from area on unsubscribe,
+        // while binding's weak listener will not be removed from area until
+        // paragraphGraphicFactoryProperty changes, which might never happen.
+        Binding<Supplier<? extends Node>> cellGraphicFactory =
+                EventStreams.valuesOf(area.paragraphGraphicFactoryProperty())
+                        .<Supplier<? extends Node>> map(f -> f == null ? null : () -> f.apply(cell.getIndex()))
+                        .toBinding(null);
+        cell.graphicFactoryProperty().bind(cellGraphicFactory);
+        manageBinding(cellGraphicFactory);
     }
 
     private ParagraphCell<S> getCell(int index) {
@@ -387,15 +397,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private int getParagraphOffset(int parIdx) {
         return area.position(parIdx, 0).toOffset();
-    }
-
-    private void updateWrapWidth() {
-        if(area.isWrapText()) {
-            wrapWidth.bind(listView.widthProperty());
-        } else {
-            wrapWidth.unbind();
-            wrapWidth.set(Region.USE_COMPUTED_SIZE); // no wrapping
-        }
     }
 
     private void followCaret(Runnable callback) {
@@ -481,5 +482,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private void manageSubscription(Subscription subscription) {
         subscriptions = subscriptions.and(subscription);
+    }
+
+    private void manageBinding(Binding<?> binding) {
+        subscriptions = subscriptions.and(() -> binding.dispose());
     }
 }

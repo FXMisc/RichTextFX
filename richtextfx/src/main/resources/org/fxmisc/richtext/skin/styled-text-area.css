@@ -7,8 +7,12 @@
 }
 
 .styled-text-area .list-view .list-cell {
-    -fx-padding: 0 2px;
+    -fx-padding: 0;
     -fx-background-color: transparent!important;
+}
+
+.styled-text-area .list-view .list-cell .paragraph-text {
+    -fx-padding: 0 2px;
 }
 
 .styled-text-area .list-view {

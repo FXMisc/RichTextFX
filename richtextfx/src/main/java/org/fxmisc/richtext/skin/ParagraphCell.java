@@ -5,11 +5,17 @@ import static org.reactfx.util.Tuples.*;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
-import javafx.beans.InvalidationListener;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseEvent;
@@ -28,39 +34,50 @@ import org.reactfx.util.Tuple2;
 import com.sun.javafx.scene.text.HitInfo;
 
 class ParagraphCell<S> extends ListCell<Paragraph<S>> {
-    private final StyledTextAreaVisual<S> visual;
     private final BiConsumer<Text, S> applyStyle;
-    private final InvalidationListener onWrapWidthChange = obs -> requestLayout();
 
     @SuppressWarnings("unchecked")
-    private final MonadicObservableValue<ParagraphText<S>> textFlow = EasyBind.monadic(graphicProperty()).map(g -> (ParagraphText<S>) g);
+    private final MonadicObservableValue<ParagraphBox<S>> box = EasyBind.monadic(graphicProperty()).map(g -> (ParagraphBox<S>) g);
 
-    private final Property<Boolean> caretVisible = textFlow.selectProperty(ParagraphText::caretVisibleProperty);
+    private final MonadicObservableValue<ParagraphText<S>> text = box.map(ParagraphBox::getText);
+
+    private final Property<Boolean> caretVisible = text.selectProperty(ParagraphText::caretVisibleProperty);
     public Property<Boolean> caretVisibleProperty() { return caretVisible; }
 
-    private final Property<Paint> highlightFill = textFlow.selectProperty(ParagraphText::highlightFillProperty);
+    private final Property<Paint> highlightFill = text.selectProperty(ParagraphText::highlightFillProperty);
     public Property<Paint> highlightFillProperty() { return highlightFill; }
 
-    private final Property<Paint> highlightTextFill = textFlow.selectProperty(ParagraphText::highlightTextFillProperty);
+    private final Property<Paint> highlightTextFill = text.selectProperty(ParagraphText::highlightTextFillProperty);
     public Property<Paint> highlightTextFillProperty() { return highlightTextFill; }
 
-    private final Property<Number> caretPosition = textFlow.selectProperty(ParagraphText::caretPositionProperty);
+    private final Property<Number> caretPosition = text.selectProperty(ParagraphText::caretPositionProperty);
     public Property<Number> caretPositionProperty() { return caretPosition; }
 
-    private final Property<IndexRange> selection = textFlow.selectProperty(ParagraphText::selectionProperty);
+    private final Property<IndexRange> selection = text.selectProperty(ParagraphText::selectionProperty);
     public Property<IndexRange> selectionProperty() { return selection; }
 
-    public ParagraphCell(StyledTextAreaVisual<S> visual, BiConsumer<Text, S> applyStyle) {
-        this.visual = visual;
+    private final DoubleProperty wrapWidth = new SimpleDoubleProperty(Region.USE_COMPUTED_SIZE);
+    public DoubleProperty wrapWidthProperty() { return wrapWidth; }
+    {
+        wrapWidth.addListener((obs, old, w) -> requestLayout());
+    }
+
+    private final Property<Supplier<? extends Node>> graphicFactory
+            = box.selectProperty(ParagraphBox::graphicFactoryProperty);
+    public Property<Supplier<? extends Node>> graphicFactoryProperty() {
+        return graphicFactory;
+    }
+
+    public ParagraphCell(BiConsumer<Text, S> applyStyle) {
         this.applyStyle = applyStyle;
 
-        emptyProperty().addListener((obs, wasEmpty, isEmpty) -> {
-            if(wasEmpty && !isEmpty) {
-                startListening();
-            } else if(!wasEmpty && isEmpty) {
-                stopListening();
-            }
-        });
+        DoubleBinding childWrapWidth = Bindings.createDoubleBinding(() -> {
+            return wrapWidth.get() == Region.USE_COMPUTED_SIZE
+                    ? Region.USE_COMPUTED_SIZE
+                    : wrapWidth.get() - this.getInsets().getLeft() - this.getInsets().getRight();
+
+        }, wrapWidth, insetsProperty());
+        box.selectProperty(ParagraphBox::wrapWidthProperty).bind(childWrapWidth);
     }
 
     public EitherEventStream<Tuple2<Point2D, Integer>, Void> stationaryIndices(Duration delay) {
@@ -76,48 +93,35 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         super.updateItem(item, empty);
 
         if(!empty) {
-            setGraphic(new ParagraphText<S>(item, applyStyle));
+            setGraphic(new ParagraphBox<S>(item, applyStyle));
         } else {
             setGraphic(null);
         }
     }
 
     @Override
-    protected double computePrefHeight(double width) {
-        // XXX we cannot rely on the given width, because ListView does not pass
-        // the correct width (https://javafx-jira.kenai.com/browse/RT-35041)
-        // So we have to get the width by our own means.
-        double w = getWrapWidth();
-
-        return textFlow.getOpt()
-                .map(t -> t.prefHeight(w) + snappedTopInset() + snappedBottomInset())
+    protected double computePrefHeight(double ignoredWidth) {
+        return box.getOpt()
+                .map(b -> {
+                    Insets insets = getInsets();
+                    double boxHeight = wrapWidth.get() == Region.USE_COMPUTED_SIZE
+                            ? b.prefHeight(-1)
+                            : b.prefHeight(wrapWidth.get() - insets.getLeft() - insets.getRight());
+                    return boxHeight + insets.getTop() + insets.getBottom();
+                })
                 .orElse(200.0); // go big so that we don't need to construct too many empty cells
     }
 
     @Override
     protected double computePrefWidth(double height) {
-        return textFlow.getOpt()
-                .map(t -> getWrapWidth() == Region.USE_COMPUTED_SIZE
-                        ? t.prefWidth(-1.0) + snappedLeftInset() + snappedRightInset()
-                        : 0)
+        return box.getOpt()
+                .map(b -> {
+                    Insets insets = getInsets();
+                    return wrapWidth.get() == Region.USE_COMPUTED_SIZE
+                            ? b.prefWidth(-1.0) + insets.getLeft() + insets.getRight()
+                            : 0; // return 0, ListView will size it to its width anyway
+                })
                 .orElse(super.computePrefWidth(height));
-    }
-
-    private double getWrapWidth() {
-        double skinWrapWidth = visual.wrapWidth.get();
-        if(skinWrapWidth == Region.USE_COMPUTED_SIZE) {
-            return Region.USE_COMPUTED_SIZE;
-        } else {
-            return skinWrapWidth - snappedLeftInset() - snappedRightInset();
-        }
-    }
-
-    private void startListening() {
-        visual.wrapWidth.addListener(onWrapWidthChange);
-    }
-
-    private void stopListening() {
-        visual.wrapWidth.removeListener(onWrapWidthChange);
     }
 
     /**
@@ -138,7 +142,11 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
         if(isEmpty()) { // hit beyond the last line
             return Optional.empty();
         } else {
-            return textFlow.getOpt().flatMap(t -> t.hit(x - t.getLayoutX(), y));
+            return text.getOpt().flatMap(t -> {
+                Point2D onScreen = this.localToScreen(x, y);
+                Point2D inText = t.screenToLocal(onScreen);
+                return t.hit(inText.getX(), inText.getY());
+            });
         }
     }
 
@@ -151,26 +159,26 @@ class ParagraphCell<S> extends ListCell<Paragraph<S>> {
      * optional if hit beyond the end.
      */
     Optional<HitInfo> hitText(int line, double x) {
-        return textFlow.getOpt().flatMap(t -> t.hit(line, x));
+        return text.getOpt().flatMap(t -> t.hit(line, x));
     }
 
     public double getCaretOffsetX() {
-        return textFlow.getOpt().map(ParagraphText::getCaretOffsetX).orElse(0.);
+        return text.getOpt().map(ParagraphText::getCaretOffsetX).orElse(0.);
     }
 
     public int getLineCount() {
-        return textFlow.getOpt().map(ParagraphText::getLineCount).orElse(0);
+        return text.getOpt().map(ParagraphText::getLineCount).orElse(0);
     }
 
     public int getCurrentLineIndex() {
-        return textFlow.getOpt().map(ParagraphText::currentLineIndex).orElse(0);
+        return text.getOpt().map(ParagraphText::currentLineIndex).orElse(0);
     }
 
     public Optional<Bounds> getCaretBoundsOnScreen() {
-        return textFlow.getOpt().map(ParagraphText::getCaretBoundsOnScreen);
+        return text.getOpt().map(ParagraphText::getCaretBoundsOnScreen);
     }
 
     public Optional<Bounds> getSelectionBoundsOnScreen() {
-        return textFlow.getOpt().flatMap(ParagraphText::getSelectionBoundsOnScreen);
+        return text.getOpt().flatMap(ParagraphText::getSelectionBoundsOnScreen);
     }
 }
