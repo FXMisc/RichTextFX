@@ -760,9 +760,12 @@ implements
     private void clampInternalSelection() {
         int l = getLength();
         IndexRange sel = internalSelection.get();
-        int selStart = Math.min(sel.getStart(), l);
         int selEnd = Math.min(sel.getEnd(), l);
-        IndexRange clampedSelection = new IndexRange(selStart, selEnd);
-        internalSelection.set(clampedSelection);
+
+        // set internalSelection only if changed to avoid unnecessary invalidations
+        if(selEnd != sel.getEnd()) {
+            int selStart = Math.min(sel.getStart(), l);
+            internalSelection.set(new IndexRange(selStart, selEnd));
+        }
     }
 }
