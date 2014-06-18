@@ -40,6 +40,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.PlainTextChange;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
@@ -93,6 +94,7 @@ public class JavaKeywordsAsync extends Application {
     public void start(Stage primaryStage) {
         executor = Executors.newSingleThreadExecutor();
         codeArea = new CodeArea();
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         EventStream<PlainTextChange> textChanges = codeArea.plainTextChanges();
         textChanges
                 .successionEnds(Duration.ofMillis(500))

@@ -36,6 +36,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
 
@@ -83,6 +84,7 @@ public class JavaKeywords extends Application {
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.textProperty().addListener((obs, oldText, newText) -> {
             codeArea.setStyleSpans(0, computeHighlighting(newText));
         });

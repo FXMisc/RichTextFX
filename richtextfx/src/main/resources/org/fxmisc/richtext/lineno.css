@@ -1,0 +1,7 @@
+.label.lineno {
+    -fx-font-family: monospace;
+    -fx-font-style: italic;
+    -fx-background-color: #ddd;
+    -fx-text-fill: #666;
+    -fx-padding: 0 5px;
+}
