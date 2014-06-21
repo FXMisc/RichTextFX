@@ -15,6 +15,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 
 public abstract class VirtualFlow<T, C extends Node> extends Region implements Virtualized {
     // Children of a VirtualFlow are cells. All children are unmanaged.
@@ -77,8 +78,14 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
             minBreadths.add(Double.NaN);
         }
 
-        layoutBoundsProperty().addListener((obs, oldBounds, newBounds) ->
-                layoutBoundsChanged(oldBounds, newBounds));
+        Rectangle clipRect = new Rectangle();
+        setClip(clipRect);
+
+        layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
+            clipRect.setWidth(newBounds.getWidth());
+            clipRect.setHeight(newBounds.getHeight());
+            layoutBoundsChanged(oldBounds, newBounds);
+        });
 
 
         // set up bindings
