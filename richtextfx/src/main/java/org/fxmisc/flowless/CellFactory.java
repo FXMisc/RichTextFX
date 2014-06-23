@@ -55,4 +55,11 @@ public interface CellFactory<T, C extends Node> {
     default void disposeCell(C cell) {
         // do nothing by default
     }
+
+    /**
+     * Called to update index of a visible cell.
+     */
+    default void updateIndex(C cell, int newIndex) {
+        // do nothing by default
+    }
 }

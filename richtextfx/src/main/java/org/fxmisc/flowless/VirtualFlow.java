@@ -758,6 +758,9 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
             renderedFrom += delta;
             visibleFrom += delta;
             visibleTo += delta;
+            for(int i = 0; i < cells.size(); ++i) {
+                cellFactory.updateIndex(cells.get(i), renderedFrom + i);
+            }
 
             if(pos + removedSize + delta == visibleFrom) {
                 // if the viewport is not filled, add the new cells
@@ -786,14 +789,23 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
                 placeInitialFromEnd(pos - 1, 0);
                 backwardToRel(0);
             }
-        } else if(pos > visibleFrom) {
-            // the change starts in visible range
-            // and the first visible cell is retained
-            replacedItemsAfter(pos-1, removedSize, addedSize);
-        } else {
-            // the change ends in visible range
-            // and the last visible cell is retained
+        } else if(pos + removedSize < visibleTo) {
+            // The change ends in visible range
+            // and the last visible cell is retained.
+
+            // update indices of retained visible cells beyond the change
+            for(int i = pos + removedSize - renderedFrom; i < cells.size(); ++i) {
+                cellFactory.updateIndex(cells.get(i), pos + addedSize + i);
+            }
+
             replacedItemsAt(pos, removedSize, addedSize);
+        } else {
+            assert pos > visibleFrom;
+            // The change starts in visible range
+            // and the first visible cell is retained.
+            // There are no visible cells retained after the removed region.
+
+            replacedItemsAfter(pos-1, removedSize, addedSize);
         }
 
         totalBreadthEstimate.invalidate();
@@ -814,7 +826,7 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
 
         double length = length();
         double placedLength = 0;
-        int insertionPos = pos+1 - renderedFrom;
+        int insertionPos = rmFrom;
 
         for(int i = pos + addedSize; i > pos; --i) {
             C cell = placeAnywhere(i, insertionPos);
@@ -849,7 +861,7 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
     private void replacedItemsAt(int pos, int removedSize, int addedSize) {
         // item pos+addedSize is assumed to be visible
 
-        int rmFrom = 0;
+        int rmFrom = Math.max(pos - renderedFrom, 0);
         int rmTo = pos + removedSize - renderedFrom;
         List<C> rmCells = cells.subList(rmFrom, rmTo);
         rmCells.forEach(this::addToPool);
@@ -857,7 +869,7 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
 
         double length = length();
         double placedLength = 0;
-        int insertionPos = 0;
+        int insertionPos = rmFrom;
 
         for(int i = pos + addedSize - 1; i >= pos; --i) {
             C cell = placeAnywhere(i, insertionPos);
