@@ -10,6 +10,7 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableDoubleValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
@@ -85,6 +86,23 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
             clipRect.setWidth(newBounds.getWidth());
             clipRect.setHeight(newBounds.getHeight());
             layoutBoundsChanged(oldBounds, newBounds);
+        });
+
+        items.addListener((ListChangeListener<? super T>) ch -> {
+            while(ch.next()) {
+                int pos = ch.getFrom();
+                int removedSize;
+                int addedSize;
+                if(ch.wasPermutated()) {
+                    addedSize = removedSize = ch.getTo() - pos;
+                } else {
+                    removedSize = ch.getRemovedSize();
+                    addedSize = ch.getAddedSize();
+                }
+                System.out.println("list change: at " + pos + ", -" + removedSize + ", +" + addedSize);
+                itemsReplaced(pos, removedSize, addedSize);
+                System.out.println("handled");
+            }
         });
 
 
@@ -250,6 +268,7 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
         C cell = createCell(index, item);
         cell.setVisible(false);
         cells.add(cell);
+        cell.applyCss();
 
         renderedFrom = index;
         visibleFrom = index;
@@ -261,20 +280,19 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
 
     private C renderPrevious() {
         --renderedFrom;
-        T item = items.get(renderedFrom);
-        C cell = createCell(renderedFrom, item);
-        cell.setVisible(false);
-        cells.add(0, cell);
-        cell.applyCss();
-        return cell;
+        return render(renderedFrom, 0);
     }
 
     private C renderNext() {
         int index = renderedFrom + cells.size();
+        return render(index, cells.size());
+    }
+
+    private C render(int index, int childInsertionPos) {
         T item = items.get(index);
         C cell = createCell(index, item);
         cell.setVisible(false);
-        cells.add(cell);
+        cells.add(childInsertionPos, cell);
         cell.applyCss();
         return cell;
     }
@@ -344,16 +362,12 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
         // fill current screen
         forwardToRel(0);
 
-        cull();
-
         if(breadth + breadthOffset < newBreadth) { // empty space on the right
             shiftVisibleCellsByBreadth(newBreadth - (breadth + breadthOffset));
         }
 
-        // TODO: invalidate only if changed (record the value at the start of this method
         totalBreadthEstimate.invalidate();
         totalLengthEstimate.invalidate();
-
         breadthPositionEstimate.invalidate();
         lengthOffsetEstimate.invalidate();
     }
@@ -403,6 +417,8 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
                 repeat = false;
             }
         }
+
+        cull();
     }
 
     private void fillLengthForwardTo(double l, double breadth) {
@@ -505,6 +521,23 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
         visibleTo = idx + 1;
     }
 
+    private C placeAnywhere(int item, int childInsertionPos) {
+        double breadth = Math.max(maxKnownMinBreadth(), breadth());
+        C cell = render(item, childInsertionPos);
+
+        double minBreadth = minBreadth(cell);
+        minBreadths.set(item, minBreadth);
+        if(minBreadth > maxKnownMinBreadth()) {
+            maxKnownMinBreadth = minBreadth;
+            breadth = Math.max(breadth, minBreadth);
+        }
+
+        double length = prefLength(cell, breadth);
+        layoutCell(cell, 0, breadth, length);
+
+        return cell;
+    }
+
     private void layoutCell(C cell, double l0, double breadth, double length) {
         if(cell.isVisible()) {
             visibleLength -= length(cell);
@@ -543,9 +576,13 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
             }
         }
 
-        renderedFrom += i;
-        visibleFrom = renderedFrom;
-        List<C> toCull = cells.subList(0, i);
+        cullBefore(i);
+    }
+
+    private void cullBefore(int childIdx) {
+        renderedFrom += childIdx;
+        visibleFrom = Math.max(visibleFrom, renderedFrom);
+        List<C> toCull = cells.subList(0, childIdx);
         toCull.forEach(this::addToPool);
         toCull.clear();
     }
@@ -560,8 +597,12 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
             }
         }
 
-        visibleTo = visibleFrom + i;
-        List<C> toCull = cells.subList(i, cells.size());
+        cullFrom(i);
+    }
+
+    private void cullFrom(int childIdx) {
+        visibleTo = Math.min(visibleTo, renderedFrom + childIdx);
+        List<C> toCull = cells.subList(childIdx, cells.size());
         toCull.forEach(this::addToPool);
         toCull.clear();
     }
@@ -697,6 +738,210 @@ public abstract class VirtualFlow<T, C extends Node> extends Region implements V
         } else {
             placeInitialFromEnd(items.size()-1, 0);
             backwardToRel(0);
+        }
+    }
+
+    private void itemsReplaced(int pos, int removedSize, int addedSize) {
+        replaceMinBreadths(pos, removedSize, addedSize);
+
+        if(pos > visibleTo) {
+            // does not affect visible cells, do nothing
+        } else if(pos == visibleTo) {
+            // if the viewport is not filled, add the new cells
+            forwardToRel(0);
+        } else if(pos + removedSize <= visibleFrom) { // before visible cells
+            if(visibleFrom != renderedFrom) {
+                throw new AssertionError("not culled or inconsisten");
+            }
+            // update the indices
+            int delta = addedSize - removedSize;
+            renderedFrom += delta;
+            visibleFrom += delta;
+            visibleTo += delta;
+
+            if(pos + removedSize + delta == visibleFrom) {
+                // if the viewport is not filled, add the new cells
+                forwardToRel(0);
+            }
+        } else if(pos <= visibleFrom && pos + removedSize >= visibleTo) {
+            // all visible cells replaced
+
+            cells.forEach(this::addToPool);
+            cells.clear();
+
+            if(addedSize > 0) {
+                // place the last inserted at the end of the viewport
+                // and proceed backwards
+                int lastInserted = pos + addedSize - 1;
+                placeInitialFromEnd(lastInserted, 0);
+                backwardToRel(0);
+            } else if(pos < items.size()) {
+                // place the first after the removed region at the start
+                // of the viewport and proceed forwards
+                placeInitial(pos, 0);
+                forwardToRel(0);
+            } else if(pos > 0) {
+                // place the last retained at the end of the viewport
+                // and proceed backwards
+                placeInitialFromEnd(pos - 1, 0);
+                backwardToRel(0);
+            }
+        } else if(pos > visibleFrom) {
+            // the change starts in visible range
+            // and the first visible cell is retained
+            replacedItemsAfter(pos-1, removedSize, addedSize);
+        } else {
+            // the change ends in visible range
+            // and the last visible cell is retained
+            replacedItemsAt(pos, removedSize, addedSize);
+        }
+
+        totalBreadthEstimate.invalidate();
+        totalLengthEstimate.invalidate();
+        breadthPositionEstimate.invalidate();
+        lengthOffsetEstimate.invalidate();
+    }
+
+    private void replacedItemsAfter(int pos, int removedSize, int addedSize) {
+        // start placing items from the last one, until the viewport length
+        // worth of cells is placed, or all items are placed.
+
+        int rmFrom = pos+1 - renderedFrom;
+        int rmTo = Math.min(pos+1 + removedSize - renderedFrom, cells.size());
+        List<C> rmCells = cells.subList(rmFrom, rmTo);
+        rmCells.forEach(this::addToPool);
+        rmCells.clear();
+
+        double length = length();
+        double placedLength = 0;
+        int insertionPos = pos+1 - renderedFrom;
+
+        for(int i = pos + addedSize; i > pos; --i) {
+            C cell = placeAnywhere(i, insertionPos);
+            placedLength += length(cell);
+            if(placedLength >= length) {
+                int nPlaced = pos + addedSize - i + 1;
+                cullBefore(insertionPos);
+                cullFrom(nPlaced);
+                renderedFrom = i;
+                visibleFrom = renderedFrom;
+                visibleTo = visibleFrom + nPlaced;
+                positionVisibleFromEnd();
+                return;
+            }
+        }
+        // placed them all
+
+        if(maxY(cells.get(insertionPos - 1)) + placedLength > length) {
+            // Inserted enough to overflow the viewport.
+            // Position the last inserted at the end of the viewport.
+            visibleTo = pos+1 + addedSize;
+            cullFrom(insertionPos + addedSize);
+            positionVisibleFromEnd();
+            cullBeforeViewport();
+        } else {
+            visibleTo += -removedSize + addedSize;
+            fixPositionsAfter(insertionPos - 1);
+            forwardToRel(0);
+        }
+    }
+
+    private void replacedItemsAt(int pos, int removedSize, int addedSize) {
+        // item pos+addedSize is assumed to be visible
+
+        int rmFrom = 0;
+        int rmTo = pos + removedSize - renderedFrom;
+        List<C> rmCells = cells.subList(rmFrom, rmTo);
+        rmCells.forEach(this::addToPool);
+        rmCells.clear();
+
+        double length = length();
+        double placedLength = 0;
+        int insertionPos = 0;
+
+        for(int i = pos + addedSize - 1; i >= pos; --i) {
+            C cell = placeAnywhere(i, insertionPos);
+            placedLength += length(cell);
+            if(placedLength >= length) {
+                int nPlaced = pos + addedSize - i;
+                cullBefore(insertionPos);
+                cullFrom(nPlaced);
+                renderedFrom = i;
+                visibleFrom = renderedFrom;
+                visibleTo = visibleFrom + nPlaced;
+                positionVisibleFromEnd();
+                return;
+            }
+        }
+        // placed them all
+
+        if(placedLength > minY(cells.get(insertionPos + addedSize))) {
+            // Inserted enough to overflow the viewport.
+            // Position the first inserted at the start of the viewport.
+            renderedFrom = pos;
+            visibleFrom = pos;
+            visibleTo += -removedSize + addedSize;
+            cullBefore(insertionPos);
+            positionVisibleFromStart();
+            cullAfterViewport();
+        } else {
+            visibleTo += -removedSize + addedSize;
+            fixPositionsBefore(insertionPos + addedSize);
+            backwardToRel(0);
+        }
+    }
+
+    private void fixPositionsBefore(int childIdx) {
+        double y = minY(cells.get(childIdx));
+        for(int i = childIdx - 1; i >= visibleFrom - renderedFrom; --i) {
+            C cell = cells.get(i);
+            y -= length(cell);
+            relocate(cell, breadthOffset, y);
+        }
+    }
+
+    private void positionVisibleFromEnd() {
+        double y = length();
+        int firstVisible = visibleFrom - renderedFrom;
+        int lastVisible = visibleTo - renderedFrom - 1;
+        for(int i = lastVisible; i >= firstVisible; --i) {
+            C cell = cells.get(i);
+            y -= length(cell);
+            relocate(cell, breadthOffset, y);
+        }
+    }
+
+    private void fixPositionsAfter(int childIdx) {
+        double y = maxY(cells.get(childIdx));
+        for(int i = childIdx + 1; i < visibleTo - renderedFrom; ++i) {
+            C cell = cells.get(i);
+            relocate(cell, breadthOffset, y);
+            y += length(cell);
+        }
+    }
+
+    private void positionVisibleFromStart() {
+        double y = 0.0;
+        int visFrom = visibleFrom - renderedFrom;
+        int visTo = visibleTo - renderedFrom;
+        for(int i = visFrom; i < visTo; ++i) {
+            C cell = cells.get(i);
+            relocate(cell, breadthOffset, y);
+            y += length(cell);
+        }
+    }
+
+    private void replaceMinBreadths(int pos, int removedSize, int addedSize) {
+        List<Double> remBreadths = minBreadths.subList(pos, pos + removedSize);
+        for(double b: remBreadths) {
+            if(b == maxKnownMinBreadth) {
+                maxKnownMinBreadth = Double.NaN;
+                break;
+            }
+        }
+        remBreadths.clear();
+        for(int i = 0; i < addedSize; ++i) {
+            remBreadths.add(Double.NaN);
         }
     }
 }
