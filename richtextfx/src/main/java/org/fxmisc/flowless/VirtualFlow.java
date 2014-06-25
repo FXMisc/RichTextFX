@@ -695,6 +695,56 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         cullAfterViewport();
     }
 
+    private void fillViewportOnce() {
+        // expand the visible range
+        IndexRange visibleRange = firstVisibleRange();
+        int firstVisible = visibleRange.getStart();
+        int lastVisible = visibleRange.getEnd() - 1;
+
+        // fill backward until 0 is covered
+        firstVisible = paveBackwardTo(0.0, firstVisible);
+        double minY = metrics.minY(getVisibleCell(firstVisible));
+        if(minY > 0) {
+            shiftVisibleCellsByLength(-minY);
+            minY = 0;
+        }
+
+        // fill forward until end of viewport is covered
+        double length = length();
+        lastVisible = paveForwardTo(length, lastVisible);
+        double maxY = metrics.maxY(getVisibleCell(lastVisible));
+
+        double leftToFill = length - maxY;
+        if(leftToFill > 0) {
+            firstVisible = paveBackwardTo(-leftToFill, firstVisible);
+            minY = metrics.minY(getVisibleCell(firstVisible));
+            double shift = Math.min(-minY, leftToFill);
+            shiftVisibleCellsByLength(shift);
+        }
+    }
+
+    private int paveForwardTo(double y, int startAfter) {
+        int i = startAfter;
+        C cell = getVisibleCell(i);
+        double maxY = metrics.maxY(cell);
+        while(maxY < y && i < items.size() - 1) {
+            cell = placeAt(++i, maxY);
+            maxY = metrics.maxY(cell);
+        }
+        return i;
+    }
+
+    private int paveBackwardTo(double y, int startBefore) {
+        int i = startBefore;
+        C cell = getVisibleCell(i);
+        double minY = metrics.minY(cell);
+        while(minY > y && i > 0) {
+            cell = placeEndAt(--i, minY);
+            minY = metrics.minY(cell);
+        }
+        return i;
+    }
+
     private void cullBeforeViewport() {
         if(hole.isPresent()) {
             throw new IllegalStateException("unexpected hole");
@@ -727,47 +777,6 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         }
 
         cullFrom(renderedFrom + i);
-    }
-
-    private void fillViewportOnce() {
-        // expand the visible range
-        IndexRange visibleRange = firstVisibleRange();
-        int firstVisible = visibleRange.getStart();
-        int lastVisible = visibleRange.getEnd() - 1;
-
-        // fill backward until 0 is covered
-        double minY = metrics.minY(getVisibleCell(firstVisible));
-        while(minY > 0) {
-            if(firstVisible > 0) {
-                C cell = placeEndAt(--firstVisible, minY);
-                minY = metrics.minY(cell);
-            } else {
-                shiftVisibleCellsByLength(-minY);
-                minY = 0;
-            }
-        }
-
-        // fill forward until end of viewport is covered
-        double length = length();
-        double maxY = metrics.maxY(getVisibleCell(lastVisible));
-        while(maxY < length) {
-            if(lastVisible < items.size() - 1) {
-                C cell = placeAt(++lastVisible, maxY);
-                maxY = metrics.maxY(cell);
-            } else {
-                break;
-            }
-        }
-
-        double leftToFill = length - maxY;
-        if(leftToFill > 0) {
-            while(-minY < leftToFill && firstVisible > 0) {
-                C cell = placeEndAt(--firstVisible, minY);
-                minY = metrics.minY(cell);
-            }
-            double shift = Math.min(-minY, leftToFill);
-            shiftVisibleCellsByLength(shift);
-        }
     }
 
     private C getVisibleCell(int itemIdx) {
@@ -901,7 +910,7 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         return cells.stream().filter(Node::isVisible);
     }
 
-    public double maxKnownBreadth() {
+    private double maxKnownBreadth() {
         return breadthTracker.maxKnownBreadth();
     }
 
