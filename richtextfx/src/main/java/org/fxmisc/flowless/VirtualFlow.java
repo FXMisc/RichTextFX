@@ -7,7 +7,9 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.stream.Stream;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -88,23 +90,33 @@ public class VirtualFlow<T, C extends Node> extends Region {
             se.consume();
         });
 
+        // scrollbar visibility
         DoubleBinding layoutWidth = Bindings.createDoubleBinding(
                 () -> getLayoutBounds().getWidth(),
                 layoutBoundsProperty());
         DoubleBinding layoutHeight = Bindings.createDoubleBinding(
                 () -> getLayoutBounds().getHeight(),
                 layoutBoundsProperty());
-
-        // scrollbar visibility
-        hbar.visibleProperty().bind(Bindings.greaterThan(
+        BooleanBinding needsHBar0 = Bindings.greaterThan(
                 metrics.widthEstimateProperty(content),
-                layoutWidth));
-        vbar.visibleProperty().bind(Bindings.greaterThan(
+                layoutWidth);
+        BooleanBinding needsVBar0 = Bindings.greaterThan(
                 metrics.heightEstimateProperty(content),
-                layoutHeight));
+                layoutHeight);
+        BooleanBinding needsHBar = needsHBar0.or(needsVBar0.and(
+                Bindings.greaterThan(
+                        Bindings.add(metrics.widthEstimateProperty(content), vbar.widthProperty()),
+                        layoutWidth)));
+        BooleanBinding needsVBar = needsVBar0.or(needsHBar0.and(
+                Bindings.greaterThan(
+                        Bindings.add(metrics.heightEstimateProperty(content), hbar.heightProperty()),
+                        layoutHeight)));
+        hbar.visibleProperty().bind(needsHBar);
+        vbar.visibleProperty().bind(needsVBar);
 
-        hbar.visibleProperty().addListener(obs -> requestLayout());
-        vbar.visibleProperty().addListener(obs -> requestLayout());
+        // request layout later, because if currently in layout, the request is ignored
+        hbar.visibleProperty().addListener(obs -> Platform.runLater(() -> requestLayout()));
+        vbar.visibleProperty().addListener(obs -> Platform.runLater(() -> requestLayout()));
 
         getChildren().addAll(content, hbar, vbar);
     }
@@ -116,45 +128,42 @@ public class VirtualFlow<T, C extends Node> extends Region {
 
     @Override
     public double computePrefWidth(double height) {
-        return content.prefWidth(height);
+        return content.prefWidth(height)
+                + (vbar.isVisible() ? vbar.prefWidth(-1) : 0);
     }
 
     @Override
     public double computePrefHeight(double width) {
-        return content.prefHeight(width);
+        return content.prefHeight(width)
+                + (hbar.isVisible() ? hbar.prefHeight(-1) : 0);
     }
 
     @Override
     public double computeMinWidth(double height) {
-        return content.minWidth(height);
+        return content.minWidth(height)
+                + (vbar.isVisible() ? vbar.minWidth(-1) : 0);
     }
 
     @Override
     public double computeMinHeight(double width) {
-        return content.minHeight(width);
+        return content.minHeight(width)
+                + (hbar.isVisible() ? hbar.minHeight(-1) : 0);
     }
 
     @Override
     public double computeMaxWidth(double height) {
-        return content.maxWidth(height);
+        return content.maxWidth(height)
+                + (vbar.isVisible() ? vbar.maxWidth(-1) : 0);
     }
 
     @Override
     public double computeMaxHeight(double width) {
-        return content.maxHeight(width);
+        return content.maxHeight(width)
+                + (hbar.isVisible() ? hbar.maxHeight(-1) : 0);
     }
 
     @Override
     protected void layoutChildren() {
-        // allow 3 iterations:
-        // - the first might result in need of one scrollbar
-        // - the second might result in need of the other scrollbar,
-        //   as a result of limited space due to the first one
-        // - the third iteration should lead to a fixed point
-        layoutChildren(3);
-    }
-
-    private void layoutChildren(int limit) {
         double layoutWidth = getLayoutBounds().getWidth();
         double layoutHeight = getLayoutBounds().getHeight();
         boolean vbarVisible = vbar.isVisible();
@@ -166,16 +175,6 @@ public class VirtualFlow<T, C extends Node> extends Region {
         double h = layoutHeight - hbarHeight;
 
         content.resizeRelocate(0, 0, w, h);
-
-        if(vbar.isVisible() != vbarVisible || hbar.isVisible() != hbarVisible) {
-            // the need for scrollbars changed, start over
-            if(limit > 1) {
-                layoutChildren(limit - 1);
-                return;
-            } else {
-                // layout didn't settle after 3 iterations
-            }
-        }
 
         hbar.setVisibleAmount(w);
         vbar.setVisibleAmount(h);
