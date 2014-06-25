@@ -216,7 +216,6 @@ class VirtualFlowContent<T, C extends Node> extends Region {
 
     private final Queue<C> cellPool = new LinkedList<>();
 
-    private double visibleLength = 0; // total length of all visible cells
     private int renderedFrom = 0; // index of the first item that has a cell
     private Optional<IndexRange> hole = Optional.empty();
 
@@ -293,7 +292,7 @@ class VirtualFlowContent<T, C extends Node> extends Region {
             @Override
             protected double computeValue() {
                 return hasVisibleCells()
-                        ? visibleLength / visibleCells().count() * items.size()
+                        ? averageLength() * items.size()
                         : 0;
             }
         };
@@ -321,12 +320,11 @@ class VirtualFlowContent<T, C extends Node> extends Region {
                     return 0;
                 }
 
-                double total = totalLengthEstimate.get();
-                if(total <= length()) {
+                if(totalLengthEstimate.get() <= length()) {
                     return 0;
                 }
 
-                double avgLen = total / items.size();
+                double avgLen = averageLength();
                 double beforeVisible = firstVisibleRange().getStart() * avgLen;
                 return beforeVisible - visibleCellsMinY();
             }
@@ -429,8 +427,6 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         }
 
         renderedFrom = index;
-        visibleLength = 0;
-
         return render(index, 0);
     }
 
@@ -499,9 +495,6 @@ class VirtualFlowContent<T, C extends Node> extends Region {
     }
 
     private void addToPool(C cell) {
-        if(cell.isVisible()) {
-            visibleLength -= metrics.length(cell);
-        }
         cellFactory.resetCell(cell);
         cellPool.add(cell);
     }
@@ -617,7 +610,6 @@ class VirtualFlowContent<T, C extends Node> extends Region {
             // all rendered items removed
             dropCellsFrom(0);
             renderedFrom = 0;
-            visibleLength = 0;
         } else {
             dropCellsBefore(pos + removedSize - renderedFrom);
             renderedFrom = pos + addedSize;
@@ -734,6 +726,16 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         return i;
     }
 
+    private C paveForwardToItem(int itemIdx, int startAfter) {
+        C cell = getVisibleCell(startAfter);
+        double maxY = metrics.maxY(cell);
+        for(int i = startAfter + 1; i <= itemIdx; ++i) {
+            cell = placeAt(i, maxY);
+            maxY = metrics.maxY(cell);
+        }
+        return cell;
+    }
+
     private int paveBackwardTo(double y, int startBefore) {
         int i = startBefore;
         C cell = getVisibleCell(i);
@@ -743,6 +745,156 @@ class VirtualFlowContent<T, C extends Node> extends Region {
             minY = metrics.minY(cell);
         }
         return i;
+    }
+
+    private C paveBackwardToItem(int itemIdx, int startBefore) {
+        C cell = getVisibleCell(startBefore);
+        double minY = metrics.minY(cell);
+        for(int i = startBefore - 1; i >= itemIdx; --i) {
+            cell = placeEndAt(i, minY);
+            minY = metrics.minY(cell);
+        }
+        return cell;
+    }
+
+    private C paveToItem(int itemIdx) {
+        if(hasVisibleCells()) {
+            IndexRange rng = firstVisibleRange();
+            if(itemIdx < rng.getStart()) {
+                return paveBackwardToItem(itemIdx, rng.getStart());
+            } else if(itemIdx >= rng.getEnd()) {
+                return paveForwardToItem(itemIdx, rng.getEnd());
+            } else {
+                return getVisibleCell(itemIdx);
+            }
+        } else {
+            return jumpToItem(itemIdx);
+        }
+    }
+
+    private int paveTo(double offset) {
+        if(!hasVisibleCells()) {
+            throw new IllegalStateException("No visible cells to offset from");
+        }
+
+        IndexRange rng = firstVisibleRange();
+        double minY = metrics.minY(getVisibleCell(rng.getStart()));
+        double maxY = metrics.maxY(getVisibleCell(rng.getEnd() - 1));
+
+        if(offset < minY) {
+            return paveBackwardTo(offset, rng.getStart());
+        } else if(offset > maxY) {
+            return paveForwardTo(offset, rng.getEnd() - 1);
+        } else {
+            for(int i = rng.getStart(); i < rng.getEnd(); ++i) {
+                if(metrics.maxY(getVisibleCell(i)) >= offset) {
+                    return i;
+                }
+            }
+            throw new AssertionError("unreachable code");
+        }
+    }
+
+    private void show(int itemIdx) {
+        if(hasVisibleCells()) {
+            IndexRange rng = firstVisibleRange();
+            if(itemIdx < rng.getStart()) {
+                showStartAtBeforeVisibleRange(itemIdx, 0.0, rng.getStart());
+            } else if(itemIdx >= rng.getEnd()) {
+                showEndAtAfterVisibleRange(itemIdx, 0.0, rng.getEnd() - 1);
+            } else { // already visible
+                C cell = getVisibleCell(itemIdx);
+                double spaceBefore = metrics.minY(cell);
+                double spaceAfter = length() - metrics.maxY(cell);
+                if(spaceBefore < 0 && spaceAfter > 0) {
+                    double shift = Math.min(-spaceBefore, spaceAfter);
+                    shiftVisibleCellsByLength(shift);
+                } else if(spaceAfter < 0 && spaceBefore > 0) {
+                    double shift = Math.max(spaceAfter, -spaceBefore);
+                    shiftVisibleCellsByLength(shift);
+                }
+            }
+        } else {
+            jumpToItem(itemIdx);
+        }
+    }
+
+    private void showAsFirst(int itemIdx) {
+        showStartAt(itemIdx, 0.0);
+    }
+
+    private void showAsLast(int itemIdx) {
+        showEndAt(itemIdx, 0.0);
+    }
+
+    private void showStartAt(int itemIdx, double offset) {
+        if(hasVisibleCells()) {
+            IndexRange rng = firstVisibleRange();
+            if(itemIdx < rng.getStart()) {
+                showStartAtBeforeVisibleRange(itemIdx, offset, rng.getStart());
+            } else if(itemIdx >= rng.getEnd()) {
+                jumpToItem(itemIdx, offset);
+            } else {
+                C cell = getVisibleCell(itemIdx);
+                double minY = metrics.minY(cell);
+                if(minY != offset) {
+                    shiftVisibleCellsByLength(offset - minY);
+                    fillViewport();
+                }
+            }
+        } else {
+            jumpToItem(itemIdx, offset);
+        }
+    }
+
+    private void showEndAt(int itemIdx, double offsetFromEnd) {
+        if(hasVisibleCells()) {
+            IndexRange rng = firstVisibleRange();
+            if(itemIdx < rng.getStart()) {
+                jumpToEndOfItem(itemIdx, offsetFromEnd);
+            } else if(itemIdx >= rng.getEnd()) {
+                showEndAtAfterVisibleRange(itemIdx, offsetFromEnd, rng.getEnd());
+            } else {
+                C cell = getVisibleCell(itemIdx);
+                double maxY = metrics.maxY(cell);
+                double targetMaxY = length() + offsetFromEnd;
+                if(maxY != targetMaxY) {
+                    shiftVisibleCellsByLength(targetMaxY - maxY);
+                    fillViewport();
+                }
+            }
+        } else {
+            jumpToEndOfItem(itemIdx, offsetFromEnd);
+        }
+    }
+
+    private void showStartAtBeforeVisibleRange(int itemIdx, double offset, int firstVisible) {
+        double distance = averageLength() * (firstVisible - itemIdx);
+        if(distance > length()) {
+            jumpToItem(itemIdx, offset);
+        } else {
+            C cell = paveBackwardToItem(itemIdx, firstVisible);
+            double minY = metrics.minY(cell);
+            if(minY != offset) {
+                shiftVisibleCellsByLength(offset - minY);
+                fillViewport();
+            }
+        }
+    }
+
+    private void showEndAtAfterVisibleRange(int itemIdx, double offsetFromEnd, int lastVisible) {
+        double distance = averageLength() * (itemIdx - lastVisible);
+        if(distance > length()) {
+            jumpToEndOfItem(itemIdx, offsetFromEnd);
+        } else {
+            C cell = paveForwardToItem(itemIdx, lastVisible);
+            double maxY = metrics.maxY(cell);
+            double targetMaxY = length() + offsetFromEnd;
+            if(maxY != targetMaxY) {
+                shiftVisibleCellsByLength(targetMaxY - maxY);
+                fillViewport();
+            }
+        }
     }
 
     private void cullBeforeViewport() {
@@ -853,28 +1005,25 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         return cell;
     }
 
-    private void placeInitialAt(int itemIdx, double y) {
+    private C placeInitialAt(int itemIdx, double y) {
         C cell = renderInitial(itemIdx);
         placeAt(itemIdx, cell, y);
+        return cell;
     }
 
     private void placeInitialAtStart(int itemIdx) {
         placeInitialAt(itemIdx, 0.0);
     }
 
-    private void placeInitialAtEnd(int itemIdx) {
+    private C placeInitialFromEnd(int itemIdx, double offsetFromEnd) {
         C cell = renderInitial(itemIdx);
-        double length = length();
-        placeAt(itemIdx, cell, length - metrics.length(cell));
+        double maxY = length() + offsetFromEnd;
+        placeAt(itemIdx, cell, maxY - metrics.length(cell));
+        return cell;
     }
 
     private void layoutCell(C cell, double l0, double breadth, double length) {
-        if(cell.isVisible()) {
-            visibleLength -= metrics.length(cell);
-        } else {
-            cell.setVisible(true);
-        }
-        visibleLength += length;
+        cell.setVisible(true);
         metrics.resizeRelocate(cell, breadthOffset, l0, breadth, length);
     }
 
@@ -924,6 +1073,18 @@ class VirtualFlowContent<T, C extends Node> extends Region {
 
     private double visibleCellsMinY() {
         return visibleCells().findFirst().map(metrics::minY).orElse(0.0);
+    }
+
+    private double averageLength() {
+        int n = 0;
+        double lengthSum = 0.0;
+        for(C cell: cells) {
+            if(cell.isVisible()) {
+                n += 1;
+                lengthSum += metrics.length(cell);
+            }
+        }
+        return n == 0 ? 0 : lengthSum / n;
     }
 
     private IndexRange firstVisibleRange() {
@@ -984,7 +1145,7 @@ class VirtualFlowContent<T, C extends Node> extends Region {
             shiftVisibleCellsByLength(-diff);
             fillViewport(0);
         } else {
-            goToY(pixels);
+            jumpToAbsolutePosition(pixels);
         }
 
         totalBreadthEstimate.invalidate();
@@ -1007,28 +1168,50 @@ class VirtualFlowContent<T, C extends Node> extends Region {
         }
     }
 
-    private void goToY(double pixels) {
+    private void jumpToAbsolutePosition(double pixels) {
         if(items.isEmpty()) {
             return;
         }
 
         // guess the first visible cell and its offset in the viewport
-        double total = totalLengthEstimate.get();
-        double avgLen = total / items.size();
+        double avgLen = averageLength();
         if(avgLen == 0) return;
         int first = (int) Math.floor(pixels / avgLen);
         double firstOffset = -(pixels % avgLen);
 
+        if(first < items.size()) {
+            jumpToItem(first, firstOffset);
+        } else {
+            jumpToEndOfItem(items.size()-1);
+        }
+    }
+
+    private C jumpToItem(int itemIdx) {
+        return jumpToItem(itemIdx, 0.0);
+    }
+
+    private C jumpToItem(int itemIdx, double itemOffset) {
         // remove all cells
         cullFrom(renderedFrom);
 
-        if(first < items.size()) {
-            placeInitialAt(first, firstOffset);
-            fillViewport();
-        } else {
-            placeInitialAtEnd(items.size()-1);
-            fillViewport();
-        }
+        C cell = placeInitialAt(itemIdx, itemOffset);
+        fillViewport();
+
+        return cell;
+    }
+
+    private C jumpToEndOfItem(int itemIdx) {
+        return jumpToEndOfItem(itemIdx, 0.0);
+    }
+
+    private C jumpToEndOfItem(int itemIdx, double offsetFromEnd) {
+        // remove all cells
+        cullFrom(renderedFrom);
+
+        C cell = placeInitialFromEnd(itemIdx, offsetFromEnd);
+        fillViewport();
+
+        return cell;
     }
 
     private double pixelsToPosition(double pixels) {
