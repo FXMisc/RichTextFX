@@ -30,31 +30,31 @@ import javafx.scene.shape.Rectangle;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public class VirtualFlow<T, N extends Node> extends Region {
+public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
     // Children of a VirtualFlow are cells. All children are unmanaged.
     // Children correspond to a sublist of items. Not all children are
     // visible. Visible children form a continuous subrange of all children.
     // Invisible children have CSS applied, but are not sized and positioned.
 
 
-    public static <T, N extends Node> VirtualFlow<T, N> createHorizontal(
-            ObservableList<T> items, BiFunction<Integer, T, Cell<T, N>> cellFactory) {
+    public static <T, C extends Cell<T, ?>> VirtualFlow<T, C> createHorizontal(
+            ObservableList<T> items, BiFunction<Integer, T, C> cellFactory) {
         return new VirtualFlow<>(items, cellFactory, new HorizontalFlowMetrics());
     }
 
-    public static <T, N extends Node> VirtualFlow<T, N> createVertical(
-            ObservableList<T> items, BiFunction<Integer, T, Cell<T, N>> cellFactory) {
+    public static <T, C extends Cell<T, ?>> VirtualFlow<T, C> createVertical(
+            ObservableList<T> items, BiFunction<Integer, T, C> cellFactory) {
         return new VirtualFlow<>(items, cellFactory, new VerticalFlowMetrics());
     }
 
     private final ScrollBar hbar;
     private final ScrollBar vbar;
-    private final VirtualFlowContent<T, N> content;
+    private final VirtualFlowContent<T, C> content;
 
 
     private VirtualFlow(
             ObservableList<T> items,
-            BiFunction<Integer, T, Cell<T, N>> cellFactory,
+            BiFunction<Integer, T, C> cellFactory,
             Metrics metrics) {
         this.content = new VirtualFlowContent<>(items, cellFactory, metrics);
 
@@ -213,13 +213,13 @@ public class VirtualFlow<T, N extends Node> extends Region {
 }
 
 
-class VirtualFlowContent<T, N extends Node> extends Region {
+class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
     private final List<T> items;
-    private final ObservableList<Cell<T, N>> cells;
-    private final BiFunction<Integer, T, Cell<T, N>> cellFactory;
+    private final ObservableList<C> cells;
+    private final BiFunction<Integer, T, C> cellFactory;
     private final Metrics metrics;
     private final BreadthTracker breadthTracker;
-    private final Queue<Cell<T, N>> cellPool = new LinkedList<>();
+    private final Queue<C> cellPool = new LinkedList<>();
 
     // hold the subscription of list binding to prevent it from being garbage collected
     @SuppressWarnings("unused")
@@ -257,7 +257,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
 
     VirtualFlowContent(
             ObservableList<T> items,
-            BiFunction<Integer, T, Cell<T, N>> cellFactory,
+            BiFunction<Integer, T, C> cellFactory,
             Metrics metrics) {
         this.items = items;
         this.cellFactory = cellFactory;
@@ -265,9 +265,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         this.breadthTracker = new BreadthTracker(items.size());
         this.cells = FXCollections.observableArrayList();
 
-        @SuppressWarnings("unchecked")
-        ObservableList<N> children = (ObservableList<N>) getChildren();
-        this.childrenBinding = EasyBind.listBind(children, EasyBind.map(cells, Cell::getNode));
+        this.childrenBinding = EasyBind.listBind(getChildren(), EasyBind.map(cells, Cell::getNode));
 
         Rectangle clipRect = new Rectangle();
         setClip(clipRect);
@@ -436,7 +434,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         }
     }
 
-    private Cell<T, N> renderInitial(int index) {
+    private C renderInitial(int index) {
         if(!cells.isEmpty()) {
             throw new IllegalStateException("There are some rendered cells already");
         }
@@ -445,21 +443,21 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         return render(index, 0);
     }
 
-    private Cell<T, N> render(int index, int childInsertionPos) {
+    private C render(int index, int childInsertionPos) {
         T item = items.get(index);
-        Cell<T, N> cell = createCell(index, item);
+        C cell = createCell(index, item);
         cell.getNode().setVisible(false);
         cells.add(childInsertionPos, cell);
         cell.getNode().applyCss();
         return cell;
     }
 
-    private Cell<T, N> render(int index) {
+    private C render(int index) {
         int renderedTo = renderedFrom + cells.size() + hole.map(IndexRange::getLength).orElse(0);
         if(index < renderedFrom - 1) {
             throw new IllegalArgumentException("Cannot render " + index + ". Rendered cells start at " + renderedFrom);
         } else if(index == renderedFrom - 1) {
-            Cell<T, N> cell = render(index, 0);
+            C cell = render(index, 0);
             renderedFrom -= 1;
             return cell;
         } else if(index == renderedTo) {
@@ -473,13 +471,13 @@ class VirtualFlowContent<T, N extends Node> extends Region {
             } else if(index >= hole.getEnd()) {
                 return cells.get(index - renderedFrom - hole.getLength());
             } else if(index == hole.getStart()) {
-                Cell<T, N> cell = render(index, index - renderedFrom);
+                C cell = render(index, index - renderedFrom);
                 this.hole = hole.getLength() == 1
                         ? Optional.empty()
                         : Optional.of(new IndexRange(index + 1, hole.getEnd()));
                 return cell;
             } else if(index == hole.getEnd() - 1) {
-                Cell<T, N> cell = render(index, hole.getStart() - renderedFrom);
+                C cell = render(index, hole.getStart() - renderedFrom);
                 this.hole = Optional.of(new IndexRange(hole.getStart(), hole.getEnd() - 1));
                 return cell;
             } else {
@@ -490,8 +488,8 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         }
     }
 
-    private Cell<T, N> createCell(int index, T item) {
-        Cell<T, N> cell = getFromPool();
+    private C createCell(int index, T item) {
+        C cell = getFromPool();
         if(cell != null) {
             cell.updateItem(index, item);
         } else {
@@ -501,11 +499,11 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         return cell;
     }
 
-    private Cell<T, N> getFromPool() {
+    private C getFromPool() {
         return cellPool.poll();
     }
 
-    private void addToPool(Cell<T, N> cell) {
+    private void addToPool(C cell) {
         cell.reset();
         if(cell.isReusable()) {
             cellPool.add(cell);
@@ -559,7 +557,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
     }
 
     private void dropCellRange(int from, int to) {
-        List<Cell<T, N>> toDrop = cells.subList(from, to);
+        List<C> toDrop = cells.subList(from, to);
         toDrop.forEach(this::addToPool);
         toDrop.clear();
     }
@@ -688,7 +686,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         if(hole.isPresent()) {
             IndexRange hole = this.hole.get();
             if(hole.getStart() > renderedFrom) {
-                N cellBeforeHole = cells.get(hole.getStart() - 1 - renderedFrom).getNode();
+                Node cellBeforeHole = cells.get(hole.getStart() - 1 - renderedFrom).getNode();
                 if(!cellBeforeHole.isVisible() || metrics.maxY(cellBeforeHole) <= 0) {
                     cullBefore(hole.getEnd());
                 } else {
@@ -732,7 +730,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
 
     private int paveForwardTo(double y, int startAfter) {
         int i = startAfter;
-        Cell<T, N> cell = getVisibleCell(i);
+        C cell = getVisibleCell(i);
         double maxY = metrics.maxY(cell);
         while(maxY < y && i < items.size() - 1) {
             cell = placeAt(++i, maxY);
@@ -741,8 +739,8 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         return i;
     }
 
-    private Cell<T, N> paveForwardToItem(int itemIdx, int startAfter) {
-        Cell<T, N> cell = getVisibleCell(startAfter);
+    private C paveForwardToItem(int itemIdx, int startAfter) {
+        C cell = getVisibleCell(startAfter);
         double maxY = metrics.maxY(cell);
         for(int i = startAfter + 1; i <= itemIdx; ++i) {
             cell = placeAt(i, maxY);
@@ -753,7 +751,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
 
     private int paveBackwardTo(double y, int startBefore) {
         int i = startBefore;
-        Cell<T, N> cell = getVisibleCell(i);
+        C cell = getVisibleCell(i);
         double minY = metrics.minY(cell);
         while(minY > y && i > 0) {
             cell = placeEndAt(--i, minY);
@@ -762,8 +760,8 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         return i;
     }
 
-    private Cell<T, N> paveBackwardToItem(int itemIdx, int startBefore) {
-        Cell<T, N> cell = getVisibleCell(startBefore);
+    private C paveBackwardToItem(int itemIdx, int startBefore) {
+        C cell = getVisibleCell(startBefore);
         double minY = metrics.minY(cell);
         for(int i = startBefore - 1; i >= itemIdx; --i) {
             cell = placeEndAt(i, minY);
@@ -772,7 +770,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         return cell;
     }
 
-    private Cell<T, N> paveToItem(int itemIdx) {
+    private C paveToItem(int itemIdx) {
         if(hasVisibleCells()) {
             IndexRange rng = firstVisibleRange();
             if(itemIdx < rng.getStart()) {
@@ -818,7 +816,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 showEndAtAfterVisibleRange(itemIdx, 0.0, rng.getEnd() - 1);
             } else { // already visible
-                N cell = getVisibleCell(itemIdx).getNode();
+                Node cell = getVisibleCell(itemIdx).getNode();
                 double spaceBefore = metrics.minY(cell);
                 double spaceAfter = length() - metrics.maxY(cell);
                 if(spaceBefore < 0 && spaceAfter > 0) {
@@ -850,7 +848,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 jumpToItem(itemIdx, offset);
             } else {
-                N cell = getVisibleCell(itemIdx).getNode();
+                Node cell = getVisibleCell(itemIdx).getNode();
                 double minY = metrics.minY(cell);
                 if(minY != offset) {
                     shiftVisibleCellsByLength(offset - minY);
@@ -870,7 +868,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 showEndAtAfterVisibleRange(itemIdx, offsetFromEnd, rng.getEnd());
             } else {
-                N cell = getVisibleCell(itemIdx).getNode();
+                Node cell = getVisibleCell(itemIdx).getNode();
                 double maxY = metrics.maxY(cell);
                 double targetMaxY = length() + offsetFromEnd;
                 if(maxY != targetMaxY) {
@@ -888,7 +886,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         if(distance > length()) {
             jumpToItem(itemIdx, offset);
         } else {
-            N cell = paveBackwardToItem(itemIdx, firstVisible).getNode();
+            Node cell = paveBackwardToItem(itemIdx, firstVisible).getNode();
             double minY = metrics.minY(cell);
             if(minY != offset) {
                 shiftVisibleCellsByLength(offset - minY);
@@ -902,7 +900,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         if(distance > length()) {
             jumpToEndOfItem(itemIdx, offsetFromEnd);
         } else {
-            N cell = paveForwardToItem(itemIdx, lastVisible).getNode();
+            Node cell = paveForwardToItem(itemIdx, lastVisible).getNode();
             double maxY = metrics.maxY(cell);
             double targetMaxY = length() + offsetFromEnd;
             if(maxY != targetMaxY) {
@@ -920,7 +918,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         // find first in the viewport
         int i = 0;
         for(; i < cells.size(); ++i) {
-            N cell = cells.get(i).getNode();
+            Node cell = cells.get(i).getNode();
             if(cell.isVisible() && metrics.maxY(cell) > 0) {
                 break;
             }
@@ -937,7 +935,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         // find first after the viewport
         int i = 0;
         for(; i < cells.size(); ++i) {
-            N cell = cells.get(i).getNode();
+            Node cell = cells.get(i).getNode();
             if(!cell.isVisible() || metrics.minY(cell) >= length()) {
                 break;
             }
@@ -946,12 +944,12 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         cullFrom(renderedFrom + i);
     }
 
-    private Cell<T, N> getVisibleCell(int itemIdx) {
+    private C getVisibleCell(int itemIdx) {
         if(itemIdx < renderedFrom) {
             throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
         } else if(hole.isPresent()) {
             IndexRange hole = this.hole.get();
-            Cell<T, N> cell;
+            C cell;
             if(itemIdx < hole.getStart()) {
                 cell = cells.get(itemIdx - renderedFrom);
             } else if(itemIdx < hole.getEnd()) {
@@ -969,7 +967,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         } else if(itemIdx >= renderedFrom + cells.size()) {
             throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
         } else {
-            Cell<T, N> cell = cells.get(itemIdx - renderedFrom);
+            C cell = cells.get(itemIdx - renderedFrom);
             if(cell.getNode().isVisible()) {
                 return cell;
             } else {
@@ -985,14 +983,14 @@ class VirtualFlowContent<T, N extends Node> extends Region {
     private void shrinkHoleFromLeft(double placeAtY) {
         int itemIdx = hole.get().getStart();
         int cellIdx = itemIdx - renderedFrom;
-        Cell<T, N> cell = render(itemIdx, cellIdx);
+        C cell = render(itemIdx, cellIdx);
         placeAt(itemIdx, cell, placeAtY);
         hole = hole.get().getLength() == 1
                 ? Optional.empty()
                 : Optional.of(new IndexRange(itemIdx + 1, hole.get().getEnd()));
     }
 
-    private void placeAt(int itemIdx, Cell<T, N> cell, double y) {
+    private void placeAt(int itemIdx, C cell, double y) {
         double minBreadth = metrics.minBreadth(cell.getNode());
         breadthTracker.reportBreadth(itemIdx, minBreadth);
         double breadth = Math.max(maxKnownBreadth(), breadth());
@@ -1000,7 +998,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         layoutCell(cell.getNode(), y, breadth, length);
     }
 
-    private void placeEndAt(int itemIdx, Cell<T, N> cell, double endY) {
+    private void placeEndAt(int itemIdx, C cell, double endY) {
         double minBreadth = metrics.minBreadth(cell.getNode());
         breadthTracker.reportBreadth(itemIdx, minBreadth);
         double breadth = Math.max(maxKnownBreadth(), breadth());
@@ -1008,20 +1006,20 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         layoutCell(cell.getNode(), endY - length, breadth, length);
     }
 
-    private Cell<T, N> placeAt(int itemIdx, double y) {
-        Cell<T, N> cell = render(itemIdx);
+    private C placeAt(int itemIdx, double y) {
+        C cell = render(itemIdx);
         placeAt(itemIdx, cell, y);
         return cell;
     }
 
-    private Cell<T, N> placeEndAt(int itemIdx, double endY) {
-        Cell<T, N> cell = render(itemIdx);
+    private C placeEndAt(int itemIdx, double endY) {
+        C cell = render(itemIdx);
         placeEndAt(itemIdx, cell, endY);
         return cell;
     }
 
-    private Cell<T, N> placeInitialAt(int itemIdx, double y) {
-        Cell<T, N> cell = renderInitial(itemIdx);
+    private C placeInitialAt(int itemIdx, double y) {
+        C cell = renderInitial(itemIdx);
         placeAt(itemIdx, cell, y);
         return cell;
     }
@@ -1030,14 +1028,14 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         placeInitialAt(itemIdx, 0.0);
     }
 
-    private Cell<T, N> placeInitialFromEnd(int itemIdx, double offsetFromEnd) {
-        Cell<T, N> cell = renderInitial(itemIdx);
+    private C placeInitialFromEnd(int itemIdx, double offsetFromEnd) {
+        C cell = renderInitial(itemIdx);
         double maxY = length() + offsetFromEnd;
         placeAt(itemIdx, cell, maxY - metrics.length(cell.getNode()));
         return cell;
     }
 
-    private void layoutCell(N cell, double l0, double breadth, double length) {
+    private void layoutCell(Node cell, double l0, double breadth, double length) {
         cell.setVisible(true);
         metrics.resizeRelocate(cell, breadthOffset, l0, breadth, length);
     }
@@ -1061,7 +1059,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         }
 
         double y = visibleCellsMinY();
-        for(Cell<T, N> cell: cells) {
+        for(C cell: cells) {
             if(cell.getNode().isVisible()) {
                 double length = metrics.prefLength(cell.getNode(), breadth);
                 layoutCell(cell.getNode(), y, breadth, length);
@@ -1070,7 +1068,7 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         }
     }
 
-    private Stream<N> visibleCells() {
+    private Stream<? extends Node> visibleCells() {
         return cells.stream().map(Cell::getNode).filter(Node::isVisible);
     }
 
@@ -1201,29 +1199,29 @@ class VirtualFlowContent<T, N extends Node> extends Region {
         }
     }
 
-    private Cell<T, N> jumpToItem(int itemIdx) {
+    private C jumpToItem(int itemIdx) {
         return jumpToItem(itemIdx, 0.0);
     }
 
-    private Cell<T, N> jumpToItem(int itemIdx, double itemOffset) {
+    private C jumpToItem(int itemIdx, double itemOffset) {
         // remove all cells
         cullFrom(renderedFrom);
 
-        Cell<T, N> cell = placeInitialAt(itemIdx, itemOffset);
+        C cell = placeInitialAt(itemIdx, itemOffset);
         fillViewport();
 
         return cell;
     }
 
-    private Cell<T, N> jumpToEndOfItem(int itemIdx) {
+    private C jumpToEndOfItem(int itemIdx) {
         return jumpToEndOfItem(itemIdx, 0.0);
     }
 
-    private Cell<T, N> jumpToEndOfItem(int itemIdx, double offsetFromEnd) {
+    private C jumpToEndOfItem(int itemIdx, double offsetFromEnd) {
         // remove all cells
         cullFrom(renderedFrom);
 
-        Cell<T, N> cell = placeInitialFromEnd(itemIdx, offsetFromEnd);
+        C cell = placeInitialFromEnd(itemIdx, offsetFromEnd);
         fillViewport();
 
         return cell;
