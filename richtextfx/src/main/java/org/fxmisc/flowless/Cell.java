@@ -1,5 +1,8 @@
 package org.fxmisc.flowless;
 
+import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
+
 import javafx.scene.Node;
 
 @FunctionalInterface
@@ -62,5 +65,37 @@ public interface Cell<T, N extends Node> {
      */
     default void dispose() {
         // do nothing by default
+    }
+
+    default Cell<T, N> beforeDispose(Runnable action) {
+        return CellWrapper.beforeDispose(this, action);
+    }
+
+    default Cell<T, N> afterDispose(Runnable action) {
+        return CellWrapper.afterDispose(this, action);
+    }
+
+    default Cell<T, N> beforeReset(Runnable action) {
+        return CellWrapper.beforeReset(this, action);
+    }
+
+    default Cell<T, N> afterReset(Runnable action) {
+        return CellWrapper.afterReset(this, action);
+    }
+
+    default Cell<T, N> beforeUpdateItem(BiConsumer<Integer, T> action) {
+        return CellWrapper.beforeUpdateItem(this, action);
+    }
+
+    default Cell<T, N> afterUpdateItem(BiConsumer<Integer, T> action) {
+        return CellWrapper.afterUpdateItem(this, action);
+    }
+
+    default Cell<T, N> beforeUpdateIndex(IntConsumer action) {
+        return CellWrapper.beforeUpdateIndex(this, action);
+    }
+
+    default Cell<T, N> afterUpdateIndex(IntConsumer action) {
+        return CellWrapper.afterUpdateIndex(this, action);
     }
 }
