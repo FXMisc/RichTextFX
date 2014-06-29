@@ -293,7 +293,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         this.breadthTracker = new BreadthTracker(items.size());
         this.cells = FXCollections.observableArrayList();
 
-        this.childrenBinding = EasyBind.listBind(getChildren(), EasyBind.map(cells, Cell::getNode));
+        ObservableList<Node> cellNodes = EasyBind.map(cells, c -> c.getNode());
+        this.childrenBinding = EasyBind.listBind(getChildren(), cellNodes);
 
         Rectangle clipRect = new Rectangle();
         setClip(clipRect);
