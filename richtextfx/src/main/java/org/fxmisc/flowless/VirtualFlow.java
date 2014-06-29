@@ -134,38 +134,66 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
         return content.getContentBias();
     }
 
+    public void show(int index) {
+        content.show(index);
+    }
+
+    public void showAsFirst(int itemIndex) {
+        content.showAsFirst(itemIndex);
+    }
+
+    public void showAsLast(int itemIndex) {
+        content.showAsLast(itemIndex);
+    }
+
+    public C getCell(int itemIndex) {
+        return content.paveToItem(itemIndex);
+    }
+
+    public Optional<C> getCellIfVisible(int itemIndex) {
+        return content.tryGetVisibleCell(itemIndex);
+    }
+
+    public Stream<C> visibleCells() {
+        return content.visibleCells();
+    }
+
+    public IndexRange getVisibleRange() {
+        return content.firstVisibleRange();
+    }
+
     @Override
-    public double computePrefWidth(double height) {
+    protected double computePrefWidth(double height) {
         return content.prefWidth(height)
                 + (vbar.isVisible() ? vbar.prefWidth(-1) : 0);
     }
 
     @Override
-    public double computePrefHeight(double width) {
+    protected double computePrefHeight(double width) {
         return content.prefHeight(width)
                 + (hbar.isVisible() ? hbar.prefHeight(-1) : 0);
     }
 
     @Override
-    public double computeMinWidth(double height) {
+    protected double computeMinWidth(double height) {
         return content.minWidth(height)
                 + (vbar.isVisible() ? vbar.minWidth(-1) : 0);
     }
 
     @Override
-    public double computeMinHeight(double width) {
+    protected double computeMinHeight(double width) {
         return content.minHeight(width)
                 + (hbar.isVisible() ? hbar.minHeight(-1) : 0);
     }
 
     @Override
-    public double computeMaxWidth(double height) {
+    protected double computeMaxWidth(double height) {
         return content.maxWidth(height)
                 + (vbar.isVisible() ? vbar.maxWidth(-1) : 0);
     }
 
     @Override
-    public double computeMaxHeight(double width) {
+    protected double computeMaxHeight(double width) {
         return content.maxHeight(width)
                 + (hbar.isVisible() ? hbar.maxHeight(-1) : 0);
     }
@@ -770,7 +798,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         return cell;
     }
 
-    private C paveToItem(int itemIdx) {
+    C paveToItem(int itemIdx) {
         if(hasVisibleCells()) {
             IndexRange rng = firstVisibleRange();
             if(itemIdx < rng.getStart()) {
@@ -808,7 +836,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    private void show(int itemIdx) {
+    void show(int itemIdx) {
         if(hasVisibleCells()) {
             IndexRange rng = firstVisibleRange();
             if(itemIdx < rng.getStart()) {
@@ -832,11 +860,11 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    private void showAsFirst(int itemIdx) {
+    void showAsFirst(int itemIdx) {
         showStartAt(itemIdx, 0.0);
     }
 
-    private void showAsLast(int itemIdx) {
+    void showAsLast(int itemIdx) {
         showEndAt(itemIdx, 0.0);
     }
 
@@ -944,35 +972,42 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         cullFrom(renderedFrom + i);
     }
 
-    private C getVisibleCell(int itemIdx) {
+    private Optional<Integer> itemToCellIndex(int itemIdx) {
         if(itemIdx < renderedFrom) {
-            throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
+            return Optional.empty();
         } else if(hole.isPresent()) {
             IndexRange hole = this.hole.get();
-            C cell;
             if(itemIdx < hole.getStart()) {
-                cell = cells.get(itemIdx - renderedFrom);
+                return Optional.of(itemIdx - renderedFrom);
             } else if(itemIdx < hole.getEnd()) {
-                throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
+                return Optional.empty();
             } else if(itemIdx < renderedFrom + hole.getLength() + cells.size()) {
-                cell = cells.get(itemIdx - hole.getLength() - renderedFrom);
+                return Optional.of(itemIdx - hole.getLength() - renderedFrom);
             } else {
-                throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
-            }
-            if(cell.getNode().isVisible()) {
-                return cell;
-            } else {
-                throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
+                return Optional.empty();
             }
         } else if(itemIdx >= renderedFrom + cells.size()) {
-            throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
+            return Optional.empty();
         } else {
-            C cell = cells.get(itemIdx - renderedFrom);
-            if(cell.getNode().isVisible()) {
-                return cell;
-            } else {
-                throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
-            }
+            return Optional.of(itemIdx - renderedFrom);
+        }
+    }
+
+    Optional<C> tryGetVisibleCell(int itemIdx) {
+        return itemToCellIndex(itemIdx).flatMap(cellIdx -> {
+            C cell = cells.get(cellIdx);
+            return cell.getNode().isVisible()
+                    ? Optional.of(cell)
+                    : Optional.empty();
+        });
+    }
+
+    private C getVisibleCell(int itemIdx) {
+        Optional<C> cell = tryGetVisibleCell(itemIdx);
+        if(cell.isPresent()) {
+            return cell.get();
+        } else {
+            throw new IllegalArgumentException("Item " + itemIdx + " is not visible");
         }
     }
 
@@ -1041,14 +1076,14 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
     }
 
     private void shiftVisibleCellsByLength(double shift) {
-        visibleCells().forEach(cell -> {
+        visibleNodes().forEach(cell -> {
             metrics.relocate(cell, breadthOffset, metrics.minY(cell) + shift);
         });
     }
 
     private void shiftVisibleCellsByBreadth(double shift) {
         breadthOffset += shift;
-        visibleCells().forEach(cell -> {
+        visibleNodes().forEach(cell -> {
             metrics.relocate(cell, breadthOffset, metrics.minY(cell));
         });
     }
@@ -1068,8 +1103,12 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    private Stream<? extends Node> visibleCells() {
-        return cells.stream().map(Cell::getNode).filter(Node::isVisible);
+    private Stream<Node> visibleNodes() {
+        return getChildren().stream().filter(Node::isVisible);
+    }
+
+    Stream<C> visibleCells() {
+        return cells.stream().filter(c -> c.getNode().isVisible());
     }
 
     private double maxKnownBreadth() {
@@ -1085,7 +1124,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
     }
 
     private double visibleCellsMinY() {
-        return visibleCells().findFirst().map(metrics::minY).orElse(0.0);
+        return visibleNodes().findFirst().map(metrics::minY).orElse(0.0);
     }
 
     private double averageLength() {
@@ -1100,7 +1139,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         return n == 0 ? 0 : lengthSum / n;
     }
 
-    private IndexRange firstVisibleRange() {
+    IndexRange firstVisibleRange() {
         if(cells.isEmpty()) {
             throw new IllegalStateException("no rendered cells");
         }
