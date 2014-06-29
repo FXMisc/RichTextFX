@@ -1347,12 +1347,11 @@ interface Metrics {
     Orientation getContentBias();
     double length(Bounds bounds);
     double breadth(Bounds bounds);
-    double minY(Bounds bounds);
-    double maxY(Bounds bounds);
+    double layoutY(Node cell);
     default double length(Node cell) { return length(cell.getLayoutBounds()); }
     default double breadth(Node cell) { return breadth(cell.getLayoutBounds()); }
-    default double minY(Node cell) { return minY(cell.getBoundsInParent()); }
-    default double maxY(Node cell) { return maxY(cell.getBoundsInParent()); }
+    default double minY(Node cell) { return layoutY(cell); }
+    default double maxY(Node cell) { return layoutY(cell) + length(cell); }
     default double minY(Cell<?, ?> cell) { return minY(cell.getNode()); }
     default double maxY(Cell<?, ?> cell) { return maxY(cell.getNode()); }
     double minBreadth(Node cell);
@@ -1411,13 +1410,8 @@ final class HorizontalFlowMetrics implements Metrics {
     }
 
     @Override
-    public double maxY(Bounds bounds) {
-        return bounds.getMaxX();
-    }
-
-    @Override
-    public double minY(Bounds bounds) {
-        return bounds.getMinX();
+    public double layoutY(Node cell) {
+        return cell.getLayoutX();
     }
 
     @Override
@@ -1510,13 +1504,8 @@ final class VerticalFlowMetrics implements Metrics {
     }
 
     @Override
-    public double maxY(Bounds bounds) {
-        return bounds.getMaxY();
-    }
-
-    @Override
-    public double minY(Bounds bounds) {
-        return bounds.getMinY();
+    public double layoutY(Node cell) {
+        return cell.getLayoutY();
     }
 
     @Override
