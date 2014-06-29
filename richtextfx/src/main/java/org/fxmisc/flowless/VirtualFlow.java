@@ -641,8 +641,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             // change within rendered cells,
             // at least one cell retained on both sides
             dropCellRange(pos - renderedFrom, pos + removedSize - renderedFrom);
-            for(int i = pos + renderedFrom; i < cells.size(); ++i) {
-                cells.get(i).updateIndex(pos + addedSize + i);
+            for(int i = pos - renderedFrom; i < cells.size(); ++i) {
+                cells.get(i).updateIndex(renderedFrom + addedSize + i);
             }
             if(addedSize > 0) {
                 // creating a hole in rendered cells
@@ -658,7 +658,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             dropCellsBefore(pos + removedSize - renderedFrom);
             renderedFrom = pos + addedSize;
             for(int i = 0; i < cells.size(); ++i) {
-                cells.get(i).updateIndex(pos + i);
+                cells.get(i).updateIndex(renderedFrom + i);
             }
         }
 
