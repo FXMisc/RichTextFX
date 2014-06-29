@@ -56,6 +56,7 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
             ObservableList<T> items,
             BiFunction<Integer, T, C> cellFactory,
             Metrics metrics) {
+        this.getStyleClass().add("virtual-flow");
         this.content = new VirtualFlowContent<>(items, cellFactory, metrics);
 
         // create scrollbars
@@ -287,6 +288,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             ObservableList<T> items,
             BiFunction<Integer, T, C> cellFactory,
             Metrics metrics) {
+        this.getStyleClass().add("virtual-flow-content");
         this.items = items;
         this.cellFactory = cellFactory;
         this.metrics = metrics;
