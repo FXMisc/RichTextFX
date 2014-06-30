@@ -25,8 +25,6 @@
 
 package org.fxmisc.richtext.demo;
 
-import org.fxmisc.richtext.StyleClassedTextArea;
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -39,6 +37,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+
+import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class ManualHighlighting extends Application {
 

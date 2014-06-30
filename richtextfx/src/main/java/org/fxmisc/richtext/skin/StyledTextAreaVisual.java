@@ -11,9 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javafx.beans.InvalidationListener;
@@ -21,7 +19,6 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -37,7 +34,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -45,6 +41,8 @@ import javafx.stage.PopupWindow;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
+import org.fxmisc.flowless.Cell;
+import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.PopupAlignment;
@@ -85,8 +83,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     private final StyleableObjectProperty<Paint> highlightTextFill
             = new HighlightTextFillProperty(this, Color.WHITE);
 
-    private final DoubleBinding wrapWidth;
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -97,8 +93,8 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     /**
      * Stream of all mouse events on all cells. May be used by behavior.
      */
-    private final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents;
-    final EventStream<Tuple2<ParagraphCell<S>, MouseEvent>> cellMouseEvents() {
+    private final EventStream<Tuple2<ParagraphBox<S>, MouseEvent>> cellMouseEvents;
+    final EventStream<Tuple2<ParagraphBox<S>, MouseEvent>> cellMouseEvents() {
         return cellMouseEvents;
     }
 
@@ -117,7 +113,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private final BooleanBinding caretVisible;
 
-    private final MyListView<Paragraph<S>, ParagraphCell<S>> listView;
+    private final VirtualFlow<Paragraph<S>, Cell<Paragraph<S>, ParagraphBox<S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -138,53 +134,39 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         // load the default style
         area.getStylesheets().add(StyledTextAreaVisual.class.getResource("styled-text-area.css").toExternalForm());
 
-        // keeps track of all cells
-        @SuppressWarnings("unchecked")
-        ObservableSet<ParagraphCell<S>> cells = FXCollections.observableSet();
-
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
-        ObservableSet<ParagraphCell<S>> nonEmptyCells = FXCollections.observableSet();
+        ObservableSet<ParagraphBox<S>> nonEmptyCells = FXCollections.observableSet();
 
         // Initialize content
-        listView = new MyListView<>(
+        virtualFlow = VirtualFlow.createVertical(
                 area.getParagraphs(),
-                lv -> { // Use ParagraphCell as cell implementation
-                    ParagraphCell<S> cell = new ParagraphCell<S>(applyStyle);
-                    cells.add(cell);
-                    valuesOf(cell.emptyProperty()).subscribe(empty -> {
-                        if(empty) {
-                            nonEmptyCells.remove(cell);
-                        } else {
-                            nonEmptyCells.add(cell);
-                        }
-                    });
-                    cellCreated(cell);
-                    return cell;
+                (index, par) -> {
+                    Cell<Paragraph<S>, ParagraphBox<S>> cell = createCell(index, par, applyStyle);
+                    nonEmptyCells.add(cell.getNode());
+                    return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
+                            .afterUpdateItem((i, p) -> nonEmptyCells.add(cell.getNode()));
                 });
 
         // initialize navigator
         IntSupplier cellCount = () -> area.getParagraphs().size();
-        IntUnaryOperator cellLength = i -> listView.mapCell(i, c -> c.getLineCount());
+        IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
         navigator = new TwoLevelNavigator(cellCount, cellLength);
-
-        // make wrapWidth behave according to the wrapText property
-        wrapWidth = Bindings.when(area.wrapTextProperty())
-                .then(listView.widthProperty())
-                .otherwise(Region.USE_COMPUTED_SIZE);
-        manageBinding(wrapWidth);
 
         // emits a value every time the area is done updating
         EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().offs();
 
         // follow the caret every time the caret position or paragraphs change
         EventStream<Void> caretPosDirty = invalidationsOf(area.caretPositionProperty());
-        EventStream<Void> paragraphsDirty = invalidationsOf(listView.getItems());
+        EventStream<Void> paragraphsDirty = invalidationsOf(area.getParagraphs());
         EventStream<Void> selectionDirty = invalidationsOf(area.selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
         EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         EventSource<Void> positionPopupImpulse = new EventSource<>();
-        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> followCaret(() -> positionPopupImpulse.push(null)));
+        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> {
+            followCaret();
+            positionPopupImpulse.push(null);
+        });
 
         // blink caret only when focused
         listenTo(area.focusedProperty(), (obs, old, isFocused) -> {
@@ -237,7 +219,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
         // initialize stream of all mouse events on all cells
         cellMouseEvents = merge(
-                cells,
+                nonEmptyCells,
                 c -> eventsOf(c, MouseEvent.ANY).map(e -> t(c, e)));
     }
 
@@ -250,12 +232,13 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     @Override
     public Node getNode() {
-        return listView;
+        return virtualFlow;
     }
 
     @Override
     public void dispose() {
         subscriptions.unsubscribe();
+        virtualFlow.dispose();
     }
 
 
@@ -280,11 +263,11 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      * ********************************************************************** */
 
     void showAsFirst(int index) {
-        listView.showAsFirst(index);
+        virtualFlow.showAsFirst(index);
     }
 
     void showAsLast(int index) {
-        listView.showAsLast(index);
+        virtualFlow.showAsLast(index);
     }
 
 
@@ -295,11 +278,11 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      * ********************************************************************** */
 
     int getFirstVisibleIndex() {
-        return listView.getFirstVisibleIndex();
+        return virtualFlow.getVisibleRange().getStart();
     }
 
     int getLastVisibleIndex() {
-        return listView.getLastVisibleIndex();
+        return virtualFlow.getVisibleRange().getEnd() - 1;
     }
 
     double getCaretOffsetX() {
@@ -309,7 +292,8 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     int getInsertionIndex(Position targetLine, double x) {
         int parIdx = targetLine.getMajor();
-        int parInsertionIndex = listView.mapCell(parIdx, c -> getCellInsertionIndex(c, targetLine.getMinor(), x));
+        ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
+        int parInsertionIndex = getCellInsertionIndex(cell, targetLine.getMinor(), x);
         return getParagraphOffset(parIdx) + parInsertionIndex;
     }
 
@@ -336,60 +320,126 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      *                                                                        *
      * ********************************************************************** */
 
-    private void cellCreated(ParagraphCell<S> cell) {
+    private Cell<Paragraph<S>, ParagraphBox<S>> createCell(
+            int index,
+            Paragraph<S> paragraph,
+            BiConsumer<Text, S> applyStyle) {
+
+        ParagraphBox<S> box = new ParagraphBox<>(index, paragraph, applyStyle);
+
+        box.highlightFillProperty().bind(highlightFill);
+        box.highlightTextFillProperty().bind(highlightTextFill);
+        box.wrapTextProperty().bind(area.wrapTextProperty());
+        box.graphicFactoryProperty().bind(area.paragraphGraphicFactoryProperty());
+
         BooleanBinding hasCaret = Bindings.equal(
-                cell.indexProperty(),
+                box.indexProperty(),
                 area.currentParagraphProperty());
 
         // caret is visible only in the paragraph with the caret
-        cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
-
-        cell.highlightFillProperty().bind(highlightFill);
-        cell.highlightTextFillProperty().bind(highlightTextFill);
+        BooleanBinding cellCaretVisible = hasCaret.and(caretVisible);
+        box.caretVisibleProperty().bind(cellCaretVisible);
 
         // bind cell's caret position to area's caret column,
         // when the cell is the one with the caret
-        EasyBind.bindConditionally(
-                cell.caretPositionProperty(),
-                area.caretColumnProperty(),
-                hasCaret);
+        org.fxmisc.easybind.Subscription caretPositionSub =
+                EasyBind.bindConditionally(
+                        box.caretPositionProperty(),
+                        area.caretColumnProperty(),
+                        hasCaret);
 
         // keep paragraph selection updated
         ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
-            int idx = cell.getIndex();
+            int idx = box.getIndex();
             return idx != -1
                     ? area.getParagraphSelection(idx)
                     : StyledTextArea.EMPTY_RANGE;
-        }, area.selectionProperty(), cell.indexProperty());
-        cell.selectionProperty().bind(cellSelection);
-        manageBinding(cellSelection);
+        }, area.selectionProperty(), box.indexProperty());
+        box.selectionProperty().bind(cellSelection);
+
+        return new Cell<Paragraph<S>, ParagraphBox<S>>() {
+            @Override
+            public ParagraphBox<S> getNode() {
+                return box;
+            }
+
+            @Override
+            public void updateIndex(int index) {
+                box.setIndex(index);
+            }
+
+            @Override
+            public void dispose() {
+                box.highlightFillProperty().unbind();
+                box.highlightTextFillProperty().unbind();
+                box.wrapTextProperty().unbind();
+                box.graphicFactoryProperty().unbind();
+
+                box.caretVisibleProperty().unbind();
+                cellCaretVisible.dispose();
+                hasCaret.dispose();
+                caretPositionSub.unsubscribe();
+
+                box.selectionProperty().unbind();
+                cellSelection.dispose();
+            }
+        };
+    }
+
+//    private void cellCreated(ParagraphCell<S> cell) {
+//        BooleanBinding hasCaret = Bindings.equal(
+//                cell.indexProperty(),
+//                area.currentParagraphProperty());
+//
+//        // caret is visible only in the paragraph with the caret
+//        cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
+
+//        cell.highlightFillProperty().bind(highlightFill);
+//        cell.highlightTextFillProperty().bind(highlightTextFill);
+
+//        // bind cell's caret position to area's caret column,
+//        // when the cell is the one with the caret
+//        EasyBind.bindConditionally(
+//                cell.caretPositionProperty(),
+//                area.caretColumnProperty(),
+//                hasCaret);
+
+//        // keep paragraph selection updated
+//        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
+//            int idx = cell.getIndex();
+//            return idx != -1
+//                    ? area.getParagraphSelection(idx)
+//                    : StyledTextArea.EMPTY_RANGE;
+//        }, area.selectionProperty(), cell.indexProperty());
+//        cell.selectionProperty().bind(cellSelection);
+//        manageBinding(cellSelection);
 
         // keep cell's wrap width updated
-        cell.wrapWidthProperty().bind(wrapWidth);
+//        cell.wrapWidthProperty().bind(wrapWidth);
 
         // Respond to changes in paragraphGraphicFactory.
         // Use event stream because it is unbound from area on unsubscribe,
         // while binding's weak listener will not be removed from area until
         // paragraphGraphicFactoryProperty changes, which might never happen.
-        Binding<Supplier<? extends Node>> cellGraphicFactory =
-                EventStreams.valuesOf(area.paragraphGraphicFactoryProperty())
-                        .<Supplier<? extends Node>> map(f -> f == null ? null : () -> f.apply(cell.getIndex()))
-                        .toBinding(null);
-        cell.graphicFactoryProperty().bind(cellGraphicFactory);
-        manageBinding(cellGraphicFactory);
+//        Binding<Supplier<? extends Node>> cellGraphicFactory =
+//                EventStreams.valuesOf(area.paragraphGraphicFactoryProperty())
+//                        .<Supplier<? extends Node>> map(f -> f == null ? null : () -> f.apply(cell.getIndex()))
+//                        .toBinding(null);
+//        cell.graphicFactoryProperty().bind(cellGraphicFactory);
+//        manageBinding(cellGraphicFactory);
+//    }
+
+    private ParagraphBox<S> getCell(int index) {
+        return virtualFlow.getCellIfVisible(index).get().getNode();
     }
 
-    private ParagraphCell<S> getCell(int index) {
-        return listView.getVisibleCell(index).get();
-    }
-
-    private int getCellInsertionIndex(ParagraphCell<S> cell, int line, double x) {
+    private int getCellInsertionIndex(ParagraphBox<S> cell, int line, double x) {
         return cell.hitText(line, x)
                 .map(HitInfo::getInsertionIndex)
-                .orElse(cell.getItem().length());
+                .orElse(cell.getParagraph().length());
     }
 
-    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphCell<S>> cells, Duration delay) {
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S>> cells, Duration delay) {
         return merge(cells, c -> c.stationaryIndices(delay).unify(
                 l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
                 r -> MouseOverTextEvent.end()));
@@ -399,18 +449,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         return area.position(parIdx, 0).toOffset();
     }
 
-    private void followCaret(Runnable callback) {
-        int par = area.getCurrentParagraph();
-
-        // Bring the current paragraph to the viewport, then update the popup.
-        Paragraph<S> paragraph = area.getParagraphs().get(par);
-        listView.show(par, item -> {
-            // Since this callback is executed on the next pulse,
-            // make sure the item (paragraph) hasn't changed in the meantime.
-            if(item == paragraph) {
-                callback.run();
-            }
-        });
+    private void followCaret() {
+        // bring the current paragraph to the viewport
+        virtualFlow.show(area.getCurrentParagraph());
     }
 
     private void positionPopup(PopupWindow popup, PopupAlignment alignment, UnaryOperator<Point2D> adjustment) {
@@ -438,8 +479,8 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     }
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
-        return listView.getVisibleCell(area.getCurrentParagraph())
-                .flatMap(ParagraphCell::getCaretBoundsOnScreen);
+        return virtualFlow.getCellIfVisible(area.getCurrentParagraph())
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
     private Optional<Bounds> getSelectionBoundsOnScreen() {
@@ -448,10 +489,8 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
             return getCaretBoundsOnScreen();
         }
 
-        IndexRange visibleRange = listView.getVisibleRange();
-        Bounds[] bounds = IntStream.range(visibleRange.getStart(), visibleRange.getEnd())
-                .<Optional<Bounds>>mapToObj(i -> listView.getVisibleCell(i)
-                        .flatMap(ParagraphCell::getSelectionBoundsOnScreen))
+        Bounds[] bounds = virtualFlow.visibleCells()
+                .map(c -> c.getNode().getSelectionBoundsOnScreen())
                 .filter(opt -> opt.isPresent())
                 .map(opt -> opt.get())
                 .toArray(n -> new Bounds[n]);

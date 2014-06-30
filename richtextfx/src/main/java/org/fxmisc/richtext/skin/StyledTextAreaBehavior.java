@@ -167,6 +167,8 @@ public class StyledTextAreaBehavior implements Behavior {
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
                         .subscribe(pair -> handleMouseEvent(pair._1, pair._2)),
+                EventStreams.eventsOf(area, MouseEvent.ANY)
+                        .subscribe(this::handleMouseEvent),
                 EventStreams.eventsOf(area, KeyEvent.ANY)
                         .subscribe(e -> handleKeyEvent(e)));
     }
@@ -340,7 +342,17 @@ public class StyledTextAreaBehavior implements Behavior {
         goToLine(visual.position(targetRow, 0), selectionPolicy);
     }
 
-    private void handleMouseEvent(ParagraphCell<?> cell, MouseEvent e) {
+    /**
+     * Handle mouse event on void space, i.e. beyond cells.
+     */
+    private void handleMouseEvent(MouseEvent e) {
+        if(e.getEventType() == MOUSE_PRESSED && e.getButton() == MouseButton.PRIMARY) {
+            area.end(SelectionPolicy.CLEAR);
+            e.consume();
+        }
+    }
+
+    private void handleMouseEvent(ParagraphBox<?> cell, MouseEvent e) {
         if(e.getEventType() == MOUSE_PRESSED) {
             mousePressed(cell, e);
             e.consume();
@@ -363,7 +375,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private void mousePressed(ParagraphCell<?> cell, MouseEvent e) {
+    private void mousePressed(ParagraphBox<?> cell, MouseEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
@@ -380,7 +392,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private void leftPress(ParagraphCell<?> cell, MouseEvent e) {
+    private void leftPress(ParagraphBox<?> cell, MouseEvent e) {
         HitInfo hit = hitCell(cell, e);
 
         if(e.isShiftDown()) {
@@ -417,7 +429,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private void mouseDragOver(ParagraphCell<?> cell, MouseDragEvent e) {
+    private void mouseDragOver(ParagraphBox<?> cell, MouseDragEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
@@ -438,7 +450,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private void mouseReleased(ParagraphCell<?> cell, MouseEvent e) {
+    private void mouseReleased(ParagraphBox<?> cell, MouseEvent e) {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
@@ -453,7 +465,7 @@ public class StyledTextAreaBehavior implements Behavior {
         dragSelection = DragState.NO_DRAG;
     }
 
-    private void mouseDragReleased(ParagraphCell<?> cell, MouseDragEvent e) {
+    private void mouseDragReleased(ParagraphBox<?> cell, MouseDragEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
@@ -467,17 +479,13 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private HitInfo hitCell(ParagraphCell<?> cell, MouseEvent e) {
-        if(cell.isEmpty()) {
-            return leadingEdgeOf(area.getLength());
-        } else {
-            int cellIdx = cell.getIndex();
-            int cellOffset = area.position(cellIdx, 0).toOffset();
-            return cell.hit(e).map(hit -> {
-                hit.setCharIndex(hit.getCharIndex() + cellOffset);
-                return hit;
-            }).orElseGet(() -> leadingEdgeOf(cellOffset + cell.getItem().length()));
-        }
+    private HitInfo hitCell(ParagraphBox<?> cell, MouseEvent e) {
+        int cellIdx = cell.getIndex();
+        int cellOffset = area.position(cellIdx, 0).toOffset();
+        return cell.hit(e).map(hit -> {
+            hit.setCharIndex(hit.getCharIndex() + cellOffset);
+            return hit;
+        }).orElseGet(() -> leadingEdgeOf(cellOffset + cell.getParagraph().length()));
     }
 
     private HitInfo leadingEdgeOf(int charIdx) {

@@ -1,20 +1,7 @@
-.styled-text-area .list-view .clipped-container {
+.styled-text-area .virtual-flow .virtual-flow-content {
     -fx-cursor: text;
 }
 
-.styled-text-area .list-view {
-    -fx-background-color: transparent!important;
-}
-
-.styled-text-area .list-view .list-cell {
-    -fx-padding: 0;
-    -fx-background-color: transparent!important;
-}
-
-.styled-text-area .list-view .list-cell .paragraph-text {
+.styled-text-area .paragraph-box .paragraph-text {
     -fx-padding: 0 2px;
-}
-
-.styled-text-area .list-view {
-    -fx-padding: 0;
 }
