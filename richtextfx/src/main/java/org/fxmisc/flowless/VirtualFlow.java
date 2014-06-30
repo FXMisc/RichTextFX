@@ -29,6 +29,7 @@ import javafx.scene.shape.Rectangle;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.fxmisc.flowless.VirtualFlow.HitInfo;
 
 public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
     // Children of a VirtualFlow are cells. All children are unmanaged.
@@ -45,6 +46,129 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
     public static <T, C extends Cell<T, ?>> VirtualFlow<T, C> createVertical(
             ObservableList<T> items, BiFunction<Integer, T, C> cellFactory) {
         return new VirtualFlow<>(items, cellFactory, new VerticalFlowMetrics());
+    }
+
+    public static abstract class HitInfo<C extends Cell<?, ?>> {
+
+        static <C extends Cell<?, ?>> HitInfo<C> cellHit(
+                int cellIndex, C cell, double cellOffset) {
+            return new CellHit<>(cellIndex, cell, cellOffset);
+        }
+
+        static <C extends Cell<?, ?>> HitInfo<C> hitBeforeCells(double offset) {
+            return new HitBeforeCells<>(offset);
+        }
+
+        static <C extends Cell<?, ?>> HitInfo<C> hitAfterCells(double offset) {
+            return new HitAfterCells<>(offset);
+        }
+
+        // private constructor to prevent subclassing
+        private HitInfo() {}
+
+        public abstract boolean isCellHit();
+        public abstract boolean isBeforeCells();
+        public abstract boolean isAfterCells();
+
+        public abstract int getCellIndex();
+        public abstract C getCell();
+        public abstract double getCellOffset();
+
+        public abstract double getOffsetBeforeCells();
+        public abstract double getOffsetAfterCells();
+
+        private static class CellHit<C extends Cell<?, ?>> extends HitInfo<C> {
+            private final int cellIdx;
+            private final C cell;
+            private final double cellOffset;
+
+            CellHit(int cellIdx, C cell, double cellOffset) {
+                this.cellIdx = cellIdx;
+                this.cell = cell;
+                this.cellOffset = cellOffset;
+            }
+
+            @Override public boolean isCellHit() { return true; }
+            @Override public boolean isBeforeCells() { return false; }
+            @Override public boolean isAfterCells() { return false; }
+            @Override public int getCellIndex() { return cellIdx; }
+            @Override public C getCell() { return cell; }
+            @Override public double getCellOffset() { return cellOffset; }
+
+            @Override
+            public double getOffsetBeforeCells() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public double getOffsetAfterCells() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        private static class HitBeforeCells<C extends Cell<?, ?>> extends HitInfo<C> {
+            private final double offset;
+
+            HitBeforeCells(double offset) {
+                this.offset = offset;
+            }
+
+            @Override public boolean isCellHit() { return false; }
+            @Override public boolean isBeforeCells() { return true; }
+            @Override public boolean isAfterCells() { return false; }
+
+            @Override public int getCellIndex() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public C getCell() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public double getCellOffset() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public double getOffsetBeforeCells() {
+                return offset;
+            }
+
+            @Override public double getOffsetAfterCells() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        private static class HitAfterCells<C extends Cell<?, ?>> extends HitInfo<C> {
+            private final double offset;
+
+            HitAfterCells(double offset) {
+                this.offset = offset;
+            }
+
+            @Override public boolean isCellHit() { return false; }
+            @Override public boolean isBeforeCells() { return false; }
+            @Override public boolean isAfterCells() { return true; }
+
+            @Override public int getCellIndex() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public C getCell() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public double getCellOffset() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public double getOffsetBeforeCells() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override public double getOffsetAfterCells() {
+                return offset;
+            }
+        }
     }
 
     private final ScrollBar hbar;
@@ -165,6 +289,10 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
 
     public IndexRange getVisibleRange() {
         return content.firstVisibleRange();
+    }
+
+    public HitInfo<C> hit(double offset) {
+        return content.hit(offset);
     }
 
     @Override
@@ -803,7 +931,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    private int paveTo(double offset) {
+    int paveTo(double offset) {
         if(!hasVisibleCells()) {
             throw new IllegalStateException("No visible cells to offset from");
         }
@@ -823,6 +951,20 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
                 }
             }
             throw new AssertionError("unreachable code");
+        }
+    }
+
+    HitInfo<C> hit(double offset) {
+        int idx = paveTo(offset);
+        C cell = getVisibleCell(idx);
+        double minY = metrics.minY(cell);
+        double maxY = metrics.maxY(cell);
+        if(offset < minY) {
+            return HitInfo.hitBeforeCells(offset - minY);
+        } else if(offset > maxY) {
+            return HitInfo.hitAfterCells(offset - maxY);
+        } else {
+            return HitInfo.cellHit(idx, cell, offset - minY);
         }
     }
 
