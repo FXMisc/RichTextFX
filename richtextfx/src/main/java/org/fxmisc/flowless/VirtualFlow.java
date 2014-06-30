@@ -130,6 +130,10 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
         getChildren().addAll(content, hbar, vbar);
     }
 
+    public void dispose() {
+        content.dispose();
+    }
+
     @Override
     public Orientation getContentBias() {
         return content.getContentBias();
@@ -243,12 +247,26 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
 
 
 class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
-    private final List<T> items;
+    private final ObservableList<T> items;
     private final ObservableList<C> cells;
-    private final BiFunction<Integer, T, C> cellFactory;
     private final Metrics metrics;
     private final BreadthTracker breadthTracker;
-    private final Queue<C> cellPool = new LinkedList<>();
+    private final CellPool<T, C> cellPool;
+
+    private final ListChangeListener<? super T> itemsListener = ch -> {
+        while(ch.next()) {
+            int pos = ch.getFrom();
+            int removedSize;
+            int addedSize;
+            if(ch.wasPermutated()) {
+                addedSize = removedSize = ch.getTo() - pos;
+            } else {
+                removedSize = ch.getRemovedSize();
+                addedSize = ch.getAddedSize();
+            }
+            itemsReplaced(pos, removedSize, addedSize);
+        }
+    };
 
     // hold the subscription of list binding to prevent it from being garbage collected
     @SuppressWarnings("unused")
@@ -290,7 +308,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             Metrics metrics) {
         this.getStyleClass().add("virtual-flow-content");
         this.items = items;
-        this.cellFactory = cellFactory;
+        this.cellPool = new CellPool<>(cellFactory);
         this.metrics = metrics;
         this.breadthTracker = new BreadthTracker(items.size());
         this.cells = FXCollections.observableArrayList();
@@ -307,20 +325,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             layoutBoundsChanged(oldBounds, newBounds);
         });
 
-        items.addListener((ListChangeListener<? super T>) ch -> {
-            while(ch.next()) {
-                int pos = ch.getFrom();
-                int removedSize;
-                int addedSize;
-                if(ch.wasPermutated()) {
-                    addedSize = removedSize = ch.getTo() - pos;
-                } else {
-                    removedSize = ch.getRemovedSize();
-                    addedSize = ch.getAddedSize();
-                }
-                itemsReplaced(pos, removedSize, addedSize);
-            }
-        });
+        items.addListener(itemsListener);
 
 
         // set up bindings
@@ -382,6 +387,12 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
                 return pixelsToPosition(lengthOffsetEstimate.get());
             }
         };
+    }
+
+    public void dispose() {
+        items.removeListener(itemsListener);
+        dropCellsFrom(0);
+        cellPool.dispose();
     }
 
     @Override
@@ -476,7 +487,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
 
     private C render(int index, int childInsertionPos) {
         T item = items.get(index);
-        C cell = createCell(index, item);
+        C cell = cellPool.getCell(index, item);
         cell.getNode().setVisible(false);
         cells.add(childInsertionPos, cell);
         cell.getNode().applyCss();
@@ -516,30 +527,6 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             }
         } else {
             return cells.get(index - renderedFrom);
-        }
-    }
-
-    private C createCell(int index, T item) {
-        C cell = getFromPool();
-        if(cell != null) {
-            cell.updateItem(index, item);
-        } else {
-            cell = cellFactory.apply(index, item);
-        }
-        cell.getNode().setManaged(false);
-        return cell;
-    }
-
-    private C getFromPool() {
-        return cellPool.poll();
-    }
-
-    private void addToPool(C cell) {
-        cell.reset();
-        if(cell.isReusable()) {
-            cellPool.add(cell);
-        } else {
-            cell.dispose();
         }
     }
 
@@ -589,7 +576,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
 
     private void dropCellRange(int from, int to) {
         List<C> toDrop = cells.subList(from, to);
-        toDrop.forEach(this::addToPool);
+        toDrop.forEach(cellPool::acceptCell);
         toDrop.clear();
     }
 
@@ -1299,6 +1286,43 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         return total > 0 && total > breadth
                 ? pos / total * (total - breadth)
                 : 0;
+    }
+}
+
+final class CellPool<T, C extends Cell<T, ?>> {
+    private final BiFunction<Integer, T, C> cellFactory;
+    private final Queue<C> pool = new LinkedList<>();
+
+    public CellPool(BiFunction<Integer, T, C> cellFactory) {
+        this.cellFactory = cellFactory;
+    }
+
+    public C getCell(int index, T item) {
+        C cell = pool.poll();
+        if(cell != null) {
+            cell.updateItem(index, item);
+        } else {
+            cell = cellFactory.apply(index, item);
+        }
+        cell.getNode().setManaged(false);
+        return cell;
+    }
+
+    public void acceptCell(C cell) {
+        cell.reset();
+        if(cell.isReusable()) {
+            pool.add(cell);
+        } else {
+            cell.dispose();
+        }
+    }
+
+    public void dispose() {
+        for(C cell: pool) {
+            cell.dispose();
+        }
+
+        pool.clear();
     }
 }
 
