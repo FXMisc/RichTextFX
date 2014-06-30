@@ -272,30 +272,36 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
             if(firstParIdx == lastParIdx) {
                 Paragraph<S> p = paragraphs.get(firstParIdx);
-                p = p.restyle(firstParFrom, styleSpans);
-                paragraphs.set(firstParIdx, p);
+                Paragraph<S> q = p.restyle(firstParFrom, styleSpans);
+                if(q != p) {
+                    paragraphs.set(firstParIdx, p);
+                }
             } else {
-                int affectedPars = lastParIdx - firstParIdx + 1;
-                List<Paragraph<S>> restyledPars = new ArrayList<>(affectedPars);
-
                 Paragraph<S> firstPar = paragraphs.get(firstParIdx);
                 Position spansFrom = styleSpans.position(0, 0);
                 Position spansTo = spansFrom.offsetBy(firstPar.length() - firstParFrom, Backward);
-                restyledPars.add(firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo)));
+                Paragraph<S> q = firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo));
+                if(q != firstPar) {
+                    paragraphs.set(firstParIdx, q);
+                }
                 spansFrom = spansTo.offsetBy(firstPar.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
                     Paragraph<S> par = paragraphs.get(i);
                     spansTo = spansFrom.offsetBy(par.length(), Backward);
-                    restyledPars.add(par.restyle(0, styleSpans.subView(spansFrom, spansTo)));
+                    q = par.restyle(0, styleSpans.subView(spansFrom, spansTo));
+                    if(q != par) {
+                        paragraphs.set(i, q);
+                    }
                     spansFrom = spansTo.offsetBy(par.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
                 }
 
                 Paragraph<S> lastPar = paragraphs.get(lastParIdx);
                 spansTo = spansFrom.offsetBy(lastParTo, Backward);
-                restyledPars.add(lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo)));
-
-                setAll(firstParIdx, lastParIdx + 1, restyledPars);
+                q = lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo));
+                if(q != lastPar) {
+                    paragraphs.set(lastParIdx, q);
+                }
             }
         }
     }
@@ -309,8 +315,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
             Paragraph<S> p = paragraphs.get(paragraph);
-            p = p.restyle(from, styleSpans);
-            paragraphs.set(paragraph, p);
+            Paragraph<S> q = p.restyle(from, styleSpans);
+            if(q != p) {
+                paragraphs.set(paragraph, q);
+            }
         }
     }
 

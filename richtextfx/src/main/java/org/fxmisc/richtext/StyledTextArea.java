@@ -636,6 +636,12 @@ implements
     @Override
     public void replaceText(int start, int end, String text) {
         text = filterInput(text);
+
+        // just an optimization to reduce the number of changes
+        if(start == end && text.length() == 0) {
+            return;
+        }
+
         try(Guard g = omniGuardian.guard()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());

@@ -55,7 +55,7 @@ public class StyleSpansBuilder<S> {
 
     public StyleSpansBuilder<S> add(StyleSpan<S> styleSpan) {
         ensureNotCreated();
-        spans.add(styleSpan);
+        _add(styleSpan);
         return this;
     }
 
@@ -64,24 +64,18 @@ public class StyleSpansBuilder<S> {
     }
 
     public StyleSpansBuilder<S> addAll(Collection<? extends StyleSpan<S>> styleSpans) {
-        ensureNotCreated();
-        spans.addAll(styleSpans);
-        return this;
+        return addAll(styleSpans, styleSpans.size());
     }
 
     public StyleSpansBuilder<S> addAll(Iterable<? extends StyleSpan<S>> styleSpans, int sizeHint) {
-        ensureNotCreated();
         spans.ensureCapacity(spans.size() + sizeHint);
-        for(StyleSpan<S> span: styleSpans) {
-            spans.add(span);
-        }
-        return this;
+        return addAll(styleSpans);
     }
 
     public StyleSpansBuilder<S> addAll(Iterable<? extends StyleSpan<S>> styleSpans) {
         ensureNotCreated();
         for(StyleSpan<S> span: styleSpans) {
-            spans.add(span);
+            _add(span);
         }
         return this;
     }
@@ -94,6 +88,20 @@ public class StyleSpansBuilder<S> {
 
         created = true;
         return new StyleSpansImpl<>(Collections.unmodifiableList(spans));
+    }
+
+    private void _add(StyleSpan<S> span) {
+        if(spans.isEmpty()) {
+            spans.add(span);
+        } else if(span.getLength() > 0) {
+            if(spans.size() == 1 && spans.get(0).getLength() == 0) {
+                spans.set(0, span);
+            } else {
+                spans.add(span);
+            }
+        } else {
+            // do nothing, don't add a zero-length span
+        }
     }
 
     private void ensureNotCreated() {

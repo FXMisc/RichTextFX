@@ -158,18 +158,18 @@ implements StyledDocument<S> {
 
         if(startParIdx == endParIdx) {
             Paragraph<S> par = paragraphs.get(startParIdx);
-            subSpans.add(par.getStyleRanges(start.getMinor(), end.getMinor()));
+            subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
             Paragraph<S> startPar = paragraphs.get(startParIdx);
-            subSpans.add(startPar.getStyleRanges(start.getMinor(), startPar.length() + 1)); // +1 for the newline
+            subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1)); // +1 for the newline
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
                 Paragraph<S> par = paragraphs.get(i);
-                subSpans.add(par.getStyleRanges(0, par.length() + 1)); // +1 for the newline
+                subSpans.add(par.getStyleSpans(0, par.length() + 1)); // +1 for the newline
             }
 
             Paragraph<S> endPar = paragraphs.get(endParIdx);
-            subSpans.add(endPar.getStyleRanges(0, end.getMinor()));
+            subSpans.add(endPar.getStyleSpans(0, end.getMinor()));
         }
 
         int n = subSpans.stream().mapToInt(sr -> sr.getSpanCount()).sum();
@@ -185,12 +185,12 @@ implements StyledDocument<S> {
 
     @Override
     public StyleSpans<S> getStyleSpans(int paragraph) {
-        return paragraphs.get(paragraph).getStyleRanges();
+        return paragraphs.get(paragraph).getStyleSpans();
     }
 
     @Override
     public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
-        return paragraphs.get(paragraph).getStyleRanges(from, to);
+        return paragraphs.get(paragraph).getStyleSpans(from, to);
     }
 
 

@@ -257,6 +257,9 @@ public final class Paragraph<S> implements CharSequence {
 
     public Paragraph<S> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
+        if(styleSpans.equals(getStyleSpans(from, from + len))) {
+            return this;
+        }
 
         Paragraph<S> left = trim(from);
         Paragraph<S> right = subSequence(from + len);
@@ -322,7 +325,7 @@ public final class Paragraph<S> implements CharSequence {
         return new IndexRange(start, end);
     }
 
-    public StyleSpans<S> getStyleRanges() {
+    public StyleSpans<S> getStyleSpans() {
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(segments.size());
         for(StyledText<S> seg: segments) {
             builder.add(seg.getStyle(), seg.length());
@@ -330,7 +333,7 @@ public final class Paragraph<S> implements CharSequence {
         return builder.create();
     }
 
-    public StyleSpans<S> getStyleRanges(int from, int to) {
+    public StyleSpans<S> getStyleSpans(int from, int to) {
         Position start = navigator.offsetToPosition(from, Forward);
         Position end = to == from
                 ? start
