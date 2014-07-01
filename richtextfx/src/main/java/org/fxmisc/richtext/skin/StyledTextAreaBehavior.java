@@ -168,9 +168,13 @@ public class StyledTextAreaBehavior implements Behavior {
                 visual.cellMouseEvents()
                         .subscribe(pair -> handleMouseEvent(pair._1, pair._2)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
-                        .subscribe(this::handleMouseEvent),
+                        .hook(this::handleMouseEvent)
+                        .handleErrors(Throwable::printStackTrace)
+                        .pin(),
                 EventStreams.eventsOf(area, KeyEvent.ANY)
-                        .subscribe(e -> handleKeyEvent(e)));
+                        .hook(e -> handleKeyEvent(e))
+                        .handleErrors(Throwable::printStackTrace)
+                        .pin());
     }
 
     /* ********************************************************************** *
