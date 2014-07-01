@@ -14,8 +14,6 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -389,49 +387,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         };
     }
 
-//    private void cellCreated(ParagraphCell<S> cell) {
-//        BooleanBinding hasCaret = Bindings.equal(
-//                cell.indexProperty(),
-//                area.currentParagraphProperty());
-//
-//        // caret is visible only in the paragraph with the caret
-//        cell.caretVisibleProperty().bind(hasCaret.and(caretVisible));
-
-//        cell.highlightFillProperty().bind(highlightFill);
-//        cell.highlightTextFillProperty().bind(highlightTextFill);
-
-//        // bind cell's caret position to area's caret column,
-//        // when the cell is the one with the caret
-//        EasyBind.bindConditionally(
-//                cell.caretPositionProperty(),
-//                area.caretColumnProperty(),
-//                hasCaret);
-
-//        // keep paragraph selection updated
-//        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
-//            int idx = cell.getIndex();
-//            return idx != -1
-//                    ? area.getParagraphSelection(idx)
-//                    : StyledTextArea.EMPTY_RANGE;
-//        }, area.selectionProperty(), cell.indexProperty());
-//        cell.selectionProperty().bind(cellSelection);
-//        manageBinding(cellSelection);
-
-        // keep cell's wrap width updated
-//        cell.wrapWidthProperty().bind(wrapWidth);
-
-        // Respond to changes in paragraphGraphicFactory.
-        // Use event stream because it is unbound from area on unsubscribe,
-        // while binding's weak listener will not be removed from area until
-        // paragraphGraphicFactoryProperty changes, which might never happen.
-//        Binding<Supplier<? extends Node>> cellGraphicFactory =
-//                EventStreams.valuesOf(area.paragraphGraphicFactoryProperty())
-//                        .<Supplier<? extends Node>> map(f -> f == null ? null : () -> f.apply(cell.getIndex()))
-//                        .toBinding(null);
-//        cell.graphicFactoryProperty().bind(cellGraphicFactory);
-//        manageBinding(cellGraphicFactory);
-//    }
-
     private ParagraphBox<S> getCell(int index) {
         return virtualFlow.getCellIfVisible(index).get().getNode();
     }
@@ -506,11 +461,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
         double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
-    }
-
-    private void listenTo(Observable observable, InvalidationListener listener) {
-        observable.addListener(listener);
-        manageSubscription(() -> observable.removeListener(listener));
     }
 
     private <T> void listenTo(ObservableValue<T> observable, ChangeListener<T> listener) {
