@@ -301,11 +301,14 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      * Returns the current line as a two-level index.
      * The major number is the paragraph index, the minor
      * number is the line number within the paragraph.
+     *
+     * <p>This method has a side-effect of bringing the current
+     * paragraph to the viewport if it is not already visible.
      */
     Position currentLine() {
         int parIdx = area.getCurrentParagraph();
-        int lineIdx = getCell(parIdx).getCurrentLineIndex();
-
+        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        int lineIdx = cell.getNode().getCurrentLineIndex();
         return position(parIdx, lineIdx);
     }
 
