@@ -275,6 +275,10 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
         content.showAsLast(itemIndex);
     }
 
+    public void show(C cell, Rectangle region) {
+        content.showRegion(cell, region);
+    }
+
     public C getCell(int itemIndex) {
         return content.paveToItem(itemIndex);
     }
@@ -976,20 +980,42 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 showEndAtAfterVisibleRange(itemIdx, 0.0, rng.getEnd() - 1);
             } else { // already visible
-                Node cell = getVisibleCell(itemIdx).getNode();
-                double spaceBefore = metrics.minY(cell);
-                double spaceAfter = length() - metrics.maxY(cell);
-                if(spaceBefore < 0 && spaceAfter > 0) {
-                    double shift = Math.min(-spaceBefore, spaceAfter);
-                    shiftVisibleCellsByLength(shift);
-                } else if(spaceAfter < 0 && spaceBefore > 0) {
-                    double shift = Math.max(spaceAfter, -spaceBefore);
-                    shiftVisibleCellsByLength(shift);
-                }
+                C cell = getVisibleCell(itemIdx);
+                showLengthRegion(cell, 0.0, metrics.length(cell.getNode()));
             }
         } else {
             jumpToItem(itemIdx);
         }
+    }
+
+    private void showLengthRegion(C cell, double fromY, double toY) {
+        double minY = metrics.minY(cell);
+        double spaceBefore = minY + fromY;
+        double spaceAfter = length() - (minY + toY);
+        if(spaceBefore < 0 && spaceAfter > 0) {
+            double shift = Math.min(-spaceBefore, spaceAfter);
+            shiftVisibleCellsByLength(shift);
+        } else if(spaceAfter < 0 && spaceBefore > 0) {
+            double shift = Math.max(spaceAfter, -spaceBefore);
+            shiftVisibleCellsByLength(shift);
+        }
+    }
+
+    private void showBreadthRegion(C cell, double fromX, double toX) {
+        double spaceBefore = fromX + breadthOffset;
+        double spaceAfter = breadth() - toX - breadthOffset;
+        if(spaceBefore < 0 && spaceAfter > 0) {
+            double shift = Math.min(-spaceBefore, spaceAfter);
+            shiftVisibleCellsByBreadth(shift);
+        } else if(spaceAfter < 0 && spaceBefore > 0) {
+            double shift = Math.max(spaceAfter, -spaceBefore);
+            shiftVisibleCellsByBreadth(shift);
+        }
+    }
+
+    void showRegion(C cell, Rectangle region) {
+        showLengthRegion(cell, metrics.minY(region), metrics.maxY(region));
+        showBreadthRegion(cell, metrics.minX(region), metrics.maxX(region));
     }
 
     void showAsFirst(int itemIdx) {
@@ -1515,11 +1541,16 @@ interface Metrics {
     Orientation getContentBias();
     double length(Bounds bounds);
     double breadth(Bounds bounds);
-    double layoutY(Node cell);
-    default double length(Node cell) { return length(cell.getLayoutBounds()); }
-    default double breadth(Node cell) { return breadth(cell.getLayoutBounds()); }
-    default double minY(Node cell) { return layoutY(cell); }
-    default double maxY(Node cell) { return layoutY(cell) + length(cell); }
+    double minX(Bounds bounds);
+    double minY(Bounds bounds);
+    double layoutX(Node node);
+    double layoutY(Node node);
+    default double length(Node node) { return length(node.getLayoutBounds()); }
+    default double breadth(Node node) { return breadth(node.getLayoutBounds()); }
+    default double minY(Node node) { return layoutY(node) + minY(node.getLayoutBounds()); }
+    default double maxY(Node node) { return minY(node) + length(node); }
+    default double minX(Node node) { return layoutX(node) + minX(node.getLayoutBounds()); }
+    default double maxX(Node node) { return minX(node) + breadth(node); }
     default double minY(Cell<?, ?> cell) { return minY(cell.getNode()); }
     default double maxY(Cell<?, ?> cell) { return maxY(cell.getNode()); }
     double minBreadth(Node cell);
@@ -1578,8 +1609,23 @@ final class HorizontalFlowMetrics implements Metrics {
     }
 
     @Override
-    public double layoutY(Node cell) {
-        return cell.getLayoutX();
+    public double minX(Bounds bounds) {
+        return bounds.getMinY();
+    }
+
+    @Override
+    public double minY(Bounds bounds) {
+        return bounds.getMinX();
+    }
+
+    @Override
+    public double layoutX(Node node) {
+        return node.getLayoutY();
+    }
+
+    @Override
+    public double layoutY(Node node) {
+        return node.getLayoutX();
     }
 
     @Override
@@ -1672,8 +1718,23 @@ final class VerticalFlowMetrics implements Metrics {
     }
 
     @Override
-    public double layoutY(Node cell) {
-        return cell.getLayoutY();
+    public double minX(Bounds bounds) {
+        return bounds.getMinX();
+    }
+
+    @Override
+    public double minY(Bounds bounds) {
+        return bounds.getMinY();
+    }
+
+    @Override
+    public double layoutX(Node node) {
+        return node.getLayoutX();
+    }
+
+    @Override
+    public double layoutY(Node node) {
+        return node.getLayoutY();
     }
 
     @Override
