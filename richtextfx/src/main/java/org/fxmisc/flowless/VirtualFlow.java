@@ -926,7 +926,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             if(itemIdx < rng.getStart()) {
                 return paveBackwardToItem(itemIdx, rng.getStart());
             } else if(itemIdx >= rng.getEnd()) {
-                return paveForwardToItem(itemIdx, rng.getEnd());
+                return paveForwardToItem(itemIdx, rng.getEnd() - 1);
             } else {
                 return getVisibleCell(itemIdx);
             }
