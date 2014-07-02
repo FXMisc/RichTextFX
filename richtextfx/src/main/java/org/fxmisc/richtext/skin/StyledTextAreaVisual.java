@@ -434,9 +434,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     }
 
     private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S>> cells, Duration delay) {
-        return merge(cells, c -> c.stationaryIndices(delay).unify(
+        return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
                 l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
-                r -> MouseOverTextEvent.end()));
+                r -> MouseOverTextEvent.end())));
     }
 
     private int getParagraphOffset(int parIdx) {

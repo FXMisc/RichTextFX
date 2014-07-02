@@ -10,9 +10,9 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
-import org.reactfx.EitherEventStream;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
+import org.reactfx.util.Either;
 
 public class MouseStationaryHelper {
     private final Node node;
@@ -23,7 +23,7 @@ public class MouseStationaryHelper {
         this.node = node;
     }
 
-    public EitherEventStream<Point2D, Void> events(Duration delay) {
+    public EventStream<Either<Point2D, Void>> events(Duration delay) {
         EventStream<MouseEvent> mouseEvents = eventsOf(node, MouseEvent.ANY);
         EventStream<Point2D> stationaryPositions = mouseEvents
                 .successionEnds(delay)
@@ -37,9 +37,9 @@ public class MouseStationaryHelper {
         if(installed != null) {
             installed.unsubscribe();
         }
-        installed = events(delay).unify(
+        installed = events(delay).<Event>map(either -> either.unify(
                 pos -> MouseStationaryEvent.beginAt(node.localToScreen(pos)),
-                stop -> MouseStationaryEvent.end())
+                stop -> MouseStationaryEvent.end()))
             .subscribe(evt -> Event.fireEvent(node, evt));
     }
 

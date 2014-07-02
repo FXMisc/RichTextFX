@@ -28,7 +28,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
-import org.reactfx.EitherEventStream;
+import org.reactfx.EventStream;
 import org.reactfx.util.Either;
 import org.reactfx.util.Tuple2;
 
@@ -87,12 +87,12 @@ class ParagraphBox<S> extends Region {
         return text.getParagraph();
     }
 
-    public EitherEventStream<Tuple2<Point2D, Integer>, Void> stationaryIndices(Duration delay) {
-        return new MouseStationaryHelper(this)
-                .events(delay)
-                .mapLeft(pos -> hit(pos).<Tuple2<Point2D, Integer>>map(hit -> t(pos, hit.getCharIndex())))
-                .<Tuple2<Point2D, Integer>>splitLeft(Either::leftOrNull)
-                .distinct();
+    public EventStream<Either<Tuple2<Point2D, Integer>, Object>> stationaryIndices(Duration delay) {
+        EventStream<Either<Point2D, Void>> stationaryEvents = new MouseStationaryHelper(this).events(delay);
+        EventStream<Tuple2<Point2D, Integer>> hits = stationaryEvents.filterMap(Either::asLeft)
+                .<Tuple2<Point2D, Integer>>filterMap(pos -> hit(pos).map(hit -> t(pos, hit.getCharIndex())));
+        EventStream<?> stops = stationaryEvents.filterMap(Either::isRight, Either::getRight);
+        return hits.or(stops);
     }
 
     /**
