@@ -275,7 +275,7 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
         content.showAsLast(itemIndex);
     }
 
-    public void show(C cell, Rectangle region) {
+    public void show(C cell, Bounds region) {
         content.showRegion(cell, region);
     }
 
@@ -1013,7 +1013,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    void showRegion(C cell, Rectangle region) {
+    void showRegion(C cell, Bounds region) {
         showLengthRegion(cell, metrics.minY(region), metrics.maxY(region));
         showBreadthRegion(cell, metrics.minX(region), metrics.maxX(region));
     }
@@ -1543,6 +1543,8 @@ interface Metrics {
     double breadth(Bounds bounds);
     double minX(Bounds bounds);
     double minY(Bounds bounds);
+    default double maxX(Bounds bounds) { return minX(bounds) + breadth(bounds); }
+    default double maxY(Bounds bounds) { return minY(bounds) + length(bounds); }
     double layoutX(Node node);
     double layoutY(Node node);
     default double length(Node node) { return length(node.getLayoutBounds()); }
