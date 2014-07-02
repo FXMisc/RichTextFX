@@ -139,7 +139,7 @@ class ParagraphText<S> extends TextFlow {
         return selectionShape.fillProperty();
     }
 
-    Optional<HitInfo> hit(int lineIndex, double x) {
+    Optional<HitInfo> hit(double x, int lineIndex) {
         return hit(x, getLineCenter(lineIndex));
     }
 

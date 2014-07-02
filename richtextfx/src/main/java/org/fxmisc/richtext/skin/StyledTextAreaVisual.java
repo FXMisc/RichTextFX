@@ -260,12 +260,15 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      *                                                                        *
      * ********************************************************************** */
 
-    void showAsFirst(int index) {
-        virtualFlow.showAsFirst(index);
+    void show(double y) {
+        virtualFlow.show(y);
     }
 
-    void showAsLast(int index) {
-        virtualFlow.showAsLast(index);
+    void followCaret() {
+        int parIdx = area.getCurrentParagraph();
+        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        virtualFlow.show(cell, caretBounds);
     }
 
 
@@ -275,24 +278,51 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      *                                                                        *
      * ********************************************************************** */
 
-    int getFirstVisibleIndex() {
-        return virtualFlow.getVisibleRange().getStart();
+    /**
+     * Returns caret bounds relative to the viewport, i.e. the visual bounds
+     * of the embedded VirtualFlow.
+     */
+    Optional<Bounds> getCaretBounds() {
+        return virtualFlow.getCellIfVisible(area.getCurrentParagraph())
+                .map(c -> {
+                    Bounds cellBounds = c.getNode().getCaretBounds();
+                    return virtualFlow.cellToViewport(c, cellBounds);
+                });
     }
 
-    int getLastVisibleIndex() {
-        return virtualFlow.getVisibleRange().getEnd() - 1;
-    }
-
+    /**
+     * Returns x coordinate of the caret relative to the current TextFlow, not
+     * relative to the skin.
+     */
     double getCaretOffsetX() {
         int idx = area.getCurrentParagraph();
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
     }
 
-    int getInsertionIndex(Position targetLine, double x) {
+    double getViewportHeight() {
+        return virtualFlow.getViewportHeight();
+    }
+
+    int getInsertionIndex(double textX, Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
-        int parInsertionIndex = getCellInsertionIndex(cell, targetLine.getMinor(), x);
+        int parInsertionIndex = getCellInsertionIndex(cell, textX, targetLine.getMinor());
         return getParagraphOffset(parIdx) + parInsertionIndex;
+    }
+
+    int getInsertionIndex(double textX, double y) {
+        VirtualFlow.HitInfo<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(y);
+        if(hit.isBeforeCells()) {
+            return 0;
+        } else if(hit.isAfterCells()) {
+            return area.getLength();
+        } else {
+            int parIdx = hit.getCellIndex();
+            ParagraphBox<S> cell = hit.getCell().getNode();
+            double cellY = hit.getCellOffset();
+            int parInsertionIndex = getCellInsertionIndex(cell, textX, cellY);
+            return getParagraphOffset(parIdx) + parInsertionIndex;
+        }
     }
 
     /**
@@ -391,8 +421,14 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         return virtualFlow.getCellIfVisible(index).get().getNode();
     }
 
-    private int getCellInsertionIndex(ParagraphBox<S> cell, int line, double x) {
-        return cell.hitText(line, x)
+    private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
+        return cell.hitText(x, line)
+                .map(HitInfo::getInsertionIndex)
+                .orElse(cell.getParagraph().length());
+    }
+
+    private int getCellInsertionIndex(ParagraphBox<S> cell, double x, double y) {
+        return cell.hitText(x, y)
                 .map(HitInfo::getInsertionIndex)
                 .orElse(cell.getParagraph().length());
     }
@@ -405,13 +441,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private int getParagraphOffset(int parIdx) {
         return area.position(parIdx, 0).toOffset();
-    }
-
-    private void followCaret() {
-        int parIdx = area.getCurrentParagraph();
-        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
-        virtualFlow.show(cell, caretBounds);
     }
 
     private void positionPopup(PopupWindow popup, PopupAlignment alignment, UnaryOperator<Point2D> adjustment) {

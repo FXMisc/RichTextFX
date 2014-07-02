@@ -168,14 +168,24 @@ class ParagraphBox<S> extends Region {
 
     /**
      * Hits the embedded TextFlow at the given line and x offset.
-     * Assumes this cell is non-empty.
      *
      * @param x x coordinate relative to the TextFlow, not relative to the cell.
      * @return HitInfo for the given line and x coordinate, or an empty
      * optional if hit beyond the end.
      */
-    Optional<HitInfo> hitText(int line, double x) {
-        return text.hit(line, x);
+    Optional<HitInfo> hitText(double x, int line) {
+        return text.hit(x, line);
+    }
+
+    /**
+     * Hits the embedded TextFlow at the given x and y offset. Offsets are
+     * relative to the embedded TextFlow, not relative to this ParagraphBox.
+     *
+     * @return HitInfo for the given x and y coordinates, or an empty
+     * optional if hit beyond the end.
+     */
+    Optional<HitInfo> hitText(double x, double y) {
+        return text.hit(x, y);
     }
 
     private Optional<HitInfo> hit(Point2D pos) {

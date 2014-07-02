@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -312,16 +313,12 @@ public class StyledTextAreaBehavior implements Behavior {
         Position currentLine = visual.currentLine();
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
-            goToLine(targetLine, selectionPolicy);
+            // compute new caret position
+            int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), targetLine);
+
+            // update model
+            area.moveTo(newCaretPos, selectionPolicy);
         }
-    }
-
-    private void goToLine(Position targetLine, SelectionPolicy selectionPolicy) {
-        // compute new caret position
-        int newCaretPos = visual.getInsertionIndex(targetLine, getTargetCaretOffset());
-
-        // update model
-        area.moveTo(newCaretPos, selectionPolicy);
     }
 
     private void previousLine(SelectionPolicy selectionPolicy) {
@@ -333,17 +330,25 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void previousPage(SelectionPolicy selectionPolicy) {
-        int currentRow = area.getCurrentParagraph();
-        visual.showAsLast(currentRow);
-        int targetRow = visual.getFirstVisibleIndex();
-        goToLine(visual.position(targetRow, 0), selectionPolicy);
+        visual.followCaret(); // make sure caret is in the viewport
+        double height = visual.getViewportHeight();
+        Bounds caretBounds = visual.getCaretBounds().get();
+        double caretMidY = caretBounds.getMinY() + caretBounds.getHeight() / 2;
+
+        int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), caretMidY - height);
+        visual.show(-height);
+        area.moveTo(newCaretPos, selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        int currentRow = area.getCurrentParagraph();
-        visual.showAsFirst(currentRow);
-        int targetRow = visual.getLastVisibleIndex();
-        goToLine(visual.position(targetRow, 0), selectionPolicy);
+        visual.followCaret(); // make sure caret is in the viewport
+        double height = visual.getViewportHeight();
+        Bounds caretBounds = visual.getCaretBounds().get();
+        double caretMidY = caretBounds.getMinY() + caretBounds.getHeight() / 2;
+
+        int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), caretMidY + height);
+        visual.show(2*height);
+        area.moveTo(newCaretPos, selectionPolicy);
     }
 
     /**
