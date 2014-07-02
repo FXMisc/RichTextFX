@@ -158,6 +158,10 @@ class ParagraphText<S> extends TextFlow {
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
 
+    public Bounds getCaretBounds() {
+        return caretShape.getBoundsInParent();
+    }
+
     public Bounds getCaretBoundsOnScreen() {
         Bounds localBounds = caretShape.getBoundsInLocal();
         return caretShape.localToScreen(localBounds);

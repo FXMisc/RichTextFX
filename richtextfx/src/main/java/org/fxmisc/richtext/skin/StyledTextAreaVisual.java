@@ -408,8 +408,10 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
     }
 
     private void followCaret() {
-        // bring the current paragraph to the viewport
-        virtualFlow.show(area.getCurrentParagraph());
+        int parIdx = area.getCurrentParagraph();
+        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        virtualFlow.show(cell, caretBounds);
     }
 
     private void positionPopup(PopupWindow popup, PopupAlignment alignment, UnaryOperator<Point2D> adjustment) {

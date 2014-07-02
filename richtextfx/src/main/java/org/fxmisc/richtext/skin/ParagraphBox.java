@@ -116,6 +116,11 @@ class ParagraphBox<S> extends Region {
         return text.currentLineIndex();
     }
 
+    public Bounds getCaretBounds() {
+        Bounds b = text.getCaretBounds();
+        return text.localToParent(b);
+    }
+
     public Bounds getCaretBoundsOnScreen() {
         return text.getCaretBoundsOnScreen();
     }
