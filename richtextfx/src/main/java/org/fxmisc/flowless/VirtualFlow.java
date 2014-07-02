@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.ScrollEvent;
@@ -1231,6 +1232,11 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
     private void layoutCell(Node cell, double l0, double breadth, double length) {
         cell.setVisible(true);
         metrics.resizeRelocate(cell, breadthOffset, l0, breadth, length);
+
+        // do instant layout
+        if(cell instanceof Parent) {
+            ((Parent) cell).layout();
+        }
     }
 
     private void shiftVisibleCellsByLength(double shift) {
