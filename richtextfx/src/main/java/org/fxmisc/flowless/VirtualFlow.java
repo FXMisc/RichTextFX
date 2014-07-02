@@ -20,6 +20,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.IndexRange;
@@ -264,8 +265,32 @@ public class VirtualFlow<T, C extends Cell<T, ?>> extends Region {
         return content.getContentBias();
     }
 
+    public double getViewportWidth() {
+        return content.getWidth();
+    }
+
+    public double getViewportHeight() {
+        return content.getHeight();
+    }
+
+    public Bounds cellToViewport(C cell, Bounds bounds) {
+        return cell.getNode().localToParent(bounds);
+    }
+
+    public Point2D cellToViewport(C cell, Point2D point) {
+        return cell.getNode().localToParent(point);
+    }
+
+    public Point2D cellToViewport(C cell, double x, double y) {
+        return cell.getNode().localToParent(x, y);
+    }
+
     public void show(int index) {
         content.show(index);
+    }
+
+    public void show(double primaryAxisOffset) {
+        content.show(primaryAxisOffset);
     }
 
     public void showAsFirst(int itemIndex) {
@@ -973,6 +998,18 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
+    void show(double offset) {
+        HitInfo<C> hit = hit(offset);
+        if(hit.isBeforeCells()) {
+            showStartAt(getVisibleCell(0), 0.0);
+        } else if(hit.isAfterCells()) {
+            showEndAt(getVisibleCell(items.size() - 1), 0.0);
+        } else {
+            double cellOffset = hit.getCellOffset();
+            showLengthRegion(hit.getCell(), cellOffset, cellOffset);
+        }
+    }
+
     void show(int itemIdx) {
         if(hasVisibleCells()) {
             IndexRange rng = firstVisibleRange();
@@ -1035,15 +1072,19 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 jumpToItem(itemIdx, offset);
             } else {
-                Node cell = getVisibleCell(itemIdx).getNode();
-                double minY = metrics.minY(cell);
-                if(minY != offset) {
-                    shiftVisibleCellsByLength(offset - minY);
-                    fillViewport();
-                }
+                C cell = getVisibleCell(itemIdx);
+                showStartAt(cell, offset);
             }
         } else {
             jumpToItem(itemIdx, offset);
+        }
+    }
+
+    private void showStartAt(C cell, double offset) {
+        double minY = metrics.minY(cell);
+        if(minY != offset) {
+            shiftVisibleCellsByLength(offset - minY);
+            fillViewport();
         }
     }
 
@@ -1055,16 +1096,20 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             } else if(itemIdx >= rng.getEnd()) {
                 showEndAtAfterVisibleRange(itemIdx, offsetFromEnd, rng.getEnd());
             } else {
-                Node cell = getVisibleCell(itemIdx).getNode();
-                double maxY = metrics.maxY(cell);
-                double targetMaxY = length() + offsetFromEnd;
-                if(maxY != targetMaxY) {
-                    shiftVisibleCellsByLength(targetMaxY - maxY);
-                    fillViewport();
-                }
+                C cell = getVisibleCell(itemIdx);
+                showEndAt(cell, offsetFromEnd);
             }
         } else {
             jumpToEndOfItem(itemIdx, offsetFromEnd);
+        }
+    }
+
+    private void showEndAt(C cell, double offsetFromEnd) {
+        double maxY = metrics.maxY(cell);
+        double targetMaxY = length() + offsetFromEnd;
+        if(maxY != targetMaxY) {
+            shiftVisibleCellsByLength(targetMaxY - maxY);
+            fillViewport();
         }
     }
 
@@ -1073,12 +1118,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         if(distance > length()) {
             jumpToItem(itemIdx, offset);
         } else {
-            Node cell = paveBackwardToItem(itemIdx, firstVisible).getNode();
-            double minY = metrics.minY(cell);
-            if(minY != offset) {
-                shiftVisibleCellsByLength(offset - minY);
-                fillViewport();
-            }
+            C cell = paveBackwardToItem(itemIdx, firstVisible);
+            showStartAt(cell, offset);
         }
     }
 
@@ -1087,13 +1128,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         if(distance > length()) {
             jumpToEndOfItem(itemIdx, offsetFromEnd);
         } else {
-            Node cell = paveForwardToItem(itemIdx, lastVisible).getNode();
-            double maxY = metrics.maxY(cell);
-            double targetMaxY = length() + offsetFromEnd;
-            if(maxY != targetMaxY) {
-                shiftVisibleCellsByLength(targetMaxY - maxY);
-                fillViewport();
-            }
+            C cell = paveForwardToItem(itemIdx, lastVisible);
+            showEndAt(cell, offsetFromEnd);
         }
     }
 
