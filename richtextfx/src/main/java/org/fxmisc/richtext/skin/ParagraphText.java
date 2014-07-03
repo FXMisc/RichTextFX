@@ -144,10 +144,18 @@ class ParagraphText<S> extends TextFlow {
     }
 
     Optional<HitInfo> hit(double x, double y) {
-        HitInfo hit = textLayout().getHitInfo((float)x, (float)y);
+        TextLayout textLayout = textLayout();
+        HitInfo hit = textLayout.getHitInfo((float)x, (float)y);
 
-        if(hit.getCharIndex() == paragraph.length()) { // clicked beyond the end of line
-            return Optional.empty();
+        if(hit.getCharIndex() == paragraph.length() - 1) {
+            // might be a hit beyond the end of line, investigate
+            PathElement[] elems = textLayout.getCaretShape(paragraph.length(), true, 0, 0);
+            Path caret = new Path(elems);
+            if(x > caret.getBoundsInLocal().getMinX()) {
+                return Optional.empty();
+            } else {
+                return Optional.of(hit);
+            }
         } else {
             return Optional.of(hit);
         }
