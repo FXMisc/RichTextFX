@@ -144,11 +144,17 @@ class ParagraphText<S> extends TextFlow {
     }
 
     Optional<HitInfo> hit(double x, double y) {
+        // workaround for https://javafx-jira.kenai.com/browse/RT-37801
+        if(paragraph.length() == 0) {
+            return Optional.empty();
+        }
+
         TextLayout textLayout = textLayout();
         HitInfo hit = textLayout.getHitInfo((float)x, (float)y);
 
         if(hit.getCharIndex() == paragraph.length() - 1) {
-            // might be a hit beyond the end of line, investigate
+            // Might be a hit beyond the end of line, investigate.
+            // Workaround for https://javafx-jira.kenai.com/browse/RT-37803
             PathElement[] elems = textLayout.getCaretShape(paragraph.length(), true, 0, 0);
             Path caret = new Path(elems);
             if(x > caret.getBoundsInLocal().getMinX()) {

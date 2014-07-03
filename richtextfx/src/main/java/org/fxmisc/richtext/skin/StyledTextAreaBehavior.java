@@ -493,7 +493,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }).orElseGet(() -> leadingEdgeOf(cellOffset + cell.getParagraph().length()));
     }
 
-    private HitInfo leadingEdgeOf(int charIdx) {
+    private static HitInfo leadingEdgeOf(int charIdx) {
         HitInfo hit = new HitInfo();
         hit.setCharIndex(charIdx);
         hit.setLeading(true);
