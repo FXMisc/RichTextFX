@@ -620,6 +620,13 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         setBreadthOffset(breadthOffset - deltaBreadth);
     }
 
+    private void invalidateMetrics() {
+        totalBreadthEstimate.invalidate();
+        totalLengthEstimate.invalidate();
+        breadthPositionEstimate.invalidate();
+        lengthOffsetEstimate.invalidate();
+    }
+
     private void ensureRenderedCells(int n) {
         for(int i = cells.size(); i < n; ++i) {
             if(hole.isPresent()) {
@@ -809,10 +816,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
 
         fillViewport(pos);
 
-        totalBreadthEstimate.invalidate();
-        totalLengthEstimate.invalidate();
-        breadthPositionEstimate.invalidate();
-        lengthOffsetEstimate.invalidate();
+        invalidateMetrics();
     }
 
     private void fillViewport(int ifEmptyStartWith) {
@@ -961,7 +965,7 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         }
     }
 
-    int paveTo(double offset) {
+    private int paveTo(double offset) {
         if(!hasVisibleCells()) {
             throw new IllegalStateException("No visible cells to offset from");
         }
@@ -1008,6 +1012,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
             double cellOffset = hit.getCellOffset();
             showLengthRegion(hit.getCell(), cellOffset, cellOffset);
         }
+
+        invalidateMetrics();
     }
 
     void show(int itemIdx) {
@@ -1024,6 +1030,8 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
         } else {
             jumpToItem(itemIdx);
         }
+
+        invalidateMetrics();
     }
 
     private void showLengthRegion(C cell, double fromY, double toY) {
@@ -1054,14 +1062,17 @@ class VirtualFlowContent<T, C extends Cell<T, ?>> extends Region {
     void showRegion(C cell, Bounds region) {
         showLengthRegion(cell, metrics.minY(region), metrics.maxY(region));
         showBreadthRegion(cell, metrics.minX(region), metrics.maxX(region));
+        invalidateMetrics();
     }
 
     void showAsFirst(int itemIdx) {
         showStartAt(itemIdx, 0.0);
+        invalidateMetrics();
     }
 
     void showAsLast(int itemIdx) {
         showEndAt(itemIdx, 0.0);
+        invalidateMetrics();
     }
 
     private void showStartAt(int itemIdx, double offset) {
