@@ -268,7 +268,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         int parIdx = area.getCurrentParagraph();
         Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
-        virtualFlow.show(cell, caretBounds);
+        double graphicWidth = cell.getNode().getGraphicWidth();
+        Bounds region = extendLeft(caretBounds, graphicWidth);
+        virtualFlow.show(cell, region);
     }
 
 
@@ -509,5 +511,15 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
 
     private void manageBinding(Binding<?> binding) {
         subscriptions = subscriptions.and(() -> binding.dispose());
+    }
+
+    private static Bounds extendLeft(Bounds b, double w) {
+        if(w == 0) {
+            return b;
+        } else {
+            return new BoundingBox(
+                        b.getMinX() - w, b.getMinY(),
+                        b.getWidth() + w, b.getHeight());
+        }
     }
 }

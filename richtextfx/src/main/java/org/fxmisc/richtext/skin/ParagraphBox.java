@@ -71,6 +71,9 @@ class ParagraphBox<S> extends Region {
                 getChildren().add(newG);
             }
         });
+        boundsInParentProperty().addListener((obs, old, bounds) -> {
+            graphic.ifPresent(g -> g.relocate(-bounds.getMinX(), 0));
+        });
     }
 
     public Property<Boolean> caretVisibleProperty() { return text.caretVisibleProperty(); }
@@ -139,7 +142,7 @@ class ParagraphBox<S> extends Region {
         Insets insets = getInsets();
         return wrapText.get()
                 ? 0 // return 0, VirtualFlow will size it to its width anyway
-                : graphicWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
+                : getGraphicWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
     }
 
     @Override
@@ -154,15 +157,15 @@ class ParagraphBox<S> extends Region {
         Bounds bounds = getLayoutBounds();
         double w = bounds.getWidth();
         double h = bounds.getHeight();
-        double graphicWidth = graphicWidth();
+        double graphicWidth = getGraphicWidth();
         text.resizeRelocate(graphicWidth, 0, w - graphicWidth, h);
 
         graphic.ifPresent(g -> {
-            g.resizeRelocate(0, 0, graphicWidth, h);
+            g.resize(graphicWidth, h);
         });
     }
 
-    private double graphicWidth() {
+    double getGraphicWidth() {
         return graphic.getOpt().map(g -> g.prefWidth(-1)).orElse(0.0);
     }
 
