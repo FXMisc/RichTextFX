@@ -41,51 +41,52 @@ signArchives.onlyIf {
     project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+def doUploadArchives = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 
-        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-          authentication(userName: sonatypeUsername, password: sonatypePassword)
+if(doUploadArchives) {
+    uploadArchives {
+        repositories.mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+              authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'RichTextFX'
+                packaging 'jar'
+                description 'Rich-text area for JavaFX'
+                url 'http://www.fxmisc.org/richtext/'
+           
+                scm {
+                    url 'scm:git@github.com:TomasMikula/RichTextFX.git'
+                    connection 'scm:git@github.com:TomasMikula/RichTextFX.git'
+                    developerConnection 'scm:git@github.com:TomasMikula/RichTextFX.git'
+                }
+           
+                licenses {
+                    license {
+                        name 'GPLv2 with the Classpath Exception'
+                        url 'http://www.gnu.org/software/classpath/license.html'
+                        distribution 'repo'
+                    }
+                }
+           
+                developers {
+                    developer {
+                        name 'Tomas Mikula'
+                    }
+                }
+            }
         }
-
-        snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
-            authentication(userName: sonatypeUsername, password: sonatypePassword)
-        }
-
-        pom.project {
-           name 'RichTextFX'
-           packaging 'jar'
-           description 'Rich-text area for JavaFX'
-           url 'http://www.fxmisc.org/richtext/'
-
-           scm {
-               url 'scm:git@github.com:TomasMikula/RichTextFX.git'
-               connection 'scm:git@github.com:TomasMikula/RichTextFX.git'
-               developerConnection 'scm:git@github.com:TomasMikula/RichTextFX.git'
-           }
-
-           licenses {
-               license {
-                   name 'GPLv2 with the Classpath Exception'
-                   url 'http://www.gnu.org/software/classpath/license.html'
-                   distribution 'repo'
-               }
-           }
-
-           developers {
-               developer {
-                   name 'Tomas Mikula'
-               }
-           }
-       }
     }
 }
 
-
-uploadArchives.onlyIf {
-    project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
-}
+uploadArchives.onlyIf { doUploadArchives }
 
 task fatJar(type: Jar, dependsOn: classes) {
     appendix = 'fat'
