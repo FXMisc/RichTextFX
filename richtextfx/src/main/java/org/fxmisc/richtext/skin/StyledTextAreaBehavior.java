@@ -223,9 +223,25 @@ public class StyledTextAreaBehavior implements Behavior {
             return;
         }
 
-        // It's OK if character is an empty string.
-        // Invalid characters will be filtered by StyledTextArea.
-        area.replaceSelection(event.getCharacter());
+        String text = event.getCharacter();
+        int n = text.length();
+
+        if(n == 0) {
+            return;
+        }
+
+        for(int i = 0; i < n; ++i) {
+            if(!isLegal(text.charAt(i))) {
+                return;
+            }
+        }
+
+        area.replaceSelection(text);
+    }
+
+    private static boolean isLegal(char c) {
+        return !Character.isISOControl(c)
+                || c == '\t';
     }
 
     private void deleteBackward() {
