@@ -108,39 +108,32 @@ public interface NavigationActions<S> extends TextEditingArea<S> {
 
 
     /**
-     * Moves the caret to the beginning of preceding word.
+     * Skips two word boundaries backwards.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
      */
     default void previousWord(SelectionPolicy selectionPolicy) {
-        int textLength = getLength();
-        if (textLength == 0)
+        if(getLength() == 0) {
             return;
-
-        String text = getText();
-        BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
-        wordBreakIterator.setText(text);
-
-        int pos = wordBreakIterator.preceding(getCaretPosition());
-        if(pos != BreakIterator.DONE &&
-               !Character.isLetter(text.charAt(pos))) {
-            // we ended at the end of the word, skip to the beginning
-            wordBreakIterator.preceding(pos);
         }
 
-        // move/select
+        BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
+        wordBreakIterator.setText(getText());
+        wordBreakIterator.preceding(getCaretPosition());
+        wordBreakIterator.previous();
+
         moveTo(wordBreakIterator.current(), selectionPolicy);
     }
 
     /**
-     * Moves the caret to the beginning of the following word.
+     * Skips two word boundaries forward.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
      */
     default void nextWord(SelectionPolicy selectionPolicy) {
-        int textLength = getLength();
-        if (textLength == 0)
+        if(getLength() == 0) {
             return;
+        }
 
         BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
         wordBreakIterator.setText(getText());
