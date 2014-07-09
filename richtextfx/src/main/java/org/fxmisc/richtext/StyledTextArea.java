@@ -54,7 +54,7 @@ import org.reactfx.EventStream;
 import org.reactfx.Guard;
 import org.reactfx.Guardian;
 import org.reactfx.Indicator;
-import org.reactfx.InterceptableEventStream;
+import org.reactfx.SuspendableEventStream;
 import org.reactfx.inhibeans.collection.Collections;
 import org.reactfx.inhibeans.collection.ObservableList;
 
@@ -253,12 +253,12 @@ implements
      * ********************************************************************** */
 
     // text changes
-    private final InterceptableEventStream<PlainTextChange> plainTextChanges;
+    private final SuspendableEventStream<PlainTextChange> plainTextChanges;
     @Override
     public final EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
     // rich text changes
-    private final InterceptableEventStream<RichTextChange<S>> richTextChanges;
+    private final SuspendableEventStream<RichTextChange<S>> richTextChanges;
     @Override
     public final EventStream<RichTextChange<S>> richChanges() { return richTextChanges; }
 
@@ -326,8 +326,8 @@ implements
 
         text = org.reactfx.inhibeans.binding.Binding.wrap(content.textProperty());
         length = org.reactfx.inhibeans.binding.IntegerBinding.wrap(content.lengthProperty());
-        plainTextChanges = content.plainTextChanges().interceptable();
-        richTextChanges = content.richChanges().interceptable();
+        plainTextChanges = content.plainTextChanges().pausable();
+        richTextChanges = content.richChanges().pausable();
 
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
@@ -371,8 +371,8 @@ implements
                 caretColumn,
 
                 // add streams after properties, to be released before them
-                plainTextChanges::pause,
-                richTextChanges::pause,
+                plainTextChanges::suspend,
+                richTextChanges::suspend,
 
                 // paragraphs to be released first
                 paragraphs);
