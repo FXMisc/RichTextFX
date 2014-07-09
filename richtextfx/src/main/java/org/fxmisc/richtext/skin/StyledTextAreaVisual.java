@@ -376,10 +376,9 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         // bind cell's caret position to area's caret column,
         // when the cell is the one with the caret
         org.fxmisc.easybind.Subscription caretPositionSub =
-                EasyBind.bindConditionally(
+                EasyBind.when(hasCaret).bind(
                         box.caretPositionProperty(),
-                        area.caretColumnProperty(),
-                        hasCaret);
+                        area.caretColumnProperty());
 
         // keep paragraph selection updated
         ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
