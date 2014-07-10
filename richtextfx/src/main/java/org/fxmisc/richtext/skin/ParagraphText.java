@@ -79,7 +79,9 @@ class ParagraphText<S> extends TextFlow {
         getStyleClass().add("paragraph-text");
 
         clampedCaretPosition = Bindings.min(caretPosition, paragraph.length());
-        clampedCaretPosition.addListener((obs, oldPos, newPos) -> updateCaretShape());
+        clampedCaretPosition.addListener((obs, oldPos, newPos) -> requestLayout());
+
+        selection.addListener((obs, old, sel) -> requestLayout());
 
         Binding<Double> leftInset = EasyBind.map(insetsProperty(), ins -> ins.getLeft());
         Binding<Double> rightInset = EasyBind.map(insetsProperty(), ins -> ins.getTop());
@@ -123,8 +125,6 @@ class ParagraphText<S> extends TextFlow {
 
             getChildren().add(t);
         }
-
-        selection.addListener((obs, old, sel) -> updateSelectionShape());
     }
 
     public Paragraph<S> getParagraph() {
@@ -245,6 +245,7 @@ class ParagraphText<S> extends TextFlow {
 
     @Override
     protected void layoutChildren() {
+        System.out.println("layout children of: " + paragraph);
         super.layoutChildren();
         updateCaretShape();
         updateSelectionShape();
