@@ -245,7 +245,6 @@ class ParagraphText<S> extends TextFlow {
 
     @Override
     protected void layoutChildren() {
-        System.out.println("layout children of: " + paragraph);
         super.layoutChildren();
         updateCaretShape();
         updateSelectionShape();
