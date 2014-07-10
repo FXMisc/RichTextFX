@@ -274,7 +274,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 Paragraph<S> p = paragraphs.get(firstParIdx);
                 Paragraph<S> q = p.restyle(firstParFrom, styleSpans);
                 if(q != p) {
-                    paragraphs.set(firstParIdx, p);
+                    paragraphs.set(firstParIdx, q);
                 }
             } else {
                 Paragraph<S> firstPar = paragraphs.get(firstParIdx);
