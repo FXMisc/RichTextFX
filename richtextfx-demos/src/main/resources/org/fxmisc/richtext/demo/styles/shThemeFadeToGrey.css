@@ -1,0 +1,90 @@
+/**
+ * SyntaxHighlighter
+ * http://alexgorbatchev.com/SyntaxHighlighter
+ *
+ * SyntaxHighlighter is donationware. If you are using it, please donate.
+ * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
+ *
+ * @version
+ * 3.0.83 (July 02 2010)
+ * 
+ * @copyright
+ * Copyright (C) 2004-2010 Alex Gorbatchev.
+ *
+ * @license
+ * Dual licensed under the MIT and GPL licenses.
+ */
+.syntaxhighlighter {
+  -fx-background-color: #121212 ;
+}
+.syntaxhighlighter .line.alt1 {
+  -fx-background-color: #121212 ;
+}
+.syntaxhighlighter .line.alt2 {
+  -fx-background-color: #121212 ;
+}
+.syntaxhighlighter .line.highlighted.alt1, .syntaxhighlighter .line.highlighted.alt2 {
+  -fx-background-color: #2c2c29 ;
+}
+.syntaxhighlighter .line.highlighted.number {
+  -fx-fill: white ;
+}
+.syntaxhighlighter .gutter {
+  -fx-fill: #afafaf ;
+}
+.syntaxhighlighter .gutter .line.highlighted {
+  -fx-background-color: #3185b9 ;
+  -fx-fill: #121212 ;
+}
+.syntaxhighlighter.collapsed .toolbar {
+  -fx-fill: #3185b9 ;
+  -fx-background-color: black ;
+}
+.syntaxhighlighter .toolbar {
+  -fx-fill: white ;
+  -fx-background-color: #3185b9 ;
+}
+.syntaxhighlighter .plain {
+  -fx-fill: white ;
+}
+.syntaxhighlighter .comments {
+  -fx-fill: #696854 ;
+}
+.syntaxhighlighter .string {
+  -fx-fill: #e3e658 ;
+}
+.syntaxhighlighter .keyword {
+  -fx-fill: #d01d33 ;
+}
+.syntaxhighlighter .preprocessor {
+  -fx-fill: #435a5f ;
+}
+.syntaxhighlighter .variable {
+  -fx-fill: #898989 ;
+}
+.syntaxhighlighter .value {
+  -fx-fill: #009900 ;
+}
+.syntaxhighlighter .functions {
+  -fx-fill: #aaaaaa ;
+}
+.syntaxhighlighter .constants {
+  -fx-fill: #96daff ;
+}
+.syntaxhighlighter .script {
+  -fx-font-weight: bold ;
+  -fx-fill: #d01d33 ;
+  -fx-background-color: none ;
+}
+.syntaxhighlighter .color1 {
+  -fx-fill: #ffc074 ;
+}
+.syntaxhighlighter .color2 {
+  -fx-fill: #4a8cdb ;
+}
+.syntaxhighlighter .color3 {
+  -fx-fill: #96daff ;
+}
+.syntaxhighlighter .functions {
+  -fx-font-weight: bold ;
+}
