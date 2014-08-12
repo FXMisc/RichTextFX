@@ -71,9 +71,6 @@ class ParagraphBox<S> extends Region {
                 getChildren().add(newG);
             }
         });
-        boundsInParentProperty().addListener((obs, old, bounds) -> {
-            graphic.ifPresent(g -> g.relocate(-bounds.getMinX(), 0));
-        });
     }
 
     public Property<Boolean> caretVisibleProperty() { return text.caretVisibleProperty(); }
@@ -157,11 +154,12 @@ class ParagraphBox<S> extends Region {
         Bounds bounds = getLayoutBounds();
         double w = bounds.getWidth();
         double h = bounds.getHeight();
+        double layoutX = getLayoutX();
         double graphicWidth = getGraphicWidth();
         text.resizeRelocate(graphicWidth, 0, w - graphicWidth, h);
 
         graphic.ifPresent(g -> {
-            g.resize(graphicWidth, h);
+            g.resizeRelocate(-layoutX, 0, graphicWidth, h);
         });
     }
 
