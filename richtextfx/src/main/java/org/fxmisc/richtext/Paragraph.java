@@ -39,6 +39,19 @@ import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.TwoDimensional.Position;
 
 public final class Paragraph<S> implements CharSequence {
+
+    @SafeVarargs
+    private static <T> List<T> list(T head, T... tail) {
+        if(tail.length == 0) {
+            return Collections.singletonList(head);
+        } else {
+            ArrayList<T> list = new ArrayList<>(1 + tail.length);
+            list.add(head);
+            for(T t: tail) list.add(t);
+            return list;
+        }
+    }
+
     private final List<StyledText<S>> segments;
     private final Optional<LineTerminator> terminator;
     private final TwoLevelNavigator navigator;
@@ -47,8 +60,9 @@ public final class Paragraph<S> implements CharSequence {
         this(new StyledText<S>(text, style));
     }
 
-    public Paragraph(StyledText<S> text) {
-        this(text, Optional.empty());
+    @SafeVarargs
+    public Paragraph(StyledText<S> text, StyledText<S>... texts) {
+        this(list(text, texts), Optional.empty());
     }
 
     private Paragraph(String text, S style, LineTerminator terminator) {
