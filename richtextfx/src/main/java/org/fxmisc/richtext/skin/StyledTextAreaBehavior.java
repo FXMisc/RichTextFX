@@ -167,7 +167,7 @@ public class StyledTextAreaBehavior implements Behavior {
         this.visual = visual;
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
-                        .subscribe(pair -> pair.exec(this::handleMouseEvent)),
+                        .watch(pair -> pair.exec(this::handleMouseEvent), Throwable::printStackTrace),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .watch(this::handleMouseEvent, Throwable::printStackTrace),
                 EventStreams.eventsOf(area, KeyEvent.ANY)
@@ -368,6 +368,7 @@ public class StyledTextAreaBehavior implements Behavior {
      */
     private void handleMouseEvent(MouseEvent e) {
         if(e.getEventType() == MOUSE_PRESSED && e.getButton() == MouseButton.PRIMARY) {
+            area.requestFocus();
             area.end(SelectionPolicy.CLEAR);
             e.consume();
         }
@@ -403,9 +404,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
 
         // ensure focus
-        if(!area.isFocused()) {
-            area.requestFocus();
-        }
+        area.requestFocus();
 
         switch(e.getButton()) {
             case PRIMARY: leftPress(cell, e); break;
