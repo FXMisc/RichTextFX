@@ -13,6 +13,9 @@ public class CodeArea extends StyleClassedTextArea {
 
         // load the default style that defines a fixed-width font
         getStylesheets().add(CodeArea.class.getResource("code-area.css").toExternalForm());
+
+        // don't apply preceding style to typed text
+        setUseInitialStyleForInsertion(true);
     }
 
     public CodeArea() {

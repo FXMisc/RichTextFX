@@ -175,6 +175,15 @@ implements
     public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
     public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
+    /**
+     * Indicates whether the initial style should also be used for plain text
+     * inserted into this text area. When {@code false}, the style immediately
+     * preceding the insertion position is used. Default value is {@code false}.
+     */
+    public void setUseInitialStyleForInsertion(boolean value) { content.useInitialStyleForInsertion.set(value); }
+    public boolean getUseInitialStyleForInsertion() { return content.useInitialStyleForInsertion.get(); }
+    public BooleanProperty useInitialStyleForInsertionProperty() { return content.useInitialStyleForInsertion; }
+
 
     /* ********************************************************************** *
      *                                                                        *

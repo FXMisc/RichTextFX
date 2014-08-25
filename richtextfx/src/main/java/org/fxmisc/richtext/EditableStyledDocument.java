@@ -13,6 +13,8 @@ import java.util.regex.Matcher;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -141,6 +143,24 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     /* ********************************************************************** *
      *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * ********************************************************************** */
+
+    final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Fields                                                                 *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private final S initialStyle;
+
+
+    /* ********************************************************************** *
+     *                                                                        *
      * Constructors                                                           *
      *                                                                        *
      * ********************************************************************** */
@@ -148,6 +168,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     @SuppressWarnings("unchecked")
     EditableStyledDocument(S initialStyle) {
         super(FXCollections.observableArrayList(new Paragraph<S>("", initialStyle)));
+        this.initialStyle = initialStyle;
         length.set(0);
     }
 
@@ -497,7 +518,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     private S getStyleForInsertionAt(Position insertionPos) {
-        Paragraph<S> par = paragraphs.get(insertionPos.getMajor());
-        return par.getStyleAtPosition(insertionPos.getMinor());
+        if(useInitialStyleForInsertion.get()) {
+            return initialStyle;
+        } else {
+            Paragraph<S> par = paragraphs.get(insertionPos.getMajor());
+            return par.getStyleAtPosition(insertionPos.getMinor());
+        }
     }
 }
