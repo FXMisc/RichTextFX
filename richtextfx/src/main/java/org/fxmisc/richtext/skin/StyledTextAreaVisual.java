@@ -18,7 +18,6 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -155,27 +154,25 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().offs();
 
         // follow the caret every time the caret position or paragraphs change
-        EventStream<Void> caretPosDirty = invalidationsOf(area.caretPositionProperty());
-        EventStream<Void> paragraphsDirty = invalidationsOf(area.getParagraphs());
-        EventStream<Void> selectionDirty = invalidationsOf(area.selectionProperty());
+        EventStream<?> caretPosDirty = invalidationsOf(area.caretPositionProperty());
+        EventStream<?> paragraphsDirty = invalidationsOf(area.getParagraphs());
+        EventStream<?> selectionDirty = invalidationsOf(area.selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
-        EventStream<Void> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-        EventSource<Void> positionPopupImpulse = new EventSource<>();
+        EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
+        EventSource<?> positionPopupImpulse = new EventSource<>();
         subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> {
             followCaret();
             positionPopupImpulse.push(null);
         });
 
         // blink caret only when focused
-        listenTo(area.focusedProperty(), (obs, old, isFocused) -> {
-            if(isFocused)
+        manageSubscription(EventStreams.valuesOf(area.focusedProperty()).subscribe(isFocused -> {
+            if(isFocused) {
                 caretPulse.start(true);
-            else
+            } else {
                 caretPulse.stop(false);
-        });
-        if(area.isFocused()) {
-            caretPulse.start(true);
-        }
+            }
+        }));
         manageSubscription(() -> caretPulse.stop());
 
         // The caret is visible in periodic intervals, but only when
@@ -493,11 +490,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
         double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
         double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
-    }
-
-    private <T> void listenTo(ObservableValue<T> observable, ChangeListener<T> listener) {
-        observable.addListener(listener);
-        manageSubscription(() -> observable.removeListener(listener));
     }
 
     private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
