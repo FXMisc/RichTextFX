@@ -241,6 +241,16 @@ libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
 [Download](https://googledrive.com/host/0B4a5AnNnZhkbZ3dRam5ONHJGOHM/downloads/) the fat JAR file (including dependencies) and place it on your classpath.
 
 
+Who uses RichTextFX?
+--------------------
+
+[Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)  
+[Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)  
+[mqtt-spy](https://code.google.com/p/mqtt-spy/)  
+
+Please, let me know if you use RichTextFX in your project and would like it to be listed here.
+
+
 License
 -------
 
@@ -250,7 +260,6 @@ License
 Links
 -----
 
-[API Documentation](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)  
+[API Documentation (Javadoc)](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)  
 [Dropped Features](https://github.com/TomasMikula/RichTextFX/wiki/Dropped-Features)  
 [Known Issues](https://github.com/TomasMikula/RichTextFX/wiki/Known-Issues)  
-[Java 8 Development Gotchas](https://github.com/TomasMikula/RichTextFX/wiki/Java-8-Development-Gotchas)
