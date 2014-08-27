@@ -168,15 +168,18 @@ class ParagraphText<S> extends TextFlow {
     }
 
     public double getCaretOffsetX() {
+        layout(); // ensure layout, is a no-op if not dirty
         Bounds bounds = caretShape.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
 
     public Bounds getCaretBounds() {
+        layout(); // ensure layout, is a no-op if not dirty
         return caretShape.getBoundsInParent();
     }
 
     public Bounds getCaretBoundsOnScreen() {
+        layout(); // ensure layout, is a no-op if not dirty
         Bounds localBounds = caretShape.getBoundsInLocal();
         return caretShape.localToScreen(localBounds);
     }
@@ -185,6 +188,7 @@ class ParagraphText<S> extends TextFlow {
         if(selection.get().getLength() == 0) {
             return Optional.empty();
         } else {
+            layout(); // ensure layout, is a no-op if not dirty
             Bounds localBounds = selectionShape.getBoundsInLocal();
             return Optional.of(selectionShape.localToScreen(localBounds));
         }

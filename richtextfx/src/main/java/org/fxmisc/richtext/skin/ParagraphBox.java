@@ -105,27 +105,33 @@ class ParagraphBox<S> extends Region {
     }
 
     public double getCaretOffsetX() {
+        layout(); // ensure layout, is a no-op if not dirty
         return text.getCaretOffsetX();
     }
 
     public int getLineCount() {
+        layout(); // ensure layout, is a no-op if not dirty
         return text.getLineCount();
     }
 
     public int getCurrentLineIndex() {
+        layout(); // ensure layout, is a no-op if not dirty
         return text.currentLineIndex();
     }
 
     public Bounds getCaretBounds() {
+        layout(); // ensure layout, is a no-op if not dirty
         Bounds b = text.getCaretBounds();
         return text.localToParent(b);
     }
 
     public Bounds getCaretBoundsOnScreen() {
+        layout(); // ensure layout, is a no-op if not dirty
         return text.getCaretBoundsOnScreen();
     }
 
     public Optional<Bounds> getSelectionBoundsOnScreen() {
+        layout(); // ensure layout, is a no-op if not dirty
         return text.getSelectionBoundsOnScreen();
     }
 
