@@ -45,6 +45,7 @@ public class TooltipDemo extends Application {
 
         Scene scene = new Scene(area, 600, 400);
         stage.setScene(scene);
+        stage.setTitle("Tooltip Demo");
         stage.show();
     }
 }

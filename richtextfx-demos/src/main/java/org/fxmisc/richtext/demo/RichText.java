@@ -316,6 +316,7 @@ public class RichText extends Application {
         scene.getStylesheets().add(RichText.class.getResource("rich-text.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
+        primaryStage.setTitle("Rich Text Demo");
         primaryStage.show();
     }
 

@@ -29,6 +29,7 @@ public class PopupDemo extends Application {
         area.setPopupAnchorOffset(new Point2D(4, 4));
 
         primaryStage.setScene(new Scene(new StackPane(area), 200, 200));
+        primaryStage.setTitle("Popup Demo");
         primaryStage.show();
         popup.show(primaryStage);
     }

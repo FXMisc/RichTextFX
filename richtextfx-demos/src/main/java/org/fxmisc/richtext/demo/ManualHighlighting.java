@@ -68,6 +68,7 @@ public class ManualHighlighting extends Application {
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
+        primaryStage.setTitle("Manual Highlighting Demo");
         primaryStage.show();
     }
 

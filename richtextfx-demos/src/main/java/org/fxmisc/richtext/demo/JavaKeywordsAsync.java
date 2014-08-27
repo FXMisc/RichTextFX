@@ -106,6 +106,7 @@ public class JavaKeywordsAsync extends Application {
         Scene scene = new Scene(new StackPane(codeArea), 600, 400);
         scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
+        primaryStage.setTitle("Java Keywords Async Demo");
         primaryStage.show();
     }
 
