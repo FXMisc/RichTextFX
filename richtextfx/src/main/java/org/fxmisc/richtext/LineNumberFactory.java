@@ -41,6 +41,6 @@ public class LineNumberFactory implements IntFunction<Node> {
 
     private String format(int x, int max) {
         int digits = (int) Math.floor(Math.log10(max)) + 1;
-        return String.format("%0" + digits + "d", x);
+        return String.format(" %" + digits + "d ", x);
     }
 }

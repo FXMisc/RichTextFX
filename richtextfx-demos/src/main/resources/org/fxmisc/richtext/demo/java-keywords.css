@@ -1,4 +1,7 @@
 .keyword {
-    -fx-fill: brown;
+    -fx-fill: #8a6;
     -fx-font-weight: bold;
+}
+.default {
+    -fx-fill: #888;
 }
