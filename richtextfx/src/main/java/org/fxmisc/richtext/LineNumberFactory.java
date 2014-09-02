@@ -10,15 +10,16 @@ import org.reactfx.EventStreams;
 
 public class LineNumberFactory implements IntFunction<Node> {
 
-    private static final String STYLESHEET = LineNumberFactory.class.getResource("lineno.css").toExternalForm();
-
     public static IntFunction<Node> get(StyledTextArea<?> area) {
         return new LineNumberFactory(area);
     }
 
     private final EventStream<Integer> nParagraphs;
 
+    private final StyledTextArea<?> area;
+
     private LineNumberFactory(StyledTextArea<?> area) {
+        this.area = area;
         nParagraphs = EventStreams.sizeOf(area.getParagraphs());
     }
 
@@ -26,7 +27,9 @@ public class LineNumberFactory implements IntFunction<Node> {
     public Node apply(int idx) {
         Label lineNo = new Label();
         lineNo.getStyleClass().add("lineno");
-        lineNo.getStylesheets().add(STYLESHEET);
+        for (String s : area.getStylesheets()) {
+            lineNo.getStylesheets().add(s);
+        }
 
         // When removed from the scene, stay subscribed to never(), which is
         // a fake subscription that consumes no resources, instead of staying
@@ -41,6 +44,9 @@ public class LineNumberFactory implements IntFunction<Node> {
 
     private String format(int x, int max) {
         int digits = (int) Math.floor(Math.log10(max)) + 1;
-        return String.format(" %" + digits + "d ", x);
+        if(area.getLineNumberFormat() != null)
+            return String.format(area.getLineNumberFormat().apply(digits), x);
+        else
+            return String.format(" %0" + digits + "d ", x);
     }
 }

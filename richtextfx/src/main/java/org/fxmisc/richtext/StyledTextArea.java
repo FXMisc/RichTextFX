@@ -8,11 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Binding;
@@ -174,6 +170,11 @@ implements
     public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
     public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
     public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
+
+    private final ObjectProperty<Function<Integer,String>> lineNumberFormat = new SimpleObjectProperty<>(null);
+    public void setLineNumberFormat(Function<Integer,String> format) { lineNumberFormat.set(format); }
+    public Function<Integer,String> getLineNumberFormat() { return lineNumberFormat.get(); }
+    public ObjectProperty<Function<Integer,String>> lineNumberFormatProperty() { return lineNumberFormat; }
 
     /**
      * Indicates whether the initial style should also be used for plain text
