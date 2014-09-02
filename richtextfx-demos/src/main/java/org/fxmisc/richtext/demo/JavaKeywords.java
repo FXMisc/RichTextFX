@@ -84,10 +84,10 @@ public class JavaKeywords extends Application {
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
+        codeArea.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.textProperty().addListener((obs, oldText, newText) -> {
-            codeArea.setStyleSpans(0, computeHighlighting(newText));
-        });
+        codeArea.setLineNumberFormat(digits ->" %" + digits + "d ");
+        codeArea.textProperty().addListener((obs, oldText, newText) -> codeArea.setStyleSpans(0, computeHighlighting(newText)));
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(codeArea), 600, 400);
@@ -103,11 +103,11 @@ public class JavaKeywords extends Application {
         StyleSpansBuilder<Collection<String>> spansBuilder
                 = new StyleSpansBuilder<>();
         while(matcher.find()) {
-            spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
+            spansBuilder.add(Collections.singleton("default"), matcher.start() - lastKwEnd);
             spansBuilder.add(Collections.singleton("keyword"), matcher.end() - matcher.start());
             lastKwEnd = matcher.end();
         }
-        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
+        spansBuilder.add(Collections.singleton("default"), text.length() - lastKwEnd);
         return spansBuilder.create();
     }
 }
