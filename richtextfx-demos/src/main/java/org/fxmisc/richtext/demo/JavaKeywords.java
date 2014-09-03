@@ -86,7 +86,7 @@ public class JavaKeywords extends Application {
         CodeArea codeArea = new CodeArea();
         String stylesheet = JavaKeywords.class.getResource("java-keywords.css").toExternalForm();
 
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea,stylesheet));
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea, stylesheet));
         codeArea.textProperty().addListener((obs, oldText, newText) -> {
             codeArea.setStyleSpans(0, computeHighlighting(newText));
         });

@@ -17,23 +17,22 @@ public class LineNumberFactory implements IntFunction<Node> {
         return new LineNumberFactory(area,customStylesheet);
     }
     public static IntFunction<Node> get(StyledTextArea<?> area) {
-        return new LineNumberFactory(area,STYLESHEET);
+        return new LineNumberFactory(area, STYLESHEET);
     }
 
     private final EventStream<Integer> nParagraphs;
+    private final String stylesheet;
 
-    private LineNumberFactory(StyledTextArea<?> area,String Stylesheet) {
+    private LineNumberFactory(StyledTextArea<?> area, String stylesheet) {
         nParagraphs = EventStreams.sizeOf(area.getParagraphs());
-        this.Stylesheet = Stylesheet;
+        this.stylesheet = stylesheet;
     }
-
-    private final String Stylesheet;
 
     @Override
     public Node apply(int idx) {
         Label lineNo = new Label();
         lineNo.getStyleClass().add("lineno");
-        lineNo.getStylesheets().add(Stylesheet);
+        lineNo.getStylesheets().add(stylesheet);
 
         // When removed from the scene, stay subscribed to never(), which is
         // a fake subscription that consumes no resources, instead of staying
