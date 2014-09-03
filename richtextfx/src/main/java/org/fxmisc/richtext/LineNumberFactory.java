@@ -1,7 +1,6 @@
 package org.fxmisc.richtext;
 
 import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -20,11 +19,24 @@ public class LineNumberFactory implements IntFunction<Node> {
         return new LineNumberFactory(area, STYLESHEET);
     }
 
+    public static IntFunction<Node> get(StyledTextArea<?> area,IntFunction<String> format) {
+        return new LineNumberFactory(area,format,STYLESHEET);
+    }
+    public static IntFunction<Node> get(StyledTextArea<?> area,IntFunction<String> format,String customStylesheet) {
+        return new LineNumberFactory(area,format,customStylesheet);
+    }
     private final EventStream<Integer> nParagraphs;
     private final String stylesheet;
+    private final IntFunction<String> format;
 
     private LineNumberFactory(StyledTextArea<?> area, String stylesheet) {
         nParagraphs = EventStreams.sizeOf(area.getParagraphs());
+        this.format = (digits -> "%0" + digits + "d");
+        this.stylesheet = stylesheet;
+    }
+    private LineNumberFactory(StyledTextArea<?> area, IntFunction<String> format, String stylesheet) {
+        nParagraphs = EventStreams.sizeOf(area.getParagraphs());
+        this.format = format;
         this.stylesheet = stylesheet;
     }
 
@@ -47,6 +59,6 @@ public class LineNumberFactory implements IntFunction<Node> {
 
     private String format(int x, int max) {
         int digits = (int) Math.floor(Math.log10(max)) + 1;
-        return String.format("%0" + digits + "d", x);
+        return String.format(format.apply(digits), x);
     }
 }
