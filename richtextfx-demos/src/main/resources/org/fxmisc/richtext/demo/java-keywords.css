@@ -1,4 +1,17 @@
 .keyword {
-    -fx-fill: brown;
+    -fx-fill: #8a6;
     -fx-font-weight: bold;
+}
+.default {
+    -fx-fill: #666;
+}
+.lineno {
+    -fx-font-family: monospace;
+    -fx-background-color: #eee;
+    -fx-text-fill: #666;
+    -fx-padding: 0 5px;
+}
+.code-area {
+    -fx-font-family: monospace;
+    -fx-background-color: #eee;
 }

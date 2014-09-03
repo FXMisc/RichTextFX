@@ -84,14 +84,16 @@ public class JavaKeywords extends Application {
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
+        String stylesheet = JavaKeywords.class.getResource("java-keywords.css").toExternalForm();
+
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea,stylesheet));
         codeArea.textProperty().addListener((obs, oldText, newText) -> {
             codeArea.setStyleSpans(0, computeHighlighting(newText));
         });
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(codeArea), 600, 400);
-        scene.getStylesheets().add(JavaKeywords.class.getResource("java-keywords.css").toExternalForm());
+        scene.getStylesheets().add(stylesheet);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();

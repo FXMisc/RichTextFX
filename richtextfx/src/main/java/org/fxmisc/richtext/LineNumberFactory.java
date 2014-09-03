@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -12,21 +13,27 @@ public class LineNumberFactory implements IntFunction<Node> {
 
     private static final String STYLESHEET = LineNumberFactory.class.getResource("lineno.css").toExternalForm();
 
+    public static IntFunction<Node> get(StyledTextArea<?> area,String customStylesheet) {
+        return new LineNumberFactory(area,customStylesheet);
+    }
     public static IntFunction<Node> get(StyledTextArea<?> area) {
-        return new LineNumberFactory(area);
+        return new LineNumberFactory(area,STYLESHEET);
     }
 
     private final EventStream<Integer> nParagraphs;
 
-    private LineNumberFactory(StyledTextArea<?> area) {
+    private LineNumberFactory(StyledTextArea<?> area,String Stylesheet) {
         nParagraphs = EventStreams.sizeOf(area.getParagraphs());
+        this.Stylesheet = Stylesheet;
     }
+
+    private final String Stylesheet;
 
     @Override
     public Node apply(int idx) {
         Label lineNo = new Label();
         lineNo.getStyleClass().add("lineno");
-        lineNo.getStylesheets().add(STYLESHEET);
+        lineNo.getStylesheets().add(Stylesheet);
 
         // When removed from the scene, stay subscribed to never(), which is
         // a fake subscription that consumes no resources, instead of staying
