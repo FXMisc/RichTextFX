@@ -1,11 +1,12 @@
 package org.fxmisc.richtext.util.skin;
 
 import javafx.scene.Node;
+import javafx.scene.control.Control;
 
 /**
  * A Visual that is represented by a single node.
  */
-public interface SimpleVisual extends Visual {
+public interface SimpleVisual<C extends Control> extends Visual<C> {
     /**
      * Returns the node representing the visual rendering of the control. This
      * node will be attached to the control as its child on skin creation and

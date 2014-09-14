@@ -160,10 +160,8 @@ public class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    public StyledTextAreaBehavior(
-            StyledTextArea<?> styledTextArea,
-            StyledTextAreaVisual<?> visual) {
-        this.area = styledTextArea;
+    public StyledTextAreaBehavior(StyledTextAreaVisual<?> visual) {
+        this.area = visual.getControl();
         this.visual = visual;
         subscription = Subscription.multi(
                 visual.cellMouseEvents()

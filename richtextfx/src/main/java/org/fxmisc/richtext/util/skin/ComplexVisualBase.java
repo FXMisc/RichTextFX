@@ -12,7 +12,7 @@ import javafx.scene.control.Control;
  * control's child list as well as removing them on {@link #dispose()}.
  * @param <C> type of the control.
  */
-public abstract class ComplexVisualBase<C extends Control> implements Visual {
+public abstract class ComplexVisualBase<C extends Control> implements Visual<C> {
     private final C control;
     private final ObservableList<Node> children;
 
@@ -40,10 +40,8 @@ public abstract class ComplexVisualBase<C extends Control> implements Visual {
     @Override
     public abstract void dispose();
 
-    /**
-     * Returns the control this Visual is used for.
-     */
-    protected final C getControl() {
+    @Override
+    public final C getControl() {
         return control;
     }
 

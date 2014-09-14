@@ -1,7 +1,6 @@
 package org.fxmisc.richtext.util.skin;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import javafx.css.CssMetaData;
@@ -48,19 +47,18 @@ public final class Skins {
      *
      * @param control control for which the skin is going to be created.
      * @param visualFactory function to create the Visual, given the control.
-     * @param behaviorFactory function to create the Behavior, given the control
-     * and the Visual.
+     * @param behaviorFactory function to create the Behavior, given the Visual.
      * @return a Skin that delegates the view aspect to the Visual and the
      * controller aspect to the Behavior.
      */
-    public static <C extends Control, V extends SimpleVisual> Skin<C> createSimpleSkin(
+    public static <C extends Control, V extends SimpleVisual<? super C>> Skin<C> createSimpleSkin(
             C control,
             Function<? super C, ? extends V> visualFactory,
-            BiFunction<? super C, ? super V, ? extends Behavior> behaviorFactory) {
+            Function<? super V, ? extends Behavior> behaviorFactory) {
 
         return new SkinBase<C>(control) {
             private final V visual = visualFactory.apply(control);
-            private final Behavior behavior = behaviorFactory.apply(control, visual);
+            private final Behavior behavior = behaviorFactory.apply(visual);
             private final Node node = visual.getNode();
             {
                 getChildren().add(node);
@@ -110,19 +108,18 @@ public final class Skins {
      *
      * @param control control for which the skin is going to be created.
      * @param visualFactory function to create the Visual, given the control.
-     * @param behaviorFactory function to create the Behavior, given the control
-     * and the Visual.
+     * @param behaviorFactory function to create the Behavior, given the Visual.
      * @return a Skin that delegates the view aspect to the Visual and the
      * controller aspect to the Behavior.
      */
     public static <C extends Control, V extends ComplexVisualBase<C>> Skin<C> createComplexSkin(
             C control,
             Function<? super C, ? extends V> visualFactory,
-            BiFunction<? super C, ? super V, ? extends Behavior> behaviorFactory) {
+            Function<? super V, ? extends Behavior> behaviorFactory) {
 
         return new SkinBase<C>(control) {
             private final V visual = visualFactory.apply(control);
-            private final Behavior behavior = behaviorFactory.apply(control, visual);
+            private final Behavior behavior = behaviorFactory.apply(visual);
 
             @Override
             public void dispose() {

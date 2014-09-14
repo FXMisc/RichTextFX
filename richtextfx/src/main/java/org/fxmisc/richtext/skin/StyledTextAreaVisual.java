@@ -60,7 +60,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Code area skin.
  */
-public class StyledTextAreaVisual<S> implements SimpleVisual {
+public class StyledTextAreaVisual<S> implements SimpleVisual<StyledTextArea<S>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -224,6 +224,11 @@ public class StyledTextAreaVisual<S> implements SimpleVisual {
      * Public API (from Visual)                                               *
      *                                                                        *
      * ********************************************************************** */
+
+    @Override
+    public StyledTextArea<S> getControl() {
+        return area;
+    }
 
     @Override
     public Node getNode() {
