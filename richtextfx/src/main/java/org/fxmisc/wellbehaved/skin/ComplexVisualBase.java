@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util.skin;
+package org.fxmisc.wellbehaved.skin;
 
 import java.lang.reflect.Method;
 

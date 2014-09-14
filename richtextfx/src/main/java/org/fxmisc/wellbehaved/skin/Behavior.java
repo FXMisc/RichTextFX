@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util.skin;
+package org.fxmisc.wellbehaved.skin;
 
 /**
  * Represents the controller aspect of a JavaFX control. It defines how the

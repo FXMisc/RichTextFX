@@ -20,7 +20,7 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
-import org.fxmisc.richtext.util.skin.Behavior;
+import org.fxmisc.wellbehaved.skin.Behavior;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 

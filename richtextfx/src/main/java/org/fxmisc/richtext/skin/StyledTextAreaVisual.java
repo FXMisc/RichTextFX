@@ -48,7 +48,7 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
-import org.fxmisc.richtext.util.skin.SimpleVisual;
+import org.fxmisc.wellbehaved.skin.SimpleVisual;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;

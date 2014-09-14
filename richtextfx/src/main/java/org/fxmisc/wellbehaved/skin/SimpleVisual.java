@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util.skin;
+package org.fxmisc.wellbehaved.skin;
 
 import javafx.scene.Node;
 import javafx.scene.control.Control;

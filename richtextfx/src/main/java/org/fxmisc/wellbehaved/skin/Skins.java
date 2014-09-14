@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util.skin;
+package org.fxmisc.wellbehaved.skin;
 
 import java.util.List;
 import java.util.function.Function;
