@@ -48,7 +48,7 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
-import org.fxmisc.wellbehaved.skin.SimpleVisual;
+import org.fxmisc.wellbehaved.skin.SimpleVisualBase;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -60,7 +60,7 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Code area skin.
  */
-public class StyledTextAreaVisual<S> implements SimpleVisual<StyledTextArea<S>> {
+public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -126,6 +126,7 @@ public class StyledTextAreaVisual<S> implements SimpleVisual<StyledTextArea<S>> 
     public StyledTextAreaVisual(
             StyledTextArea<S> styledTextArea,
             BiConsumer<Text, S> applyStyle) {
+        super(styledTextArea);
         this.area = styledTextArea;
 
         // load the default style
@@ -224,11 +225,6 @@ public class StyledTextAreaVisual<S> implements SimpleVisual<StyledTextArea<S>> 
      * Public API (from Visual)                                               *
      *                                                                        *
      * ********************************************************************** */
-
-    @Override
-    public StyledTextArea<S> getControl() {
-        return area;
-    }
 
     @Override
     public Node getNode() {

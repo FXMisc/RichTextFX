@@ -7,14 +7,16 @@ import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.scene.control.Control;
 
+import org.fxmisc.wellbehaved.input.InputReceiver;
+
 /**
  * Represents the view aspect of a JavaFX control. It defines how the control
  * is rendered visually on the screen. The implementations should either
- * implement {@link SimpleVisual}, or extend from {@link ComplexVisualBase}.
+ * implement {@link SimpleVisualBase}, or extend from {@link ComplexVisualBase}.
  *
  * @param <C> type of the control this Visual is used for.
  */
-public interface Visual<C extends Control> {
+public interface Visual<C extends Control> extends InputReceiver {
     /**
      * Returns the control this Visual is used for.
      */

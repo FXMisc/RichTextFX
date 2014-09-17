@@ -12,7 +12,7 @@ public final class InputReceiverHelper<T extends Node> implements InputReceiver 
         this.target = target;
     }
 
-    T getTarget() {
+    public T getTarget() {
         return target;
     }
 

@@ -12,13 +12,12 @@ import javafx.scene.control.Control;
  * control's child list as well as removing them on {@link #dispose()}.
  * @param <C> type of the control.
  */
-public abstract class ComplexVisualBase<C extends Control> implements Visual<C> {
-    private final C control;
+public abstract class ComplexVisualBase<C extends Control> extends VisualBase<C> {
     private final ObservableList<Node> children;
 
     @SuppressWarnings("unchecked")
     public ComplexVisualBase(C control) {
-        this.control = control;
+        super(control);
 
         // Use reflection because control.getControlChildren is package private.
         // This would be unnecessary if this class was in javafx.scene control.
@@ -34,16 +33,11 @@ public abstract class ComplexVisualBase<C extends Control> implements Visual<C> 
     /**
      * {@inheritDoc}
      *
-     * In addition, it should remove any nodes it had previously attached to
+     * <p>In addition, it should remove any nodes it had previously attached to
      * the control.
      */
     @Override
     public abstract void dispose();
-
-    @Override
-    public final C getControl() {
-        return control;
-    }
 
     /**
      * Provides direct access to control's child list.

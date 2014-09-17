@@ -51,7 +51,7 @@ public final class Skins {
      * @return a Skin that delegates the view aspect to the Visual and the
      * controller aspect to the Behavior.
      */
-    public static <C extends Control, V extends SimpleVisual<? super C>> Skin<C> createSimpleSkin(
+    public static <C extends Control, V extends SimpleVisualBase<? super C>> Skin<C> createSimpleSkin(
             C control,
             Function<? super C, ? extends V> visualFactory,
             Function<? super V, ? extends Behavior> behaviorFactory) {
