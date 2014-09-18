@@ -1,6 +1,9 @@
 package org.fxmisc.wellbehaved.input;
 
+import javafx.event.EventHandler;
+import javafx.scene.input.InputEvent;
+
 public interface InputReceiver {
-    InputHandler getOnInput();
-    void setOnInput(InputHandler handler);
+    EventHandler<? super InputEvent> getOnInput();
+    void setOnInput(EventHandler<? super InputEvent> handler);
 }

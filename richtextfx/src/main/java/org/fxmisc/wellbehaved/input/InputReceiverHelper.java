@@ -1,12 +1,13 @@
 package org.fxmisc.wellbehaved.input;
 
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.input.InputEvent;
 
 public final class InputReceiverHelper<T extends Node> implements InputReceiver {
     private final T target;
 
-    private InputHandler handler = InputHandler.EMPTY;
+    private EventHandler<? super InputEvent> handler = EventHandlerHelper.empty();
 
     public InputReceiverHelper(T target) {
         this.target = target;
@@ -17,21 +18,17 @@ public final class InputReceiverHelper<T extends Node> implements InputReceiver 
     }
 
     @Override
-    public InputHandler getOnInput() {
+    public EventHandler<? super InputEvent> getOnInput() {
         return handler;
     }
 
     @Override
-    public void setOnInput(InputHandler handler) {
-        if(handler != InputHandler.EMPTY && handler.getTarget() != this) {
-            throw new IllegalArgumentException("Wrong input target: " + handler.getTarget() + " instead of " + this);
-        }
-
-        if(this.handler != InputHandler.EMPTY) {
+    public void setOnInput(EventHandler<? super InputEvent> handler) {
+        if(this.handler != EventHandlerHelper.empty()) {
             target.removeEventHandler(InputEvent.ANY, handler);
         }
 
-        if(handler != InputHandler.EMPTY) {
+        if(handler != EventHandlerHelper.empty()) {
             target.addEventHandler(InputEvent.ANY, handler);
         }
 
@@ -39,6 +36,6 @@ public final class InputReceiverHelper<T extends Node> implements InputReceiver 
     }
 
     public void dispose() {
-        setOnInput(InputHandler.EMPTY);
+        setOnInput(EventHandlerHelper.empty());
     }
 }

@@ -1,8 +1,9 @@
 package org.fxmisc.wellbehaved.skin;
 
+import javafx.event.EventHandler;
 import javafx.scene.control.Control;
+import javafx.scene.input.InputEvent;
 
-import org.fxmisc.wellbehaved.input.InputHandler;
 import org.fxmisc.wellbehaved.input.InputReceiverHelper;
 
 abstract class VisualBase<C extends Control> implements Visual<C> {
@@ -13,12 +14,12 @@ abstract class VisualBase<C extends Control> implements Visual<C> {
     }
 
     @Override
-    public final InputHandler getOnInput() {
+    public final EventHandler<? super InputEvent> getOnInput() {
         return helper.getOnInput();
     }
 
     @Override
-    public final void setOnInput(InputHandler handler) {
+    public final void setOnInput(EventHandler<? super InputEvent> handler) {
         helper.setOnInput(handler);
     }
 
@@ -31,5 +32,4 @@ abstract class VisualBase<C extends Control> implements Visual<C> {
     public void dispose() {
         helper.dispose();
     }
-
 }
