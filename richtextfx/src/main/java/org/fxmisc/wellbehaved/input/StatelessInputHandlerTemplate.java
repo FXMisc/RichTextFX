@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import javafx.event.EventType;
 import javafx.scene.input.InputEvent;
+import javafx.scene.input.KeyCharacterCombination;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
@@ -36,6 +40,18 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
 
         public On<T, KeyEvent> on(KeyCombination combination) {
             return on(EventPattern.keyCombinationPattern(combination));
+        }
+
+        public On<T, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
+            return on(new KeyCharacterCombination(character, modifiers));
+        }
+
+        public On<T, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
+            return on(new KeyCodeCombination(code, modifiers));
+        }
+
+        public <E extends InputEvent> On<T, E> on(EventType<E> eventType) {
+            return on(EventPattern.eventTypePattern(eventType));
         }
 
         public <U extends T> Builder<U> addHandler(BiConsumer<? super U, ? super InputEvent> handler) {
@@ -131,6 +147,18 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
 
     public static On<InputReceiver, KeyEvent> on(KeyCombination combination) {
         return Builder.empty().on(combination);
+    }
+
+    public static On<InputReceiver, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().on(character, modifiers);
+    }
+
+    public static On<InputReceiver, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().on(code, modifiers);
+    }
+
+    public static <E extends InputEvent> On<InputReceiver, E> on(EventType<E> eventType) {
+        return Builder.empty().on(eventType);
     }
 
     public static <T extends InputReceiver> Builder<T>

@@ -8,7 +8,11 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javafx.event.EventType;
 import javafx.scene.input.InputEvent;
+import javafx.scene.input.KeyCharacterCombination;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
@@ -49,6 +53,18 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
 
         public On<T, S, KeyEvent> on(KeyCombination combination) {
             return on(EventPattern.keyCombinationPattern(combination));
+        }
+
+        public On<T, S, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
+            return on(new KeyCharacterCombination(character, modifiers));
+        }
+
+        public On<T, S, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
+            return on(new KeyCodeCombination(code, modifiers));
+        }
+
+        public <E extends InputEvent> On<T, S, E> on(EventType<E> eventType) {
+            return on(EventPattern.eventTypePattern(eventType));
         }
 
         public <U extends T> Builder<U, S> addHandler(StateTransitioningHandler<? super U, S, InputEvent> handler) {
