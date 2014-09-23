@@ -26,12 +26,24 @@ public interface InputHandlerTemplate<T extends InputReceiver> {
 
     default <U extends T> InputHandlerTemplate<U> orElse(InputHandlerTemplate<U> that) {
         return () -> {
-            BiConsumer<? super T, ? super InputEvent> thisHandler = this.getHandler();
+            BiConsumer<? super T, ? super InputEvent> thisHandler = InputHandlerTemplate.this.getHandler();
             BiConsumer<? super U, ? super InputEvent> thatHandler = that.getHandler();
             return (u, e) -> {
                 thisHandler.accept(u, e);
                 if(!e.isConsumed()) {
                     thatHandler.accept(u, e);
+                }
+            };
+        };
+    }
+
+    default <U extends T> InputHandlerTemplate<U> ifConsumed(BiConsumer<? super U, ? super InputEvent> postConsumption) {
+        return () -> {
+            BiConsumer<? super T, ? super InputEvent> thisHandler = InputHandlerTemplate.this.getHandler();
+            return (u, e) -> {
+                thisHandler.accept(u, e);
+                if(e.isConsumed()) {
+                    postConsumption.accept(u, e);
                 }
             };
         };
