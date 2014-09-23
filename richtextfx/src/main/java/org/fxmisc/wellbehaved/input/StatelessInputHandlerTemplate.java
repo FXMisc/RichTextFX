@@ -17,7 +17,7 @@ import javafx.scene.input.KeyEvent;
  *
  * @param <T> type of the control the input handler applies to.
  */
-public final class StatelessInputHandlerTemplate<T extends InputReceiver> implements InputHandlerTemplate<T>, BiConsumer<T, InputEvent> {
+public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> implements InputHandlerTemplate<T>, BiConsumer<T, InputEvent> {
 
     public static abstract class Builder<T extends InputReceiver> {
         private static Builder<InputReceiver> empty() {
@@ -54,7 +54,19 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
         }
 
         public StatelessInputHandlerTemplate<T> create() {
-            return new StatelessInputHandlerTemplate<T>(getHandlers());
+            List<BiConsumer<? super T, ? super InputEvent>> handlers = getHandlers();
+
+            return new StatelessInputHandlerTemplate<T>() {
+                @Override
+                public void accept(T target, InputEvent event) {
+                    for(BiConsumer<? super T, ? super InputEvent> handler: handlers) {
+                        handler.accept(target, event);
+                        if(event.isConsumed()) {
+                            break;
+                        }
+                    }
+                }
+            };
         }
 
         List<BiConsumer<? super T, ? super InputEvent>> getHandlers() {
@@ -163,24 +175,23 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
     }
 
 
-    private final List<BiConsumer<? super T, ? super InputEvent>> handlers;
-
-    private StatelessInputHandlerTemplate(List<BiConsumer<? super T, ? super InputEvent>> handlers) {
-        this.handlers = handlers;
-    }
+    // private constructor to prevent subclassing by the user
+    private StatelessInputHandlerTemplate() {}
 
     @Override
-    public void accept(T target, InputEvent event) {
-        for(BiConsumer<? super T, ? super InputEvent> handler: handlers) {
-            handler.accept(target, event);
-            if(event.isConsumed()) {
-                break;
-            }
-        }
-    }
-
-    @Override
-    public BiConsumer<? super T, ? super InputEvent> getHandler() {
+    public final BiConsumer<? super T, ? super InputEvent> getHandler() {
         return this;
+    }
+
+    public final <U extends T> StatelessInputHandlerTemplate<U> onlyWhen(Predicate<? super U> condition) {
+        return new StatelessInputHandlerTemplate<U>() {
+
+            @Override
+            public void accept(U target, InputEvent event) {
+                if(condition.test(target)) {
+                    StatelessInputHandlerTemplate.this.accept(target, event);
+                }
+            }
+        };
     }
 }

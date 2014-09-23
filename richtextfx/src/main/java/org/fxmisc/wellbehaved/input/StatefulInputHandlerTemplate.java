@@ -44,6 +44,14 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             };
         }
 
+        default <U extends T> StateTransitioningHandler<U, S> onlyWhen(BiPredicate<? super U, ? super S> condition) {
+            return (u, s, e) -> {
+                return condition.test(u, s)
+                        ? StateTransitioningHandler.this.handle(u, s, e)
+                        : s;
+            };
+        }
+
         default StatefulInputHandlerTemplate<T, S> initialStateSupplier(Supplier<? extends S> initialStateSupplier) {
             return new StatefulInputHandlerTemplate<>(this, initialStateSupplier);
         }
@@ -249,6 +257,10 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
                 state = handler.handle(t, state, e);
             }
         };
+    }
+
+    public <U extends T> StatefulInputHandlerTemplate<U, S> onlyWhen(BiPredicate<? super U, ? super S> condition) {
+        return handler.<U>onlyWhen(condition).initialStateSupplier(initialStateSupplier);
     }
 
     public <U extends T> StatefulInputHandlerTemplate<U, S> addHandler(StateTransitioningHandler<? super U, S> nextHandler) {
