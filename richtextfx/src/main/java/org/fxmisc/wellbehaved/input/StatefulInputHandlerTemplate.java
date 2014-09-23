@@ -107,7 +107,7 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
         }
 
         public StatefulInputHandlerTemplate<T, S> initialStateSupplier(Supplier<? extends S> initialStateSupplier) {
-            return new StatefulInputHandlerTemplate<T, S>(createHandler(), initialStateSupplier);
+            return createHandler().initialStateSupplier(initialStateSupplier);
         }
 
         List<StateTransitioningHandler<? super T, S>> getHandlers() {
@@ -163,7 +163,7 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
         }
 
         public <U extends T> Builder<U, S> act(StateTransition<? super U, S, ? super E> action) {
-            return new CompositeBuilder<>(previousBuilder, (u, s, ie) -> {
+            return previousBuilder.addHandler((u, s, ie) -> {
                 Optional<E> optE = eventMatcher.match(ie);
                 if(optE.isPresent()) {
                     E e = optE.get();
@@ -196,7 +196,7 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
         }
 
         public <U extends T> Builder<U, S> act(StateTransition<? super U, S, ? super E> action) {
-            return new CompositeBuilder<>(previousBuilder, (u, s, ie) -> {
+            return previousBuilder.addHandler((u, s, ie) -> {
                 Optional<E> optE = eventMatcher.match(ie);
                 if(optE.isPresent() && condition.test(u, s)) {
                     E e = optE.get();

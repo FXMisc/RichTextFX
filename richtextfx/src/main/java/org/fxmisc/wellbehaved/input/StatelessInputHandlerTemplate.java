@@ -113,7 +113,7 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
         }
 
         public <U extends T> Builder<U> act(BiConsumer<? super U, ? super E> action) {
-            return new CompositeBuilder<>(previousBuilder, (t, ie) -> {
+            return previousBuilder.addHandler((t, ie) -> {
                 eventMatcher.match(ie).ifPresent(e -> {
                     action.accept(t, e);
                     e.consume();
@@ -137,7 +137,7 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
         }
 
         public <U extends T> Builder<U> act(BiConsumer<? super U, ? super E> action) {
-            return new CompositeBuilder<>(previousBuilder, (u, ie) -> {
+            return previousBuilder.addHandler((u, ie) -> {
                 eventMatcher.match(ie).ifPresent(e -> {
                     if(condition.test(u)) {
                         action.accept(u, e);
