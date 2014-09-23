@@ -138,6 +138,10 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             this.eventMatcher = eventMatcher;
         }
 
+        public On<T, S, E> where(Predicate<? super E> condition) {
+            return new On<>(previousBuilder, eventMatcher.and(condition));
+        }
+
         public <U extends T> When<U, S, E> when(Predicate<? super U> condition) {
             return when((u, s) -> condition.test(u));
         }

@@ -92,6 +92,10 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
             this.eventMatcher = eventMatcher;
         }
 
+        public On<T, E> where(Predicate<? super E> condition) {
+            return new On<>(previousBuilder, eventMatcher.and(condition));
+        }
+
         public <U extends T> When<U, E> when(Predicate<? super U> condition) {
             return new When<U, E>(previousBuilder, eventMatcher, condition);
         }
