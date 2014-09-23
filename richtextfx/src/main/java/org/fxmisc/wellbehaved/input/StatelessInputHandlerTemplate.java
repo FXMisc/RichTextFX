@@ -20,16 +20,11 @@ import javafx.scene.input.KeyEvent;
 public final class StatelessInputHandlerTemplate<T extends InputReceiver> implements InputHandlerTemplate<T>, BiConsumer<T, InputEvent> {
 
     public static abstract class Builder<T extends InputReceiver> {
-        private static <T extends InputReceiver> Builder<T> empty() {
-            return new Builder<T>() {
+        private static Builder<InputReceiver> empty() {
+            return new Builder<InputReceiver>() {
                 @Override
-                <U extends T> List<BiConsumer<? super U, ? super InputEvent>> getHandlers(int additionalCapacity) {
+                <U extends InputReceiver> List<BiConsumer<? super U, ? super InputEvent>> getHandlers(int additionalCapacity) {
                     return new ArrayList<>(additionalCapacity);
-                }
-
-                @Override
-                public StatelessInputHandlerTemplate<T> create() {
-                    throw new UnsupportedOperationException("Cannot create input handler template from an empty builder.");
                 }
             };
         }
@@ -58,7 +53,9 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
             return new CompositeBuilder<>(this, handler);
         }
 
-        public abstract StatelessInputHandlerTemplate<T> create();
+        public StatelessInputHandlerTemplate<T> create() {
+            return new StatelessInputHandlerTemplate<T>(getHandlers());
+        }
 
         List<BiConsumer<? super T, ? super InputEvent>> getHandlers() {
             return getHandlers(0);
@@ -83,11 +80,6 @@ public final class StatelessInputHandlerTemplate<T extends InputReceiver> implem
             List<BiConsumer<? super U, ? super InputEvent>> handlers = previousBuilder.getHandlers(additionalCapacity + 1);
             handlers.add(handler);
             return handlers;
-        }
-
-        @Override
-        public StatelessInputHandlerTemplate<T> create() {
-            return new StatelessInputHandlerTemplate<T>(getHandlers());
         }
     }
 

@@ -19,30 +19,44 @@ import javafx.scene.input.KeyEvent;
 public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> implements InputHandlerTemplate<T> {
 
     @FunctionalInterface
-    public interface StateTransitioningHandler<T extends InputReceiver, S, E extends InputEvent> {
+    public interface StateTransition<T extends InputReceiver, S, E extends InputEvent> {
         S transition(T target, S state, E event);
+    }
+
+    /**
+     * An instance of this interface is expected to <em>consume</em> the event
+     * if it successfully handled the event. If the event was not handled by an
+     * instance of this interface, the event should be left unconsumed and the
+     * returned state should be unchanged.
+     */
+    @FunctionalInterface
+    public interface StateTransitioningHandler<T extends InputReceiver, S> {
+        S handle(T target, S state, InputEvent event);
+
+        default <U extends T> StateTransitioningHandler<U, S> orElse(StateTransitioningHandler<? super U, S> nextHandler) {
+            return (u, s, e) -> {
+                S newState = StateTransitioningHandler.this.handle(u, s, e);
+                if(e.isConsumed()) {
+                    return newState;
+                } else {
+                    return nextHandler.handle(u, s, e);
+                }
+            };
+        }
+
+        default StatefulInputHandlerTemplate<T, S> initialStateSupplier(Supplier<? extends S> initialStateSupplier) {
+            return new StatefulInputHandlerTemplate<>(this, initialStateSupplier);
+        }
     }
 
     public static abstract class Builder<T extends InputReceiver, S> {
 
-        private static <T extends InputReceiver, S> Builder<T, S> initial(
-                Supplier<? extends S> initialStateSupplier) {
-            return new Builder<T, S>() {
-
+        private static <S> Builder<InputReceiver, S> empty() {
+            return new Builder<InputReceiver, S>() {
                 @Override
-                public StatefulInputHandlerTemplate<T, S> create() {
-                    throw new UnsupportedOperationException("Cannot create input handler template from an empty builder.");
-                }
-
-                @Override
-                <U extends T> List<StateTransitioningHandler<? super U, S, InputEvent>> getHandlers(
+                <U extends InputReceiver> List<StateTransitioningHandler<? super U, S>> getHandlers(
                         int additionalCapacity) {
                     return new ArrayList<>(additionalCapacity);
-                }
-
-                @Override
-                Supplier<? extends S> getInitialStateSupplier() {
-                    return initialStateSupplier;
                 }
             };
         }
@@ -67,47 +81,51 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             return on(EventPattern.eventTypePattern(eventType));
         }
 
-        public <U extends T> Builder<U, S> addHandler(StateTransitioningHandler<? super U, S, InputEvent> handler) {
+        public <U extends T> Builder<U, S> addHandler(StateTransitioningHandler<? super U, S> handler) {
             return new CompositeBuilder<>(this, handler);
         }
 
-        public abstract StatefulInputHandlerTemplate<T, S> create();
+        public StateTransitioningHandler<T, S> createHandler() {
+            return (t, s, e) -> {
+                S newState = s;
+                for(StateTransitioningHandler<? super T, S> handler: getHandlers()) {
+                    newState = handler.handle(t, newState, e);
+                    if(e.isConsumed()) {
+                        break;
+                    }
+                }
+                return newState;
+            };
+        }
 
-        List<StateTransitioningHandler<? super T, S, InputEvent>> getHandlers() {
+        public StatefulInputHandlerTemplate<T, S> initialStateSupplier(Supplier<? extends S> initialStateSupplier) {
+            return new StatefulInputHandlerTemplate<T, S>(createHandler(), initialStateSupplier);
+        }
+
+        List<StateTransitioningHandler<? super T, S>> getHandlers() {
             return getHandlers(0);
         }
 
-        abstract Supplier<? extends S> getInitialStateSupplier();
-        abstract <U extends T> List<StateTransitioningHandler<? super U, S, InputEvent>> getHandlers(int additionalCapacity);
+        abstract <U extends T> List<StateTransitioningHandler<? super U, S>> getHandlers(int additionalCapacity);
     }
 
     private static class CompositeBuilder<T extends InputReceiver, S> extends Builder<T, S> {
         private final Builder<? super T, S> previousBuilder;
-        private final StateTransitioningHandler<? super T, S, InputEvent> handler;
+        private final StateTransitioningHandler<? super T, S> handler;
 
         private CompositeBuilder(
                 Builder<? super T, S> previousBuilder,
-                StateTransitioningHandler<? super T, S, InputEvent> handler) {
+                StateTransitioningHandler<? super T, S> handler) {
             this.previousBuilder = previousBuilder;
             this.handler = handler;
         }
 
         @Override
-        public StatefulInputHandlerTemplate<T, S> create() {
-            return new StatefulInputHandlerTemplate<>(getInitialStateSupplier(), getHandlers());
-        }
-
-        @Override
-        <U extends T> List<StateTransitioningHandler<? super U, S, InputEvent>> getHandlers(
+        <U extends T> List<StateTransitioningHandler<? super U, S>> getHandlers(
                 int additionalCapacity) {
-            List<StateTransitioningHandler<? super U, S, InputEvent>> handlers = previousBuilder.getHandlers(additionalCapacity + 1);
+            List<StateTransitioningHandler<? super U, S>> handlers = previousBuilder.getHandlers(additionalCapacity + 1);
             handlers.add(handler);
             return handlers;
-        }
-
-        @Override
-        Supplier<? extends S> getInitialStateSupplier() {
-            return previousBuilder.getInitialStateSupplier();
         }
     }
 
@@ -132,7 +150,7 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             return act((u, s, e) -> { action.accept(u, e); return s; });
         }
 
-        public <U extends T> Builder<U, S> act(StateTransitioningHandler<? super U, S, ? super E> action) {
+        public <U extends T> Builder<U, S> act(StateTransition<? super U, S, ? super E> action) {
             return new CompositeBuilder<>(previousBuilder, (u, s, ie) -> {
                 Optional<E> optE = eventMatcher.match(ie);
                 if(optE.isPresent()) {
@@ -165,7 +183,7 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             return act((u, s, e) -> { action.accept(u, e); return s; });
         }
 
-        public <U extends T> Builder<U, S> act(StateTransitioningHandler<? super U, S, ? super E> action) {
+        public <U extends T> Builder<U, S> act(StateTransition<? super U, S, ? super E> action) {
             return new CompositeBuilder<>(previousBuilder, (u, s, ie) -> {
                 Optional<E> optE = eventMatcher.match(ie);
                 if(optE.isPresent() && condition.test(u, s)) {
@@ -180,20 +198,41 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
         }
     }
 
-    public static <S> Builder<InputReceiver, S> initialStateSupplier(
-            Supplier<? extends S> initialStateSupplier) {
-        return Builder.initial(initialStateSupplier);
+    public static <E extends InputEvent, S> On<InputReceiver, S, E> on(
+            EventPattern<? super InputEvent, E> eventMatcher) {
+        return Builder.<S>empty().on(eventMatcher);
+    }
+
+    public static <S> On<InputReceiver, S, KeyEvent> on(KeyCombination combination) {
+        return Builder.<S>empty().on(combination);
+    }
+
+    public static <S> On<InputReceiver, S, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
+        return Builder.<S>empty().on(character, modifiers);
+    }
+
+    public static <S> On<InputReceiver, S, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
+        return Builder.<S>empty().on(code, modifiers);
+    }
+
+    public static <E extends InputEvent, S> On<InputReceiver, S, E> on(EventType<E> eventType) {
+        return Builder.<S>empty().on(eventType);
+    }
+
+    public static <T extends InputReceiver, S> Builder<T, S>
+    startWith(StateTransitioningHandler<? super T, S> handler) {
+        return Builder.<S>empty().addHandler(handler);
     }
 
 
     private final Supplier<? extends S> initialStateSupplier;
-    private final List<StateTransitioningHandler<? super T, S, InputEvent>> handlers;
+    private final StateTransitioningHandler<? super T, S> handler;
 
     StatefulInputHandlerTemplate(
-            Supplier<? extends S> initialStateSupplier,
-            List<StateTransitioningHandler<? super T, S, InputEvent>> handlers) {
+            StateTransitioningHandler<? super T, S> handler,
+            Supplier<? extends S> initialStateSupplier) {
         this.initialStateSupplier = initialStateSupplier;
-        this.handlers = handlers;
+        this.handler = handler;
     }
 
     @Override
@@ -203,13 +242,12 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
 
             @Override
             public void accept(T t, InputEvent e) {
-                for(StateTransitioningHandler<? super T, S, InputEvent> handler: handlers) {
-                    state = handler.transition(t, state, e);
-                    if(e.isConsumed()) {
-                        break;
-                    }
-                }
+                state = handler.handle(t, state, e);
             }
         };
+    }
+
+    public <U extends T> StatefulInputHandlerTemplate<U, S> addHandler(StateTransitioningHandler<? super U, S> nextHandler) {
+        return handler.<U>orElse(nextHandler).initialStateSupplier(initialStateSupplier);
     }
 }
