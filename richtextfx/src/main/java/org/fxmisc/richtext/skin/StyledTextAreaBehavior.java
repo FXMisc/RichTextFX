@@ -7,6 +7,7 @@ import static javafx.scene.input.KeyEvent.*;
 import static javafx.scene.input.MouseDragEvent.*;
 import static javafx.scene.input.MouseEvent.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.wellbehaved.input.EventPattern.*;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
@@ -19,10 +20,9 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
-import org.fxmisc.wellbehaved.input.AffinedEventHandler;
-import org.fxmisc.wellbehaved.input.InputHandlerTemplate;
-import org.fxmisc.wellbehaved.input.InputReceiver;
-import org.fxmisc.wellbehaved.input.StatelessInputHandlerTemplate;
+import org.fxmisc.wellbehaved.input.EventHandlerHelper;
+import org.fxmisc.wellbehaved.input.EventHandlerTemplate;
+import org.fxmisc.wellbehaved.input.StatelessEventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -33,35 +33,36 @@ import com.sun.javafx.scene.text.HitInfo;
 /**
  * Controller for StyledTextArea.
  */
-public class StyledTextAreaBehavior implements Behavior, InputReceiver {
+public class StyledTextAreaBehavior implements Behavior {
 
-    private static final InputHandlerTemplate<StyledTextAreaBehavior> TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> TEMPLATE;
     static {
         SelectionPolicy selPolicy = PlatformUtil.isMac()
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
-        InputHandlerTemplate<StyledTextAreaBehavior> edits = StatelessInputHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> edits = StatelessEventHandlerTemplate
+                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // deletion
-                .onPressed(DELETE).<StyledTextAreaBehavior>act(StyledTextAreaBehavior::deleteForward)
-                .onPressed(BACK_SPACE)                    .act(StyledTextAreaBehavior::deleteBackward)
-                .onPressed(DELETE,     SHORTCUT_DOWN).act(StyledTextAreaBehavior::deleteNextWord)
-                .onPressed(BACK_SPACE, SHORTCUT_DOWN).act(StyledTextAreaBehavior::deletePrevWord)
+                 on(keyPressed(DELETE))                   .act(StyledTextAreaBehavior::deleteForward)
+                .on(keyPressed(BACK_SPACE))               .act(StyledTextAreaBehavior::deleteBackward)
+                .on(keyPressed(DELETE,     SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deleteNextWord)
+                .on(keyPressed(BACK_SPACE, SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deletePrevWord)
                 // cut
-                .onPressed(CUT)               .act((b, e) -> b.area.cut())
-                .onPressed(X, SHORTCUT_DOWN)  .act((b, e) -> b.area.cut())
-                .onPressed(DELETE, SHIFT_DOWN).act((b, e) -> b.area.cut())
+                .on(keyPressed(CUT))               .act((b, e) -> b.area.cut())
+                .on(keyPressed(X, SHORTCUT_DOWN))  .act((b, e) -> b.area.cut())
+                .on(keyPressed(DELETE, SHIFT_DOWN)).act((b, e) -> b.area.cut())
                 // paste
-                .onPressed(PASTE)             .act((b, e) -> b.area.paste())
-                .onPressed(V, SHORTCUT_DOWN)  .act((b, e) -> b.area.paste())
-                .onPressed(INSERT, SHIFT_DOWN).act((b, e) -> b.area.paste())
+                .on(keyPressed(PASTE))             .act((b, e) -> b.area.paste())
+                .on(keyPressed(V, SHORTCUT_DOWN))  .act((b, e) -> b.area.paste())
+                .on(keyPressed(INSERT, SHIFT_DOWN)).act((b, e) -> b.area.paste())
                 // tab & newline
-                .onPressed(ENTER).act((b, e) -> b.area.replaceSelection("\n"))
-                .onPressed(TAB)  .act((b, e) -> b.area.replaceSelection("\t"))
+                .on(keyPressed(ENTER)).act((b, e) -> b.area.replaceSelection("\n"))
+                .on(keyPressed(TAB))  .act((b, e) -> b.area.replaceSelection("\t"))
                 // undo/redo,
-                .onPressed(Z, SHORTCUT_DOWN)            .act((b, e) -> b.area.undo())
-                .onPressed(Y, SHORTCUT_DOWN)            .act((b, e) -> b.area.redo())
-                .onPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN).act((b, e) -> b.area.redo())
+                .on(keyPressed(Z, SHORTCUT_DOWN))            .act((b, e) -> b.area.undo())
+                .on(keyPressed(Y, SHORTCUT_DOWN))            .act((b, e) -> b.area.redo())
+                .on(keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)).act((b, e) -> b.area.redo())
                 // Consume KEY_TYPED events for Enter and Tab,
                 // because they are already handled as KEY_PRESSED
                 .on(KEY_TYPED).where(e -> e.getCharacter().equals("\t")).act((b, e) -> {})
@@ -75,60 +76,63 @@ public class StyledTextAreaBehavior implements Behavior, InputReceiver {
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
 
-        InputHandlerTemplate<StyledTextAreaBehavior> verticalNavigation = StatelessInputHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> verticalNavigation = StatelessEventHandlerTemplate
+                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // vertical caret movement
-                .onPressed(UP)       .<StyledTextAreaBehavior>act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
-                .onPressed(KP_UP)    .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
-                .onPressed(DOWN)     .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
-                .onPressed(KP_DOWN)  .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
-                .onPressed(PAGE_UP)  .act((b, e) -> b.prevPage(SelectionPolicy.CLEAR))
-                .onPressed(PAGE_DOWN).act((b, e) -> b.nextPage(SelectionPolicy.CLEAR))
+                 on(keyPressed(UP))       .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_UP))    .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
+                .on(keyPressed(DOWN))     .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_DOWN))  .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
+                .on(keyPressed(PAGE_UP))  .act((b, e) -> b.prevPage(SelectionPolicy.CLEAR))
+                .on(keyPressed(PAGE_DOWN)).act((b, e) -> b.nextPage(SelectionPolicy.CLEAR))
                 // vertical selection
-                .onPressed(UP,        SHIFT_DOWN).act((b, e) -> b.prevLine(SelectionPolicy.ADJUST))
-                .onPressed(KP_UP,     SHIFT_DOWN).act((b, e) -> b.prevLine(SelectionPolicy.ADJUST))
-                .onPressed(DOWN,      SHIFT_DOWN).act((b, e) -> b.nextLine(SelectionPolicy.ADJUST))
-                .onPressed(KP_DOWN,   SHIFT_DOWN).act((b, e) -> b.nextLine(SelectionPolicy.ADJUST))
-                .onPressed(PAGE_UP,   SHIFT_DOWN).act((b, e) -> b.prevPage(SelectionPolicy.ADJUST))
-                .onPressed(PAGE_DOWN, SHIFT_DOWN).act((b, e) -> b.nextPage(SelectionPolicy.ADJUST))
+                .on(keyPressed(UP,        SHIFT_DOWN)).act((b, e) -> b.prevLine(SelectionPolicy.ADJUST))
+                .on(keyPressed(KP_UP,     SHIFT_DOWN)).act((b, e) -> b.prevLine(SelectionPolicy.ADJUST))
+                .on(keyPressed(DOWN,      SHIFT_DOWN)).act((b, e) -> b.nextLine(SelectionPolicy.ADJUST))
+                .on(keyPressed(KP_DOWN,   SHIFT_DOWN)).act((b, e) -> b.nextLine(SelectionPolicy.ADJUST))
+                .on(keyPressed(PAGE_UP,   SHIFT_DOWN)).act((b, e) -> b.prevPage(SelectionPolicy.ADJUST))
+                .on(keyPressed(PAGE_DOWN, SHIFT_DOWN)).act((b, e) -> b.nextPage(SelectionPolicy.ADJUST))
 
                 .create();
 
-        InputHandlerTemplate<StyledTextAreaBehavior> otherNavigation = StatelessInputHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherNavigation = StatelessEventHandlerTemplate
+                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // caret movement
-                .onPressed(RIGHT)   .<StyledTextAreaBehavior>act(StyledTextAreaBehavior::right)
-                .onPressed(KP_RIGHT).act(StyledTextAreaBehavior::right)
-                .onPressed(LEFT)    .act(StyledTextAreaBehavior::left)
-                .onPressed(KP_LEFT) .act(StyledTextAreaBehavior::left)
-                .onPressed(HOME)    .act((b, e) -> b.area.lineStart(SelectionPolicy.CLEAR))
-                .onPressed(END)     .act((b, e) -> b.area.lineEnd(SelectionPolicy.CLEAR))
-                .onPressed(RIGHT,    SHORTCUT_DOWN).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
-                .onPressed(KP_RIGHT, SHORTCUT_DOWN).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
-                .onPressed(LEFT,     SHORTCUT_DOWN).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
-                .onPressed(KP_LEFT,  SHORTCUT_DOWN).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
-                .onPressed(HOME,     SHORTCUT_DOWN).act((b, e) -> b.area.start(SelectionPolicy.CLEAR))
-                .onPressed(END,      SHORTCUT_DOWN).act((b, e) -> b.area.end(SelectionPolicy.CLEAR))
+                 on(keyPressed(RIGHT))   .act(StyledTextAreaBehavior::right)
+                .on(keyPressed(KP_RIGHT)).act(StyledTextAreaBehavior::right)
+                .on(keyPressed(LEFT))    .act(StyledTextAreaBehavior::left)
+                .on(keyPressed(KP_LEFT)) .act(StyledTextAreaBehavior::left)
+                .on(keyPressed(HOME))    .act((b, e) -> b.area.lineStart(SelectionPolicy.CLEAR))
+                .on(keyPressed(END))     .act((b, e) -> b.area.lineEnd(SelectionPolicy.CLEAR))
+                .on(keyPressed(RIGHT,    SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_RIGHT, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
+                .on(keyPressed(LEFT,     SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_LEFT,  SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
+                .on(keyPressed(HOME,     SHORTCUT_DOWN)).act((b, e) -> b.area.start(SelectionPolicy.CLEAR))
+                .on(keyPressed(END,      SHORTCUT_DOWN)).act((b, e) -> b.area.end(SelectionPolicy.CLEAR))
                 // selection
-                .onPressed(RIGHT,    SHIFT_DOWN).act(StyledTextAreaBehavior::selectRight)
-                .onPressed(KP_RIGHT, SHIFT_DOWN).act(StyledTextAreaBehavior::selectRight)
-                .onPressed(LEFT,     SHIFT_DOWN).act(StyledTextAreaBehavior::selectLeft)
-                .onPressed(KP_LEFT,  SHIFT_DOWN).act(StyledTextAreaBehavior::selectLeft)
-                .onPressed(HOME,     SHIFT_DOWN).act((b, e) -> b.area.lineStart(selPolicy))
-                .onPressed(END,      SHIFT_DOWN).act((b, e) -> b.area.lineEnd(selPolicy))
-                .onPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.start(selPolicy))
-                .onPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.end(selPolicy))
-                .onPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.previousWord(selPolicy))
-                .onPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.previousWord(selPolicy))
-                .onPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.nextWord(selPolicy))
-                .onPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN).act((b, e) -> b.area.nextWord(selPolicy))
-                .onPressed(A, SHORTCUT_DOWN)    .act((b, e) -> b.area.selectAll())
+                .on(keyPressed(RIGHT,    SHIFT_DOWN)).act(StyledTextAreaBehavior::selectRight)
+                .on(keyPressed(KP_RIGHT, SHIFT_DOWN)).act(StyledTextAreaBehavior::selectRight)
+                .on(keyPressed(LEFT,     SHIFT_DOWN)).act(StyledTextAreaBehavior::selectLeft)
+                .on(keyPressed(KP_LEFT,  SHIFT_DOWN)).act(StyledTextAreaBehavior::selectLeft)
+                .on(keyPressed(HOME,     SHIFT_DOWN)).act((b, e) -> b.area.lineStart(selPolicy))
+                .on(keyPressed(END,      SHIFT_DOWN)).act((b, e) -> b.area.lineEnd(selPolicy))
+                .on(keyPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.start(selPolicy))
+                .on(keyPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.end(selPolicy))
+                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(selPolicy))
+                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(selPolicy))
+                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(selPolicy))
+                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(selPolicy))
+                .on(keyPressed(A, SHORTCUT_DOWN)).act((b, e) -> b.area.selectAll())
 
                 .create();
 
-        InputHandlerTemplate<StyledTextAreaBehavior> otherActions = StatelessInputHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherActions = StatelessEventHandlerTemplate
+                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // copy
-                .onPressed(COPY).<StyledTextAreaBehavior>act((b, e) -> b.area.copy())
-                .onPressed(C,      SHORTCUT_DOWN)       .act((b, e) -> b.area.copy())
-                .onPressed(INSERT, SHORTCUT_DOWN)       .act((b, e) -> b.area.copy())
+                 on(keyPressed(COPY))                 .act((b, e) -> b.area.copy())
+                .on(keyPressed(C,      SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
+                .on(keyPressed(INSERT, SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
                 .create();
 
         TEMPLATE = edits.orElse(otherNavigation).ifConsumed((b, e) -> b.clearTargetCaretOffset())
@@ -186,34 +190,24 @@ public class StyledTextAreaBehavior implements Behavior, InputReceiver {
         this.area = visual.getControl();
         this.visual = visual;
 
-        AffinedEventHandler keyHandler = TEMPLATE.bind(this);
-        keyHandler.install();
+        EventHandler<InputEvent> keyHandler = TEMPLATE.bind(this);
+        EventHandlerHelper.install(visual.onInputProperty(), keyHandler);
 
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
                         .subscribe(pair -> pair.exec(this::handleMouseEvent)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .subscribe(this::handleMouseEvent),
-                keyHandler::remove);
+                () -> EventHandlerHelper.remove(visual.onInputProperty(), keyHandler));
     }
 
     /* ********************************************************************** *
-     * Public API (from Behavior & InputReceiver)                             *
+     * Public API (from Behavior)                                             *
      * ********************************************************************** */
 
     @Override
     public void dispose() {
         subscription.unsubscribe();
-    }
-
-    @Override
-    public EventHandler<? super InputEvent> getOnInput() {
-        return visual.getOnInput();
-    }
-
-    @Override
-    public void setOnInput(EventHandler<? super InputEvent> handler) {
-        visual.setOnInput(handler);
     }
 
 
