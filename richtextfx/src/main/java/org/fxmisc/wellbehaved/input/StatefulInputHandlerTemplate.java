@@ -71,6 +71,9 @@ public final class StatefulInputHandlerTemplate<T extends InputReceiver, S> impl
             };
         }
 
+        // private constructor to prevent subclassing by the user
+        private Builder() {}
+
         public <E extends InputEvent> On<T, S, E> on(EventPattern<? super InputEvent, E> eventMatcher) {
             return new On<>(this, eventMatcher);
         }

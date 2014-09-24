@@ -31,6 +31,9 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
             };
         }
 
+        // private constructor to prevent subclassing by the user
+        private Builder() {}
+
         public <E extends InputEvent> On<T, E> on(EventPattern<? super InputEvent, E> eventMatcher) {
             return new On<>(this, eventMatcher);
         }
