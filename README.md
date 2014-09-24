@@ -254,7 +254,7 @@ Please, let me know if you use RichTextFX in your project and would like it to b
 License
 -------
 
-[GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html)
+Dual-licensed under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause) and [GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html).
 
 
 Links

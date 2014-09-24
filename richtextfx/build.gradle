@@ -70,6 +70,11 @@ if(doUploadArchives) {
            
                 licenses {
                     license {
+                        name 'The BSD 2-Clause License'
+                        url 'http://opensource.org/licenses/BSD-2-Clause'
+                        distribution 'repo'
+                    }
+                    license {
                         name 'GPLv2 with the Classpath Exception'
                         url 'http://www.gnu.org/software/classpath/license.html'
                         distribution 'repo'
