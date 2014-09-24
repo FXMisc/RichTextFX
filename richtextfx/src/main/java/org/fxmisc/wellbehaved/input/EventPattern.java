@@ -5,8 +5,6 @@ import java.util.function.Predicate;
 
 import javafx.event.Event;
 import javafx.event.EventType;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
 
 @FunctionalInterface
 public interface EventPattern<T extends Event, U extends T> {
@@ -33,9 +31,5 @@ public interface EventPattern<T extends Event, U extends T> {
             } while(actualType != null);
             return Optional.empty();
         };
-    }
-
-    static EventPattern<Event, KeyEvent> keyCombinationPattern(KeyCombination combination) {
-        return eventTypePattern(KeyEvent.ANY).and(combination::match);
     }
 }

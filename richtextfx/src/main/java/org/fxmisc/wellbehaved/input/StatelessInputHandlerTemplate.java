@@ -1,5 +1,7 @@
 package org.fxmisc.wellbehaved.input;
 
+import static javafx.scene.input.KeyEvent.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -33,16 +35,28 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
             return new On<>(this, eventMatcher);
         }
 
-        public On<T, KeyEvent> on(KeyCombination combination) {
-            return on(EventPattern.keyCombinationPattern(combination));
+        public On<T, KeyEvent> on(KeyCharacterCombination combination) {
+            return on(KEY_TYPED).where(combination::match);
+        }
+
+        public On<T, KeyEvent> onPressed(KeyCodeCombination combination) {
+            return on(KEY_PRESSED).where(combination::match);
+        }
+
+        public On<T, KeyEvent> onReleased(KeyCodeCombination combination) {
+            return on(KEY_RELEASED).where(combination::match);
         }
 
         public On<T, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
             return on(new KeyCharacterCombination(character, modifiers));
         }
 
-        public On<T, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
-            return on(new KeyCodeCombination(code, modifiers));
+        public On<T, KeyEvent> onPressed(KeyCode code, KeyCombination.Modifier... modifiers) {
+            return onPressed(new KeyCodeCombination(code, modifiers));
+        }
+
+        public On<T, KeyEvent> onReleased(KeyCode code, KeyCombination.Modifier... modifiers) {
+            return onReleased(new KeyCodeCombination(code, modifiers));
         }
 
         public <E extends InputEvent> On<T, E> on(EventType<E> eventType) {
@@ -153,16 +167,28 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
         return Builder.empty().on(eventMatcher);
     }
 
-    public static On<InputReceiver, KeyEvent> on(KeyCombination combination) {
+    public static On<InputReceiver, KeyEvent> on(KeyCharacterCombination combination) {
         return Builder.empty().on(combination);
+    }
+
+    public static On<InputReceiver, KeyEvent> onPressed(KeyCodeCombination combination) {
+        return Builder.empty().onPressed(combination);
+    }
+
+    public static On<InputReceiver, KeyEvent> onReleased(KeyCodeCombination combination) {
+        return Builder.empty().onReleased(combination);
     }
 
     public static On<InputReceiver, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
         return Builder.empty().on(character, modifiers);
     }
 
-    public static On<InputReceiver, KeyEvent> on(KeyCode code, KeyCombination.Modifier... modifiers) {
-        return Builder.empty().on(code, modifiers);
+    public static On<InputReceiver, KeyEvent> onPressed(KeyCode code, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().onPressed(code, modifiers);
+    }
+
+    public static On<InputReceiver, KeyEvent> onReleased(KeyCode code, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().onReleased(code, modifiers);
     }
 
     public static <E extends InputEvent> On<InputReceiver, E> on(EventType<E> eventType) {
