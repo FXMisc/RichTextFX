@@ -8,6 +8,7 @@ dependencies {
     compile group: 'org.fxmisc.undo', name: 'undofx', version: '[1.0.1,)'
     compile group: 'org.fxmisc.easybind', name: 'easybind', version: '[1.0.3,)'
     compile group: 'org.fxmisc.flowless', name: 'flowless', version: '[0.3,)'
+    compile group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.1-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '[4.0,)'
 }
 
