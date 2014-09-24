@@ -35,32 +35,37 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
             return new On<>(this, eventMatcher);
         }
 
-        public On<T, KeyEvent> on(KeyCharacterCombination combination) {
-            return on(KEY_TYPED).where(combination::match);
+        public <E extends InputEvent> On<T, E> on(EventType<E> eventType) {
+            return on(EventPattern.eventTypePattern(eventType));
         }
 
-        public On<T, KeyEvent> onPressed(KeyCodeCombination combination) {
+        public On<T, KeyEvent> onPressed(KeyCombination combination) {
             return on(KEY_PRESSED).where(combination::match);
-        }
-
-        public On<T, KeyEvent> onReleased(KeyCodeCombination combination) {
-            return on(KEY_RELEASED).where(combination::match);
-        }
-
-        public On<T, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
-            return on(new KeyCharacterCombination(character, modifiers));
         }
 
         public On<T, KeyEvent> onPressed(KeyCode code, KeyCombination.Modifier... modifiers) {
             return onPressed(new KeyCodeCombination(code, modifiers));
         }
 
+        public On<T, KeyEvent> onPressed(String character, KeyCombination.Modifier... modifiers) {
+            return onPressed(new KeyCharacterCombination(character, modifiers));
+        }
+
+        public On<T, KeyEvent> onReleased(KeyCombination combination) {
+            return on(KEY_RELEASED).where(combination::match);
+        }
+
         public On<T, KeyEvent> onReleased(KeyCode code, KeyCombination.Modifier... modifiers) {
             return onReleased(new KeyCodeCombination(code, modifiers));
         }
 
-        public <E extends InputEvent> On<T, E> on(EventType<E> eventType) {
-            return on(EventPattern.eventTypePattern(eventType));
+        public On<T, KeyEvent> onReleased(String character, KeyCombination.Modifier... modifiers) {
+            return onReleased(new KeyCharacterCombination(character, modifiers));
+        }
+
+        public On<T, KeyEvent> onTyped(String character, KeyCombination.Modifier... modifiers) {
+            KeyTypedCombination combination = new KeyTypedCombination(character, modifiers);
+            return on(KEY_TYPED).where(combination::match);
         }
 
         public <U extends T> Builder<U> addHandler(BiConsumer<? super U, ? super InputEvent> handler) {
@@ -167,32 +172,36 @@ public abstract class StatelessInputHandlerTemplate<T extends InputReceiver> imp
         return Builder.empty().on(eventMatcher);
     }
 
-    public static On<InputReceiver, KeyEvent> on(KeyCharacterCombination combination) {
-        return Builder.empty().on(combination);
+    public static <E extends InputEvent> On<InputReceiver, E> on(EventType<E> eventType) {
+        return Builder.empty().on(eventType);
     }
 
-    public static On<InputReceiver, KeyEvent> onPressed(KeyCodeCombination combination) {
+    public static On<InputReceiver, KeyEvent> onPressed(KeyCombination combination) {
         return Builder.empty().onPressed(combination);
-    }
-
-    public static On<InputReceiver, KeyEvent> onReleased(KeyCodeCombination combination) {
-        return Builder.empty().onReleased(combination);
-    }
-
-    public static On<InputReceiver, KeyEvent> on(String character, KeyCombination.Modifier... modifiers) {
-        return Builder.empty().on(character, modifiers);
     }
 
     public static On<InputReceiver, KeyEvent> onPressed(KeyCode code, KeyCombination.Modifier... modifiers) {
         return Builder.empty().onPressed(code, modifiers);
     }
 
+    public static On<InputReceiver, KeyEvent> onPressed(String character, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().onPressed(character, modifiers);
+    }
+
+    public static On<InputReceiver, KeyEvent> onReleased(KeyCombination combination) {
+        return Builder.empty().onReleased(combination);
+    }
+
     public static On<InputReceiver, KeyEvent> onReleased(KeyCode code, KeyCombination.Modifier... modifiers) {
         return Builder.empty().onReleased(code, modifiers);
     }
 
-    public static <E extends InputEvent> On<InputReceiver, E> on(EventType<E> eventType) {
-        return Builder.empty().on(eventType);
+    public static On<InputReceiver, KeyEvent> onReleased(String character, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().onReleased(character, modifiers);
+    }
+
+    public static On<InputReceiver, KeyEvent> onTyped(String character, KeyCombination.Modifier... modifiers) {
+        return Builder.empty().onTyped(character, modifiers);
     }
 
     public static <T extends InputReceiver> Builder<T>
