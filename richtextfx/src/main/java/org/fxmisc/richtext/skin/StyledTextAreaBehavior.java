@@ -11,7 +11,6 @@ import static org.fxmisc.wellbehaved.input.EventPattern.*;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
-import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
@@ -22,6 +21,7 @@ import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.input.EventHandlerHelper;
 import org.fxmisc.wellbehaved.input.EventHandlerTemplate;
+import org.fxmisc.wellbehaved.input.EventSourceHelper;
 import org.fxmisc.wellbehaved.skin.Behavior;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -34,16 +34,15 @@ import com.sun.javafx.scene.text.HitInfo;
  */
 public class StyledTextAreaBehavior implements Behavior {
 
-    private static final EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> TEMPLATE;
     static {
         SelectionPolicy selPolicy = PlatformUtil.isMac()
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> edits = EventHandlerTemplate
-                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
+        EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> edits = EventHandlerTemplate
                 // deletion
-                 on(keyPressed(DELETE))                   .act(StyledTextAreaBehavior::deleteForward)
+                .on(keyPressed(DELETE))                   .act(StyledTextAreaBehavior::deleteForward)
                 .on(keyPressed(BACK_SPACE))               .act(StyledTextAreaBehavior::deleteBackward)
                 .on(keyPressed(DELETE,     SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deleteNextWord)
                 .on(keyPressed(BACK_SPACE, SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deletePrevWord)
@@ -75,8 +74,8 @@ public class StyledTextAreaBehavior implements Behavior {
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> verticalNavigation = EventHandlerTemplate
-                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
+        EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> verticalNavigation = EventHandlerTemplate
+                .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
                 // vertical caret movement
                  on(keyPressed(UP))       .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
                 .on(keyPressed(KP_UP))    .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
@@ -94,10 +93,9 @@ public class StyledTextAreaBehavior implements Behavior {
 
                 .create();
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherNavigation = EventHandlerTemplate
-                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
+        EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> otherNavigation = EventHandlerTemplate
                 // caret movement
-                 on(keyPressed(RIGHT))   .act(StyledTextAreaBehavior::right)
+                .on(keyPressed(RIGHT))   .act(StyledTextAreaBehavior::right)
                 .on(keyPressed(KP_RIGHT)).act(StyledTextAreaBehavior::right)
                 .on(keyPressed(LEFT))    .act(StyledTextAreaBehavior::left)
                 .on(keyPressed(KP_LEFT)) .act(StyledTextAreaBehavior::left)
@@ -126,8 +124,8 @@ public class StyledTextAreaBehavior implements Behavior {
 
                 .create();
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherActions = EventHandlerTemplate
-                .<StyledTextAreaBehavior, InputEvent, KeyEvent>
+        EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> otherActions = EventHandlerTemplate
+                .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
                 // copy
                  on(keyPressed(COPY))                 .act((b, e) -> b.area.copy())
                 .on(keyPressed(C,      SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
@@ -189,15 +187,17 @@ public class StyledTextAreaBehavior implements Behavior {
         this.area = visual.getControl();
         this.visual = visual;
 
-        EventHandler<InputEvent> keyHandler = TEMPLATE.bind(this);
-        EventHandlerHelper.install(visual.onInputProperty(), keyHandler);
+        EventHandler<KeyEvent> keyHandler = TEMPLATE.bind(this);
+        EventSourceHelper<?, KeyEvent> helper = EventSourceHelper.forNode(area, KeyEvent.ANY);
+
+        EventHandlerHelper.install(helper.onEventProperty(), keyHandler);
 
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
                         .subscribe(pair -> pair.exec(this::handleMouseEvent)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .subscribe(this::handleMouseEvent),
-                () -> EventHandlerHelper.remove(visual.onInputProperty(), keyHandler));
+                helper::dispose);
     }
 
     /* ********************************************************************** *
