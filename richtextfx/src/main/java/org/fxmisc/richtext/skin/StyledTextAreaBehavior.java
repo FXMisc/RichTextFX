@@ -22,7 +22,6 @@ import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.input.EventHandlerHelper;
 import org.fxmisc.wellbehaved.input.EventHandlerTemplate;
-import org.fxmisc.wellbehaved.input.StatelessEventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -41,7 +40,7 @@ public class StyledTextAreaBehavior implements Behavior {
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> edits = StatelessEventHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> edits = EventHandlerTemplate
                 .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // deletion
                  on(keyPressed(DELETE))                   .act(StyledTextAreaBehavior::deleteForward)
@@ -76,7 +75,7 @@ public class StyledTextAreaBehavior implements Behavior {
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> verticalNavigation = StatelessEventHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> verticalNavigation = EventHandlerTemplate
                 .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // vertical caret movement
                  on(keyPressed(UP))       .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
@@ -95,7 +94,7 @@ public class StyledTextAreaBehavior implements Behavior {
 
                 .create();
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherNavigation = StatelessEventHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherNavigation = EventHandlerTemplate
                 .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // caret movement
                  on(keyPressed(RIGHT))   .act(StyledTextAreaBehavior::right)
@@ -127,7 +126,7 @@ public class StyledTextAreaBehavior implements Behavior {
 
                 .create();
 
-        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherActions = StatelessEventHandlerTemplate
+        EventHandlerTemplate<StyledTextAreaBehavior, InputEvent> otherActions = EventHandlerTemplate
                 .<StyledTextAreaBehavior, InputEvent, KeyEvent>
                 // copy
                  on(keyPressed(COPY))                 .act((b, e) -> b.area.copy())
