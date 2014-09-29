@@ -193,8 +193,8 @@ public class StyledTextAreaBehavior implements Behavior {
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
 
-        EventHandlerHelper.install(area.onKeyPressedProperty(), keyPressedHandler);
-        EventHandlerHelper.install(area.onKeyTypedProperty(), keyTypedHandler);
+        EventHandlerHelper.installAfter(area.onKeyPressedProperty(), keyPressedHandler);
+        EventHandlerHelper.installAfter(area.onKeyTypedProperty(), keyTypedHandler);
 
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
