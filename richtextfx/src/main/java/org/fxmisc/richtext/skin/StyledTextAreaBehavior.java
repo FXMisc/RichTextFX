@@ -21,7 +21,6 @@ import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
-import org.fxmisc.wellbehaved.event.EventSourceHelper;
 import org.fxmisc.wellbehaved.skin.Behavior;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -34,7 +33,8 @@ import com.sun.javafx.scene.text.HitInfo;
  */
 public class StyledTextAreaBehavior implements Behavior {
 
-    private static final EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_PRESSED_TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_TYPED_TEMPLATE;
     static {
         SelectionPolicy selPolicy = PlatformUtil.isMac()
                 ? SelectionPolicy.EXTEND
@@ -61,15 +61,6 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(Z, SHORTCUT_DOWN))            .act((b, e) -> b.area.undo())
                 .on(keyPressed(Y, SHORTCUT_DOWN))            .act((b, e) -> b.area.redo())
                 .on(keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)).act((b, e) -> b.area.redo())
-                // Consume KEY_TYPED events for Enter and Tab,
-                // because they are already handled as KEY_PRESSED
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\t")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\n")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r\n")).act((b, e) -> {})
-                // character input
-                .on(KEY_TYPED).where(e -> !e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
-                        .act(StyledTextAreaBehavior::keyTyped)
 
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
@@ -132,9 +123,23 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(INSERT, SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
                 .create();
 
-        TEMPLATE = edits.orElse(otherNavigation).ifConsumed((b, e) -> b.clearTargetCaretOffset())
+        KEY_PRESSED_TEMPLATE = edits.orElse(otherNavigation).ifConsumed((b, e) -> b.clearTargetCaretOffset())
                 .orElse(verticalNavigation)
                 .orElse(otherActions);
+
+        KEY_TYPED_TEMPLATE = EventHandlerTemplate
+                // Consume KEY_TYPED events for Enter and Tab,
+                // because they are handled as KEY_PRESSED
+                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\t")).act((b, e) -> {})
+                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\n")).act((b, e) -> {})
+                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r")).act((b, e) -> {})
+                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r\n")).act((b, e) -> {})
+                // character input
+                .on(KEY_TYPED).where(e -> !e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
+                        .act(StyledTextAreaBehavior::keyTyped)
+
+                .create()
+                .onlyWhen(b -> b.area.isEditable());
     }
 
     /**
@@ -187,17 +192,21 @@ public class StyledTextAreaBehavior implements Behavior {
         this.area = visual.getControl();
         this.visual = visual;
 
-        EventHandler<KeyEvent> keyHandler = TEMPLATE.bind(this);
-        EventSourceHelper<?, KeyEvent> helper = EventSourceHelper.forNode(area, KeyEvent.ANY);
+        EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
+        EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
 
-        EventHandlerHelper.install(helper.onEventProperty(), keyHandler);
+        EventHandlerHelper.install(area.onKeyPressedProperty(), keyPressedHandler);
+        EventHandlerHelper.install(area.onKeyTypedProperty(), keyTypedHandler);
 
         subscription = Subscription.multi(
                 visual.cellMouseEvents()
                         .subscribe(pair -> pair.exec(this::handleMouseEvent)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .subscribe(this::handleMouseEvent),
-                helper::dispose);
+                () -> {
+                    EventHandlerHelper.remove(area.onKeyPressedProperty(), keyPressedHandler);
+                    EventHandlerHelper.remove(area.onKeyTypedProperty(), keyTypedHandler);
+                });
     }
 
     /* ********************************************************************** *
