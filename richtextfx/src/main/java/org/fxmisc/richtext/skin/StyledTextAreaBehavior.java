@@ -128,14 +128,12 @@ public class StyledTextAreaBehavior implements Behavior {
                 .orElse(otherActions);
 
         KEY_TYPED_TEMPLATE = EventHandlerTemplate
-                // Consume KEY_TYPED events for Enter and Tab,
-                // because they are handled as KEY_PRESSED
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\t")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\n")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r")).act((b, e) -> {})
-                .on(KEY_TYPED).where(e -> e.getCharacter().equals("\r\n")).act((b, e) -> {})
                 // character input
-                .on(KEY_TYPED).where(e -> !e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
+                .on(KEY_TYPED).where(e ->
+                                !e.isControlDown()
+                                && !e.isAltDown()
+                                && !e.isMetaDown()
+                                && isLegal(e.getCharacter()))
                         .act(StyledTextAreaBehavior::keyTyped)
 
                 .create()
@@ -231,18 +229,17 @@ public class StyledTextAreaBehavior implements Behavior {
             return;
         }
 
-        for(int i = 0; i < n; ++i) {
-            if(!isLegal(text.charAt(i))) {
-                return;
-            }
-        }
-
         area.replaceSelection(text);
     }
 
-    private static boolean isLegal(char c) {
-        return !Character.isISOControl(c)
-                || c == '\t';
+    private static boolean isLegal(String text) {
+        int n = text.length();
+        for(int i = 0; i < n; ++i) {
+            if(Character.isISOControl(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void deleteBackward(KeyEvent ignore) {
