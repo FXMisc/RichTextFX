@@ -68,6 +68,32 @@ import com.sun.javafx.Utils;
  * <p>Subclassing is allowed to define the type of style, e.g. inline
  * style or style classes.</p>
  *
+ * <h3>Overriding keyboard shortcuts</h3>
+ *
+ * {@code StyledTextArea} comes with {@link #onKeyTypedProperty()} and
+ * {@link #onKeyPressedProperty()} handlers installed to handle keyboard input.
+ * Ordinary character input is handled by the {@code onKeyTyped} handler and
+ * control key combinations (including Enter and Tab) are handled by the
+ * {@code onKeyPressed} handler. To add or override some keyboard shortcuts,
+ * but keep the rest in place, you would combine the default event handler with
+ * a new one that adds or overrides some of the default key combinations. This
+ * is how to bind {@code Ctrl+S} to the {@code save()} operation:
+ * <pre>
+ * {@code
+ * import static javafx.scene.input.KeyCode.*;
+ * import static javafx.scene.input.KeyCombination.*;
+ * import static org.fxmisc.wellbehaved.event.EventPattern.*;
+ *
+ * import org.fxmisc.wellbehaved.event.EventHandlerHelper;
+ *
+ * EventHandler<? super KeyEvent> ctrlS = EventHandlerHelper
+ *         .on(keyPressed(S, CONTROL_DOWN)).act(event -> save())
+ *         .create();
+ *
+ * EventHandlerHelper.install(area.onKeyPressedProperty(), ctrlS);
+ * }
+ * </pre>
+ *
  * @param <S> type of style that can be applied to text.
  */
 public class StyledTextArea<S> extends Control
