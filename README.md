@@ -5,7 +5,7 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
 
 Scroll down to [Demos](#demos) to see it in action.
 
-There is plenty of room for enhancements, e.g. support for paragraph-level styles (#6), placing arbitrary nodes in the text, copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
+There is plenty of room for enhancements, e.g. support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
 
 
 Features
