@@ -244,6 +244,7 @@ Who uses RichTextFX?
 [Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)  
 [mqtt-spy](https://code.google.com/p/mqtt-spy/)  
 [Alt.Text](http://alttexting.com/)  
+[Xanthic](https://github.com/jrguenther/Xanthic)  
 
 Please, let me know if you use RichTextFX in your project and would like it to be listed here.
 
