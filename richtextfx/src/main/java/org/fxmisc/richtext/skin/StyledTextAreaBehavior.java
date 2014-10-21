@@ -129,12 +129,14 @@ public class StyledTextAreaBehavior implements Behavior {
 
         KEY_TYPED_TEMPLATE = EventHandlerTemplate
                 // character input
-                .on(KEY_TYPED).where(e ->
-                                !e.isControlDown()
-                                && !e.isAltDown()
-                                && !e.isMetaDown()
-                                && isLegal(e.getCharacter()))
-                        .act(StyledTextAreaBehavior::keyTyped)
+                .on(KEY_TYPED)
+                .where(e ->
+                        // filter out control keys
+                        (!e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
+                        // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
+                        || (PlatformUtil.isWindows() && e.isControlDown() && e.isAltDown()))
+                .where(e -> isLegal(e.getCharacter()))
+                .act(StyledTextAreaBehavior::keyTyped)
 
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
