@@ -96,6 +96,7 @@ class ParagraphText<S> extends TextFlow {
         getChildren().add(selectionShape);
 
         // caret
+        caretShape.getStyleClass().add("caret");
         caretShape.setManaged(false);
         caretShape.setStrokeWidth(1);
         caretShape.layoutXProperty().bind(leftInset);
