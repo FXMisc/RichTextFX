@@ -2,9 +2,25 @@
     -fx-fill: #8a6;
     -fx-font-weight: bold;
 }
-.default {
-    -fx-fill: #666;
+.semicolon {
+    -fx-font-weight: bold;
 }
+.paren {
+    -fx-fill: darkblue;
+    -fx-font-weight: bold;
+}
+.bracket {
+    -fx-fill: darkgreen;
+    -fx-font-weight: bold;
+}
+.brace {
+    -fx-fill: darkviolet;
+    -fx-font-weight: bold;
+}
+.string {
+    -fx-fill: blue;
+}
+
 .lineno {
     -fx-font-family: monospace;
     -fx-background-color: #eee;
@@ -12,6 +28,5 @@
     -fx-padding: 0 5px;
 }
 .code-area {
-    -fx-font-family: monospace;
     -fx-background-color: #eee;
 }
