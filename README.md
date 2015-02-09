@@ -8,6 +8,19 @@ Scroll down to [Demos](#demos) to see it in action.
 There is plenty of room for enhancements, e.g. support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
 
 
+Who uses RichTextFX?
+--------------------
+
+[Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)  
+[Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)  
+[mqtt-spy](https://code.google.com/p/mqtt-spy/)  
+[Alt.Text](http://alttexting.com/)  
+[Xanthic](https://github.com/jrguenther/Xanthic)  
+[Arduino Harp](http://www.avrharp.org/)  
+
+Please, let me know if you use RichTextFX in your project and would like it to be listed here.
+
+
 Features
 --------
 
@@ -235,18 +248,6 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
 ```
-
-
-Who uses RichTextFX?
---------------------
-
-[Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)  
-[Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)  
-[mqtt-spy](https://code.google.com/p/mqtt-spy/)  
-[Alt.Text](http://alttexting.com/)  
-[Xanthic](https://github.com/jrguenther/Xanthic)  
-
-Please, let me know if you use RichTextFX in your project and would like it to be listed here.
 
 
 License
