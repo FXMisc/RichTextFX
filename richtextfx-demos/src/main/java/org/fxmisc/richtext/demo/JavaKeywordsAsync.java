@@ -20,6 +20,7 @@ import org.fxmisc.richtext.PlainTextChange;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
 import org.reactfx.EventStream;
+import org.reactfx.util.Try;
 
 public class JavaKeywordsAsync extends Application {
 
@@ -89,6 +90,7 @@ public class JavaKeywordsAsync extends Application {
                 .successionEnds(Duration.ofMillis(500))
                 .supplyTask(this::computeHighlightingAsync)
                 .awaitLatest(textChanges)
+                .map(Try::get)
                 .subscribe(this::applyHighlighting);
         codeArea.replaceText(0, 0, sampleCode);
 

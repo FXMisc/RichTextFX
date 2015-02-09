@@ -40,6 +40,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
+import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.PopupAlignment;
@@ -139,11 +140,11 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 area.getParagraphs(),
-                (index, par) -> {
-                    Cell<Paragraph<S>, ParagraphBox<S>> cell = createCell(index, par, applyStyle);
+                par -> {
+                    Cell<Paragraph<S>, ParagraphBox<S>> cell = createCell(par, applyStyle);
                     nonEmptyCells.add(cell.getNode());
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
-                            .afterUpdateItem((i, p) -> nonEmptyCells.add(cell.getNode()));
+                            .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
 
         // initialize navigator
@@ -202,8 +203,8 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
                 EventStreams.valuesOf(area.popupAlignmentProperty()),
                 EventStreams.valuesOf(popupAnchorAdjustment))
             .repeatOn(positionPopupImpulse)
-            .filter((w, al, adj) -> w != null)
-            .subscribe((w, al, adj) -> positionPopup(w, al, adj)));
+            .filter(t3 -> t3.map((w, al, adj) -> w != null))
+            .subscribe(t3 -> t3.exec((w, al, adj) -> positionPopup(w, al, adj))));
 
         // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
         EventStreams.valuesOf(area.mouseOverTextDelayProperty())
@@ -266,7 +267,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         int parIdx = area.getCurrentParagraph();
         Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
-        double graphicWidth = cell.getNode().getGraphicWidth();
+        double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         virtualFlow.show(cell, region);
     }
@@ -311,7 +312,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
     }
 
     int getInsertionIndex(double textX, double y) {
-        VirtualFlow.HitInfo<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(y);
+        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(y);
         if(hit.isBeforeCells()) {
             return 0;
         } else if(hit.isAfterCells()) {
@@ -352,16 +353,16 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
      * ********************************************************************** */
 
     private Cell<Paragraph<S>, ParagraphBox<S>> createCell(
-            int index,
             Paragraph<S> paragraph,
             BiConsumer<Text, S> applyStyle) {
 
-        ParagraphBox<S> box = new ParagraphBox<>(index, paragraph, applyStyle);
+        ParagraphBox<S> box = new ParagraphBox<>(paragraph, applyStyle);
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
         box.wrapTextProperty().bind(area.wrapTextProperty());
         box.graphicFactoryProperty().bind(area.paragraphGraphicFactoryProperty());
+        box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
 
         BooleanBinding hasCaret = Bindings.equal(
                 box.indexProperty(),
@@ -404,6 +405,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
                 box.highlightTextFillProperty().unbind();
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
+                box.graphicOffset.unbind();
 
                 box.caretVisibleProperty().unbind();
                 cellCaretVisible.dispose();
@@ -417,7 +419,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
     }
 
     private ParagraphBox<S> getCell(int index) {
-        return virtualFlow.getCellIfVisible(index).get().getNode();
+        return virtualFlow.getCell(index).getNode();
     }
 
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
@@ -477,7 +479,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
             return getCaretBoundsOnScreen();
         }
 
-        Bounds[] bounds = virtualFlow.visibleCells()
+        Bounds[] bounds = virtualFlow.visibleCells().stream()
                 .map(c -> c.getNode().getSelectionBoundsOnScreen())
                 .filter(opt -> opt.isPresent())
                 .map(opt -> opt.get())

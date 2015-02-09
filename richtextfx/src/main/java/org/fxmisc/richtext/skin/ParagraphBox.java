@@ -8,10 +8,12 @@ import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
@@ -46,6 +48,8 @@ class ParagraphBox<S> extends Region {
 
     private final MonadicBinding<Node> graphic;
 
+    final DoubleProperty graphicOffset = new SimpleDoubleProperty(0.0);
+
     private final BooleanProperty wrapText = new SimpleBooleanProperty(false);
     public BooleanProperty wrapTextProperty() { return wrapText; }
     {
@@ -57,10 +61,10 @@ class ParagraphBox<S> extends Region {
     public void setIndex(int index) { this.index.set(index); }
     public int getIndex() { return index.get(); }
 
-    public ParagraphBox(int index, Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
+    public ParagraphBox(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
-        this.index = new SimpleIntegerProperty(index);
+        this.index = new SimpleIntegerProperty(0);
         getChildren().add(text);
         graphic = EasyBind.combine(graphicFactory, this.index, (f, i) -> f != null ? f.apply(i.intValue()) : null);
         graphic.addListener((obs, oldG, newG) -> {
@@ -71,6 +75,14 @@ class ParagraphBox<S> extends Region {
                 getChildren().add(newG);
             }
         });
+        graphicOffset.addListener(obs -> requestLayout());
+    }
+
+    @Override
+    public String toString() {
+        return graphic.isPresent()
+                ? "[#|" + text.getParagraph() + "]"
+                : "["   + text.getParagraph() + "]";
     }
 
     public Property<Boolean> caretVisibleProperty() { return text.caretVisibleProperty(); }
@@ -145,7 +157,7 @@ class ParagraphBox<S> extends Region {
         Insets insets = getInsets();
         return wrapText.get()
                 ? 0 // return 0, VirtualFlow will size it to its width anyway
-                : getGraphicWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
+                : getGraphicPrefWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
     }
 
     @Override
@@ -160,17 +172,21 @@ class ParagraphBox<S> extends Region {
         Bounds bounds = getLayoutBounds();
         double w = bounds.getWidth();
         double h = bounds.getHeight();
-        double layoutX = getLayoutX();
-        double graphicWidth = getGraphicWidth();
+        double graphicWidth = getGraphicPrefWidth();
+
         text.resizeRelocate(graphicWidth, 0, w - graphicWidth, h);
 
         graphic.ifPresent(g -> {
-            g.resizeRelocate(-layoutX, 0, graphicWidth, h);
+            g.resizeRelocate(graphicOffset.get(), 0, graphicWidth, h);
         });
     }
 
-    double getGraphicWidth() {
-        return graphic.getOpt().map(g -> g.prefWidth(-1)).orElse(0.0);
+    double getGraphicPrefWidth() {
+        if(graphic.isPresent()) {
+            return graphic.get().prefWidth(-1);
+        } else {
+            return 0.0;
+        }
     }
 
     /**
