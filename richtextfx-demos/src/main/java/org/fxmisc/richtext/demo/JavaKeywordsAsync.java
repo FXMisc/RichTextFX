@@ -42,7 +42,7 @@ public class JavaKeywordsAsync extends Application {
     private static final String BRACE_PATTERN = "\\{|\\}";
     private static final String BRACKET_PATTERN = "\\[|\\]";
     private static final String SEMICOLON_PATTERN = "\\;";
-    private static final String STRING_PATTERN = "\"([^\"]|\\\")*\"";
+    private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
