@@ -55,6 +55,7 @@ import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.util.Tuple2;
+import org.reactfx.value.Val;
 
 import com.sun.javafx.scene.text.HitInfo;
 
@@ -364,12 +365,13 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         box.graphicFactoryProperty().bind(area.paragraphGraphicFactoryProperty());
         box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
 
-        BooleanBinding hasCaret = Bindings.equal(
+        Val<Boolean> hasCaret = Val.combine(
                 box.indexProperty(),
-                area.currentParagraphProperty());
+                area.currentParagraphProperty(),
+                (bi, cp) -> bi == cp);
 
         // caret is visible only in the paragraph with the caret
-        BooleanBinding cellCaretVisible = hasCaret.and(caretVisible);
+        Val<Boolean> cellCaretVisible = Val.combine(hasCaret, caretVisible, (a, b) -> a && b);
         box.caretVisibleProperty().bind(cellCaretVisible);
 
         // bind cell's caret position to area's caret column,
@@ -408,8 +410,6 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
                 box.graphicOffset.unbind();
 
                 box.caretVisibleProperty().unbind();
-                cellCaretVisible.dispose();
-                hasCaret.dispose();
                 caretPositionSub.unsubscribe();
 
                 box.selectionProperty().unbind();

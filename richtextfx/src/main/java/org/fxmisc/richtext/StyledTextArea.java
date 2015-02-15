@@ -14,17 +14,12 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.binding.Binding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableIntegerValue;
-import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
@@ -42,7 +37,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
 
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
@@ -55,8 +49,12 @@ import org.reactfx.Guard;
 import org.reactfx.Guardian;
 import org.reactfx.Indicator;
 import org.reactfx.SuspendableEventStream;
-import org.reactfx.inhibeans.collection.Collections;
-import org.reactfx.inhibeans.collection.ObservableList;
+import org.reactfx.collection.LiveList;
+import org.reactfx.collection.SuspendableList;
+import org.reactfx.value.SuspendableVal;
+import org.reactfx.value.SuspendableVar;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 import com.sun.javafx.Utils;
 
@@ -222,7 +220,7 @@ implements
      * ********************************************************************** */
 
     // text
-    private final org.reactfx.inhibeans.binding.Binding<String> text;
+    private final SuspendableVal<String> text;
     @Override public final String getText() { return text.getValue(); }
     @Override public final ObservableValue<String> textProperty() { return text; }
 
@@ -230,47 +228,44 @@ implements
     @Override public final StyledDocument<S> getDocument() { return content.snapshot(); };
 
     // length
-    private final org.reactfx.inhibeans.binding.IntegerBinding length;
-    @Override public final int getLength() { return length.get(); }
-    @Override public final ObservableIntegerValue lengthProperty() { return length; }
+    private final SuspendableVal<Integer> length;
+    @Override public final int getLength() { return length.getValue(); }
+    @Override public final ObservableValue<Integer> lengthProperty() { return length; }
 
     // caret position
-    private final IntegerProperty internalCaretPosition = new SimpleIntegerProperty(0);
-    private final org.reactfx.inhibeans.binding.IntegerBinding caretPosition =
-            org.reactfx.inhibeans.binding.IntegerBinding.wrap(internalCaretPosition);
-    @Override public final int getCaretPosition() { return caretPosition.get(); }
-    @Override public final ObservableIntegerValue caretPositionProperty() { return caretPosition; }
+    private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
+    private final SuspendableVal<Integer> caretPosition = internalCaretPosition.suspendable();
+    @Override public final int getCaretPosition() { return caretPosition.getValue(); }
+    @Override public final ObservableValue<Integer> caretPositionProperty() { return caretPosition; }
 
     // selection anchor
-    private final org.reactfx.inhibeans.property.SimpleIntegerProperty anchor =
-            new org.reactfx.inhibeans.property.SimpleIntegerProperty(0);
-    @Override public final int getAnchor() { return anchor.get(); }
-    @Override public final ObservableIntegerValue anchorProperty() { return anchor; }
+    private final SuspendableVar<Integer> anchor = Var.newSimpleVar(0).suspendable();
+    @Override public final int getAnchor() { return anchor.getValue(); }
+    @Override public final ObservableValue<Integer> anchorProperty() { return anchor; }
 
     // selection
-    private final ObjectProperty<IndexRange> internalSelection = new SimpleObjectProperty<>(EMPTY_RANGE);
-    private final org.reactfx.inhibeans.binding.ObjectBinding<IndexRange> selection =
-            org.reactfx.inhibeans.binding.ObjectBinding.wrap(internalSelection);
+    private final Var<IndexRange> internalSelection = Var.newSimpleVar(EMPTY_RANGE);
+    private final SuspendableVal<IndexRange> selection = internalSelection.suspendable();
     @Override public final IndexRange getSelection() { return selection.getValue(); }
     @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
 
     // selected text
-    private final org.reactfx.inhibeans.binding.StringBinding selectedText;
-    @Override public final String getSelectedText() { return selectedText.get(); }
-    @Override public final ObservableStringValue selectedTextProperty() { return selectedText; }
+    private final SuspendableVal<String> selectedText;
+    @Override public final String getSelectedText() { return selectedText.getValue(); }
+    @Override public final ObservableValue<String> selectedTextProperty() { return selectedText; }
 
     // current paragraph index
-    private final org.reactfx.inhibeans.binding.IntegerBinding currentParagraph;
-    @Override public final int getCurrentParagraph() { return currentParagraph.get(); }
-    @Override public final ObservableIntegerValue currentParagraphProperty() { return currentParagraph; }
+    private final SuspendableVal<Integer> currentParagraph;
+    @Override public final int getCurrentParagraph() { return currentParagraph.getValue(); }
+    @Override public final ObservableValue<Integer> currentParagraphProperty() { return currentParagraph; }
 
     // caret column
-    private final org.reactfx.inhibeans.binding.IntegerBinding caretColumn;
-    @Override public final int getCaretColumn() { return caretColumn.get(); }
-    @Override public final ObservableIntegerValue caretColumnProperty() { return caretColumn; }
+    private final SuspendableVal<Integer> caretColumn;
+    @Override public final int getCaretColumn() { return caretColumn.getValue(); }
+    @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    private final ObservableList<Paragraph<S>> paragraphs;
+    private final SuspendableList<Paragraph<S>> paragraphs;
     @Override public ObservableList<Paragraph<S>> getParagraphs() {
         return paragraphs;
     }
@@ -357,10 +352,10 @@ implements
         this.applyStyle = applyStyle;
         this.preserveStyle = preserveStyle;
         content = new EditableStyledDocument<>(initialStyle);
-        paragraphs = Collections.wrap(content.getParagraphs());
+        paragraphs = LiveList.suspendable(content.getParagraphs());
 
-        text = org.reactfx.inhibeans.binding.Binding.wrap(content.textProperty());
-        length = org.reactfx.inhibeans.binding.IntegerBinding.wrap(content.lengthProperty());
+        text = Val.suspendable(content.textProperty());
+        length = Val.suspendable(content.lengthProperty());
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
@@ -368,42 +363,37 @@ implements
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        Binding<Position> caretPosition2D = EasyBind.map(internalCaretPosition,
-                p -> content.offsetToPosition(p.intValue(), Forward));
-        paragraphs.addListener((InvalidationListener) (obs -> caretPosition2D.invalidate()));
+        Val<Position> caretPosition2D = Val.create(
+                () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
+                internalCaretPosition, paragraphs);
 
-        currentParagraph = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
-                EasyBind.map(caretPosition2D, p -> p.getMajor()));
-        caretColumn = org.reactfx.inhibeans.binding.IntegerBinding.wrap(
-                EasyBind.map(caretPosition2D, p -> p.getMinor()));
+        currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
+        caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
 
         selectionStart2D = position(0, 0);
         selectionEnd2D = position(0, 0);
         internalSelection.addListener(obs -> {
-            IndexRange sel = internalSelection.get();
+            IndexRange sel = internalSelection.getValue();
             selectionStart2D = offsetToPosition(sel.getStart(), Forward);
             selectionEnd2D = sel.getLength() == 0
                     ? selectionStart2D
                     : selectionStart2D.offsetBy(sel.getLength(), Backward);
         });
 
-        selectedText = new org.reactfx.inhibeans.binding.StringBinding() {
-            { bind(internalSelection, content.textProperty()); }
-            @Override protected String computeValue() {
-                return content.getText(internalSelection.get());
-            }
-        };
+        selectedText = Val.create(
+                () -> content.getText(internalSelection.getValue()),
+                internalSelection, content.getParagraphs()).suspendable();
 
         omniGuardian = Guardian.combine(
                 beingUpdated, // must be first, to be the last one to release
-                text,
-                length,
-                caretPosition,
-                anchor,
-                selection,
-                selectedText,
-                currentParagraph,
-                caretColumn,
+                text::suspend,
+                length::suspend,
+                caretPosition::suspend,
+                anchor::suspend,
+                selection::suspend,
+                selectedText::suspend,
+                currentParagraph::suspend,
+                caretColumn::suspend,
 
                 // add streams after properties, to be released before them
                 plainTextChanges::suspend,
@@ -696,17 +686,20 @@ implements
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        try(Guard g = guard(this.caretPosition, currentParagraph, caretColumn, this.anchor, selection, selectedText)) {
-            this.internalCaretPosition.set(Utils.clamp(0, caretPosition, getLength()));
-            this.anchor.set(Utils.clamp(0, anchor, getLength()));
-            this.internalSelection.set(IndexRange.normalize(getAnchor(), getCaretPosition()));
+        try(Guard g = guard(
+                this.caretPosition::suspend, currentParagraph::suspend,
+                caretColumn::suspend, this.anchor::suspend,
+                selection::suspend, selectedText::suspend)) {
+            this.internalCaretPosition.setValue(Utils.clamp(0, caretPosition, getLength()));
+            this.anchor.setValue(Utils.clamp(0, anchor, getLength()));
+            this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
         }
     }
 
     @Override
     public void positionCaret(int pos) {
-        try(Guard g = guard(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.set(pos);
+        try(Guard g = guard(caretPosition::suspend, currentParagraph::suspend, caretColumn::suspend)) {
+            internalCaretPosition.setValue(pos);
         }
     }
 

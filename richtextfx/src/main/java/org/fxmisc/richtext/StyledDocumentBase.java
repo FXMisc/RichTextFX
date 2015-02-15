@@ -49,9 +49,9 @@ implements StyledDocument<S> {
     public String getText(int start, int end) {
         return sub(
                 start, end,
-                p -> p.fullText(),
-                (p, a, b) -> p.substring(a, b),
-                (List<String> ss) -> concat(ss));
+                Paragraph::fullText,
+                Paragraph::substring,
+                StyledDocumentBase::concat);
     }
 
     @Override

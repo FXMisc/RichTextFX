@@ -9,12 +9,10 @@ import java.util.function.IntFunction;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -33,6 +31,8 @@ import org.fxmisc.richtext.util.MouseStationaryHelper;
 import org.reactfx.EventStream;
 import org.reactfx.util.Either;
 import org.reactfx.util.Tuple2;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 import com.sun.javafx.scene.text.HitInfo;
 
@@ -56,17 +56,20 @@ class ParagraphBox<S> extends Region {
         wrapText.addListener((obs, old, w) -> requestLayout());
     }
 
-    private final IntegerProperty index;
-    public IntegerProperty indexProperty() { return index; }
-    public void setIndex(int index) { this.index.set(index); }
-    public int getIndex() { return index.get(); }
+    private final Var<Integer> index;
+    public Val<Integer> indexProperty() { return index; }
+    public void setIndex(int index) { this.index.setValue(index); }
+    public int getIndex() { return index.getValue(); }
 
     public ParagraphBox(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
-        this.index = new SimpleIntegerProperty(0);
+        this.index = Var.newSimpleVar(0);
         getChildren().add(text);
-        graphic = EasyBind.combine(graphicFactory, this.index, (f, i) -> f != null ? f.apply(i.intValue()) : null);
+        graphic = EasyBind.combine(
+                graphicFactory,
+                this.index,
+                (f, i) -> f != null ? f.apply(i) : null);
         graphic.addListener((obs, oldG, newG) -> {
             if(oldG != null) {
                 getChildren().remove(oldG);

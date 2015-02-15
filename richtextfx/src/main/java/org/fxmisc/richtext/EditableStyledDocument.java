@@ -15,7 +15,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,7 +24,9 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
-import org.reactfx.inhibeans.property.ReadOnlyIntegerWrapper;
+import org.reactfx.value.SuspendableVar;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -56,11 +57,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     /**
      * Length of this {@code StyledDocument}.
      */
-    private final ReadOnlyIntegerWrapper length = new ReadOnlyIntegerWrapper();
-    public int getLength() { return length.get(); }
-    public ObservableIntegerValue lengthProperty() { return length.getReadOnlyProperty(); }
+    private final SuspendableVar<Integer> length = Var.newSimpleVar(0).suspendable();
+    public int getLength() { return length.getValue(); }
+    public Val<Integer> lengthProperty() { return length; }
     @Override
-    public int length() { return length.get(); }
+    public int length() { return length.getValue(); }
 
     /**
      * Unmodifiable observable list of styled paragraphs of this document.
@@ -169,7 +170,6 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     EditableStyledDocument(S initialStyle) {
         super(FXCollections.observableArrayList(new Paragraph<S>("", initialStyle)));
         this.initialStyle = initialStyle;
-        length.set(0);
     }
 
 
@@ -462,9 +462,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         setAll(firstParIdx, lastParIdx + 1, newPars);
 
         // update length, invalidate text
-        int newLength = length.get() - (end - start) + replacement.length();
-        length.blockWhile(() -> { // don't publish length change until text is invalidated
-            length.set(newLength);
+        int newLength = length.getValue() - (end - start) + replacement.length();
+        length.suspendWhile(() -> { // don't publish length change until text is invalidated
+            length.setValue(newLength);
             text.invalidate();
         });
 
