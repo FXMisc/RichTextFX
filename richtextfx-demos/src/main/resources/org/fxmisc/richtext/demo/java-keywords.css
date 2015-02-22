@@ -21,12 +21,6 @@
     -fx-fill: blue;
 }
 
-.lineno {
-    -fx-font-family: monospace;
-    -fx-background-color: #eee;
-    -fx-text-fill: #666;
-    -fx-padding: 0 5px;
-}
 .code-area {
     -fx-background-color: #eee;
 }

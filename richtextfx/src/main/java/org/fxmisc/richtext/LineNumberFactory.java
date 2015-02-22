@@ -2,58 +2,60 @@ package org.fxmisc.richtext;
 
 import java.util.function.IntFunction;
 
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 
+/**
+ * Graphic factory that produces labels containing line numbers.
+ * To customize appearance, use {@code .lineno} style class in CSS stylesheets.
+ */
 public class LineNumberFactory implements IntFunction<Node> {
 
-    private static final String STYLESHEET =
-            LineNumberFactory.class.getResource("lineno.css").toExternalForm();
+    private static final Insets DEFAULT_INSETS = new Insets(0.0, 5.0, 0.0, 5.0);
+    private static final Paint DEFAULT_TEXT_FILL = Color.web("#666");
+    private static final Font DEFAULT_FONT =
+            Font.font("monospace", FontPosture.ITALIC, 13);
+    private static final Background DEFAULT_BACKGROUND =
+            new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
     public static IntFunction<Node> get(StyledTextArea<?> area) {
-        return get(area, STYLESHEET);
-    }
-
-    public static IntFunction<Node> get(
-            StyledTextArea<?> area,
-            String customStylesheet) {
-        return get(area, digits -> "%0" + digits + "d", customStylesheet);
+        return get(area, digits -> "%0" + digits + "d");
     }
 
     public static IntFunction<Node> get(
             StyledTextArea<?> area,
             IntFunction<String> format) {
-        return get(area, format, STYLESHEET);
-    }
-
-    public static IntFunction<Node> get(
-            StyledTextArea<?> area,
-            IntFunction<String> format,
-            String customStylesheet) {
-        return new LineNumberFactory(area, format, customStylesheet);
+        return new LineNumberFactory(area, format);
     }
 
     private final Val<Integer> nParagraphs;
-    private final String stylesheet;
     private final IntFunction<String> format;
 
     private LineNumberFactory(
             StyledTextArea<?> area,
-            IntFunction<String> format,
-            String stylesheet) {
+            IntFunction<String> format) {
         nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = format;
-        this.stylesheet = stylesheet;
     }
 
     @Override
     public Node apply(int idx) {
         Label lineNo = new Label();
+        lineNo.setFont(DEFAULT_FONT);
+        lineNo.setBackground(DEFAULT_BACKGROUND);
+        lineNo.setTextFill(DEFAULT_TEXT_FILL);
+        lineNo.setPadding(DEFAULT_INSETS);
         lineNo.getStyleClass().add("lineno");
-        lineNo.getStylesheets().add(stylesheet);
 
         // When removed from the scene, bind label's text to constant "",
         // which is a fake binding that consumes no resources, instead of
