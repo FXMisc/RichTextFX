@@ -9,7 +9,6 @@ import static javafx.scene.input.MouseEvent.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -162,6 +161,7 @@ public class StyledTextAreaBehavior implements Behavior {
 
     private final StyledTextArea<?> area;
     private final StyledTextAreaVisual<?> visual;
+    private final StyledTextAreaView<?> view;
 
     private final Subscription subscription;
 
@@ -180,7 +180,7 @@ public class StyledTextAreaBehavior implements Behavior {
     }
     private double getTargetCaretOffset() {
         if(targetCaretOffset == -1)
-            targetCaretOffset = visual.getCaretOffsetX();
+            targetCaretOffset = view.getCaretOffsetX();
         return targetCaretOffset;
     }
 
@@ -191,6 +191,7 @@ public class StyledTextAreaBehavior implements Behavior {
     public StyledTextAreaBehavior(StyledTextAreaVisual<?> visual) {
         this.area = visual.getControl();
         this.visual = visual;
+        this.view = visual.getNode();
 
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
@@ -199,7 +200,7 @@ public class StyledTextAreaBehavior implements Behavior {
         EventHandlerHelper.installAfter(area.onKeyTypedProperty(), keyTypedHandler);
 
         subscription = Subscription.multi(
-                visual.cellMouseEvents()
+                view.cellMouseEvents()
                         .subscribe(pair -> pair.exec(this::handleMouseEvent)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .subscribe(this::handleMouseEvent),
@@ -314,11 +315,11 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void downLines(SelectionPolicy selectionPolicy, int nLines) {
-        Position currentLine = visual.currentLine();
+        Position currentLine = view.currentLine();
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
             // compute new caret position
-            int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), targetLine);
+            int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), targetLine);
 
             // update model
             visual.getControl().moveTo(newCaretPos, selectionPolicy);
@@ -334,24 +335,14 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void prevPage(SelectionPolicy selectionPolicy) {
-        visual.followCaret(); // make sure caret is in the viewport
-        double height = visual.getViewportHeight();
-        Bounds caretBounds = visual.getCaretBounds().get();
-        double caretMidY = caretBounds.getMinY() + caretBounds.getHeight() / 2;
-
-        int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), caretMidY - height);
-        visual.show(-height);
+        view.showCaretAtBottom();
+        int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), 1.0);
         visual.getControl().moveTo(newCaretPos, selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        visual.followCaret(); // make sure caret is in the viewport
-        double height = visual.getViewportHeight();
-        Bounds caretBounds = visual.getCaretBounds().get();
-        double caretMidY = caretBounds.getMinY() + caretBounds.getHeight() / 2;
-
-        int newCaretPos = visual.getInsertionIndex(getTargetCaretOffset(), caretMidY + height);
-        visual.show(2*height);
+        view.showCaretAtTop();
+        int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
         visual.getControl().moveTo(newCaretPos, selectionPolicy);
     }
 

@@ -18,6 +18,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
@@ -272,7 +273,7 @@ implements
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
-    public SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
     public boolean isBeingUpdated() { return beingUpdated.get(); }
 
 

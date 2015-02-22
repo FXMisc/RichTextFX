@@ -18,7 +18,6 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.css.CssMetaData;
@@ -28,16 +27,15 @@ import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
 
 import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.monadic.MonadicObservableValue;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -50,7 +48,6 @@ import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
 import org.fxmisc.wellbehaved.skin.SimpleVisualBase;
-import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -59,10 +56,29 @@ import org.reactfx.value.Val;
 
 import com.sun.javafx.scene.text.HitInfo;
 
-/**
- * Code area skin.
- */
 public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
+    private final StyledTextAreaView<S> node;
+
+    public StyledTextAreaVisual(StyledTextArea<S> control, BiConsumer<Text, S> applyStyle) {
+        super(control);
+        this.node = new StyledTextAreaView<>(control, applyStyle);
+    }
+
+    @Override
+    public void dispose() {
+        node.dispose();
+    }
+
+    @Override
+    public StyledTextAreaView<S> getNode() {
+        return node;
+    }
+}
+
+/**
+ * StyledTextArea skin.
+ */
+class StyledTextAreaView<S> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -112,11 +128,15 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
 
     private final BooleanBinding caretVisible;
 
+    private final Val<UnaryOperator<Point2D>> popupAnchorAdjustment;
+
     private final VirtualFlow<Paragraph<S>, Cell<Paragraph<S>, ParagraphBox<S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
+
+    private boolean followCaretRequested = false;
 
 
     /* ********************************************************************** *
@@ -125,14 +145,13 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
      *                                                                        *
      * ********************************************************************** */
 
-    public StyledTextAreaVisual(
+    public StyledTextAreaView(
             StyledTextArea<S> styledTextArea,
             BiConsumer<Text, S> applyStyle) {
-        super(styledTextArea);
         this.area = styledTextArea;
 
         // load the default style
-        area.getStylesheets().add(StyledTextAreaVisual.class.getResource("styled-text-area.css").toExternalForm());
+        area.getStylesheets().add(StyledTextAreaView.class.getResource("styled-text-area.css").toExternalForm());
 
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
@@ -147,14 +166,12 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
+        getChildren().add(virtualFlow);
 
         // initialize navigator
         IntSupplier cellCount = () -> area.getParagraphs().size();
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
         navigator = new TwoLevelNavigator(cellCount, cellLength);
-
-        // emits a value every time the area is done updating
-        EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().noes();
 
         // follow the caret every time the caret position or paragraphs change
         EventStream<?> caretPosDirty = invalidationsOf(area.caretPositionProperty());
@@ -162,11 +179,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         EventStream<?> selectionDirty = invalidationsOf(area.selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-        EventSource<?> positionPopupImpulse = new EventSource<>();
-        subscribeTo(caretDirty.emitOn(areaDoneUpdating), x -> {
-            followCaret();
-            positionPopupImpulse.push(null);
-        });
+        subscribeTo(caretDirty, x -> requestFollowCaret());
 
         // blink caret only when focused
         manageSubscription(EventStreams.valuesOf(area.focusedProperty()).subscribe(isFocused -> {
@@ -188,24 +201,14 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
-        MonadicObservableValue<UnaryOperator<Point2D>> userFunction =
-                EasyBind.monadic(area.popupAnchorAdjustmentProperty());
-        MonadicObservableValue<UnaryOperator<Point2D>> userOffset =
-                EasyBind.monadic(area.popupAnchorOffsetProperty())
-                        .map(offset -> anchor -> anchor.add(offset));
-        ObservableValue<UnaryOperator<Point2D>> popupAnchorAdjustment = userFunction
-                .orElse(userOffset)
-                .orElse(UnaryOperator.identity());
-
-        // Position popup window whenever the window itself, its alignment,
-        // or the position adjustment function changes.
-        manageSubscription(EventStreams.combine(
-                EventStreams.valuesOf(area.popupWindowProperty()),
-                EventStreams.valuesOf(area.popupAlignmentProperty()),
-                EventStreams.valuesOf(popupAnchorAdjustment))
-            .repeatOn(positionPopupImpulse)
-            .filter(t3 -> t3.map((w, al, adj) -> w != null))
-            .subscribe(t3 -> t3.exec((w, al, adj) -> positionPopup(w, al, adj))));
+        Val<UnaryOperator<Point2D>> userOffset = Val.map(
+                area.popupAnchorOffsetProperty(),
+                offset -> anchor -> anchor.add(offset));
+        this.popupAnchorAdjustment =
+                Val.orElse(
+                        area.popupAnchorAdjustmentProperty(),
+                        userOffset)
+                .orElseConst(UnaryOperator.identity());
 
         // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
         EventStreams.valuesOf(area.mouseOverTextDelayProperty())
@@ -224,19 +227,37 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
 
     /* ********************************************************************** *
      *                                                                        *
-     * Public API (from Visual)                                               *
+     * Public API                                                             *
+     *                                                                        *
+     * ********************************************************************** */
+
+    public void dispose() {
+        subscriptions.unsubscribe();
+        virtualFlow.dispose();
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Layout                                                                 *
      *                                                                        *
      * ********************************************************************** */
 
     @Override
-    public Node getNode() {
-        return virtualFlow;
-    }
+    protected void layoutChildren() {
+        virtualFlow.resize(getWidth(), getHeight());
+        if(followCaretRequested) {
+            followCaretRequested = false;
+            followCaret();
+        }
 
-    @Override
-    public void dispose() {
-        subscriptions.unsubscribe();
-        virtualFlow.dispose();
+        // position popup
+        PopupWindow popup = area.getPopupWindow();
+        PopupAlignment alignment = area.getPopupAlignment();
+        UnaryOperator<Point2D> adjustment = popupAnchorAdjustment.getValue();
+        if(popup != null) {
+            positionPopup(popup, alignment, adjustment);
+        }
     }
 
 
@@ -264,7 +285,28 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         virtualFlow.show(y);
     }
 
-    void followCaret() {
+    void showCaretAtBottom() {
+        int parIdx = area.getCurrentParagraph();
+        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMaxY();
+        virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
+    }
+
+    void showCaretAtTop() {
+        int parIdx = area.getCurrentParagraph();
+        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMinY();
+        virtualFlow.showAtOffset(parIdx, -y);
+    }
+
+    void requestFollowCaret() {
+        followCaretRequested = true;
+        requestLayout();
+    }
+
+    private void followCaret() {
         int parIdx = area.getCurrentParagraph();
         Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
@@ -444,7 +486,10 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         return area.position(parIdx, 0).toOffset();
     }
 
-    private void positionPopup(PopupWindow popup, PopupAlignment alignment, UnaryOperator<Point2D> adjustment) {
+    private void positionPopup(
+            PopupWindow popup,
+            PopupAlignment alignment,
+            UnaryOperator<Point2D> adjustment) {
         Optional<Bounds> bounds = null;
         switch(alignment.getAnchorObject()) {
             case CARET: bounds = getCaretBoundsOnScreen(); break;
