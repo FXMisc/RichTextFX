@@ -2,7 +2,6 @@ package org.fxmisc.richtext.demo;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,17 +73,15 @@ public class JavaKeywords extends Application {
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
-        String stylesheet = JavaKeywords.class.getResource("java-keywords.css").toExternalForm();
-        IntFunction<String> format = (digits -> " %" + digits + "d ");
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea, format, stylesheet));
         codeArea.textProperty().addListener((obs, oldText, newText) -> {
             codeArea.setStyleSpans(0, computeHighlighting(newText));
         });
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(codeArea), 600, 400);
-        scene.getStylesheets().add(stylesheet);
+        scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();
