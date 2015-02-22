@@ -10,31 +10,40 @@ import org.reactfx.value.Val;
 
 public class LineNumberFactory implements IntFunction<Node> {
 
-    private static final String STYLESHEET = LineNumberFactory.class.getResource("lineno.css").toExternalForm();
+    private static final String STYLESHEET =
+            LineNumberFactory.class.getResource("lineno.css").toExternalForm();
 
-    public static IntFunction<Node> get(StyledTextArea<?> area,String customStylesheet) {
-        return new LineNumberFactory(area,customStylesheet);
-    }
     public static IntFunction<Node> get(StyledTextArea<?> area) {
-        return new LineNumberFactory(area, STYLESHEET);
+        return get(area, STYLESHEET);
     }
 
-    public static IntFunction<Node> get(StyledTextArea<?> area,IntFunction<String> format) {
-        return new LineNumberFactory(area,format,STYLESHEET);
+    public static IntFunction<Node> get(
+            StyledTextArea<?> area,
+            String customStylesheet) {
+        return get(area, digits -> "%0" + digits + "d", customStylesheet);
     }
-    public static IntFunction<Node> get(StyledTextArea<?> area,IntFunction<String> format,String customStylesheet) {
-        return new LineNumberFactory(area,format,customStylesheet);
+
+    public static IntFunction<Node> get(
+            StyledTextArea<?> area,
+            IntFunction<String> format) {
+        return get(area, format, STYLESHEET);
     }
+
+    public static IntFunction<Node> get(
+            StyledTextArea<?> area,
+            IntFunction<String> format,
+            String customStylesheet) {
+        return new LineNumberFactory(area, format, customStylesheet);
+    }
+
     private final Val<Integer> nParagraphs;
     private final String stylesheet;
     private final IntFunction<String> format;
 
-    private LineNumberFactory(StyledTextArea<?> area, String stylesheet) {
-        nParagraphs = LiveList.sizeOf(area.getParagraphs());
-        this.format = (digits -> "%0" + digits + "d");
-        this.stylesheet = stylesheet;
-    }
-    private LineNumberFactory(StyledTextArea<?> area, IntFunction<String> format, String stylesheet) {
+    private LineNumberFactory(
+            StyledTextArea<?> area,
+            IntFunction<String> format,
+            String stylesheet) {
         nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = format;
         this.stylesheet = stylesheet;
@@ -46,9 +55,9 @@ public class LineNumberFactory implements IntFunction<Node> {
         lineNo.getStyleClass().add("lineno");
         lineNo.getStylesheets().add(stylesheet);
 
-        // When removed from the scene, bind label's text to constant "", which
-        // is a fake binding that consumes no resources, instead of staying
-        // bound to area's paragraphs.
+        // When removed from the scene, bind label's text to constant "",
+        // which is a fake binding that consumes no resources, instead of
+        // staying bound to area's paragraphs.
         lineNo.textProperty().bind(Val.flatMap(
                 lineNo.sceneProperty(),
                 scene -> scene != null
