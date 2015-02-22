@@ -5,8 +5,8 @@ import java.util.function.IntFunction;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 
-import org.reactfx.EventStream;
-import org.reactfx.EventStreams;
+import org.reactfx.collection.LiveList;
+import org.reactfx.value.Val;
 
 public class LineNumberFactory implements IntFunction<Node> {
 
@@ -25,17 +25,17 @@ public class LineNumberFactory implements IntFunction<Node> {
     public static IntFunction<Node> get(StyledTextArea<?> area,IntFunction<String> format,String customStylesheet) {
         return new LineNumberFactory(area,format,customStylesheet);
     }
-    private final EventStream<Integer> nParagraphs;
+    private final Val<Integer> nParagraphs;
     private final String stylesheet;
     private final IntFunction<String> format;
 
     private LineNumberFactory(StyledTextArea<?> area, String stylesheet) {
-        nParagraphs = EventStreams.sizeOf(area.getParagraphs());
+        nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = (digits -> "%0" + digits + "d");
         this.stylesheet = stylesheet;
     }
     private LineNumberFactory(StyledTextArea<?> area, IntFunction<String> format, String stylesheet) {
-        nParagraphs = EventStreams.sizeOf(area.getParagraphs());
+        nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = format;
         this.stylesheet = stylesheet;
     }
@@ -46,14 +46,14 @@ public class LineNumberFactory implements IntFunction<Node> {
         lineNo.getStyleClass().add("lineno");
         lineNo.getStylesheets().add(stylesheet);
 
-        // When removed from the scene, stay subscribed to never(), which is
-        // a fake subscription that consumes no resources, instead of staying
-        // subscribed to area's paragraphs.
-        EventStreams.valuesOf(lineNo.sceneProperty())
-                .flatMap(scene -> scene != null
+        // When removed from the scene, bind label's text to constant "", which
+        // is a fake binding that consumes no resources, instead of staying
+        // bound to area's paragraphs.
+        lineNo.textProperty().bind(Val.flatMap(
+                lineNo.sceneProperty(),
+                scene -> scene != null
                         ? nParagraphs.map(n -> format(idx+1, n))
-                        : EventStreams.<String>never())
-                .feedTo(lineNo.textProperty());
+                        : Val.constant("")));
         return lineNo;
     }
 
