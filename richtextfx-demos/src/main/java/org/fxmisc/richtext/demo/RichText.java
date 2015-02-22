@@ -28,7 +28,7 @@ import javafx.stage.Stage;
 
 import org.fxmisc.richtext.InlineStyleTextArea;
 import org.fxmisc.richtext.StyleSpans;
-import org.reactfx.Indicator;
+import org.reactfx.SuspendableNo;
 
 public class RichText extends Application {
 
@@ -179,7 +179,7 @@ public class RichText extends Application {
         area.setWrapText(true);
     }
 
-    private final Indicator updatingToolbar = new Indicator();
+    private final SuspendableNo updatingToolbar = new SuspendableNo();
 
     @Override
     public void start(Stage primaryStage) {
@@ -253,7 +253,7 @@ public class RichText extends Application {
                     textColor = style.textColor.orElse(null);
                 }
 
-                updatingToolbar.onWhile(() -> {
+                updatingToolbar.suspendWhile(() -> {
                     if(bold) {
                         if(!boldBtn.getStyleClass().contains("pressed")) {
                             boldBtn.getStyleClass().add("pressed");
@@ -368,19 +368,19 @@ public class RichText extends Application {
     }
 
     private void updateFontSize(Integer size) {
-        if(!updatingToolbar.isOn()) {
+        if(!updatingToolbar.get()) {
             updateStyleInSelection(StyleInfo.fontSize(size));
         }
     }
 
     private void updateFontFamily(String family) {
-        if(!updatingToolbar.isOn()) {
+        if(!updatingToolbar.get()) {
             updateStyleInSelection(StyleInfo.fontFamily(family));
         }
     }
 
     private void updateTextColor(Color color) {
-        if(!updatingToolbar.isOn()) {
+        if(!updatingToolbar.get()) {
             updateStyleInSelection(StyleInfo.textColor(color));
         }
     }

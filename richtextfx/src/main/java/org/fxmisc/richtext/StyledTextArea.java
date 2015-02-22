@@ -46,9 +46,9 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.fxmisc.wellbehaved.skin.Skins;
 import org.reactfx.EventStream;
 import org.reactfx.Guard;
-import org.reactfx.Guardian;
-import org.reactfx.Indicator;
+import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
+import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.value.SuspendableVal;
@@ -271,9 +271,9 @@ implements
     }
 
     // beingUpdated
-    private final Indicator beingUpdated = new Indicator();
-    public Indicator beingUpdatedProperty() { return beingUpdated; }
-    public boolean isBeingUpdated() { return beingUpdated.isOn(); }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.get(); }
 
 
     /* ********************************************************************** *
@@ -324,7 +324,7 @@ implements
      */
     private final boolean preserveStyle;
 
-    private final Guardian omniGuardian;
+    private final Suspendable omniSuspendable;
 
 
     /* ********************************************************************** *
@@ -384,20 +384,20 @@ implements
                 () -> content.getText(internalSelection.getValue()),
                 internalSelection, content.getParagraphs()).suspendable();
 
-        omniGuardian = Guardian.combine(
+        omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
-                text::suspend,
-                length::suspend,
-                caretPosition::suspend,
-                anchor::suspend,
-                selection::suspend,
-                selectedText::suspend,
-                currentParagraph::suspend,
-                caretColumn::suspend,
+                text,
+                length,
+                caretPosition,
+                anchor,
+                selection,
+                selectedText,
+                currentParagraph,
+                caretColumn,
 
                 // add streams after properties, to be released before them
-                plainTextChanges::suspend,
-                richTextChanges::suspend,
+                plainTextChanges,
+                richTextChanges,
 
                 // paragraphs to be released first
                 paragraphs);
@@ -581,7 +581,7 @@ implements
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             content.setStyle(from, to, style);
         }
     }
@@ -590,7 +590,7 @@ implements
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -599,7 +599,7 @@ implements
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -615,7 +615,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -631,7 +631,7 @@ implements
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -660,7 +660,7 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -673,7 +673,7 @@ implements
 
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
-        try(Guard g = omniGuardian.guard()) {
+        try(Guard g = omniSuspendable.suspend()) {
             start = Utils.clamp(0, start, getLength());
             end = Utils.clamp(0, end, getLength());
 
@@ -686,10 +686,10 @@ implements
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        try(Guard g = guard(
-                this.caretPosition::suspend, currentParagraph::suspend,
-                caretColumn::suspend, this.anchor::suspend,
-                selection::suspend, selectedText::suspend)) {
+        try(Guard g = suspend(
+                this.caretPosition, currentParagraph,
+                caretColumn, this.anchor,
+                selection, selectedText)) {
             this.internalCaretPosition.setValue(Utils.clamp(0, caretPosition, getLength()));
             this.anchor.setValue(Utils.clamp(0, anchor, getLength()));
             this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
@@ -698,7 +698,7 @@ implements
 
     @Override
     public void positionCaret(int pos) {
-        try(Guard g = guard(caretPosition::suspend, currentParagraph::suspend, caretColumn::suspend)) {
+        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
             internalCaretPosition.setValue(pos);
         }
     }
@@ -750,7 +750,7 @@ implements
         return factory.create(richChanges(), apply, undo, merge);
     }
 
-    private Guard guard(Guardian... guardians) {
-        return Guardian.combine(beingUpdated, Guardian.combine(guardians)).guard();
+    private Guard suspend(Suspendable... suspendables) {
+        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
     }
 }

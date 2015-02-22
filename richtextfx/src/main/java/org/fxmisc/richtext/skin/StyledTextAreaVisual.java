@@ -154,7 +154,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
         // emits a value every time the area is done updating
-        EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().offs();
+        EventStream<?> areaDoneUpdating = area.beingUpdatedProperty().noes();
 
         // follow the caret every time the caret position or paragraphs change
         EventStream<?> caretPosDirty = invalidationsOf(area.caretPositionProperty());
