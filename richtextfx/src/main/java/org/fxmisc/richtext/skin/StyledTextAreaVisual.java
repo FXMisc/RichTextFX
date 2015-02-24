@@ -410,7 +410,7 @@ class StyledTextAreaView<S> extends Region {
         Val<Boolean> hasCaret = Val.combine(
                 box.indexProperty(),
                 area.currentParagraphProperty(),
-                (bi, cp) -> bi == cp);
+                (bi, cp) -> bi.intValue() == cp.intValue());
 
         // caret is visible only in the paragraph with the caret
         Val<Boolean> cellCaretVisible = Val.combine(hasCaret, caretVisible, (a, b) -> a && b);
