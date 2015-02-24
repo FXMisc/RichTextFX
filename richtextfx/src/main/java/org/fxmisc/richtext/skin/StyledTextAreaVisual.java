@@ -73,6 +73,11 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
     public StyledTextAreaView<S> getNode() {
         return node;
     }
+
+    @Override
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+        return node.getCssMetaData();
+    }
 }
 
 /**
