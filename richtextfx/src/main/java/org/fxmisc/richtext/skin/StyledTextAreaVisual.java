@@ -312,7 +312,7 @@ class StyledTextAreaView<S> extends Region {
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
-        virtualFlow.show(cell, region);
+        virtualFlow.show(parIdx, region);
     }
 
 
