@@ -122,7 +122,7 @@ Demos
 
 #### Run using the pre-built JAR
 
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2.1/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
 
     java -cp richtextfx-demos-fat-0.6.2.jar org.fxmisc.richtext.demo.JavaKeywords
 
@@ -152,7 +152,7 @@ The former computes highlighting on the JavaFX application thread, while the lat
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
 #### Run using the pre-built JAR
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2.1/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
 
     java -cp richtextfx-demos-fat-0.6.2.jar org.fxmisc.richtext.demo.RichText
 
@@ -172,7 +172,7 @@ When the mouse pauses over the text area, you can get index of the character und
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/tooltip-demo.png)
 
 #### Run using the pre-built JAR
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2.1/richtextfx-demos-fat-0.6.2.jar) the pre-built "fat" JAR file and run
 
     java -cp richtextfx-demos-fat-0.6.2.jar org.fxmisc.richtext.demo.TooltipDemo
 
@@ -214,7 +214,7 @@ libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.6.2"
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2/richtextfx-0.6.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2/richtextfx-fat-0.6.2.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2.1/richtextfx-0.6.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.2.1/richtextfx-fat-0.6.2.jar) and place it on your classpath.
 
 
 ### Snapshot releases
