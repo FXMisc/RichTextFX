@@ -164,7 +164,8 @@ class ParagraphBox<S> extends Region {
     @Override
     protected double computePrefHeight(double width) {
         Insets insets = getInsets();
-        return text.prefHeight(width) + insets.getTop() + insets.getBottom();
+        double overhead = getGraphicPrefWidth() - insets.getLeft() - insets.getRight();
+        return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom();
     }
 
     @Override
