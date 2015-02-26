@@ -24,8 +24,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
 import org.reactfx.EventStream;
@@ -46,7 +44,7 @@ class ParagraphBox<S> extends Region {
         return graphicFactory;
     }
 
-    private final MonadicBinding<Node> graphic;
+    private final Val<Node> graphic;
 
     final DoubleProperty graphicOffset = new SimpleDoubleProperty(0.0);
 
@@ -66,7 +64,7 @@ class ParagraphBox<S> extends Region {
         this.text = new ParagraphText<>(par, applyStyle);
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
-        graphic = EasyBind.combine(
+        graphic = Val.combine(
                 graphicFactory,
                 this.index,
                 (f, i) -> f != null ? f.apply(i) : null);
@@ -186,7 +184,7 @@ class ParagraphBox<S> extends Region {
 
     double getGraphicPrefWidth() {
         if(graphic.isPresent()) {
-            return graphic.get().prefWidth(-1);
+            return graphic.getValue().prefWidth(-1);
         } else {
             return 0.0;
         }

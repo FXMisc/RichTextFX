@@ -35,7 +35,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
 
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -423,10 +422,9 @@ class StyledTextAreaView<S> extends Region {
 
         // bind cell's caret position to area's caret column,
         // when the cell is the one with the caret
-        org.fxmisc.easybind.Subscription caretPositionSub =
-                EasyBind.when(hasCaret).bind(
-                        box.caretPositionProperty(),
-                        area.caretColumnProperty());
+        box.caretPositionProperty().bind(hasCaret.flatMap(has -> has
+                ? area.caretColumnProperty()
+                : Val.constant(0)));
 
         // keep paragraph selection updated
         ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
@@ -457,7 +455,7 @@ class StyledTextAreaView<S> extends Region {
                 box.graphicOffset.unbind();
 
                 box.caretVisibleProperty().unbind();
-                caretPositionSub.unsubscribe();
+                box.caretPositionProperty().unbind();
 
                 box.selectionProperty().unbind();
                 cellSelection.dispose();

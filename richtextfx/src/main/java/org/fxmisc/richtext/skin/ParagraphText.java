@@ -7,7 +7,6 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.BooleanProperty;
@@ -25,11 +24,11 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoLevelNavigator;
+import org.reactfx.value.Val;
 
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
@@ -83,8 +82,8 @@ class ParagraphText<S> extends TextFlow {
 
         selection.addListener((obs, old, sel) -> requestLayout());
 
-        Binding<Double> leftInset = EasyBind.map(insetsProperty(), ins -> ins.getLeft());
-        Binding<Double> rightInset = EasyBind.map(insetsProperty(), ins -> ins.getTop());
+        Val<Double> leftInset = Val.map(insetsProperty(), ins -> ins.getLeft());
+        Val<Double> rightInset = Val.map(insetsProperty(), ins -> ins.getTop());
 
         // selection highlight
         selectionShape.setManaged(false);
