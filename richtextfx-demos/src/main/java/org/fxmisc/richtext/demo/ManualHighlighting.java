@@ -22,29 +22,26 @@ public class ManualHighlighting extends Application {
     }
 
     private final StyleClassedTextArea area = new StyleClassedTextArea();
-    {
-        area.setWrapText(true);
-    }
 
     @Override
     public void start(Stage primaryStage) {
-        HBox panel = new HBox();
         Button red = createColorButton(Color.RED, "red");
         Button green = createColorButton(Color.GREEN, "green");
         Button blue = createColorButton(Color.BLUE, "blue");
         Button bold = createBoldButton("bold");
-        panel.getChildren().addAll(red, green, blue, bold);
+        HBox panel = new HBox(red, green, blue, bold);
 
-        VBox vbox = new VBox();
         VBox.setVgrow(area, Priority.ALWAYS);
-        vbox.getChildren().addAll(panel, area);
+        area.setWrapText(true);
+        VBox vbox = new VBox(panel, area);
 
         Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
-        area.requestFocus();
         primaryStage.setTitle("Manual Highlighting Demo");
         primaryStage.show();
+
+        area.requestFocus();
     }
 
     private Button createBoldButton(String styleClass) {
