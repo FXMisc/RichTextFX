@@ -24,8 +24,6 @@ import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.value.Val;
 
-import com.sun.javafx.scene.text.HitInfo;
-
 class ParagraphText<S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
@@ -115,14 +113,6 @@ class ParagraphText<S> extends TextFlowExt {
 
     public ObjectProperty<Paint> highlightFillProperty() {
         return selectionShape.fillProperty();
-    }
-
-    Optional<HitInfo> hitLine(double x, int lineIndex) {
-        return hitLine(x, lineIndex, paragraph.length());
-    }
-
-    Optional<HitInfo> hit(double x, double y) {
-        return hit(x, y, paragraph.length());
     }
 
     public double getCaretOffsetX() {

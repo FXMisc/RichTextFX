@@ -4,14 +4,13 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Optional;
 
-import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.TwoLevelNavigator;
 
+import com.sun.javafx.geom.RectBounds;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import com.sun.javafx.text.PrismTextLayout;
@@ -24,15 +23,21 @@ class TextFlowExt extends TextFlow {
 
     private static Method mGetTextLayout;
     private static Method mGetLines;
+    private static Method mGetLineIndex;
+    private static Method mGetCharCount;
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
             mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
+            mGetLineIndex = PrismTextLayout.class.getDeclaredMethod("getLineIndex", float.class);
+            mGetCharCount = PrismTextLayout.class.getDeclaredMethod("getCharCount");
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
         mGetTextLayout.setAccessible(true);
         mGetLines.setAccessible(true);
+        mGetLineIndex.setAccessible(true);
+        mGetCharCount.setAccessible(true);
     }
 
     private static Object invoke(Method m, Object obj, Object... args) {
@@ -65,31 +70,34 @@ class TextFlowExt extends TextFlow {
         return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
     }
 
-    Optional<HitInfo> hitLine(double x, int lineIndex, int parLen) {
-        return hit(x, getLineCenter(lineIndex), parLen);
+    CharacterHit hitLine(double x, int lineIndex) {
+        return hit(x, getLineCenter(lineIndex));
     }
 
-    Optional<HitInfo> hit(double x, double y, int parLen) {
-        // workaround for https://javafx-jira.kenai.com/browse/RT-37801
-        if(parLen == 0) {
-            return Optional.empty();
+    CharacterHit hit(double x, double y) {
+        HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
+        int charIdx = hit.getCharIndex();
+
+        int lineIdx = getLineIndex((float) y);
+        if(lineIdx >= getLineCount()) {
+            return CharacterHit.after(getCharCount() - 1);
         }
 
-        TextLayout textLayout = textLayout();
-        HitInfo hit = textLayout.getHitInfo((float)x, (float)y);
+        TextLine line = getLines()[lineIdx];
+        RectBounds lineBounds = line.getBounds();
 
-        if(hit.getCharIndex() == parLen - 1) {
-            // Might be a hit beyond the end of line, investigate.
-            // Workaround for https://javafx-jira.kenai.com/browse/RT-37803
-            PathElement[] elems = textLayout.getCaretShape(parLen, true, 0, 0);
-            Path caret = new Path(elems);
-            if(x > caret.getBoundsInLocal().getMinX()) {
-                return Optional.empty();
+        if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {
+            if(hit.isLeading()) {
+                return CharacterHit.before(charIdx);
             } else {
-                return Optional.of(hit);
+                return CharacterHit.after(charIdx);
             }
         } else {
-            return Optional.of(hit);
+            if(hit.isLeading()) {
+                return CharacterHit.leadingHalfOf(charIdx);
+            } else {
+                return CharacterHit.trailingHalfOf(charIdx);
+            }
         }
     }
 
@@ -109,6 +117,14 @@ class TextFlowExt extends TextFlow {
 
     private TextLine[] getLines() {
         return (TextLine[]) invoke(mGetLines, textLayout());
+    }
+
+    private int getLineIndex(float y) {
+        return (int) invoke(mGetLineIndex, textLayout(), y);
+    }
+
+    private int getCharCount() {
+        return (int) invoke(mGetCharCount, textLayout());
     }
 
     private TextLayout textLayout() {

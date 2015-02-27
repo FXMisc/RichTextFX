@@ -25,7 +25,6 @@ import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 
 import com.sun.javafx.PlatformUtil;
-import com.sun.javafx.scene.text.HitInfo;
 
 /**
  * Controller for StyledTextArea.
@@ -401,7 +400,7 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void leftPress(ParagraphBox<?> cell, MouseEvent e) {
-        HitInfo hit = hitCell(cell, e);
+        CharacterHit hit = hitCell(cell, e);
 
         if(e.isShiftDown()) {
             // On Mac always extend selection,
@@ -417,12 +416,12 @@ public class StyledTextAreaBehavior implements Behavior {
         }
     }
 
-    private void firstLeftPress(HitInfo hit) {
+    private void firstLeftPress(CharacterHit hit) {
         clearTargetCaretOffset();
         IndexRange selection = area.getSelection();
         if(selection.getLength() != 0 &&
-                hit.getCharIndex() >= selection.getStart() &&
-                hit.getCharIndex() < selection.getEnd()) {
+                hit.getCharacterIndex() >= selection.getStart() &&
+                hit.getCharacterIndex() < selection.getEnd()) {
             // press inside selection
             dragSelection = DragState.POTENTIAL_DRAG;
         } else {
@@ -449,7 +448,7 @@ public class StyledTextAreaBehavior implements Behavior {
         }
 
         // get the position within text
-        HitInfo hit = hitCell(cell, e);
+        CharacterHit hit = hitCell(cell, e);
 
         if(dragSelection == DragState.DRAG) {
             area.positionCaret(hit.getInsertionIndex());
@@ -462,7 +461,7 @@ public class StyledTextAreaBehavior implements Behavior {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                HitInfo hit = hitCell(cell, e);
+                CharacterHit hit = hitCell(cell, e);
                 area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
@@ -481,25 +480,16 @@ public class StyledTextAreaBehavior implements Behavior {
 
         if(dragSelection == DragState.DRAG) {
             // get the position within text
-            HitInfo hit = hitCell(cell, e);
+            CharacterHit hit = hitCell(cell, e);
 
             area.moveSelectedText(hit.getInsertionIndex());
         }
     }
 
-    private HitInfo hitCell(ParagraphBox<?> cell, MouseEvent e) {
+    private CharacterHit hitCell(ParagraphBox<?> cell, MouseEvent e) {
         int cellIdx = cell.getIndex();
         int cellOffset = area.position(cellIdx, 0).toOffset();
-        return cell.hit(e).map(hit -> {
-            hit.setCharIndex(hit.getCharIndex() + cellOffset);
-            return hit;
-        }).orElseGet(() -> leadingEdgeOf(cellOffset + cell.getParagraph().length()));
-    }
-
-    private static HitInfo leadingEdgeOf(int charIdx) {
-        HitInfo hit = new HitInfo();
-        hit.setCharIndex(charIdx);
-        hit.setLeading(true);
-        return hit;
+        CharacterHit hit = cell.hit(e);
+        return new CharacterHit(hit.getCharacterIndex() + cellOffset, hit.getHitType());
     }
 }

@@ -32,8 +32,6 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import com.sun.javafx.scene.text.HitInfo;
-
 class ParagraphBox<S> extends Region {
 
     private final ParagraphText<S> text;
@@ -103,17 +101,24 @@ class ParagraphBox<S> extends Region {
     public EventStream<Either<Tuple2<Point2D, Integer>, Object>> stationaryIndices(Duration delay) {
         EventStream<Either<Point2D, Void>> stationaryEvents = new MouseStationaryHelper(this).events(delay);
         EventStream<Tuple2<Point2D, Integer>> hits = stationaryEvents.filterMap(Either::asLeft)
-                .<Tuple2<Point2D, Integer>>filterMap(pos -> hit(pos).map(hit -> t(pos, hit.getCharIndex())));
-        EventStream<?> stops = stationaryEvents.filterMap(Either::isRight, Either::getRight);
+                .filterMap(p -> {
+                    CharacterHit hit = hit(p);
+                    if(hit.isCharacterHit()) {
+                        return Optional.of(t(p, hit.getCharacterIndex()));
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+        EventStream<?> stops = stationaryEvents.filter(Either::isRight).map(Either::getRight);
         return hits.or(stops);
     }
 
     /**
-     * Returns a HitInfo for the given mouse event.
+     * Returns a hit info for the given mouse event.
      *
      * Empty optional is returned if clicked beyond the end of this cell's text,
      */
-    public Optional<HitInfo> hit(MouseEvent e) {
+    public CharacterHit hit(MouseEvent e) {
         return hit(e.getX(), e.getY());
     }
 
@@ -192,32 +197,32 @@ class ParagraphBox<S> extends Region {
     }
 
     /**
-     * Hits the embedded TextFlow at the given line and x offset.
+     * Hits the embedded TextFlow at the given line and x offset. Offsets are
+     * relative to the embedded TextFlow, not relative to this ParagraphBox.
      *
-     * @param x x coordinate relative to the TextFlow, not relative to the cell.
-     * @return HitInfo for the given line and x coordinate, or an empty
-     * optional if hit beyond the end.
+     * @param textX x coordinate relative to the embedded TextFlow.
+     * @param line index of the line in the embedded TextFlow.
+     * @return hit info for the given line and x coordinate
      */
-    Optional<HitInfo> hitText(double x, int line) {
-        return text.hitLine(x, line);
+    CharacterHit hitTextLine(double textX, int line) {
+        return text.hitLine(textX, line);
     }
 
     /**
      * Hits the embedded TextFlow at the given x and y offset. Offsets are
      * relative to the embedded TextFlow, not relative to this ParagraphBox.
      *
-     * @return HitInfo for the given x and y coordinates, or an empty
-     * optional if hit beyond the end.
+     * @return hit info for the given x and y coordinates
      */
-    Optional<HitInfo> hitText(double x, double y) {
+    CharacterHit hitText(double x, double y) {
         return text.hit(x, y);
     }
 
-    private Optional<HitInfo> hit(Point2D pos) {
+    private CharacterHit hit(Point2D pos) {
         return hit(pos.getX(), pos.getY());
     }
 
-    private Optional<HitInfo> hit(double x, double y) {
+    private CharacterHit hit(double x, double y) {
         Point2D onScreen = this.localToScreen(x, y);
         Point2D inText = text.screenToLocal(onScreen);
         return text.hit(inText.getX(), inText.getY());

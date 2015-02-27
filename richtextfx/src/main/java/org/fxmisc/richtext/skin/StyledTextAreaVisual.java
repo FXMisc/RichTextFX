@@ -53,8 +53,6 @@ import org.reactfx.Subscription;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 
-import com.sun.javafx.scene.text.HitInfo;
-
 public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
     private final StyledTextAreaView<S> node;
 
@@ -468,15 +466,11 @@ class StyledTextAreaView<S> extends Region {
     }
 
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
-        return cell.hitText(x, line)
-                .map(HitInfo::getInsertionIndex)
-                .orElse(cell.getParagraph().length());
+        return cell.hitTextLine(x, line).getInsertionIndex();
     }
 
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, double y) {
-        return cell.hitText(x, y)
-                .map(HitInfo::getInsertionIndex)
-                .orElse(cell.getParagraph().length());
+        return cell.hitText(x, y).getInsertionIndex();
     }
 
     private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S>> cells, Duration delay) {
