@@ -359,7 +359,7 @@ class StyledTextAreaView<S> extends Region {
     }
 
     int getInsertionIndex(double textX, double y) {
-        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(y);
+        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return 0;
         } else if(hit.isAfterCells()) {
@@ -367,7 +367,7 @@ class StyledTextAreaView<S> extends Region {
         } else {
             int parIdx = hit.getCellIndex();
             ParagraphBox<S> cell = hit.getCell().getNode();
-            double cellY = hit.getCellOffset();
+            double cellY = hit.getCellOffset().getY();
             int parInsertionIndex = getCellInsertionIndex(cell, textX, cellY);
             return getParagraphOffset(parIdx) + parInsertionIndex;
         }
