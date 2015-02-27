@@ -1,9 +1,5 @@
 package org.fxmisc.richtext.skin;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -22,33 +18,15 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TwoLevelNavigator;
 import org.reactfx.value.Val;
 
 import com.sun.javafx.scene.text.HitInfo;
-import com.sun.javafx.scene.text.TextLayout;
-import com.sun.javafx.text.PrismTextLayout;
-import com.sun.javafx.text.TextLine;
 
-class ParagraphText<S> extends TextFlow {
-
-    private static Method mGetTextLayout;
-    private static Method mGetLines;
-    static {
-        try {
-            mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
-            mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
-        } catch (NoSuchMethodException | SecurityException e) {
-            throw new RuntimeException(e);
-        }
-        mGetTextLayout.setAccessible(true);
-        mGetLines.setAccessible(true);
-    }
+class ParagraphText<S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -139,32 +117,12 @@ class ParagraphText<S> extends TextFlow {
         return selectionShape.fillProperty();
     }
 
-    Optional<HitInfo> hit(double x, int lineIndex) {
-        return hit(x, getLineCenter(lineIndex));
+    Optional<HitInfo> hitLine(double x, int lineIndex) {
+        return hitLine(x, lineIndex, paragraph.length());
     }
 
     Optional<HitInfo> hit(double x, double y) {
-        // workaround for https://javafx-jira.kenai.com/browse/RT-37801
-        if(paragraph.length() == 0) {
-            return Optional.empty();
-        }
-
-        TextLayout textLayout = textLayout();
-        HitInfo hit = textLayout.getHitInfo((float)x, (float)y);
-
-        if(hit.getCharIndex() == paragraph.length() - 1) {
-            // Might be a hit beyond the end of line, investigate.
-            // Workaround for https://javafx-jira.kenai.com/browse/RT-37803
-            PathElement[] elems = textLayout.getCaretShape(paragraph.length(), true, 0, 0);
-            Path caret = new Path(elems);
-            if(x > caret.getBoundsInLocal().getMinX()) {
-                return Optional.empty();
-            } else {
-                return Optional.of(hit);
-            }
-        } else {
-            return Optional.of(hit);
-        }
+        return hit(x, y, paragraph.length());
     }
 
     public double getCaretOffsetX() {
@@ -194,56 +152,19 @@ class ParagraphText<S> extends TextFlow {
         }
     }
 
-    public int getLineCount() {
-        return getLines().length;
-    }
-
     public int currentLineIndex() {
-        TextLine[] lines = getLines();
-        TwoLevelNavigator navigator = new TwoLevelNavigator(() -> lines.length, i -> lines[i].getLength());
-        return navigator.offsetToPosition(clampedCaretPosition.intValue(), Forward).getMajor();
-    }
-
-    private float getLineCenter(int index) {
-        return getLineY(index) + getLines()[index].getBounds().getHeight() / 2;
-    }
-
-    private float getLineY(int index) {
-        TextLine[] lines = getLines();
-        float spacing = (float) getLineSpacing();
-        float lineY = 0;
-        for(int i = 0; i < index; ++i) {
-            lineY += lines[i].getBounds().getHeight() + spacing;
-        }
-        return lineY;
-    }
-
-    private TextLayout textLayout() {
-        return (TextLayout) invoke(mGetTextLayout, this);
-    }
-
-    private TextLine[] getLines() {
-        return (TextLine[]) invoke(mGetLines, textLayout());
-    }
-
-    private static Object invoke(Method m, Object obj, Object... args) {
-        try {
-            return m.invoke(obj, args);
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+        return getLineOfCharacter(clampedCaretPosition.intValue());
     }
 
     private void updateCaretShape() {
-        PathElement[] shape = textLayout().getCaretShape(clampedCaretPosition.intValue(), true, 0, 0);
+        PathElement[] shape = getCaretShape(clampedCaretPosition.intValue(), true);
         caretShape.getElements().setAll(shape);
     }
 
     private void updateSelectionShape() {
         int start = selection.get().getStart();
         int end = selection.get().getEnd();
-        PathElement[] shape = textLayout().getRange(start, end, TextLayout.TYPE_TEXT, 0, 0);
+        PathElement[] shape = getRangeShape(start, end);
         selectionShape.getElements().setAll(shape);
     }
 

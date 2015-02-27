@@ -199,7 +199,7 @@ class ParagraphBox<S> extends Region {
      * optional if hit beyond the end.
      */
     Optional<HitInfo> hitText(double x, int line) {
-        return text.hit(x, line);
+        return text.hitLine(x, line);
     }
 
     /**
