@@ -4,9 +4,9 @@ import static com.sun.javafx.PlatformUtil.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static javafx.scene.input.KeyEvent.*;
-import static javafx.scene.input.MouseEvent.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
+import static org.reactfx.EventStreams.*;
 import javafx.event.EventHandler;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
@@ -19,7 +19,6 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
-import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 
 import com.sun.javafx.PlatformUtil;
@@ -197,8 +196,10 @@ public class StyledTextAreaBehavior implements Behavior {
         EventHandlerHelper.installAfter(area.onKeyTypedProperty(), keyTypedHandler);
 
         subscription = Subscription.multi(
-                EventStreams.eventsOf(area, MouseEvent.ANY)
-                        .subscribe(this::handleMouseEvent),
+                eventsOf(area, MouseEvent.MOUSE_PRESSED).subscribe(this::mousePressed),
+                eventsOf(area, MouseEvent.MOUSE_DRAGGED).subscribe(this::mouseDragged),
+                eventsOf(area, MouseEvent.DRAG_DETECTED).subscribe(this::dragDetected),
+                eventsOf(area, MouseEvent.MOUSE_RELEASED).subscribe(this::mouseReleased),
                 () -> {
                     EventHandlerHelper.remove(area.onKeyPressedProperty(), keyPressedHandler);
                     EventHandlerHelper.remove(area.onKeyTypedProperty(), keyTypedHandler);
@@ -345,18 +346,6 @@ public class StyledTextAreaBehavior implements Behavior {
     /* ********************************************************************** *
      * Mouse handling implementation                                          *
      * ********************************************************************** */
-
-    private void handleMouseEvent(MouseEvent e) {
-        if(e.getEventType() == MOUSE_PRESSED) {
-            mousePressed(e);
-        } else if(e.getEventType() == DRAG_DETECTED) {
-            dragDetected(e);
-        } else if(e.getEventType() == MOUSE_DRAGGED) {
-            mouseDragged(e);
-        } else if(e.getEventType() == MOUSE_RELEASED) {
-            mouseReleased(e);
-        }
-    }
 
     private void mousePressed(MouseEvent e) {
         // don't respond if disabled
