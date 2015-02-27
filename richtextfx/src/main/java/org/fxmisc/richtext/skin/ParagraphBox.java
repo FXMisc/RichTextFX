@@ -19,7 +19,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -113,13 +112,14 @@ class ParagraphBox<S> extends Region {
         return hits.or(stops);
     }
 
-    /**
-     * Returns a hit info for the given mouse event.
-     *
-     * Empty optional is returned if clicked beyond the end of this cell's text,
-     */
-    public CharacterHit hit(MouseEvent e) {
-        return hit(e.getX(), e.getY());
+    public CharacterHit hit(Point2D pos) {
+        return hit(pos.getX(), pos.getY());
+    }
+
+    public CharacterHit hit(double x, double y) {
+        Point2D onScreen = this.localToScreen(x, y);
+        Point2D inText = text.screenToLocal(onScreen);
+        return text.hit(inText.getX(), inText.getY());
     }
 
     public double getCaretOffsetX() {
@@ -216,15 +216,5 @@ class ParagraphBox<S> extends Region {
      */
     CharacterHit hitText(double x, double y) {
         return text.hit(x, y);
-    }
-
-    private CharacterHit hit(Point2D pos) {
-        return hit(pos.getX(), pos.getY());
-    }
-
-    private CharacterHit hit(double x, double y) {
-        Point2D onScreen = this.localToScreen(x, y);
-        Point2D inText = text.screenToLocal(onScreen);
-        return text.hit(inText.getX(), inText.getY());
     }
 }

@@ -4,7 +4,6 @@ import static com.sun.javafx.PlatformUtil.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static javafx.scene.input.KeyEvent.*;
-import static javafx.scene.input.MouseDragEvent.*;
 import static javafx.scene.input.MouseEvent.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
@@ -12,7 +11,6 @@ import javafx.event.EventHandler;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
@@ -199,8 +197,6 @@ public class StyledTextAreaBehavior implements Behavior {
         EventHandlerHelper.installAfter(area.onKeyTypedProperty(), keyTypedHandler);
 
         subscription = Subscription.multi(
-                view.cellMouseEvents()
-                        .subscribe(pair -> pair.exec(this::handleMouseEvent)),
                 EventStreams.eventsOf(area, MouseEvent.ANY)
                         .subscribe(this::handleMouseEvent),
                 () -> {
@@ -350,69 +346,46 @@ public class StyledTextAreaBehavior implements Behavior {
      * Mouse handling implementation                                          *
      * ********************************************************************** */
 
-    /**
-     * Handle mouse event on void space, i.e. beyond cells.
-     */
     private void handleMouseEvent(MouseEvent e) {
-        if(e.getEventType() == MOUSE_PRESSED && e.getButton() == MouseButton.PRIMARY) {
-            area.requestFocus();
-            area.end(SelectionPolicy.CLEAR);
-            e.consume();
-        }
-    }
-
-    private void handleMouseEvent(ParagraphBox<?> cell, MouseEvent e) {
         if(e.getEventType() == MOUSE_PRESSED) {
-            mousePressed(cell, e);
-            e.consume();
+            mousePressed(e);
         } else if(e.getEventType() == DRAG_DETECTED) {
-            // startFullDrag() causes subsequent drag events to be
-            // received by corresponding ParagraphCells, instead of all
-            // events being delivered to the original ParagraphCell.
-            cell.getScene().startFullDrag();
             dragDetected(e);
-            e.consume();
-        } else if(e.getEventType() == MOUSE_DRAG_OVER) {
-            mouseDragOver(cell, (MouseDragEvent) e);
-            e.consume();
-        } else if(e.getEventType() == MOUSE_DRAG_RELEASED) {
-            mouseDragReleased(cell, (MouseDragEvent) e);
-            e.consume();
+        } else if(e.getEventType() == MOUSE_DRAGGED) {
+            mouseDragged(e);
         } else if(e.getEventType() == MOUSE_RELEASED) {
-            mouseReleased(cell, e);
-            e.consume();
+            mouseReleased(e);
         }
     }
 
-    private void mousePressed(ParagraphBox<?> cell, MouseEvent e) {
+    private void mousePressed(MouseEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
         }
 
-        // ensure focus
-        area.requestFocus();
+        if(e.getButton() == MouseButton.PRIMARY) {
+            // ensure focus
+            area.requestFocus();
 
-        switch(e.getButton()) {
-            case PRIMARY: leftPress(cell, e); break;
-            default: // do nothing
-        }
-    }
+            CharacterHit hit = view.hit(e.getX(), e.getY());
 
-    private void leftPress(ParagraphBox<?> cell, MouseEvent e) {
-        CharacterHit hit = hitCell(cell, e);
-
-        if(e.isShiftDown()) {
-            // On Mac always extend selection,
-            // switching anchor and caret if necessary.
-            area.moveTo(hit.getInsertionIndex(), isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
-        } else {
-            switch (e.getClickCount()) {
-                case 1: firstLeftPress(hit); break;
-                case 2: selectWord(); break;
-                case 3: area.selectLine(); break;
-                default: // do nothing
+            if(e.isShiftDown()) {
+                // On Mac always extend selection,
+                // switching anchor and caret if necessary.
+                area.moveTo(
+                        hit.getInsertionIndex(),
+                        isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
+            } else {
+                switch (e.getClickCount()) {
+                    case 1: firstLeftPress(hit); break;
+                    case 2: selectWord(); break;
+                    case 3: area.selectLine(); break;
+                    default: // do nothing
+                }
             }
+
+            e.consume();
         }
     }
 
@@ -434,9 +407,10 @@ public class StyledTextAreaBehavior implements Behavior {
         if(dragSelection == DragState.POTENTIAL_DRAG) {
             dragSelection = DragState.DRAG;
         }
+        e.consume();
     }
 
-    private void mouseDragOver(ParagraphBox<?> cell, MouseDragEvent e) {
+    private void mouseDragged(MouseEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
@@ -448,48 +422,39 @@ public class StyledTextAreaBehavior implements Behavior {
         }
 
         // get the position within text
-        CharacterHit hit = hitCell(cell, e);
+        CharacterHit hit = view.hit(e.getX(), e.getY());
 
-        if(dragSelection == DragState.DRAG) {
+        if(dragSelection == DragState.DRAG ||
+                dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
             area.positionCaret(hit.getInsertionIndex());
         } else {
             area.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
+
+        e.consume();
     }
 
-    private void mouseReleased(ParagraphBox<?> cell, MouseEvent e) {
-        switch(dragSelection) {
-            case POTENTIAL_DRAG:
-                // drag didn't happen, position caret
-                CharacterHit hit = hitCell(cell, e);
-                area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-                break;
-            case DRAG:
-                // do nothing, handled by mouseDragReleased
-            case NO_DRAG:
-                // do nothing, caret already repositioned in mousePressed
-        }
-        dragSelection = DragState.NO_DRAG;
-    }
-
-    private void mouseDragReleased(ParagraphBox<?> cell, MouseDragEvent e) {
+    private void mouseReleased(MouseEvent e) {
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
         }
 
-        if(dragSelection == DragState.DRAG) {
-            // get the position within text
-            CharacterHit hit = hitCell(cell, e);
-
-            area.moveSelectedText(hit.getInsertionIndex());
+        switch(dragSelection) {
+            case POTENTIAL_DRAG:
+                // drag didn't happen, position caret
+                CharacterHit hit = view.hit(e.getX(), e.getY());
+                area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                break;
+            case DRAG:
+                // move selection to the target position
+                CharacterHit h = view.hit(e.getX(), e.getY());
+                area.moveSelectedText(h.getInsertionIndex());
+                // do nothing, handled by mouseDragReleased
+            case NO_DRAG:
+                // do nothing, caret already repositioned in mousePressed
         }
-    }
-
-    private CharacterHit hitCell(ParagraphBox<?> cell, MouseEvent e) {
-        int cellIdx = cell.getIndex();
-        int cellOffset = area.position(cellIdx, 0).toOffset();
-        CharacterHit hit = cell.hit(e);
-        return new CharacterHit(hit.getCharacterIndex() + cellOffset, hit.getHitType());
+        dragSelection = DragState.NO_DRAG;
+        e.consume();
     }
 }

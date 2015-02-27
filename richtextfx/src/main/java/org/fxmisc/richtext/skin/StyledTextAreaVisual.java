@@ -1,7 +1,6 @@
 package org.fxmisc.richtext.skin;
 
 import static org.reactfx.EventStreams.*;
-import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -28,7 +27,6 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -50,7 +48,6 @@ import org.fxmisc.wellbehaved.skin.SimpleVisualBase;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
-import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 
 public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
@@ -99,21 +96,6 @@ class StyledTextAreaView<S> extends Region {
      */
     private final StyleableObjectProperty<Paint> highlightTextFill
             = new HighlightTextFillProperty(this, Color.WHITE);
-
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Event streams                                                          *
-     *                                                                        *
-     * ********************************************************************** */
-
-    /**
-     * Stream of all mouse events on all cells. May be used by behavior.
-     */
-    private final EventStream<Tuple2<ParagraphBox<S>, MouseEvent>> cellMouseEvents;
-    final EventStream<Tuple2<ParagraphBox<S>, MouseEvent>> cellMouseEvents() {
-        return cellMouseEvents;
-    }
 
 
     /* ********************************************************************** *
@@ -217,13 +199,7 @@ class StyledTextAreaView<S> extends Region {
                 .flatMap(delay -> delay != null
                         ? mouseOverTextEvents(nonEmptyCells, delay)
                         : EventStreams.never())
-                .hook(evt -> Event.fireEvent(area, evt))
-                .pin();
-
-        // initialize stream of all mouse events on all cells
-        cellMouseEvents = merge(
-                nonEmptyCells,
-                c -> eventsOf(c, MouseEvent.ANY).map(e -> t(c, e)));
+                .subscribe(evt -> Event.fireEvent(area, evt));
     }
 
 
@@ -349,6 +325,7 @@ class StyledTextAreaView<S> extends Region {
         return virtualFlow.getViewportHeight();
     }
 
+    @Deprecated
     int getInsertionIndex(double textX, Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
@@ -356,6 +333,7 @@ class StyledTextAreaView<S> extends Region {
         return getParagraphOffset(parIdx) + parInsertionIndex;
     }
 
+    @Deprecated
     int getInsertionIndex(double textX, double y) {
         VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
@@ -368,6 +346,23 @@ class StyledTextAreaView<S> extends Region {
             double cellY = hit.getCellOffset().getY();
             int parInsertionIndex = getCellInsertionIndex(cell, textX, cellY);
             return getParagraphOffset(parIdx) + parInsertionIndex;
+        }
+    }
+
+    CharacterHit hit(double x, double y) {
+        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(x, y);
+        if(hit.isBeforeCells()) {
+            return CharacterHit.before(0);
+        } else if(hit.isAfterCells()) {
+            return CharacterHit.after(area.getLength() - 1);
+        } else {
+            ParagraphBox<S> cell = hit.getCell().getNode();
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit cellHit = cell.hit(cellOffset);
+            int parOffset = getParagraphOffset(cell.getIndex());
+            return new CharacterHit(
+                    parOffset + cellHit.getCharacterIndex(),
+                    cellHit.getHitType());
         }
     }
 
@@ -465,10 +460,12 @@ class StyledTextAreaView<S> extends Region {
         return virtualFlow.getCell(index).getNode();
     }
 
+    @Deprecated
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
         return cell.hitTextLine(x, line).getInsertionIndex();
     }
 
+    @Deprecated
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, double y) {
         return cell.hitText(x, y).getInsertionIndex();
     }
