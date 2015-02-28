@@ -8,6 +8,8 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.reactfx.EventStreams.*;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -19,7 +21,10 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
+import org.reactfx.EventStream;
 import org.reactfx.Subscription;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 import com.sun.javafx.PlatformUtil;
 
@@ -180,6 +185,8 @@ public class StyledTextAreaBehavior implements Behavior {
         return targetCaretOffset;
     }
 
+    private final Var<Point2D> autoscrollTo = Var.newSimpleVar(null);
+
     /* ********************************************************************** *
      * Constructors                                                           *
      * ********************************************************************** */
@@ -204,6 +211,26 @@ public class StyledTextAreaBehavior implements Behavior {
                     EventHandlerHelper.remove(area.onKeyPressedProperty(), keyPressedHandler);
                     EventHandlerHelper.remove(area.onKeyTypedProperty(), keyTypedHandler);
                 });
+
+        // setup auto-scroll
+        Val<Point2D> projection = Val.combine(
+                autoscrollTo,
+                view.layoutBoundsProperty(),
+                StyledTextAreaBehavior::project);
+        Val<Point2D> distance = Val.combine(
+                autoscrollTo,
+                projection,
+                Point2D::subtract);
+        EventStream<Point2D> deltas = nonNullValuesOf(distance)
+                .emitBothOnEach(animationFrames())
+                .map(t -> t.map((ds, nanos) -> ds.multiply(nanos / 100_000_000.0)));
+        valuesOf(autoscrollTo).flatMap(p -> p == null
+                ? never() // automatically stops the scroll animation
+                : deltas)
+            .subscribe(ds -> {
+                view.scrollBy(ds);
+                projection.ifPresent(this::dragTo);
+            });
     }
 
     /* ********************************************************************** *
@@ -410,8 +437,19 @@ public class StyledTextAreaBehavior implements Behavior {
             return;
         }
 
-        // get the position within text
-        CharacterHit hit = view.hit(e.getX(), e.getY());
+        Point2D p = new Point2D(e.getX(), e.getY());
+        if(view.getLayoutBounds().contains(p)) {
+            dragTo(p);
+            autoscrollTo.setValue(null); // stops auto-scroll
+        } else {
+            autoscrollTo.setValue(p);    // starts auto-scroll
+        }
+
+        e.consume();
+    }
+
+    private void dragTo(Point2D p) {
+        CharacterHit hit = view.hit(p.getX(), p.getY());
 
         if(dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
@@ -419,11 +457,12 @@ public class StyledTextAreaBehavior implements Behavior {
         } else {
             area.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
-
-        e.consume();
     }
 
     private void mouseReleased(MouseEvent e) {
+        // stop auto-scroll
+        autoscrollTo.setValue(null);
+
         // don't respond if disabled
         if(area.isDisabled()) {
             return;
@@ -445,5 +484,15 @@ public class StyledTextAreaBehavior implements Behavior {
         }
         dragSelection = DragState.NO_DRAG;
         e.consume();
+    }
+
+    private static Point2D project(Point2D p, Bounds bounds) {
+        double x = clamp(p.getX(), bounds.getMinX(), bounds.getMaxX());
+        double y = clamp(p.getY(), bounds.getMinY(), bounds.getMaxY());
+        return new Point2D(x, y);
+    }
+
+    private static double clamp(double x, double min, double max) {
+        return Math.min(Math.max(x, min), max);
     }
 }

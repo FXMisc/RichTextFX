@@ -259,6 +259,11 @@ class StyledTextAreaView<S> extends Region {
      *                                                                        *
      * ********************************************************************** */
 
+    void scrollBy(Point2D deltas) {
+        virtualFlow.scrollX(deltas.getX());
+        virtualFlow.scrollY(deltas.getY());
+    }
+
     void show(double y) {
         virtualFlow.show(y);
     }
