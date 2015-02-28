@@ -3,9 +3,24 @@ RichTextFX
 
 RichTextFX provides a text area for JavaFX with API to style ranges of text. It is intended as a base for rich-text editors and code editors with syntax highlighting.
 
-Scroll down to [Demos](#demos) to see it in action.
-
-There is plenty of room for enhancements, e.g. support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), ... To give me or someone else more incentive to implement these or other features, you can [create a bounty](https://www.bountysource.com/).
+* [Who uses RichTextFX?](#who-uses-richtextfx)
+* [Features](#features)
+* [Flavors](#flavors)
+  * [StyleClassedTextArea](#styleclassedtextarea)
+     * [CodeArea](#codearea)
+  * [InlineCssTextArea](#inlinecsstextarea)
+  * [InlineStyleTextArea](#inlinestyletextarea)
+* [Requirements](#requirements)
+* [Demos](#demos)
+  * [Highlighting of Java keywords](#automatic-highlighting-of-java-keywords)
+  * [Rich-text editor](#rich-text-editor)
+  * [Custom tooltips](#custom-tooltips)
+* [Download](#download)
+  * [Stable](#stable-release)
+  * [Snapshot](#snapshot-releases)
+* [API Documentation (Javadoc)](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)
+* [License](#license)
+* [How can I contribute?](#how-can-i-contribute)
 
 
 Who uses RichTextFX?
@@ -18,7 +33,7 @@ Who uses RichTextFX?
 [Xanthic](https://github.com/jrguenther/Xanthic)  
 [Arduino Harp](http://www.avrharp.org/)  
 
-Please, let me know if you use RichTextFX in your project and would like it to be listed here.
+If you use RichTextFX in an interesting project, I would like to know!
 
 
 Features
@@ -55,7 +70,7 @@ Note that the style classes are assigned to instances of [Text](http://download.
 
 #### CodeArea
 
-`CodeArea` is a variant of `StyleClassedTextArea` that uses a fixed width font by default, making it a convenient base for source code editors. `CodeArea` is used in the [Java Keywords demo](#1-automatic-highlighting-of-java-keywords) below.
+`CodeArea` is a variant of `StyleClassedTextArea` that uses a fixed width font by default, making it a convenient base for source code editors. `CodeArea` is used in the [Java Keywords demo](#automatic-highlighting-of-java-keywords) below.
 
 
 ### InlineCssTextArea
@@ -104,13 +119,15 @@ You appreciate the benefits of this approach over `InlineCssTextArea` when you n
 MyStyleInfo styleInfo = area.getStyleAt(charIndex);
 ```
 
-`InlineStyleTextArea` is used in the [Rich-text demo](#2-rich-text-editor) below.
+`InlineStyleTextArea` is used in the [Rich-text demo](#rich-text-editor) below.
 
 
 Requirements
 ------------
 
 [JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line. Also, there's a heavy use of lambdas, defender methods and the stream API in the code base.
+
+JDK 8u40 is recommended, because it fixes some text rendering bugs.
 
 
 Demos
@@ -185,8 +202,8 @@ When the mouse pauses over the text area, you can get index of the character und
 [TooltipDemo.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
 
 
-Use RichTextFX in your project
-------------------------------
+Download
+--------
 
 ### Stable release
 
@@ -256,9 +273,14 @@ License
 Dual-licensed under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause) and [GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html).
 
 
-Links
------
+How can I contribute?
+---------------------
 
-[API Documentation (Javadoc)](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)  
-[Dropped Features](https://github.com/TomasMikula/RichTextFX/wiki/Dropped-Features)  
-[Known Issues](https://github.com/TomasMikula/RichTextFX/wiki/Known-Issues)  
+There are many ways how you can contribute:
+
+* Report bugs.
+* Fix bugs ;)
+* Spread the word: write blog posts, tutorials, ...
+* Implement features. There are plenty of [feature requests](https://github.com/TomasMikula/RichTextFX/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement), for example support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), just to name a few.
+* [Create a bounty](https://www.bountysource.com/) for a feature.
+* [Send tips](https://gratipay.com/TomasMikula/).
