@@ -282,5 +282,5 @@ There are many ways how you can contribute:
 * Fix bugs ;)
 * Spread the word: write blog posts, tutorials, ...
 * Implement features. There are plenty of [feature requests](https://github.com/TomasMikula/RichTextFX/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement), for example support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), just to name a few.
-* [Create a bounty](https://www.bountysource.com/) for a feature.
-* [Send tips](https://gratipay.com/TomasMikula/).
+* [Create a bounty](https://www.bountysource.com/trackers/503734-tomasmikula-richtextfx) for a feature.
+* [Support the author](https://gratipay.com/TomasMikula/).
