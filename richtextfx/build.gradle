@@ -15,6 +15,9 @@ javadoc {
     // ignore missing Javadoc comments or tags
     options.addStringOption('Xdoclint:all,-missing', '-quiet')
 
+    // support for JavaFX properties
+    options.addBooleanOption('javafx', true);
+
     // resolve links to Java and JavaFX Javadocs
     options.links = [
         'http://docs.oracle.com/javase/8/docs/api/',

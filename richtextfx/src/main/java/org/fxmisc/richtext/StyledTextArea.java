@@ -155,28 +155,59 @@ implements
     public final void setFont(Font value) { font.setValue(value); }
     public final Font getFont() { return font.getValue(); }
 
+    /**
+     * Popup window that will be positioned by this text area relative to the
+     * caret or selection. Use {@link #popupAlignmentProperty()} to specify
+     * how the popup should be positioned relative to the caret or selection.
+     * Use {@link #popupAnchorOffsetProperty()} or
+     * {@link #popupAnchorAdjustmentProperty()} to further adjust the position.
+     */
     private final ObjectProperty<PopupWindow> popupWindow = new SimpleObjectProperty<>();
     public void setPopupWindow(PopupWindow popup) { popupWindow.set(popup); }
     public PopupWindow getPopupWindow() { return popupWindow.get(); }
     public ObjectProperty<PopupWindow> popupWindowProperty() { return popupWindow; }
 
+    /** @deprecated Use {@link #setPopupWindow(PopupWindow)}. */
     @Deprecated
     public void setPopupAtCaret(PopupWindow popup) { popupWindow.set(popup); }
+    /** @deprecated Use {@link #getPopupWindow()}. */
     @Deprecated
     public PopupWindow getPopupAtCaret() { return popupWindow.get(); }
+    /** @deprecated Use {@link #popupWindowProperty()}. */
     @Deprecated
     public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupWindow; }
 
+    /**
+     * Specifies further offset (in pixels) of the popup window from the
+     * position specified by {@link #popupAlignmentProperty()}.
+     *
+     * <p>If {@link #popupAnchorAdjustmentProperty()} is also specified, then
+     * it overrides the offset set by this property.
+     */
     private final ObjectProperty<Point2D> popupAnchorOffset = new SimpleObjectProperty<>();
     public void setPopupAnchorOffset(Point2D offset) { popupAnchorOffset.set(offset); }
     public Point2D getPopupAnchorOffset() { return popupAnchorOffset.get(); }
     public ObjectProperty<Point2D> popupAnchorOffsetProperty() { return popupAnchorOffset; }
 
+    /**
+     * Specifies how to adjust the popup window's anchor point. The given
+     * operator is invoked with the screen position calculated according to
+     * {@link #popupAlignmentProperty()} and should return a new screen
+     * position. This position will be used as the popup window's anchor point.
+     *
+     * <p>Setting this property overrides {@link #popupAnchorOffsetProperty()}.
+     */
     private final ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustment = new SimpleObjectProperty<>();
     public void setPopupAnchorAdjustment(UnaryOperator<Point2D> f) { popupAnchorAdjustment.set(f); }
     public UnaryOperator<Point2D> getPopupAnchorAdjustment() { return popupAnchorAdjustment.get(); }
     public ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustmentProperty() { return popupAnchorAdjustment; }
 
+    /**
+     * Defines where the popup window given in {@link #popupWindowProperty()}
+     * is anchored, i.e. where its anchor point is positioned. This position
+     * can further be adjusted by {@link #popupAnchorOffsetProperty()} or
+     * {@link #popupAnchorAdjustmentProperty()}.
+     */
     private final ObjectProperty<PopupAlignment> popupAlignment = new SimpleObjectProperty<>(CARET_TOP);
     public void setPopupAlignment(PopupAlignment pos) { popupAlignment.set(pos); }
     public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
