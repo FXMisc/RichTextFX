@@ -1,12 +1,12 @@
 .keyword {
-    -fx-fill: #8a6;
+    -fx-fill: purple;
     -fx-font-weight: bold;
 }
 .semicolon {
     -fx-font-weight: bold;
 }
 .paren {
-    -fx-fill: darkblue;
+    -fx-fill: firebrick;
     -fx-font-weight: bold;
 }
 .bracket {
@@ -14,13 +14,9 @@
     -fx-font-weight: bold;
 }
 .brace {
-    -fx-fill: darkviolet;
+    -fx-fill: teal;
     -fx-font-weight: bold;
 }
 .string {
     -fx-fill: blue;
-}
-
-.code-area {
-    -fx-background-color: #eee;
 }
