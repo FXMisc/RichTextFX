@@ -4,7 +4,8 @@ import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
@@ -28,7 +29,18 @@ public class PopupDemo extends Application {
         area.setPopupAlignment(PopupAlignment.SELECTION_BOTTOM_CENTER);
         area.setPopupAnchorOffset(new Point2D(4, 4));
 
-        primaryStage.setScene(new Scene(new StackPane(area), 200, 200));
+        Button toggle = new Button("Show/Hide popup");
+        toggle.setOnAction(ae -> {
+            if(popup.isShowing()) {
+                popup.hide();
+            } else {
+                popup.show(primaryStage);
+            }
+        });
+
+        VBox.setVgrow(area, Priority.ALWAYS);
+
+        primaryStage.setScene(new Scene(new VBox(toggle, area), 200, 200));
         primaryStage.setTitle("Popup Demo");
         primaryStage.show();
         popup.show(primaryStage);
