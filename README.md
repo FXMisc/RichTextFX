@@ -28,7 +28,7 @@ Who uses RichTextFX?
 
 [Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)  
 [Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)  
-[mqtt-spy](https://code.google.com/p/mqtt-spy/)  
+[mqtt-spy](http://kamilfb.github.io/mqtt-spy/)  
 [Alt.Text](http://alttexting.com/)  
 [Xanthic](https://github.com/jrguenther/Xanthic)  
 [Arduino Harp](http://www.avrharp.org/)  
