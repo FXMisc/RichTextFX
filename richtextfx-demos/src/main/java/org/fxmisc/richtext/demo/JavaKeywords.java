@@ -36,6 +36,7 @@ public class JavaKeywords extends Application {
     private static final String BRACKET_PATTERN = "\\[|\\]";
     private static final String SEMICOLON_PATTERN = "\\;";
     private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
+    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
@@ -44,6 +45,7 @@ public class JavaKeywords extends Application {
             + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
             + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
             + "|(?<STRING>" + STRING_PATTERN + ")"
+            + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
     );
 
     private static final String sampleCode = String.join("\n", new String[] {
@@ -53,14 +55,18 @@ public class JavaKeywords extends Application {
         "",
         "public class Foo extends Bar implements Baz {",
         "",
-        "   public static void main(String[] args) {",
-        "       for(String arg: args) {",
-        "           if(arg.length() != 0)",
-        "               System.out.println(arg);",
-        "           else",
-        "               System.err.println(\"Warning: empty string as argument\");",
-        "       }",
-        "   }",
+        "    /*",
+        "     * multi-line comment",
+        "     */",
+        "    public static void main(String[] args) {",
+        "        // single-line comment",
+        "        for(String arg: args) {",
+        "            if(arg.length() != 0)",
+        "                System.out.println(arg);",
+        "            else",
+        "                System.err.println(\"Warning: empty string as argument\");",
+        "        }",
+        "    }",
         "",
         "}"
     });
@@ -100,6 +106,7 @@ public class JavaKeywords extends Application {
                     matcher.group("BRACKET") != null ? "bracket" :
                     matcher.group("SEMICOLON") != null ? "semicolon" :
                     matcher.group("STRING") != null ? "string" :
+                    matcher.group("COMMENT") != null ? "comment" :
                     null; /* never happens */ assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
             spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
