@@ -7,6 +7,9 @@ import static javafx.scene.input.KeyEvent.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.reactfx.EventStreams.*;
+
+import java.util.function.Predicate;
+
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -123,18 +126,31 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(INSERT, SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
                 .create();
 
+        Predicate<KeyEvent> noControlKeys = e ->
+                // filter out control keys
+                (!e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
+                // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
+                || (PlatformUtil.isWindows() && e.isControlDown() && e.isAltDown());
+
+        Predicate<KeyEvent> isChar = e ->
+                e.getCode().isLetterKey() ||
+                e.getCode().isDigitKey() ||
+                e.getCode().isWhitespaceKey();
+
+        EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> charPressConsumer = EventHandlerTemplate
+                .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
+                 on(keyPressed()).where(isChar.and(noControlKeys)).act((b, e) -> {})
+                .create();
+
         KEY_PRESSED_TEMPLATE = edits.orElse(otherNavigation).ifConsumed((b, e) -> b.clearTargetCaretOffset())
                 .orElse(verticalNavigation)
-                .orElse(otherActions);
+                .orElse(otherActions)
+                .orElse(charPressConsumer);
 
         KEY_TYPED_TEMPLATE = EventHandlerTemplate
                 // character input
                 .on(KEY_TYPED)
-                .where(e ->
-                        // filter out control keys
-                        (!e.isControlDown() && !e.isAltDown() && !e.isMetaDown())
-                        // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
-                        || (PlatformUtil.isWindows() && e.isControlDown() && e.isAltDown()))
+                .where(noControlKeys)
                 .where(e -> isLegal(e.getCharacter()))
                 .act(StyledTextAreaBehavior::keyTyped)
 
