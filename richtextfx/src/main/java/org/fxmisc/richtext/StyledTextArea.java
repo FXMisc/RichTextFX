@@ -57,8 +57,6 @@ import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import com.sun.javafx.Utils;
-
 /**
  * Text editing control. Accepts user input (keyboard, mouse) and
  * provides API to assign style to text ranges. It is suitable for
@@ -108,6 +106,15 @@ implements
      * Index range [0, 0).
      */
     public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
+
+    /**
+     * Private helper method.
+     */
+    private static int clamp(int min, int val, int max) {
+        return val < min ? min
+             : val > max ? max
+             : val;
+    }
 
 
     /* ********************************************************************** *
@@ -693,8 +700,8 @@ implements
     @Override
     public void replaceText(int start, int end, String text) {
         try(Guard g = omniSuspendable.suspend()) {
-            start = Utils.clamp(0, start, getLength());
-            end = Utils.clamp(0, end, getLength());
+            start = clamp(0, start, getLength());
+            end = clamp(0, end, getLength());
 
             content.replaceText(start, end, text);
 
@@ -706,8 +713,8 @@ implements
     @Override
     public void replace(int start, int end, StyledDocument<S> replacement) {
         try(Guard g = omniSuspendable.suspend()) {
-            start = Utils.clamp(0, start, getLength());
-            end = Utils.clamp(0, end, getLength());
+            start = clamp(0, start, getLength());
+            end = clamp(0, end, getLength());
 
             content.replace(start, end, replacement);
 
@@ -722,8 +729,8 @@ implements
                 this.caretPosition, currentParagraph,
                 caretColumn, this.anchor,
                 selection, selectedText)) {
-            this.internalCaretPosition.setValue(Utils.clamp(0, caretPosition, getLength()));
-            this.anchor.setValue(Utils.clamp(0, anchor, getLength()));
+            this.internalCaretPosition.setValue(clamp(0, caretPosition, getLength()));
+            this.anchor.setValue(clamp(0, anchor, getLength()));
             this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
         }
     }
