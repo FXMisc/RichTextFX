@@ -424,7 +424,8 @@ public class StyledTextAreaBehavior implements Behavior {
     private void firstLeftPress(CharacterHit hit) {
         clearTargetCaretOffset();
         IndexRange selection = area.getSelection();
-        if(selection.getLength() != 0 &&
+        if(area.isEditable() &&
+                selection.getLength() != 0 &&
                 hit.getCharacterIndex() >= selection.getStart() &&
                 hit.getCharacterIndex() < selection.getEnd()) {
             // press inside selection
