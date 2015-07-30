@@ -1,0 +1,17 @@
+.anytag {
+    -fx-fill: firebrick;
+}
+.paren {
+    -fx-fill: firebrick;
+    -fx-font-weight: bold;
+}
+.attribute {
+    -fx-fill: purple;
+}
+.avalue {
+    -fx-fill: blue;
+}
+
+.comment {
+	-fx-fill: teal;
+}
