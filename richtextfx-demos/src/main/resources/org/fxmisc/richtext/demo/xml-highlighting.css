@@ -1,15 +1,18 @@
+.tagmark {
+    -fx-fill: gray;
+}
 .anytag {
-    -fx-fill: firebrick;
+    -fx-fill: crimson;
 }
 .paren {
     -fx-fill: firebrick;
     -fx-font-weight: bold;
 }
 .attribute {
-    -fx-fill: purple;
+    -fx-fill: darkviolet;
 }
 .avalue {
-    -fx-fill: blue;
+    -fx-fill: black;
 }
 
 .comment {

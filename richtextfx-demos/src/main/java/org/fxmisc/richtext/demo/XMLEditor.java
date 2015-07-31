@@ -17,17 +17,16 @@ import javafx.stage.Stage;
 
 public class XMLEditor extends Application {
 	
-    private static final Pattern XML_TAG = Pattern.compile("(?<SELEMENT>(<\\h*\\w+)([^<>]*)(/?>))"
-    		+"|(?<EELEMENT><\\h*/\\h*\\w+>)"
+    private static final Pattern XML_TAG = Pattern.compile("(?<ELEMENT>(</?)(\\w+)([^<>]*)(/?>))"
     		+"|(?<COMMENT><!--[^<>]+-->)");
     
-    private static final Pattern ATTRIBUTES = Pattern.compile("(\\w+)(=\".+\")");
+    private static final Pattern ATTRIBUTES = Pattern.compile("(\\w+\\h*)(=)(\\h*\"[^\"]+\")");
 
     private static final String sampleCode = String.join("\n", new String[] {
     		"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
     		"<!-- Sample XML -->",
     		"<orders>",
-    		"	<Order number=\"1\">",
+    		"	<Order number=\"1\" table=\"center\">",
     		"		<items>",
     		"			<Item>",
     		"				<type>ESPRESSO</type>",
@@ -84,8 +83,7 @@ public class XMLEditor extends Application {
     	
         Matcher matcher = XML_TAG.matcher(text);
         int lastKwEnd = 0;
-        StyleSpansBuilder<Collection<String>> spansBuilder
-                = new StyleSpansBuilder<>();
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         while(matcher.find()) {
         	
         	spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
@@ -93,31 +91,29 @@ public class XMLEditor extends Application {
         		spansBuilder.add(Collections.singleton("comment"), matcher.end() - matcher.start());
         	}
         	else {
-        		if(matcher.group("SELEMENT") != null) {
-        			String openText = matcher.group(2);
-        			String attributesText = matcher.group(3);
-        			String closeText = matcher.group(4);
-        			if(attributesText.isEmpty())
-        				spansBuilder.add(Collections.singleton("anytag"), matcher.end() - matcher.start());
-        			else {
+        		if(matcher.group("ELEMENT") != null) {
+        			String openBracket = matcher.group(2);
+        			String elementName = matcher.group(3);
+        			String attributesText = matcher.group(4);
+        			String closeBracket = matcher.group(5);
+        			
+        			spansBuilder.add(Collections.singleton("tagmark"), openBracket.length());
+        			spansBuilder.add(Collections.singleton("anytag"), elementName.length());
+        			if(!attributesText.isEmpty()) {
         				
-        				spansBuilder.add(Collections.singleton("anytag"), openText.length());
         				int lastAttrEnd = 0;
         				
         				Matcher amatcher = ATTRIBUTES.matcher(attributesText);
         				while(amatcher.find()) {
         					spansBuilder.add(Collections.emptyList(), amatcher.start() - lastAttrEnd);
         					spansBuilder.add(Collections.singleton("attribute"), amatcher.group(1).length());
-        					spansBuilder.add(Collections.singleton("avalue"), amatcher.group(2).length());
+        					spansBuilder.add(Collections.singleton("tagmark"), amatcher.group(2).length());
+        					spansBuilder.add(Collections.singleton("avalue"), amatcher.group(3).length());
         					lastAttrEnd = amatcher.end();
         				}
-        				spansBuilder.add(Collections.singleton("anytag"), closeText.length());
         			}
-        		}
-        		else {
-        			if(matcher.group("EELEMENT") != null) {
-        				spansBuilder.add(Collections.singleton("anytag"), matcher.end() - matcher.start());
-        			}
+        			
+        			spansBuilder.add(Collections.singleton("tagmark"), closeBracket.length());
         		}
         	}
             lastKwEnd = matcher.end();
