@@ -17,15 +17,23 @@ import javafx.stage.Stage;
 
 public class XMLEditor extends Application {
 	
-    private static final Pattern XML_TAG = Pattern.compile("(?<ELEMENT>(</?)(\\w+)([^<>]*)(/?>))"
+    private static final Pattern XML_TAG = Pattern.compile("(?<ELEMENT>(</?\\h*)(\\w+)([^<>]*)(\\h*/?>))"
     		+"|(?<COMMENT><!--[^<>]+-->)");
     
     private static final Pattern ATTRIBUTES = Pattern.compile("(\\w+\\h*)(=)(\\h*\"[^\"]+\")");
+    
+    private static final int GROUP_OPEN_BRACKET = 2;
+    private static final int GROUP_ELEMENT_NAME = 3;
+    private static final int GROUP_ATTRIBUTES_SECTION = 4;
+    private static final int GROUP_CLOSE_BRACKET = 5;
+    private static final int GROUP_ATTRIBUTE_NAME = 1;
+    private static final int GROUP_EQUAL_SYMBOL = 2;
+    private static final int GROUP_ATTRIBUTE_VALUE = 3;
 
     private static final String sampleCode = String.join("\n", new String[] {
     		"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
     		"<!-- Sample XML -->",
-    		"<orders>",
+    		"< orders >",
     		"	<Order number=\"1\" table=\"center\">",
     		"		<items>",
     		"			<Item>",
@@ -92,28 +100,30 @@ public class XMLEditor extends Application {
         	}
         	else {
         		if(matcher.group("ELEMENT") != null) {
-        			String openBracket = matcher.group(2);
-        			String elementName = matcher.group(3);
-        			String attributesText = matcher.group(4);
-        			String closeBracket = matcher.group(5);
+        			String attributesText = matcher.group(GROUP_ATTRIBUTES_SECTION);
         			
-        			spansBuilder.add(Collections.singleton("tagmark"), openBracket.length());
-        			spansBuilder.add(Collections.singleton("anytag"), elementName.length());
+        			spansBuilder.add(Collections.singleton("tagmark"), matcher.end(GROUP_OPEN_BRACKET) - matcher.start(GROUP_OPEN_BRACKET));
+        			spansBuilder.add(Collections.singleton("anytag"), matcher.end(GROUP_ELEMENT_NAME) - matcher.end(GROUP_OPEN_BRACKET));
+
         			if(!attributesText.isEmpty()) {
         				
-        				int lastAttrEnd = 0;
+        				lastKwEnd = 0;
         				
         				Matcher amatcher = ATTRIBUTES.matcher(attributesText);
         				while(amatcher.find()) {
-        					spansBuilder.add(Collections.emptyList(), amatcher.start() - lastAttrEnd);
-        					spansBuilder.add(Collections.singleton("attribute"), amatcher.group(1).length());
-        					spansBuilder.add(Collections.singleton("tagmark"), amatcher.group(2).length());
-        					spansBuilder.add(Collections.singleton("avalue"), amatcher.group(3).length());
-        					lastAttrEnd = amatcher.end();
+        					spansBuilder.add(Collections.emptyList(), amatcher.start() - lastKwEnd);
+        					spansBuilder.add(Collections.singleton("attribute"), amatcher.end(GROUP_ATTRIBUTE_NAME) - amatcher.start(GROUP_ATTRIBUTE_NAME));
+        					spansBuilder.add(Collections.singleton("tagmark"), amatcher.end(GROUP_EQUAL_SYMBOL) - amatcher.end(GROUP_ATTRIBUTE_NAME));
+        					spansBuilder.add(Collections.singleton("avalue"), amatcher.end(GROUP_ATTRIBUTE_VALUE) - amatcher.end(GROUP_EQUAL_SYMBOL));
+        					lastKwEnd = amatcher.end();
         				}
+        				if(attributesText.length() > lastKwEnd)
+        					spansBuilder.add(Collections.emptyList(), attributesText.length() - lastKwEnd);
         			}
+
+        			lastKwEnd = matcher.end(GROUP_ATTRIBUTES_SECTION);
         			
-        			spansBuilder.add(Collections.singleton("tagmark"), closeBracket.length());
+        			spansBuilder.add(Collections.singleton("tagmark"), matcher.end(GROUP_CLOSE_BRACKET) - lastKwEnd);
         		}
         	}
             lastKwEnd = matcher.end();
