@@ -20,6 +20,11 @@ task JavaKeywordsAsync(type: JavaExec, dependsOn: classes) {
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
+task XMLEditor(type: JavaExec, dependsOn: classes) {
+    main = 'org.fxmisc.richtext.demo.XMLEditor'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}
+
 task ManualHighlighting(type: JavaExec, dependsOn: classes) {
     main = 'org.fxmisc.richtext.demo.ManualHighlighting'
     classpath = files(sourceSets.main.output, configurations.runtime)

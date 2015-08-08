@@ -13,6 +13,7 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
 * [Requirements](#requirements)
 * [Demos](#demos)
   * [Highlighting of Java keywords](#automatic-highlighting-of-java-keywords)
+  * [XML Editor](#xml-editor)
   * [Rich-text editor](#rich-text-editor)
   * [Custom tooltips](#custom-tooltips)
 * [Download](#download)
@@ -162,6 +163,25 @@ or
 [JavaKeywordsAsync.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywordsAsync.java)
 
 The former computes highlighting on the JavaFX application thread, while the latter computes highlighting on a background thread.
+
+
+### XML Editor
+
+Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo above, this demo highlights XML syntax. Courtesy of @cemartins.
+
+#### Run using the pre-built JAR
+
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.5/richtextfx-demos-fat-0.6.5.jar) the pre-built "fat" JAR file and run
+
+    java -cp richtextfx-demos-fat-0.6.5.jar org.fxmisc.richtext.demo.XMLEditor
+
+#### Run from the source repo
+
+    gradle XMLEditor
+
+#### Source code
+
+[XMLEditor.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/XMLEditor.java)
 
 
 ### Rich-text editor
