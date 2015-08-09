@@ -97,7 +97,12 @@ public class StyleSpansBuilder<S> {
             if(spans.size() == 1 && spans.get(0).getLength() == 0) {
                 spans.set(0, span);
             } else {
-                spans.add(span);
+                StyleSpan<S> prev = spans.get(spans.size() - 1);
+                if(prev.getStyle().equals(span.getStyle())) {
+                    spans.set(spans.size() - 1, new StyleSpan<>(span.getStyle(), prev.getLength() + span.getLength()));
+                } else {
+                    spans.add(span);
+                }
             }
         } else {
             // do nothing, don't add a zero-length span
