@@ -129,6 +129,10 @@ public final class Paragraph<S> implements CharSequence {
             return this;
         }
 
+        if(p.length() == 0) {
+            return new Paragraph<S>(segments, p.terminator);
+        }
+
         StyledText<S> left = segments.get(segments.size()-1);
         StyledText<S> right = p.segments.get(0);
         if(Objects.equals(left.getStyle(), right.getStyle())) {
