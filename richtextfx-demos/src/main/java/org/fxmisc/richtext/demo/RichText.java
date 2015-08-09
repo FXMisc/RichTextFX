@@ -6,6 +6,7 @@
 
 package org.fxmisc.richtext.demo;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -71,6 +72,29 @@ public class RichText extends Application {
             this.fontSize = fontSize;
             this.fontFamily = fontFamily;
             this.textColor = textColor;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(
+                    bold, italic, underline, strikethrough,
+                    fontSize, fontFamily, textColor);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(other instanceof StyleInfo) {
+                StyleInfo that = (StyleInfo) other;
+                return Objects.equals(this.bold,          that.bold) &&
+                       Objects.equals(this.italic,        that.italic) &&
+                       Objects.equals(this.underline,     that.underline) &&
+                       Objects.equals(this.strikethrough, that.strikethrough) &&
+                       Objects.equals(this.fontSize,      that.fontSize) &&
+                       Objects.equals(this.fontFamily,    that.fontFamily) &&
+                       Objects.equals(this.textColor,     that.textColor);
+            } else {
+                return false;
+            }
         }
 
         public String toCss() {
