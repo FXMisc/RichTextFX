@@ -161,11 +161,11 @@ implements StyledDocument<S> {
             subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
             Paragraph<S> startPar = paragraphs.get(startParIdx);
-            subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1)); // +1 for the newline
+            subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.fullLength()));
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
                 Paragraph<S> par = paragraphs.get(i);
-                subSpans.add(par.getStyleSpans(0, par.length() + 1)); // +1 for the newline
+                subSpans.add(par.getStyleSpans(0, par.fullLength()));
             }
 
             Paragraph<S> endPar = paragraphs.get(endParIdx);
