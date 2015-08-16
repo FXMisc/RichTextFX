@@ -49,7 +49,7 @@ class ParagraphText<S> extends TextFlowExt {
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
-    private final Map<Integer, Path> backgroundShapes = new TreeMap<>();
+    private final List<Path> backgroundShapes = new ArrayList<>();
 
     public ParagraphText(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
@@ -92,7 +92,6 @@ class ParagraphText<S> extends TextFlowExt {
 //        });
 
         // populate with text nodes
-        int start = 0;
         for(StyledText<S> segment: par.getSegments()) {
             Text t = new TextExt(segment.toString());
             t.setTextOrigin(VPos.TOP);
@@ -105,22 +104,16 @@ class ParagraphText<S> extends TextFlowExt {
 
             getChildren().add(t);
 
-            // add corresponding background node
+            // add corresponding background node (empty)
 
-            int end = start + segment.length();
-
-            if (start != end) {
-                Path backgroundShape = new Path();
-                backgroundShape.setManaged(false);
-                backgroundShape.setVisible(true);
-                backgroundShape.setStrokeWidth(0);
-                backgroundShape.layoutXProperty().bind(leftInset);
-                backgroundShape.layoutYProperty().bind(rightInset);
-                backgroundShapes.put(start, backgroundShape);
-                getChildren().add(0, backgroundShape);
-            }
-
-            start = end;
+            Path backgroundShape = new Path();
+            backgroundShape.setManaged(false);
+            backgroundShape.setVisible(true);
+            backgroundShape.setStrokeWidth(0);
+            backgroundShape.layoutXProperty().bind(leftInset);
+            backgroundShape.layoutYProperty().bind(rightInset);
+            backgroundShapes.add(backgroundShape);
+            getChildren().add(0, backgroundShape);
         }
     }
 
@@ -181,20 +174,25 @@ class ParagraphText<S> extends TextFlowExt {
 
     private void updateBackgroundShapes() {
         int index = 0;
-        FilteredList<Node> filteredList = getChildren().filtered(node -> node instanceof Text);
-        for (Map.Entry<Integer, Path> backgroundShape : backgroundShapes.entrySet()) {
+        int start = 0;
+
+        FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
+        for (Node node : nodeList) {
+            TextExt text = (TextExt) node;
+            Path backgroundShape = backgroundShapes.get(index++);
+            int end = start + text.getText().length();
+
             // Set fill
-            TextExt text = (TextExt) filteredList.get(index++);
             Paint[] paints = text.backgroundColorProperty().get();
             if (paints != null && paints.length > 0) {
-                backgroundShape.getValue().setFill(paints[0]);
+                backgroundShape.setFill(paints[0]);
+
+                // Set path elements
+                PathElement[] shape = getRangeShape(start, end);
+                backgroundShape.getElements().setAll(shape);
             }
 
-            // Set path elements
-            int start = backgroundShape.getKey();
-            int end = start + text.getText().length();
-            PathElement[] shape = getRangeShape(start, end);
-            backgroundShape.getValue().getElements().setAll(shape);
+            start = end;
         }
     }
 
