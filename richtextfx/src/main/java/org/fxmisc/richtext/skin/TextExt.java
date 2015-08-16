@@ -10,7 +10,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,28 +23,22 @@ public class TextExt extends Text {
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        try {
-            // Get inner class
-            Class<?> clazz = Class.forName("javafx.scene.text.Text$StyleableProperties");
+        // Get list value and make it modifiable
+        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(super.getCssMetaData());
 
-            // Get field and make it accessible
-            Field styleablesField = clazz.getDeclaredField("STYLEABLES");
-            styleablesField.setAccessible(true);
+        // Add new properties
+        styleables.add(StyleableProperties.BACKGROUND_COLOR);
 
-            // Get list value and make it modifiable
-            List<CssMetaData<? extends Styleable, ?>> styleables = (List<CssMetaData<? extends Styleable, ?>>) styleablesField.get(null);
-            styleables = new ArrayList<>(styleables);
+        // Return list value
+        return styleables;
+    }
 
-            // Add new properties
-            styleables.add(StyleableProperties.BACKGROUND_COLOR);
+    public Paint[] getBackgroundColor() {
+        return backgroundColor.get();
+    }
 
-            // Set list value
-            return styleables;
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+    public void setBackgroundColor(Paint[] backgroundColor) {
+        this.backgroundColor.set(backgroundColor);
     }
 
     public ObjectProperty<Paint[]> backgroundColorProperty() {
@@ -64,11 +57,6 @@ public class TextExt extends Text {
                 @Override
                 public CssMetaData<TextExt, Paint[]> getCssMetaData() {
                     return StyleableProperties.BACKGROUND_COLOR;
-                }
-
-                @Override
-                public void invalidated() {
-                    // TODO
                 }
             };
         }
