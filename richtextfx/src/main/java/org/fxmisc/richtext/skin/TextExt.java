@@ -15,7 +15,22 @@ import javafx.scene.text.Text;
 
 public class TextExt extends Text {
 
-    private StyleableObjectProperty<Paint> backgroundFill = null;
+    private final StyleableObjectProperty<Paint> backgroundFill = new StyleableObjectProperty<Paint>(null) {
+        @Override
+        public Object getBean() {
+            return TextExt.this;
+        }
+
+        @Override
+        public String getName() {
+            return "backgroundFill";
+        }
+
+        @Override
+        public CssMetaData<TextExt, Paint> getCssMetaData() {
+            return StyleableProperties.BACKGROUND_FILL;
+        }
+    };
 
     TextExt(String text) {
         super(text);
@@ -34,32 +49,14 @@ public class TextExt extends Text {
     }
 
     public Paint getBackgroundFill() {
-        return backgroundFillProperty().get();
+        return backgroundFill.get();
     }
 
-    public void setBackgroundFill(Paint backgroundFill) {
-        this.backgroundFillProperty().set(backgroundFill);
+    public void setBackgroundFill(Paint fill) {
+        backgroundFill.set(fill);
     }
 
     public ObjectProperty<Paint> backgroundFillProperty() {
-        if (backgroundFill == null) {
-            backgroundFill = new StyleableObjectProperty<Paint>(null) {
-                @Override
-                public Object getBean() {
-                    return TextExt.this;
-                }
-
-                @Override
-                public String getName() {
-                    return "backgroundFill";
-                }
-
-                @Override
-                public CssMetaData<TextExt, Paint> getCssMetaData() {
-                    return StyleableProperties.BACKGROUND_FILL;
-                }
-            };
-        }
         return backgroundFill;
     }
 
@@ -71,7 +68,7 @@ public class TextExt extends Text {
                 Color.TRANSPARENT) {
             @Override
             public boolean isSettable(TextExt node) {
-                return node.backgroundFill == null || !node.backgroundFill.isBound();
+                return !node.backgroundFill.isBound();
             }
 
             @Override
