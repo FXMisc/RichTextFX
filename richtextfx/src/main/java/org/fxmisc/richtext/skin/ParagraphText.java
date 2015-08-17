@@ -62,7 +62,7 @@ class ParagraphText<S> extends TextFlowExt {
         selection.addListener((obs, old, sel) -> requestLayout());
 
         Val<Double> leftInset = Val.map(insetsProperty(), ins -> ins.getLeft());
-        Val<Double> rightInset = Val.map(insetsProperty(), ins -> ins.getTop());
+        Val<Double> topInset = Val.map(insetsProperty(), ins -> ins.getTop());
 
         // selection highlight
         selectionShape.setManaged(false);
@@ -70,7 +70,7 @@ class ParagraphText<S> extends TextFlowExt {
         selectionShape.setFill(Color.DODGERBLUE);
         selectionShape.setStrokeWidth(0);
         selectionShape.layoutXProperty().bind(leftInset);
-        selectionShape.layoutYProperty().bind(rightInset);
+        selectionShape.layoutYProperty().bind(topInset);
         getChildren().add(selectionShape);
 
         // caret
@@ -78,7 +78,7 @@ class ParagraphText<S> extends TextFlowExt {
         caretShape.setManaged(false);
         caretShape.setStrokeWidth(1);
         caretShape.layoutXProperty().bind(leftInset);
-        caretShape.layoutYProperty().bind(rightInset);
+        caretShape.layoutYProperty().bind(topInset);
         getChildren().add(caretShape);
 
         // XXX: see the note at highlightTextFill
@@ -111,7 +111,7 @@ class ParagraphText<S> extends TextFlowExt {
             backgroundShape.setVisible(true);
             backgroundShape.setStrokeWidth(0);
             backgroundShape.layoutXProperty().bind(leftInset);
-            backgroundShape.layoutYProperty().bind(rightInset);
+            backgroundShape.layoutYProperty().bind(topInset);
             backgroundShapes.add(backgroundShape);
             getChildren().add(0, backgroundShape);
         }
