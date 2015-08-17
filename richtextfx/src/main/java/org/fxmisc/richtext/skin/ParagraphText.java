@@ -1,6 +1,6 @@
 package org.fxmisc.richtext.skin;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 import javafx.beans.binding.Bindings;
@@ -10,8 +10,10 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -47,6 +49,7 @@ class ParagraphText<S> extends TextFlowExt {
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
+    private final List<Path> backgroundShapes = new ArrayList<>();
 
     public ParagraphText(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
@@ -90,7 +93,7 @@ class ParagraphText<S> extends TextFlowExt {
 
         // populate with text nodes
         for(StyledText<S> segment: par.getSegments()) {
-            Text t = new Text(segment.toString());
+            Text t = new TextExt(segment.toString());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
             applyStyle.accept(t, segment.getStyle());
@@ -100,6 +103,17 @@ class ParagraphText<S> extends TextFlowExt {
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
             getChildren().add(t);
+
+            // add corresponding background node (empty)
+
+            Path backgroundShape = new Path();
+            backgroundShape.setManaged(false);
+            backgroundShape.setVisible(true);
+            backgroundShape.setStrokeWidth(0);
+            backgroundShape.layoutXProperty().bind(leftInset);
+            backgroundShape.layoutYProperty().bind(rightInset);
+            backgroundShapes.add(backgroundShape);
+            getChildren().add(0, backgroundShape);
         }
     }
 
@@ -158,10 +172,35 @@ class ParagraphText<S> extends TextFlowExt {
         selectionShape.getElements().setAll(shape);
     }
 
+    private void updateBackgroundShapes() {
+        int index = 0;
+        int start = 0;
+
+        FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
+        for (Node node : nodeList) {
+            TextExt text = (TextExt) node;
+            Path backgroundShape = backgroundShapes.get(index++);
+            int end = start + text.getText().length();
+
+            // Set fill
+            Paint paint = text.backgroundFillProperty().get();
+            if (paint != null) {
+                backgroundShape.setFill(paint);
+
+                // Set path elements
+                PathElement[] shape = getRangeShape(start, end);
+                backgroundShape.getElements().setAll(shape);
+            }
+
+            start = end;
+        }
+    }
+
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
         updateCaretShape();
         updateSelectionShape();
+        updateBackgroundShapes();
     }
 }
