@@ -17,7 +17,7 @@ public class TextExt extends Text {
 
     private StyleableObjectProperty<Paint> backgroundFill = null;
 
-    public TextExt(String text) {
+    TextExt(String text) {
         super(text);
     }
 

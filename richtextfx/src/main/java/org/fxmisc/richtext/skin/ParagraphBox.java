@@ -21,7 +21,6 @@ import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Text;
 
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
@@ -56,7 +55,7 @@ class ParagraphBox<S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    public ParagraphBox(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
+    public ParagraphBox(Paragraph<S> par, BiConsumer<? super TextExt, S> applyStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
         this.index = Var.newSimpleVar(0);

@@ -1,6 +1,8 @@
 package org.fxmisc.richtext.skin;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javafx.beans.binding.Bindings;
@@ -19,7 +21,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
-import javafx.scene.text.Text;
 
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
@@ -51,7 +52,7 @@ class ParagraphText<S> extends TextFlowExt {
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new ArrayList<>();
 
-    public ParagraphText(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
+    public ParagraphText(Paragraph<S> par, BiConsumer<? super TextExt, S> applyStyle) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -93,7 +94,7 @@ class ParagraphText<S> extends TextFlowExt {
 
         // populate with text nodes
         for(StyledText<S> segment: par.getSegments()) {
-            Text t = new TextExt(segment.toString());
+            TextExt t = new TextExt(segment.toString());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
             applyStyle.accept(t, segment.getStyle());

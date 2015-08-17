@@ -42,6 +42,7 @@ import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
 import org.fxmisc.richtext.skin.StyledTextAreaVisual;
+import org.fxmisc.richtext.skin.TextExt;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.fxmisc.wellbehaved.skin.Skins;
@@ -354,7 +355,7 @@ implements
     /**
      * Style applicator used by the default skin.
      */
-    private final BiConsumer<Text, S> applyStyle;
+    private final BiConsumer<? super TextExt, S> applyStyle;
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -381,11 +382,11 @@ implements
      * a style, applies the style to the text node. This function is
      * used by the default skin to apply style to text nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle) {
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle) {
         this(initialStyle, applyStyle, true);
     }
 
-    public <C> StyledTextArea(S initialStyle, BiConsumer<Text, S> applyStyle,
+    public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
             boolean preserveStyle) {
         this.initialStyle = initialStyle;
         this.applyStyle = applyStyle;

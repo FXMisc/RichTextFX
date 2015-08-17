@@ -30,7 +30,6 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Text;
 import javafx.stage.PopupWindow;
 
 import org.fxmisc.flowless.Cell;
@@ -53,7 +52,7 @@ import org.reactfx.value.Val;
 public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
     private final StyledTextAreaView<S> node;
 
-    public StyledTextAreaVisual(StyledTextArea<S> control, BiConsumer<Text, S> applyStyle) {
+    public StyledTextAreaVisual(StyledTextArea<S> control, BiConsumer<? super TextExt, S> applyStyle) {
         super(control);
         this.node = new StyledTextAreaView<>(control, applyStyle);
     }
@@ -131,7 +130,7 @@ class StyledTextAreaView<S> extends Region {
 
     public StyledTextAreaView(
             StyledTextArea<S> styledTextArea,
-            BiConsumer<Text, S> applyStyle) {
+            BiConsumer<? super TextExt, S> applyStyle) {
         this.area = styledTextArea;
 
         // load the default style
@@ -399,7 +398,7 @@ class StyledTextAreaView<S> extends Region {
 
     private Cell<Paragraph<S>, ParagraphBox<S>> createCell(
             Paragraph<S> paragraph,
-            BiConsumer<Text, S> applyStyle) {
+            BiConsumer<? super TextExt, S> applyStyle) {
 
         ParagraphBox<S> box = new ParagraphBox<>(paragraph, applyStyle);
 
