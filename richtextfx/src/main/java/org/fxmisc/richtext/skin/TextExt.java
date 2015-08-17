@@ -15,7 +15,7 @@ import javafx.scene.text.Text;
 
 public class TextExt extends Text {
 
-    private ObjectProperty<Paint> backgroundFill = null;
+    private StyleableObjectProperty<Paint> backgroundFill = null;
 
     public TextExt(String text) {
         super(text);
@@ -76,7 +76,7 @@ public class TextExt extends Text {
 
             @Override
             public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
-                return (StyleableProperty<Paint>) node.backgroundFillProperty();
+                return node.backgroundFill;
             }
         };
     }
