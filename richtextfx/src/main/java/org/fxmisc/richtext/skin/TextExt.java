@@ -1,11 +1,7 @@
 package org.fxmisc.richtext.skin;
 
-import com.sun.javafx.css.converters.PaintConverter;
 import javafx.beans.property.ObjectProperty;
-import javafx.css.CssMetaData;
-import javafx.css.Styleable;
-import javafx.css.StyleableObjectProperty;
-import javafx.css.StyleableProperty;
+import javafx.css.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -15,7 +11,7 @@ import java.util.List;
 
 public class TextExt extends Text {
 
-    private ObjectProperty<Paint[]> backgroundColor = null;
+    private ObjectProperty<Paint> backgroundFill = null;
 
     public TextExt(String text) {
         super(text);
@@ -27,23 +23,23 @@ public class TextExt extends Text {
         List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(super.getCssMetaData());
 
         // Add new properties
-        styleables.add(StyleableProperties.BACKGROUND_COLOR);
+        styleables.add(StyleableProperties.BACKGROUND_FILL);
 
         // Return list value
         return styleables;
     }
 
-    public Paint[] getBackgroundColor() {
-        return backgroundColor.get();
+    public Paint getBackgroundFill() {
+        return backgroundFill.get();
     }
 
-    public void setBackgroundColor(Paint[] backgroundColor) {
-        this.backgroundColor.set(backgroundColor);
+    public void setBackgroundFill(Paint backgroundFill) {
+        this.backgroundFill.set(backgroundFill);
     }
 
-    public ObjectProperty<Paint[]> backgroundColorProperty() {
-        if (backgroundColor == null) {
-            backgroundColor = new StyleableObjectProperty<Paint[]>(null) {
+    public ObjectProperty<Paint> backgroundFillProperty() {
+        if (backgroundFill == null) {
+            backgroundFill = new StyleableObjectProperty<Paint>(null) {
                 @Override
                 public Object getBean() {
                     return TextExt.this;
@@ -51,32 +47,32 @@ public class TextExt extends Text {
 
                 @Override
                 public String getName() {
-                    return "backgroundColor";
+                    return "backgroundFill";
                 }
 
                 @Override
-                public CssMetaData<TextExt, Paint[]> getCssMetaData() {
-                    return StyleableProperties.BACKGROUND_COLOR;
+                public CssMetaData<TextExt, Paint> getCssMetaData() {
+                    return StyleableProperties.BACKGROUND_FILL;
                 }
             };
         }
-        return backgroundColor;
+        return backgroundFill;
     }
 
     private static class StyleableProperties {
 
-        private static final CssMetaData<TextExt, Paint[]> BACKGROUND_COLOR = new CssMetaData<TextExt, Paint[]>(
-                "-fx-background-color",
-                PaintConverter.SequenceConverter.getInstance(),
-                new Paint[]{Color.TRANSPARENT}) {
+        private static final CssMetaData<TextExt, Paint> BACKGROUND_FILL = new CssMetaData<TextExt, Paint>(
+                "-fx-background-fill",
+                StyleConverter.getPaintConverter(),
+                Color.TRANSPARENT) {
             @Override
             public boolean isSettable(TextExt node) {
-                return node.backgroundColor == null || !node.backgroundColor.isBound();
+                return node.backgroundFill == null || !node.backgroundFill.isBound();
             }
 
             @Override
-            public StyleableProperty<Paint[]> getStyleableProperty(TextExt node) {
-                return (StyleableProperty<Paint[]>) node.backgroundColorProperty();
+            public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
+                return (StyleableProperty<Paint>) node.backgroundFillProperty();
             }
         };
     }

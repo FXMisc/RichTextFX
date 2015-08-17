@@ -183,9 +183,9 @@ class ParagraphText<S> extends TextFlowExt {
             int end = start + text.getText().length();
 
             // Set fill
-            Paint[] paints = text.backgroundColorProperty().get();
-            if (paints != null && paints.length > 0) {
-                backgroundShape.setFill(paints[0]);
+            Paint paint = text.backgroundFillProperty().get();
+            if (paint != null) {
+                backgroundShape.setFill(paint);
 
                 // Set path elements
                 PathElement[] shape = getRangeShape(start, end);
