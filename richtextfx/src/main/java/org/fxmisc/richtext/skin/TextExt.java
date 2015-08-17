@@ -1,13 +1,17 @@
 package org.fxmisc.richtext.skin;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.beans.property.ObjectProperty;
-import javafx.css.*;
+import javafx.css.CssMetaData;
+import javafx.css.StyleConverter;
+import javafx.css.Styleable;
+import javafx.css.StyleableObjectProperty;
+import javafx.css.StyleableProperty;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class TextExt extends Text {
 
@@ -30,11 +34,11 @@ public class TextExt extends Text {
     }
 
     public Paint getBackgroundFill() {
-        return backgroundFill.get();
+        return backgroundFillProperty().get();
     }
 
     public void setBackgroundFill(Paint backgroundFill) {
-        this.backgroundFill.set(backgroundFill);
+        this.backgroundFillProperty().set(backgroundFill);
     }
 
     public ObjectProperty<Paint> backgroundFillProperty() {
