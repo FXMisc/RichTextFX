@@ -50,6 +50,8 @@ public class LineNumberFactory implements IntFunction<Node> {
 
     @Override
     public Node apply(int idx) {
+        Val<String> formatted = nParagraphs.map(n -> format(idx+1, n));
+
         Label lineNo = new Label();
         lineNo.setFont(DEFAULT_FONT);
         lineNo.setBackground(DEFAULT_BACKGROUND);
@@ -57,14 +59,10 @@ public class LineNumberFactory implements IntFunction<Node> {
         lineNo.setPadding(DEFAULT_INSETS);
         lineNo.getStyleClass().add("lineno");
 
-        // When removed from the scene, bind label's text to constant "",
-        // which is a fake binding that consumes no resources, instead of
-        // staying bound to area's paragraphs.
-        lineNo.textProperty().bind(Val.flatMap(
-                lineNo.sceneProperty(),
-                scene -> scene != null
-                        ? nParagraphs.map(n -> format(idx+1, n))
-                        : Val.constant("")));
+        // bind label's text to a Val that stops observing area's paragraphs
+        // when lineNo is removed from scene
+        lineNo.textProperty().bind(formatted.conditionOnShowing(lineNo));
+
         return lineNo;
     }
 
