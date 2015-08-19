@@ -8,6 +8,7 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.reactfx.EventStreams.*;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javafx.event.EventHandler;
@@ -21,6 +22,7 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
+import org.fxmisc.richtext.skin.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
@@ -191,14 +193,14 @@ public class StyledTextAreaBehavior implements Behavior {
     /**
      * Remembers horizontal position when traversing up / down.
      */
-    private double targetCaretOffset = -1;
+    private Optional<CaretOffsetX> targetCaretOffset = Optional.empty();
     private void clearTargetCaretOffset() {
-        targetCaretOffset = -1;
+        targetCaretOffset = Optional.empty();
     }
-    private double getTargetCaretOffset() {
-        if(targetCaretOffset == -1)
-            targetCaretOffset = view.getCaretOffsetX();
-        return targetCaretOffset;
+    private CaretOffsetX getTargetCaretOffset() {
+        if(!targetCaretOffset.isPresent())
+            targetCaretOffset = Optional.of(view.getCaretOffsetX());
+        return targetCaretOffset.get();
     }
 
     private final Var<Point2D> autoscrollTo = Var.newSimpleVar(null);

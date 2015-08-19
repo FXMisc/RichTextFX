@@ -32,6 +32,19 @@ import org.reactfx.value.Var;
 
 class ParagraphBox<S> extends Region {
 
+    /**
+     * An opaque class representing horizontal caret offset.
+     * Although it is just a wrapper around double, its purpose is to increase
+     * type safety.
+     */
+    public static class CaretOffsetX {
+        private final double value;
+
+        private CaretOffsetX(double value) {
+            this.value = value;
+        }
+    }
+
     private final ParagraphText<S> text;
 
     private final ObjectProperty<IntFunction<? extends Node>> graphicFactory
@@ -121,9 +134,9 @@ class ParagraphBox<S> extends Region {
         return text.hit(inText.getX(), inText.getY());
     }
 
-    public double getCaretOffsetX() {
+    public CaretOffsetX getCaretOffsetX() {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.getCaretOffsetX();
+        return new CaretOffsetX(text.getCaretOffsetX());
     }
 
     public int getLineCount() {
@@ -196,28 +209,22 @@ class ParagraphBox<S> extends Region {
     }
 
     /**
-     * Hits the embedded TextFlow at the given line and x offset. Offsets are
-     * relative to the embedded TextFlow, not relative to this ParagraphBox.
+     * Hits the embedded TextFlow at the given line and x offset.
      *
-     * @param textX x coordinate relative to the embedded TextFlow.
+     * @param x x coordinate relative to the embedded TextFlow.
      * @param line index of the line in the embedded TextFlow.
      * @return hit info for the given line and x coordinate
-     * @deprecated Should take an opaque type CaretOffsetX.
      */
-    @Deprecated
-    CharacterHit hitTextLine(double textX, int line) {
-        return text.hitLine(textX, line);
+    CharacterHit hitTextLine(CaretOffsetX x, int line) {
+        return text.hitLine(x.value, line);
     }
 
     /**
-     * Hits the embedded TextFlow at the given x and y offset. Offsets are
-     * relative to the embedded TextFlow, not relative to this ParagraphBox.
+     * Hits the embedded TextFlow at the given x and y offset.
      *
      * @return hit info for the given x and y coordinates
-     * @deprecated Should take an opaque type CaretOffsetX.
      */
-    @Deprecated
-    CharacterHit hitText(double x, double y) {
-        return text.hit(x, y);
+    CharacterHit hitText(CaretOffsetX x, double y) {
+        return text.hit(x.value, y);
     }
 }

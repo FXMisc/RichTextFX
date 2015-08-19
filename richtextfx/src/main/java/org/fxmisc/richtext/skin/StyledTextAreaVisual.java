@@ -43,6 +43,7 @@ import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.TwoLevelNavigator;
 import org.fxmisc.richtext.skin.CssProperties.HighlightFillProperty;
 import org.fxmisc.richtext.skin.CssProperties.HighlightTextFillProperty;
+import org.fxmisc.richtext.skin.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.skin.SimpleVisualBase;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -317,14 +318,11 @@ class StyledTextAreaView<S> extends Region {
     }
 
     /**
-     * Returns x coordinate of the caret relative to the current TextFlow, not
-     * relative to the skin.
-     * @deprecated Should return an opaque type CaretOffsetX.
+     * Returns x coordinate of the caret in the current paragraph.
      */
-    @Deprecated
-    double getCaretOffsetX() {
+    CaretOffsetX getCaretOffsetX() {
         int idx = area.getCurrentParagraph();
-        return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
+        return getCell(idx).getCaretOffsetX();
     }
 
     double getViewportHeight() {
@@ -332,15 +330,15 @@ class StyledTextAreaView<S> extends Region {
     }
 
     @Deprecated
-    int getInsertionIndex(double textX, Position targetLine) {
+    int getInsertionIndex(CaretOffsetX x, Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
-        int parInsertionIndex = getCellInsertionIndex(cell, textX, targetLine.getMinor());
+        int parInsertionIndex = getCellInsertionIndex(cell, x, targetLine.getMinor());
         return getParagraphOffset(parIdx) + parInsertionIndex;
     }
 
     @Deprecated
-    int getInsertionIndex(double textX, double y) {
+    int getInsertionIndex(CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return 0;
@@ -350,7 +348,7 @@ class StyledTextAreaView<S> extends Region {
             int parIdx = hit.getCellIndex();
             ParagraphBox<S> cell = hit.getCell().getNode();
             double cellY = hit.getCellOffset().getY();
-            int parInsertionIndex = getCellInsertionIndex(cell, textX, cellY);
+            int parInsertionIndex = getCellInsertionIndex(cell, x, cellY);
             return getParagraphOffset(parIdx) + parInsertionIndex;
         }
     }
@@ -468,19 +466,17 @@ class StyledTextAreaView<S> extends Region {
 
     /**
      * @deprecated Should return {@link CharacterHit}.
-     * @deprecated Should take an opaque type CaretOffsetX.
      */
     @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
+    private int getCellInsertionIndex(ParagraphBox<S> cell, CaretOffsetX x, int line) {
         return cell.hitTextLine(x, line).getInsertionIndex();
     }
 
     /**
      * @deprecated Should return {@link CharacterHit}.
-     * @deprecated Should take an opaque type CaretOffsetX.
      */
     @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S> cell, double x, double y) {
+    private int getCellInsertionIndex(ParagraphBox<S> cell, CaretOffsetX x, double y) {
         return cell.hitText(x, y).getInsertionIndex();
     }
 
