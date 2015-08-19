@@ -319,7 +319,9 @@ class StyledTextAreaView<S> extends Region {
     /**
      * Returns x coordinate of the caret relative to the current TextFlow, not
      * relative to the skin.
+     * @deprecated Should return an opaque type CaretOffsetX.
      */
+    @Deprecated
     double getCaretOffsetX() {
         int idx = area.getCurrentParagraph();
         return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
@@ -464,11 +466,19 @@ class StyledTextAreaView<S> extends Region {
         return virtualFlow.getCell(index).getNode();
     }
 
+    /**
+     * @deprecated Should return {@link CharacterHit}.
+     * @deprecated Should take an opaque type CaretOffsetX.
+     */
     @Deprecated
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, int line) {
         return cell.hitTextLine(x, line).getInsertionIndex();
     }
 
+    /**
+     * @deprecated Should return {@link CharacterHit}.
+     * @deprecated Should take an opaque type CaretOffsetX.
+     */
     @Deprecated
     private int getCellInsertionIndex(ParagraphBox<S> cell, double x, double y) {
         return cell.hitText(x, y).getInsertionIndex();

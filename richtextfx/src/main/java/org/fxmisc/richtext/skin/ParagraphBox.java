@@ -202,7 +202,9 @@ class ParagraphBox<S> extends Region {
      * @param textX x coordinate relative to the embedded TextFlow.
      * @param line index of the line in the embedded TextFlow.
      * @return hit info for the given line and x coordinate
+     * @deprecated Should take an opaque type CaretOffsetX.
      */
+    @Deprecated
     CharacterHit hitTextLine(double textX, int line) {
         return text.hitLine(textX, line);
     }
@@ -212,7 +214,9 @@ class ParagraphBox<S> extends Region {
      * relative to the embedded TextFlow, not relative to this ParagraphBox.
      *
      * @return hit info for the given x and y coordinates
+     * @deprecated Should take an opaque type CaretOffsetX.
      */
+    @Deprecated
     CharacterHit hitText(double x, double y) {
         return text.hit(x, y);
     }
