@@ -37,6 +37,7 @@ public class RichText extends Application {
         public static StyleInfo fontSize(int fontSize) { return EMPTY.updateFontSize(fontSize); }
         public static StyleInfo fontFamily(String family) { return EMPTY.updateFontFamily(family); }
         public static StyleInfo textColor(Color color) { return EMPTY.updateTextColor(color); }
+        public static StyleInfo backgroundColor(Color color) { return EMPTY.updateBackgroundColor(color); }
 
         final Optional<Boolean> bold;
         final Optional<Boolean> italic;
@@ -45,6 +46,7 @@ public class RichText extends Application {
         final Optional<Integer> fontSize;
         final Optional<String> fontFamily;
         final Optional<Color> textColor;
+        final Optional<Color> backgroundColor;
 
         public StyleInfo() {
             bold = Optional.empty();
@@ -54,6 +56,7 @@ public class RichText extends Application {
             fontSize = Optional.empty();
             fontFamily = Optional.empty();
             textColor = Optional.empty();
+            backgroundColor = Optional.empty();
         }
 
         public StyleInfo(
@@ -63,7 +66,8 @@ public class RichText extends Application {
                 Optional<Boolean> strikethrough,
                 Optional<Integer> fontSize,
                 Optional<String> fontFamily,
-                Optional<Color> textColor) {
+                Optional<Color> textColor,
+                Optional<Color> backgroundColor) {
             this.bold = bold;
             this.italic = italic;
             this.underline = underline;
@@ -71,6 +75,7 @@ public class RichText extends Application {
             this.fontSize = fontSize;
             this.fontFamily = fontFamily;
             this.textColor = textColor;
+            this.backgroundColor = backgroundColor;
         }
 
         public String toCss() {
@@ -121,7 +126,16 @@ public class RichText extends Application {
                 int red = (int) (color.getRed() * 255);
                 int green = (int) (color.getGreen() * 255);
                 int blue = (int) (color.getBlue() * 255);
-                sb.append("-fx-fill: rgb(" + red + ", " + green + ", " + blue + ")");
+                sb.append("-fx-fill: rgb(" + red + ", " + green + ", " + blue + ");");
+            }
+
+            if(backgroundColor.isPresent()) {
+                Color color = backgroundColor.get();
+                int red = (int) (color.getRed() * 255);
+                int green = (int) (color.getGreen() * 255);
+                int blue = (int) (color.getBlue() * 255);
+                sb.append("-fx-background-fill: rgb(" + red + ", " + green + ", " + blue + ");");
+                sb.append("-fx-background-color: rgb(" + red + ", " + green + ", " + blue + ")");
             }
 
             return sb.toString();
@@ -135,35 +149,40 @@ public class RichText extends Application {
                     mixin.strikethrough.isPresent() ? mixin.strikethrough : strikethrough,
                     mixin.fontSize.isPresent() ? mixin.fontSize : fontSize,
                     mixin.fontFamily.isPresent() ? mixin.fontFamily : fontFamily,
-                    mixin.textColor.isPresent() ? mixin.textColor : textColor);
+                    mixin.textColor.isPresent() ? mixin.textColor : textColor,
+                    mixin.backgroundColor.isPresent() ? mixin.backgroundColor : backgroundColor);
         }
 
         public StyleInfo updateBold(boolean bold) {
-            return new StyleInfo(Optional.of(bold), italic, underline, strikethrough, fontSize, fontFamily, textColor);
+            return new StyleInfo(Optional.of(bold), italic, underline, strikethrough, fontSize, fontFamily, textColor, backgroundColor);
         }
 
         public StyleInfo updateItalic(boolean italic) {
-            return new StyleInfo(bold, Optional.of(italic), underline, strikethrough, fontSize, fontFamily, textColor);
+            return new StyleInfo(bold, Optional.of(italic), underline, strikethrough, fontSize, fontFamily, textColor, backgroundColor);
         }
 
         public StyleInfo updateUnderline(boolean underline) {
-            return new StyleInfo(bold, italic, Optional.of(underline), strikethrough, fontSize, fontFamily, textColor);
+            return new StyleInfo(bold, italic, Optional.of(underline), strikethrough, fontSize, fontFamily, textColor, backgroundColor);
         }
 
         public StyleInfo updateStrikethrough(boolean strikethrough) {
-            return new StyleInfo(bold, italic, underline, Optional.of(strikethrough), fontSize, fontFamily, textColor);
+            return new StyleInfo(bold, italic, underline, Optional.of(strikethrough), fontSize, fontFamily, textColor, backgroundColor);
         }
 
         public StyleInfo updateFontSize(int fontSize) {
-            return new StyleInfo(bold, italic, underline, strikethrough, Optional.of(fontSize), fontFamily, textColor);
+            return new StyleInfo(bold, italic, underline, strikethrough, Optional.of(fontSize), fontFamily, textColor, backgroundColor);
         }
 
         public StyleInfo updateFontFamily(String fontFamily) {
-            return new StyleInfo(bold, italic, underline, strikethrough, fontSize, Optional.of(fontFamily), textColor);
+            return new StyleInfo(bold, italic, underline, strikethrough, fontSize, Optional.of(fontFamily), textColor, backgroundColor);
         }
 
         public StyleInfo updateTextColor(Color textColor) {
-            return new StyleInfo(bold, italic, underline, strikethrough, fontSize, fontFamily, Optional.of(textColor));
+            return new StyleInfo(bold, italic, underline, strikethrough, fontSize, fontFamily, Optional.of(textColor), backgroundColor);
+        }
+
+        public StyleInfo updateBackgroundColor(Color backgroundColor) {
+            return new StyleInfo(bold, italic, underline, strikethrough, fontSize, fontFamily, textColor, Optional.of(backgroundColor));
         }
     }
 
@@ -171,10 +190,12 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final InlineStyleTextArea<StyleInfo> area =
-            new InlineStyleTextArea<StyleInfo>(
+    private final InlineStyleTextArea<StyleInfo, StyleInfo> area =
+            new InlineStyleTextArea<>(
                     StyleInfo.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
-                    style -> style.toCss());
+                    StyleInfo::toCss,
+                    StyleInfo.EMPTY,
+                    StyleInfo::toCss);
     {
         area.setWrapText(true);
     }
@@ -186,24 +207,26 @@ public class RichText extends Application {
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
-        Button undoBtn = createButton("undo", () -> area.undo());
-        Button redoBtn = createButton("redo", () -> area.redo());
-        Button cutBtn = createButton("cut", () -> area.cut());
-        Button copyBtn = createButton("copy", () -> area.copy());
-        Button pasteBtn = createButton("paste", () -> area.paste());
-        Button boldBtn = createButton("bold", () -> toggleBold());
-        Button italicBtn = createButton("italic", () -> toggleItalic());
-        Button underlineBtn = createButton("underline", () -> toggleUnderline());
-        Button strikeBtn = createButton("strikethrough", () -> toggleStrikethrough());
+        Button undoBtn = createButton("undo", area::undo);
+        Button redoBtn = createButton("redo", area::redo);
+        Button cutBtn = createButton("cut", area::cut);
+        Button copyBtn = createButton("copy", area::copy);
+        Button pasteBtn = createButton("paste", area::paste);
+        Button boldBtn = createButton("bold", this::toggleBold);
+        Button italicBtn = createButton("italic", this::toggleItalic);
+        Button underlineBtn = createButton("underline", this::toggleUnderline);
+        Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
         sizeCombo.getSelectionModel().select(Integer.valueOf(12));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
         familyCombo.getSelectionModel().select("Serif");
         ColorPicker textColorPicker = new ColorPicker(Color.BLACK);
+        ColorPicker backgroundColorPicker = new ColorPicker(Color.WHITE);
 
         sizeCombo.setOnAction(evt -> updateFontSize(sizeCombo.getValue()));
         familyCombo.setOnAction(evt -> updateFontFamily(familyCombo.getValue()));
         textColorPicker.valueProperty().addListener((o, old, color) -> updateTextColor(color));
+        backgroundColorPicker.valueProperty().addListener((o, old, color) -> updateBackgroundColor(color));
 
         undoBtn.disableProperty().bind(Bindings.not(area.undoAvailableProperty()));
         redoBtn.disableProperty().bind(Bindings.not(area.redoAvailableProperty()));
@@ -226,6 +249,7 @@ public class RichText extends Application {
                 Integer fontSize;
                 String fontFamily;
                 Color textColor;
+                Color backgroundColor;
 
                 IndexRange selection = area.getSelection();
                 if(selection.getLength() != 0) {
@@ -236,10 +260,12 @@ public class RichText extends Application {
                     strike = styles.styleStream().anyMatch(s -> s.strikethrough.orElse(false));
                     int[] sizes = styles.styleStream().mapToInt(s -> s.fontSize.orElse(-1)).distinct().toArray();
                     fontSize = sizes.length == 1 ? sizes[0] : -1;
-                    String[] families = styles.styleStream().map(s -> s.fontFamily.orElse(null)).distinct().toArray(i -> new String[i]);
+                    String[] families = styles.styleStream().map(s -> s.fontFamily.orElse(null)).distinct().toArray(String[]::new);
                     fontFamily = families.length == 1 ? families[0] : null;
-                    Color[] colors = styles.styleStream().map(s -> s.textColor.orElse(null)).distinct().toArray(i -> new Color[i]);
+                    Color[] colors = styles.styleStream().map(s -> s.textColor.orElse(null)).distinct().toArray(Color[]::new);
                     textColor = colors.length == 1 ? colors[0] : null;
+                    Color[] backgroundColors = styles.styleStream().map(s -> s.backgroundColor.orElse(null)).distinct().toArray(Color[]::new);
+                    backgroundColor = backgroundColors.length == 1 ? backgroundColors[0] : null;
                 } else {
                     int p = area.getCurrentParagraph();
                     int col = area.getCaretColumn();
@@ -251,6 +277,7 @@ public class RichText extends Application {
                     fontSize = style.fontSize.orElse(-1);
                     fontFamily = style.fontFamily.orElse(null);
                     textColor = style.textColor.orElse(null);
+                    backgroundColor = style.backgroundColor.orElse(null);
                 }
 
                 updatingToolbar.suspendWhile(() -> {
@@ -301,12 +328,16 @@ public class RichText extends Application {
                     if(textColor != null) {
                         textColorPicker.setValue(textColor);
                     }
+
+                    if(backgroundColor != null) {
+                        backgroundColorPicker.setValue(backgroundColor);
+                    }
                 });
             }
         });
 
         HBox panel = new HBox(3.0);
-        panel.getChildren().addAll(wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn, boldBtn, italicBtn, underlineBtn, strikeBtn, sizeCombo, familyCombo, textColorPicker);
+        panel.getChildren().addAll(wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn, boldBtn, italicBtn, underlineBtn, strikeBtn, sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
         VBox vbox = new VBox();
         VBox.setVgrow(area, Priority.ALWAYS);
@@ -382,6 +413,12 @@ public class RichText extends Application {
     private void updateTextColor(Color color) {
         if(!updatingToolbar.get()) {
             updateStyleInSelection(StyleInfo.textColor(color));
+        }
+    }
+
+    private void updateBackgroundColor(Color color) {
+        if(!updatingToolbar.get()) {
+            updateStyleInSelection(StyleInfo.backgroundColor(color));
         }
     }
 }

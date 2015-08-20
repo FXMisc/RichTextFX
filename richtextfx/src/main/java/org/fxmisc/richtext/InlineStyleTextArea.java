@@ -8,7 +8,7 @@ import java.util.function.Function;
  *
  * @param <S> type of style information.
  */
-public class InlineStyleTextArea<S> extends StyledTextArea<S> {
+public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
 
     /**
      *
@@ -17,8 +17,11 @@ public class InlineStyleTextArea<S> extends StyledTextArea<S> {
      * @param styleToCss function that converts an instance of {@code S}
      *     to a CSS string.
      */
-    public  InlineStyleTextArea(S initialStyle, Function<S, String> styleToCss) {
-        super(initialStyle, (text, style) -> text.setStyle(styleToCss.apply(style)));
+    public  InlineStyleTextArea(S initialStyle, Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss) {
+        super(initialStyle,
+                (text, style) -> text.setStyle(styleToCss.apply(style)),
+                initialParagraphStyle,
+                (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)));
     }
 
 }

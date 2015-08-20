@@ -176,9 +176,9 @@ public class StyledTextAreaBehavior implements Behavior {
      * Fields                                                                 *
      * ********************************************************************** */
 
-    private final StyledTextArea<?> area;
-    private final StyledTextAreaVisual<?> visual;
-    private final StyledTextAreaView<?> view;
+    private final StyledTextArea<?, ?> area;
+    private final StyledTextAreaVisual<?, ?> visual;
+    private final StyledTextAreaView<?, ?> view;
 
     private final Subscription subscription;
 
@@ -207,7 +207,7 @@ public class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    public StyledTextAreaBehavior(StyledTextAreaVisual<?> visual) {
+    public StyledTextAreaBehavior(StyledTextAreaVisual<?, ?> visual) {
         this.area = visual.getControl();
         this.visual = visual;
         this.view = visual.getNode();
