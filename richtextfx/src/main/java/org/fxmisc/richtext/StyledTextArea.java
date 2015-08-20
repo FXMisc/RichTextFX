@@ -36,6 +36,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
 
 import org.fxmisc.richtext.CssProperties.EditableProperty;
@@ -94,7 +95,7 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S> extends Control
+public class StyledTextArea<S, PS> extends Control
 implements
         TextEditingArea<S>,
         EditActions<S>,
@@ -358,7 +359,7 @@ implements
     /**
      * content model
      */
-    private final EditableStyledDocument<S> content;
+    private final EditableStyledDocument<S, PS> content;
 
     /**
      * Style used by default when no other style is provided.
@@ -366,9 +367,19 @@ implements
     private final S initialStyle;
 
     /**
+     * Style used by default when no other style is provided.
+     */
+    private final PS initialParagraphStyle;
+
+    /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
+
+    /**
+     * Style applicator used by the default skin.
+     */
+    private final BiConsumer<TextFlow, PS> applyParagraphStyle;
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -394,17 +405,25 @@ implements
      * @param applyStyle function that, given a {@link Text} node and
      * a style, applies the style to the text node. This function is
      * used by the default skin to apply style to text nodes.
+     * @param initialParagraphStyle style to use in places where no other style is
+     * specified (yet).
+     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
+     * a style, applies the style to the paragraph node. This function is
+     * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle) {
-        this(initialStyle, applyStyle, true);
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
     }
 
     public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+            PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
             boolean preserveStyle) {
         this.initialStyle = initialStyle;
+        this.initialParagraphStyle = initialParagraphStyle;
         this.applyStyle = applyStyle;
+        this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
-        content = new EditableStyledDocument<>(initialStyle);
+        content = new EditableStyledDocument<>(initialStyle,initialParagraphStyle );
         paragraphs = LiveList.suspendable(content.getParagraphs());
 
         text = Val.suspendable(content.textProperty());
@@ -759,9 +778,9 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return Skins.<StyledTextArea<S>, StyledTextAreaVisual<S>>createSimpleSkin(
+        return Skins.<StyledTextArea<S, PS>, StyledTextAreaVisual<S, PS>>createSimpleSkin(
                 this,
-                area -> new StyledTextAreaVisual<>(area, applyStyle),
+                area -> new StyledTextAreaVisual<>(area, applyStyle, initialParagraphStyle, applyParagraphStyle),
                 StyledTextAreaBehavior::new);
     }
 

@@ -23,6 +23,7 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 
+import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
 import org.reactfx.EventStream;
@@ -31,7 +32,7 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-class ParagraphBox<S> extends Region {
+class ParagraphBox<S, PS> extends Region {
 
     /**
      * An opaque class representing horizontal caret offset.
@@ -69,9 +70,10 @@ class ParagraphBox<S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    public ParagraphBox(Paragraph<S> par, BiConsumer<? super TextExt, S> applyStyle) {
+    public ParagraphBox(Paragraph<S> par, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle,  BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
+        applyParagraphStyle.accept(this.text, initialParagraphStyle);
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
         graphic = Val.combine(

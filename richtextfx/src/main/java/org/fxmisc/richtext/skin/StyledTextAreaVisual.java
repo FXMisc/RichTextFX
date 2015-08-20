@@ -30,6 +30,8 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
 
 import org.fxmisc.flowless.Cell;
@@ -50,12 +52,15 @@ import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 
-public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>> {
-    private final StyledTextAreaView<S> node;
+public class StyledTextAreaVisual<S, PS> extends SimpleVisualBase<StyledTextArea<S, PS>> {
+    private final StyledTextAreaView<S, PS> node;
 
-    public StyledTextAreaVisual(StyledTextArea<S> control, BiConsumer<? super TextExt, S> applyStyle) {
+    public StyledTextAreaVisual(StyledTextArea<S, PS> control,
+                                BiConsumer<? super TextExt, S> applyStyle,
+                                PS initialParagraphStyle,
+                                BiConsumer<TextFlow, PS> applyParagraphStyle) {
         super(control);
-        this.node = new StyledTextAreaView<>(control, applyStyle);
+        this.node = new StyledTextAreaView<>(control, applyStyle, initialParagraphStyle, applyParagraphStyle);
     }
 
     @Override
@@ -64,7 +69,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
     }
 
     @Override
-    public StyledTextAreaView<S> getNode() {
+    public StyledTextAreaView<S, PS> getNode() {
         return node;
     }
 
@@ -77,7 +82,7 @@ public class StyledTextAreaVisual<S> extends SimpleVisualBase<StyledTextArea<S>>
 /**
  * StyledTextArea skin.
  */
-class StyledTextAreaView<S> extends Region {
+class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -104,7 +109,7 @@ class StyledTextAreaView<S> extends Region {
      *                                                                        *
      * ********************************************************************** */
 
-    private final StyledTextArea<S> area;
+    private final StyledTextArea<S, PS> area;
 
     private Subscription subscriptions = () -> {};
 
@@ -112,7 +117,7 @@ class StyledTextAreaView<S> extends Region {
 
     private final Val<UnaryOperator<Point2D>> popupAnchorAdjustment;
 
-    private final VirtualFlow<Paragraph<S>, Cell<Paragraph<S>, ParagraphBox<S>>> virtualFlow;
+    private final VirtualFlow<Paragraph<S>, Cell<Paragraph<S>, ParagraphBox<S, PS>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -128,8 +133,10 @@ class StyledTextAreaView<S> extends Region {
      * ********************************************************************** */
 
     public StyledTextAreaView(
-            StyledTextArea<S> styledTextArea,
-            BiConsumer<? super TextExt, S> applyStyle) {
+            StyledTextArea<S, PS> styledTextArea,
+            BiConsumer<? super TextExt, S> applyStyle,
+            PS initialParagraphStyle,
+            BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.area = styledTextArea;
 
         // load the default style
@@ -137,13 +144,17 @@ class StyledTextAreaView<S> extends Region {
 
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
-        ObservableSet<ParagraphBox<S>> nonEmptyCells = FXCollections.observableSet();
+        ObservableSet<ParagraphBox<S, PS>> nonEmptyCells = FXCollections.observableSet();
 
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 area.getParagraphs(),
                 par -> {
-                    Cell<Paragraph<S>, ParagraphBox<S>> cell = createCell(par, applyStyle);
+                    Cell<Paragraph<S>, ParagraphBox<S, PS>> cell = createCell(
+                            par,
+                            applyStyle,
+                            initialParagraphStyle,
+                            applyParagraphStyle);
                     nonEmptyCells.add(cell.getNode());
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
@@ -265,7 +276,7 @@ class StyledTextAreaView<S> extends Region {
 
     void showCaretAtBottom() {
         int parIdx = area.getCurrentParagraph();
-        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMaxY();
         virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
@@ -273,7 +284,7 @@ class StyledTextAreaView<S> extends Region {
 
     void showCaretAtTop() {
         int parIdx = area.getCurrentParagraph();
-        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMinY();
         virtualFlow.showAtOffset(parIdx, -y);
@@ -286,7 +297,7 @@ class StyledTextAreaView<S> extends Region {
 
     private void followCaret() {
         int parIdx = area.getCurrentParagraph();
-        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
@@ -326,13 +337,13 @@ class StyledTextAreaView<S> extends Region {
 
     CharacterHit hit(CaretOffsetX x, Position targetLine) {
         int parIdx = targetLine.getMajor();
-        ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
+        ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
         CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
         return parHit.offset(getParagraphOffset(parIdx));
     }
 
     CharacterHit hit(CaretOffsetX x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
+        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -340,7 +351,7 @@ class StyledTextAreaView<S> extends Region {
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S> cell = hit.getCell().getNode();
+            ParagraphBox<S, PS> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
             CharacterHit parHit = cell.hitText(x, cellOffset.getY());
             return parHit.offset(parOffset);
@@ -348,7 +359,7 @@ class StyledTextAreaView<S> extends Region {
     }
 
     CharacterHit hit(double x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(x, y);
+        VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -356,7 +367,7 @@ class StyledTextAreaView<S> extends Region {
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S> cell = hit.getCell().getNode();
+            ParagraphBox<S, PS> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
             CharacterHit parHit = cell.hit(cellOffset);
             return parHit.offset(parOffset);
@@ -373,7 +384,7 @@ class StyledTextAreaView<S> extends Region {
      */
     Position currentLine() {
         int parIdx = area.getCurrentParagraph();
-        Cell<Paragraph<S>, ParagraphBox<S>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return position(parIdx, lineIdx);
     }
@@ -389,11 +400,13 @@ class StyledTextAreaView<S> extends Region {
      *                                                                        *
      * ********************************************************************** */
 
-    private Cell<Paragraph<S>, ParagraphBox<S>> createCell(
+    private Cell<Paragraph<S>, ParagraphBox<S, PS>> createCell(
             Paragraph<S> paragraph,
-            BiConsumer<? super TextExt, S> applyStyle) {
+            BiConsumer<? super TextExt, S> applyStyle,
+            PS initialParagraphStyle,
+            BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
-        ParagraphBox<S> box = new ParagraphBox<>(paragraph, applyStyle);
+        ParagraphBox<S, PS> box = new ParagraphBox<>(paragraph, applyStyle, initialParagraphStyle, applyParagraphStyle);
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
@@ -425,9 +438,9 @@ class StyledTextAreaView<S> extends Region {
         }, area.selectionProperty(), box.indexProperty());
         box.selectionProperty().bind(cellSelection);
 
-        return new Cell<Paragraph<S>, ParagraphBox<S>>() {
+        return new Cell<Paragraph<S>, ParagraphBox<S, PS>>() {
             @Override
-            public ParagraphBox<S> getNode() {
+            public ParagraphBox<S, PS> getNode() {
                 return box;
             }
 
@@ -453,11 +466,11 @@ class StyledTextAreaView<S> extends Region {
         };
     }
 
-    private ParagraphBox<S> getCell(int index) {
+    private ParagraphBox<S, PS> getCell(int index) {
         return virtualFlow.getCell(index).getNode();
     }
 
-    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S>> cells, Duration delay) {
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S, PS>> cells, Duration delay) {
         return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
                 l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
                 r -> MouseOverTextEvent.end())));

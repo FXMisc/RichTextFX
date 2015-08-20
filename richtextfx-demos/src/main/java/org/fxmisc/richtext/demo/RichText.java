@@ -338,10 +338,12 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final InlineStyleTextArea<StyleInfo> area =
-            new InlineStyleTextArea<StyleInfo>(
+    private final InlineStyleTextArea<StyleInfo, StyleInfo> area =
+            new InlineStyleTextArea<>(
                     StyleInfo.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
-                    style -> style.toCss());
+                    StyleInfo::toCss,
+                    StyleInfo.EMPTY,
+                    StyleInfo::toCss);
     {
         area.setWrapText(true);
         area.setStyleCodec(StyleInfo.CODEC);
@@ -354,15 +356,15 @@ public class RichText extends Application {
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
-        Button undoBtn = createButton("undo", () -> area.undo());
-        Button redoBtn = createButton("redo", () -> area.redo());
-        Button cutBtn = createButton("cut", () -> area.cut());
-        Button copyBtn = createButton("copy", () -> area.copy());
-        Button pasteBtn = createButton("paste", () -> area.paste());
-        Button boldBtn = createButton("bold", () -> toggleBold());
-        Button italicBtn = createButton("italic", () -> toggleItalic());
-        Button underlineBtn = createButton("underline", () -> toggleUnderline());
-        Button strikeBtn = createButton("strikethrough", () -> toggleStrikethrough());
+        Button undoBtn = createButton("undo", area::undo);
+        Button redoBtn = createButton("redo", area::redo);
+        Button cutBtn = createButton("cut", area::cut);
+        Button copyBtn = createButton("copy", area::copy);
+        Button pasteBtn = createButton("paste", area::paste);
+        Button boldBtn = createButton("bold", this::toggleBold);
+        Button italicBtn = createButton("italic", this::toggleItalic);
+        Button underlineBtn = createButton("underline", this::toggleUnderline);
+        Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
         sizeCombo.getSelectionModel().select(Integer.valueOf(12));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
@@ -407,9 +409,9 @@ public class RichText extends Application {
                     strike = styles.styleStream().anyMatch(s -> s.strikethrough.orElse(false));
                     int[] sizes = styles.styleStream().mapToInt(s -> s.fontSize.orElse(-1)).distinct().toArray();
                     fontSize = sizes.length == 1 ? sizes[0] : -1;
-                    String[] families = styles.styleStream().map(s -> s.fontFamily.orElse(null)).distinct().toArray(i -> new String[i]);
+                    String[] families = styles.styleStream().map(s -> s.fontFamily.orElse(null)).distinct().toArray(String[]::new);
                     fontFamily = families.length == 1 ? families[0] : null;
-                    Color[] colors = styles.styleStream().map(s -> s.textColor.orElse(null)).distinct().toArray(i -> new Color[i]);
+                    Color[] colors = styles.styleStream().map(s -> s.textColor.orElse(null)).distinct().toArray(Color[]::new);
                     textColor = colors.length == 1 ? colors[0] : null;
                     Color[] backgrounds = styles.styleStream().map(s -> s.backgroundColor.orElse(null)).distinct().toArray(i -> new Color[i]);
                     backgroundColor = backgrounds.length == 1 ? backgrounds[0] : null;
