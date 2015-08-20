@@ -329,27 +329,26 @@ class StyledTextAreaView<S> extends Region {
         return virtualFlow.getViewportHeight();
     }
 
-    @Deprecated
-    int getInsertionIndex(CaretOffsetX x, Position targetLine) {
+    CharacterHit hit(CaretOffsetX x, Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S> cell = virtualFlow.getCell(parIdx).getNode();
-        int parInsertionIndex = getCellInsertionIndex(cell, x, targetLine.getMinor());
-        return getParagraphOffset(parIdx) + parInsertionIndex;
+        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
+        return parHit.offset(getParagraphOffset(parIdx));
     }
 
-    @Deprecated
-    int getInsertionIndex(CaretOffsetX x, double y) {
+    CharacterHit hit(CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
-            return 0;
+            return CharacterHit.before(0);
         } else if(hit.isAfterCells()) {
-            return area.getLength();
+            return CharacterHit.after(area.getLength() - 1);
         } else {
             int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<S> cell = hit.getCell().getNode();
-            double cellY = hit.getCellOffset().getY();
-            int parInsertionIndex = getCellInsertionIndex(cell, x, cellY);
-            return getParagraphOffset(parIdx) + parInsertionIndex;
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
+            return parHit.offset(parOffset);
         }
     }
 
@@ -360,13 +359,12 @@ class StyledTextAreaView<S> extends Region {
         } else if(hit.isAfterCells()) {
             return CharacterHit.after(area.getLength() - 1);
         } else {
+            int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<S> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
-            CharacterHit cellHit = cell.hit(cellOffset);
-            int parOffset = getParagraphOffset(cell.getIndex());
-            return new CharacterHit(
-                    parOffset + cellHit.getCharacterIndex(),
-                    cellHit.getHitType());
+            CharacterHit parHit = cell.hit(cellOffset);
+            return parHit.offset(parOffset);
         }
     }
 
@@ -462,22 +460,6 @@ class StyledTextAreaView<S> extends Region {
 
     private ParagraphBox<S> getCell(int index) {
         return virtualFlow.getCell(index).getNode();
-    }
-
-    /**
-     * @deprecated Should return {@link CharacterHit}.
-     */
-    @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S> cell, CaretOffsetX x, int line) {
-        return cell.hitTextLine(x, line).getInsertionIndex();
-    }
-
-    /**
-     * @deprecated Should return {@link CharacterHit}.
-     */
-    @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S> cell, CaretOffsetX x, double y) {
-        return cell.hitText(x, y).getInsertionIndex();
     }
 
     private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S>> cells, Duration delay) {

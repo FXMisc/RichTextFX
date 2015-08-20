@@ -360,10 +360,10 @@ public class StyledTextAreaBehavior implements Behavior {
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
             // compute new caret position
-            int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), targetLine);
+            CharacterHit hit = view.hit(getTargetCaretOffset(), targetLine);
 
             // update model
-            visual.getControl().moveTo(newCaretPos, selectionPolicy);
+            visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
         }
     }
 
@@ -377,14 +377,14 @@ public class StyledTextAreaBehavior implements Behavior {
 
     private void prevPage(SelectionPolicy selectionPolicy) {
         view.showCaretAtBottom();
-        int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), 1.0);
-        visual.getControl().moveTo(newCaretPos, selectionPolicy);
+        CharacterHit hit = view.hit(getTargetCaretOffset(), 1.0);
+        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
         view.showCaretAtTop();
-        int newCaretPos = view.getInsertionIndex(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
-        visual.getControl().moveTo(newCaretPos, selectionPolicy);
+        CharacterHit hit = view.hit(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
+        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
 

@@ -58,4 +58,8 @@ class CharacterHit {
     public boolean isCharacterHit() {
         return hitType == LEADING_HALF || hitType == TRAILING_HALF;
     }
+
+    public CharacterHit offset(int offset) {
+        return new CharacterHit(charIdx + offset, hitType);
+    }
 }
