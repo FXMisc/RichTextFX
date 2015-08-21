@@ -7,7 +7,7 @@ import javafx.scene.input.ClipboardContent;
 /**
  * Clipboard actions for {@link TextEditingArea}.
  */
-public interface ClipboardActions<S> extends EditActions<S> {
+public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
 
     /**
      * Transfers the currently selected text to the clipboard,

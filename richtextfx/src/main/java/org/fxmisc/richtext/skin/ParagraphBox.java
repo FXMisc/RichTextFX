@@ -32,9 +32,9 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-class ParagraphBox<S, PS> extends Region {
+public class ParagraphBox<S, PS> extends Region {
 
-    private final ParagraphText<S> text;
+    private final ParagraphText<S, PS> text;
 
     private final ObjectProperty<IntFunction<? extends Node>> graphicFactory
             = new SimpleObjectProperty<>(null);
@@ -57,10 +57,15 @@ class ParagraphBox<S, PS> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    public ParagraphBox(Paragraph<S> par, BiConsumer<Text, S> applyStyle, PS initialParagraphStyle,  BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    public ParagraphBox(Paragraph<S, PS> par, BiConsumer<Text, S> applyStyle, PS initialParagraphStyle,  BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
         applyParagraphStyle.accept(this.text, initialParagraphStyle);
+        par.paragraphStyle().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                applyParagraphStyle.accept(this.text, newValue);
+            }
+        });
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
         graphic = Val.combine(
@@ -95,7 +100,7 @@ class ParagraphBox<S, PS> extends Region {
 
     public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 
-    Paragraph<S> getParagraph() {
+    Paragraph<S, PS> getParagraph() {
         return text.getParagraph();
     }
 

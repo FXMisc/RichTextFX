@@ -26,7 +26,7 @@ import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.value.Val;
 
-class ParagraphText<S> extends TextFlowExt {
+class ParagraphText<S, PS> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -45,13 +45,13 @@ class ParagraphText<S> extends TextFlowExt {
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
-    private final Paragraph<S> paragraph;
+    private final Paragraph<S, PS> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new ArrayList<>();
 
-    public ParagraphText(Paragraph<S> par, BiConsumer<Text, S> applyStyle) {
+    public ParagraphText(Paragraph<S, PS> par, BiConsumer<Text, S> applyStyle) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -117,7 +117,7 @@ class ParagraphText<S> extends TextFlowExt {
         }
     }
 
-    public Paragraph<S> getParagraph() {
+    public Paragraph<S, PS> getParagraph() {
         return paragraph;
     }
 

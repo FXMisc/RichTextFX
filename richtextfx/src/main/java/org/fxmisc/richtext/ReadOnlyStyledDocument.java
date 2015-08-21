@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragraph<S>>> {
+public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, List<Paragraph<S, PS>>> {
 
     static enum ParagraphsPolicy {
         ADOPT,
@@ -15,8 +15,8 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
 
     private String text = null;
 
-    ReadOnlyStyledDocument(List<Paragraph<S>> paragraphs, ParagraphsPolicy policy) {
-        super(policy == ParagraphsPolicy.ADOPT ? paragraphs : new ArrayList<Paragraph<S>>(paragraphs));
+    ReadOnlyStyledDocument(List<Paragraph<S, PS>> paragraphs, ParagraphsPolicy policy) {
+        super(policy == ParagraphsPolicy.ADOPT ? paragraphs : new ArrayList<>(paragraphs));
     }
 
     @Override
@@ -36,7 +36,7 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     }
 
     @Override
-    public List<Paragraph<S>> getParagraphs() {
+    public List<Paragraph<S, PS>> getParagraphs() {
         return Collections.unmodifiableList(paragraphs);
     }
 
