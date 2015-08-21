@@ -375,7 +375,7 @@ public class StyledTextAreaView<S, PS> extends Region {
             PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
-        ParagraphBox<S, PS> box = new ParagraphBox<>(paragraph, applyStyle, initialParagraphStyle, applyParagraphStyle);
+        ParagraphBox<S, PS> box = new ParagraphBox<>(paragraph, applyStyle, paragraph.getParagraphStyle(), applyParagraphStyle);
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);

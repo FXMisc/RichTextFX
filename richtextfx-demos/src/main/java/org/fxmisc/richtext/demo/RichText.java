@@ -374,72 +374,98 @@ public class RichText extends Application {
     }
 
     private void toggleBold() {
-        updateStyleInSelection(spans -> StyleInfo.EMPTY.updateBold(!spans.styleStream().allMatch(style -> style.bold.orElse(false))));
+        if (!applyToParagraph.get()) {
+            updateStyleInSelection(spans -> StyleInfo.EMPTY.updateBold(!spans.styleStream().allMatch(style -> style.bold.orElse(false))));
+        } else {
+            updateParagraphStyleInSelection(styleInfo -> styleInfo.updateBold(!styleInfo.bold.orElse(false)));
+        }
     }
 
     private void toggleItalic() {
-        updateStyleInSelection(spans -> StyleInfo.EMPTY.updateItalic(!spans.styleStream().allMatch(style -> style.italic.orElse(false))));
+        if (!applyToParagraph.get()) {
+            updateStyleInSelection(spans -> StyleInfo.EMPTY.updateItalic(!spans.styleStream().allMatch(style -> style.italic.orElse(false))));
+        } else {
+            updateParagraphStyleInSelection(styleInfo -> styleInfo.updateItalic(!styleInfo.italic.orElse(false)));
+        }
     }
 
     private void toggleUnderline() {
-        updateStyleInSelection(spans -> StyleInfo.EMPTY.updateUnderline(!spans.styleStream().allMatch(style -> style.underline.orElse(false))));
+        if (!applyToParagraph.get()) {
+            updateStyleInSelection(spans -> StyleInfo.EMPTY.updateUnderline(!spans.styleStream().allMatch(style -> style.underline.orElse(false))));
+        } else {
+            updateParagraphStyleInSelection(styleInfo -> styleInfo.updateUnderline(!styleInfo.underline.orElse(false)));
+        }
     }
 
     private void toggleStrikethrough() {
-        updateStyleInSelection(spans -> StyleInfo.EMPTY.updateStrikethrough(!spans.styleStream().allMatch(style -> style.strikethrough.orElse(false))));
+        if (!applyToParagraph.get()) {
+            updateStyleInSelection(spans -> StyleInfo.EMPTY.updateStrikethrough(!spans.styleStream().allMatch(style -> style.strikethrough.orElse(false))));
+        } else {
+            updateParagraphStyleInSelection(styleInfo -> styleInfo.updateStrikethrough(!styleInfo.strikethrough.orElse(false)));
+        }
     }
 
     private void updateStyleInSelection(Function<StyleSpans<StyleInfo>, StyleInfo> mixinGetter) {
-        if (applyToParagraph.get()) {
-            StyleInfo mixin = mixinGetter.apply(StyleSpans.singleton(new StyleSpan<>(StyleInfo.EMPTY, 0)));
-            Paragraph paragraph = area.getParagraph(area.getCurrentParagraph());
-            paragraph.setParagraphStyle(mixin);
-        } else {
-            IndexRange selection = area.getSelection();
-            if(selection.getLength() != 0) {
-                StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
-                StyleInfo mixin = mixinGetter.apply(styles);
-                StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
-                area.setStyleSpans(selection.getStart(), newStyles);
-            }
+        IndexRange selection = area.getSelection();
+        if(selection.getLength() != 0) {
+            StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
+            StyleInfo mixin = mixinGetter.apply(styles);
+            StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
+            area.setStyleSpans(selection.getStart(), newStyles);
         }
     }
 
     private void updateStyleInSelection(StyleInfo mixin) {
-        if (applyToParagraph.get()) {
-            Paragraph paragraph = area.getParagraph(area.getCurrentParagraph());
-            paragraph.setParagraphStyle(mixin);
-        } else {
-            IndexRange selection = area.getSelection();
-            if (selection.getLength() != 0) {
-                StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
-                StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
-                area.setStyleSpans(selection.getStart(), newStyles);
-            }
+        IndexRange selection = area.getSelection();
+        if (selection.getLength() != 0) {
+            StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
+            StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
+            area.setStyleSpans(selection.getStart(), newStyles);
         }
+    }
+
+    private void updateParagraphStyleInSelection(Function<StyleInfo, StyleInfo> updater) {
+        Paragraph<StyleInfo, StyleInfo> paragraph = area.getParagraph(area.getCurrentParagraph());
+        paragraph.setParagraphStyle(updater.apply(paragraph.getParagraphStyle()));
     }
 
     private void updateFontSize(Integer size) {
         if(!updatingToolbar.get()) {
-            updateStyleInSelection(StyleInfo.fontSize(size));
+            if (!applyToParagraph.get()) {
+                updateStyleInSelection(StyleInfo.fontSize(size));
+            } else {
+                updateParagraphStyleInSelection(styleInfo -> styleInfo.updateFontSize(size));
+            }
         }
     }
 
     private void updateFontFamily(String family) {
         if(!updatingToolbar.get()) {
-            updateStyleInSelection(StyleInfo.fontFamily(family));
+            if (!applyToParagraph.get()) {
+                updateStyleInSelection(StyleInfo.fontFamily(family));
+            } else {
+                updateParagraphStyleInSelection(styleInfo -> styleInfo.updateFontFamily(family));
+            }
         }
     }
 
     private void updateTextColor(Color color) {
         if(!updatingToolbar.get()) {
-            updateStyleInSelection(StyleInfo.textColor(color));
+            if (!applyToParagraph.get()) {
+                updateStyleInSelection(StyleInfo.textColor(color));
+            } else {
+                updateParagraphStyleInSelection(styleInfo -> styleInfo.updateTextColor(color));
+            }
         }
     }
 
     private void updateBackgroundColor(Color color) {
         if(!updatingToolbar.get()) {
-            updateStyleInSelection(StyleInfo.backgroundColor(color));
+            if (!applyToParagraph.get()) {
+                updateStyleInSelection(StyleInfo.backgroundColor(color));
+            } else {
+                updateParagraphStyleInSelection(styleInfo -> styleInfo.updateBackgroundColor(color));
+            }
         }
     }
 }

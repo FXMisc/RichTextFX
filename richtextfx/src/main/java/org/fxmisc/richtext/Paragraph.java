@@ -199,7 +199,7 @@ public final class Paragraph<S, PS> implements CharSequence {
             List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<S, PS>(segs, paragraphStyle.get(), Optional.empty());
+            return new Paragraph<>(segs, paragraphStyle.get(), Optional.empty());
         }
     }
 
