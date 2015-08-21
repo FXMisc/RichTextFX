@@ -17,6 +17,8 @@ import java.util.function.Function;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -33,6 +35,8 @@ import javafx.stage.Stage;
 
 import org.fxmisc.richtext.Codec;
 import org.fxmisc.richtext.InlineStyleTextArea;
+import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.StyleSpan;
 import org.fxmisc.richtext.StyleSpans;
 import org.reactfx.SuspendableNo;
 
@@ -180,14 +184,16 @@ public class RichText extends Application {
         final Optional<Color> backgroundColor;
 
         public StyleInfo() {
-            bold = Optional.empty();
-            italic = Optional.empty();
-            underline = Optional.empty();
-            strikethrough = Optional.empty();
-            fontSize = Optional.empty();
-            fontFamily = Optional.empty();
-            textColor = Optional.empty();
-            backgroundColor = Optional.empty();
+            this(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()
+            );
         }
 
         public StyleInfo(
@@ -350,6 +356,7 @@ public class RichText extends Application {
     }
 
     private final SuspendableNo updatingToolbar = new SuspendableNo();
+    private final BooleanProperty applyToParagraph = new SimpleBooleanProperty(false);
 
     @Override
     public void start(Stage primaryStage) {
@@ -529,21 +536,32 @@ public class RichText extends Application {
     }
 
     private void updateStyleInSelection(Function<StyleSpans<StyleInfo>, StyleInfo> mixinGetter) {
-        IndexRange selection = area.getSelection();
-        if(selection.getLength() != 0) {
-            StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
-            StyleInfo mixin = mixinGetter.apply(styles);
-            StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
-            area.setStyleSpans(selection.getStart(), newStyles);
+        if (applyToParagraph.get()) {
+            StyleInfo mixin = mixinGetter.apply(StyleSpans.singleton(new StyleSpan<>(StyleInfo.EMPTY, 0)));
+            Paragraph paragraph = area.getParagraph(area.getCurrentParagraph());
+            paragraph.setParagraphStyle(mixin);
+        } else {
+            IndexRange selection = area.getSelection();
+            if(selection.getLength() != 0) {
+                StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
+                StyleInfo mixin = mixinGetter.apply(styles);
+                StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
+                area.setStyleSpans(selection.getStart(), newStyles);
+            }
         }
     }
 
     private void updateStyleInSelection(StyleInfo mixin) {
-        IndexRange selection = area.getSelection();
-        if(selection.getLength() != 0) {
-            StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
-            StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
-            area.setStyleSpans(selection.getStart(), newStyles);
+        if (applyToParagraph.get()) {
+            Paragraph paragraph = area.getParagraph(area.getCurrentParagraph());
+            paragraph.setParagraphStyle(mixin);
+        } else {
+            IndexRange selection = area.getSelection();
+            if (selection.getLength() != 0) {
+                StyleSpans<StyleInfo> styles = area.getStyleSpans(selection);
+                StyleSpans<StyleInfo> newStyles = styles.mapStyles(style -> style.updateWith(mixin));
+                area.setStyleSpans(selection.getStart(), newStyles);
+            }
         }
     }
 

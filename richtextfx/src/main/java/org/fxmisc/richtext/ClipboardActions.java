@@ -17,7 +17,7 @@ import javafx.scene.input.DataFormat;
 /**
  * Clipboard actions for {@link TextEditingArea}.
  */
-public interface ClipboardActions<S> extends EditActions<S> {
+public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
 
     Optional<Codec<S>> getStyleCodec();
 
