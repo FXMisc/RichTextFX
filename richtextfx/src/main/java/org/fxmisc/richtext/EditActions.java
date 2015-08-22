@@ -136,11 +136,11 @@ public interface EditActions<S> extends TextEditingArea<S> {
             // no move, just position the caret
             selectRange(pos, pos);
         } else {
-            String text = getSelectedText();
+            StyledDocument<S> text = this.subDocument(sel.getStart(), sel.getEnd());
             if(pos > sel.getEnd())
                 pos -= sel.getLength();
             deleteText(sel);
-            insertText(pos, text);
+            insert(pos, text);
         }
     }
 }
