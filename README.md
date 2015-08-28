@@ -33,6 +33,7 @@ Who uses RichTextFX?
 [Alt.Text](http://alttexting.com/)  
 [Xanthic](https://github.com/jrguenther/Xanthic)  
 [Arduino Harp](http://www.avrharp.org/)  
+[Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)  
 
 If you use RichTextFX in an interesting project, I would like to know!
 
