@@ -101,7 +101,7 @@ class ParagraphBox<S> extends Region {
 
     public Property<Paint> highlightTextFillProperty() { return text.highlightTextFillProperty(); }
 
-    public Property<Number> caretPositionProperty() { return text.caretPositionProperty(); }
+    public Var<Integer> caretPositionProperty() { return text.caretPositionProperty(); }
 
     public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 

@@ -5,12 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.NumberBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
@@ -26,6 +21,7 @@ import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyledText;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 class ParagraphText<S> extends TextFlowExt {
 
@@ -37,10 +33,10 @@ class ParagraphText<S> extends TextFlowExt {
         return highlightTextFill;
     }
 
-    private final IntegerProperty caretPosition = new SimpleIntegerProperty(0);
-    public IntegerProperty caretPositionProperty() { return caretPosition; }
-    public void setCaretPosition(int pos) { caretPosition.set(pos); }
-    private final NumberBinding clampedCaretPosition;
+    private final Var<Integer> caretPosition = Var.newSimpleVar(0);
+    public Var<Integer> caretPositionProperty() { return caretPosition; }
+    public void setCaretPosition(int pos) { caretPosition.setValue(pos); }
+    private final Val<Integer> clampedCaretPosition;
 
     private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
@@ -52,12 +48,21 @@ class ParagraphText<S> extends TextFlowExt {
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new ArrayList<>();
 
+    // proxy for caretShape.visibleProperty() that implements unbind() correctly.
+    // This is necessary due to a bug in BooleanPropertyBase#unbind().
+    // See https://bugs.openjdk.java.net/browse/JDK-8130458
+    private final Var<Boolean> caretVisible = Var.newSimpleVar(false);
+    {
+        caretShape.visibleProperty().bind(caretVisible);
+    }
+
     public ParagraphText(Paragraph<S> par, BiConsumer<? super TextExt, S> applyStyle) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
 
-        clampedCaretPosition = Bindings.min(caretPosition, paragraph.length());
+        int parLen = paragraph.length();
+        clampedCaretPosition = caretPosition.map(i -> Math.min(i, parLen));
         clampedCaretPosition.addListener((obs, oldPos, newPos) -> requestLayout());
 
         selection.addListener((obs, old, sel) -> requestLayout());
@@ -120,8 +125,8 @@ class ParagraphText<S> extends TextFlowExt {
         return paragraph;
     }
 
-    public BooleanProperty caretVisibleProperty() {
-        return caretShape.visibleProperty();
+    public Var<Boolean> caretVisibleProperty() {
+        return caretVisible;
     }
 
     public ObjectProperty<Paint> highlightFillProperty() {
@@ -156,11 +161,11 @@ class ParagraphText<S> extends TextFlowExt {
     }
 
     public int currentLineIndex() {
-        return getLineOfCharacter(clampedCaretPosition.intValue());
+        return getLineOfCharacter(clampedCaretPosition.getValue());
     }
 
     private void updateCaretShape() {
-        PathElement[] shape = getCaretShape(clampedCaretPosition.intValue(), true);
+        PathElement[] shape = getCaretShape(clampedCaretPosition.getValue(), true);
         caretShape.getElements().setAll(shape);
     }
 
