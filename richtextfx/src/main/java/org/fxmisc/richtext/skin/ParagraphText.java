@@ -67,7 +67,6 @@ class ParagraphText<S> extends TextFlowExt {
 
         // selection highlight
         selectionShape.setManaged(false);
-        selectionShape.setVisible(true);
         selectionShape.setFill(Color.DODGERBLUE);
         selectionShape.setStrokeWidth(0);
         selectionShape.layoutXProperty().bind(leftInset);
@@ -109,7 +108,6 @@ class ParagraphText<S> extends TextFlowExt {
 
             Path backgroundShape = new Path();
             backgroundShape.setManaged(false);
-            backgroundShape.setVisible(true);
             backgroundShape.setStrokeWidth(0);
             backgroundShape.layoutXProperty().bind(leftInset);
             backgroundShape.layoutYProperty().bind(topInset);
