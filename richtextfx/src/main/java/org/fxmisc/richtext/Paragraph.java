@@ -387,4 +387,20 @@ public final class Paragraph<S> implements CharSequence {
         }
         return fullText;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other instanceof Paragraph) {
+            Paragraph<?> that = (Paragraph<?>) other;
+            return Objects.equals(this.segments, that.segments)
+                && Objects.equals(this.terminator, that.terminator);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(segments, terminator);
+    }
 }

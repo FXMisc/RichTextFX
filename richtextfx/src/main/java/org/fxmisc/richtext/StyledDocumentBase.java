@@ -6,6 +6,7 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import javafx.scene.control.IndexRange;
@@ -191,6 +192,21 @@ implements StyledDocument<S> {
     @Override
     public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
         return paragraphs.get(paragraph).getStyleSpans(from, to);
+    }
+
+    @Override
+    public final boolean equals(Object other) {
+        if(other instanceof StyledDocument) {
+            StyledDocument<?> that = (StyledDocument<?>) other;
+            return Objects.equals(this.paragraphs, that.getParagraphs());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public final int hashCode() {
+        return paragraphs.hashCode();
     }
 
 
