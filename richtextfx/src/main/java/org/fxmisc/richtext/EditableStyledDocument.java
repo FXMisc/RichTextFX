@@ -135,9 +135,11 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b))));
 
         plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
+                .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map((pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted)));
 
         richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
+                .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map((pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted)));
     }
 
