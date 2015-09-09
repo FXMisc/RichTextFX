@@ -16,7 +16,6 @@ import javafx.stage.Stage;
 
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.PlainTextChange;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
 import org.reactfx.EventStream;
@@ -91,11 +90,11 @@ public class JavaKeywordsAsync extends Application {
         executor = Executors.newSingleThreadExecutor();
         codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        EventStream<PlainTextChange> textChanges = codeArea.plainTextChanges();
-        textChanges
+        EventStream<?> richChanges = codeArea.richChanges();
+        richChanges
                 .successionEnds(Duration.ofMillis(500))
                 .supplyTask(this::computeHighlightingAsync)
-                .awaitLatest(textChanges)
+                .awaitLatest(richChanges)
                 .map(Try::get)
                 .subscribe(this::applyHighlighting);
         codeArea.replaceText(0, 0, sampleCode);

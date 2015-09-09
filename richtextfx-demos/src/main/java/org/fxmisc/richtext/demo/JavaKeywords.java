@@ -81,8 +81,8 @@ public class JavaKeywords extends Application {
         CodeArea codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
-        codeArea.textProperty().addListener((obs, oldText, newText) -> {
-            codeArea.setStyleSpans(0, computeHighlighting(newText));
+        codeArea.richChanges().subscribe(change -> {
+            codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
         });
         codeArea.replaceText(0, 0, sampleCode);
 
