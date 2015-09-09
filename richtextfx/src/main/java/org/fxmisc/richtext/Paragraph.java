@@ -52,11 +52,11 @@ public final class Paragraph<S> implements CharSequence {
         this(Arrays.asList(text), terminator);
     }
 
-    private Paragraph(List<StyledText<S>> segments, LineTerminator terminator) {
+    Paragraph(List<StyledText<S>> segments, LineTerminator terminator) {
         this(segments, Optional.of(terminator));
     }
 
-    private Paragraph(List<StyledText<S>> segments, Optional<LineTerminator> terminator) {
+    Paragraph(List<StyledText<S>> segments, Optional<LineTerminator> terminator) {
         assert !segments.isEmpty();
         this.segments = segments;
         this.terminator = terminator;

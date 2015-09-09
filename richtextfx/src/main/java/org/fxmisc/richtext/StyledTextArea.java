@@ -248,6 +248,19 @@ implements
     public boolean getUseInitialStyleForInsertion() { return content.useInitialStyleForInsertion.get(); }
     public BooleanProperty useInitialStyleForInsertionProperty() { return content.useInitialStyleForInsertion; }
 
+    private Optional<Codec<S>> styleCodec = Optional.empty();
+    /**
+     * Sets the codec to encode/decode style information to/from binary format.
+     * Providing a codec enables clipboard actions to retain the style information.
+     */
+    public void setStyleCodec(Codec<S> codec) {
+        styleCodec = Optional.of(codec);
+    }
+    @Override
+    public Optional<Codec<S>> getStyleCodec() {
+        return styleCodec;
+    }
+
 
     /* ********************************************************************** *
      *                                                                        *

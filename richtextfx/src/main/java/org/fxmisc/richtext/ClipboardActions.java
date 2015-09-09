@@ -1,13 +1,25 @@
 package org.fxmisc.richtext;
 
+import static org.fxmisc.richtext.ClipboardHelper.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Optional;
+
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
 
 /**
  * Clipboard actions for {@link TextEditingArea}.
  */
 public interface ClipboardActions<S> extends EditActions<S> {
+
+    Optional<Codec<S>> getStyleCodec();
 
     /**
      * Transfers the currently selected text to the clipboard,
@@ -24,10 +36,27 @@ public interface ClipboardActions<S> extends EditActions<S> {
      * leaving the current selection.
      */
     default void copy() {
-        String selectedText = getSelectedText();
-        if (selectedText.length() > 0) {
+        IndexRange selection = getSelection();
+        if(selection.getLength() > 0) {
             ClipboardContent content = new ClipboardContent();
-            content.putString(selectedText);
+
+            content.putString(getSelectedText());
+
+            getStyleCodec().ifPresent(styleCodec -> {
+                Codec<StyledDocument<S>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+                DataFormat format = dataFormat(codec.getName());
+                StyledDocument<S> doc = subDocument(selection.getStart(), selection.getEnd());
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                DataOutputStream dos = new DataOutputStream(os);
+                try {
+                    codec.encode(dos, doc);
+                    content.put(format, os.toByteArray());
+                } catch (IOException e) {
+                    System.err.println("Codec error: Exception in encoding '" + codec.getName() + "':");
+                    e.printStackTrace();
+                }
+            });
+
             Clipboard.getSystemClipboard().setContent(content);
         }
     }
@@ -39,11 +68,45 @@ public interface ClipboardActions<S> extends EditActions<S> {
      */
     default void paste() {
         Clipboard clipboard = Clipboard.getSystemClipboard();
+
+        if(getStyleCodec().isPresent()) {
+            Codec<S> styleCodec = getStyleCodec().get();
+            Codec<StyledDocument<S>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+            DataFormat format = dataFormat(codec.getName());
+            if(clipboard.hasContent(format)) {
+                byte[] bytes = (byte[]) clipboard.getContent(format);
+                ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+                DataInputStream dis = new DataInputStream(is);
+                StyledDocument<S> doc = null;
+                try {
+                    doc = codec.decode(dis);
+                } catch (IOException e) {
+                    System.err.println("Codec error: Failed to decode '" + codec.getName() + "':");
+                    e.printStackTrace();
+                }
+                if(doc != null) {
+                    replaceSelection(doc);
+                    return;
+                }
+            }
+        }
+
         if (clipboard.hasString()) {
             String text = clipboard.getString();
             if (text != null) {
                 replaceSelection(text);
             }
+        }
+    }
+}
+
+class ClipboardHelper {
+    static DataFormat dataFormat(String name) {
+        DataFormat format = DataFormat.lookupMimeType(name);
+        if(format != null) {
+            return format;
+        } else {
+            return new DataFormat(name);
         }
     }
 }
