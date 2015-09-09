@@ -3,7 +3,6 @@ package org.fxmisc.richtext;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +15,6 @@ public interface Codec<T> {
 
 
     static final Codec<String> STRING_CODEC = new Codec<String>() {
-        private final Charset UTF8 = Charset.forName("UTF-8");
 
         @Override
         public String getName() {
