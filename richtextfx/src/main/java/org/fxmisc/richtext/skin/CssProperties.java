@@ -1,11 +1,10 @@
 package org.fxmisc.richtext.skin;
 
 import javafx.css.CssMetaData;
+import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.paint.Paint;
-
-import com.sun.javafx.css.converters.PaintConverter;
 
 class CssProperties {
 
@@ -18,8 +17,8 @@ class CssProperties {
             super(initialValue);
             this.bean = bean;
             cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
-                    this, "-fx-highlight-fill", PaintConverter.getInstance(),
-                    initialValue);
+                    this, "-fx-highlight-fill",
+                    StyleConverter.getPaintConverter(), initialValue);
         }
 
         @Override
@@ -48,7 +47,7 @@ class CssProperties {
             this.bean = bean;
             cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
                     this, "-fx-highlight-text-fill",
-                    PaintConverter.getInstance(), initialValue);
+                    StyleConverter.getPaintConverter(), initialValue);
         }
 
         @Override

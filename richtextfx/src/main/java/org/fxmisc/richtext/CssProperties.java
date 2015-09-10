@@ -1,16 +1,15 @@
 package org.fxmisc.richtext;
 
-import org.fxmisc.richtext.skin.PropertyCssMetaData;
-
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
+import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.control.Control;
 import javafx.scene.text.Font;
 
-import com.sun.javafx.css.converters.FontConverter;
+import org.fxmisc.richtext.skin.PropertyCssMetaData;
 
 
 /**
@@ -38,7 +37,7 @@ class CssProperties {
         public FontProperty(S textArea) {
             this.textArea = textArea;
             this.cssMetaData = new PropertyCssMetaData<S, Font>(
-                    this, "-fx-font", FontConverter.getInstance(),
+                    this, "-fx-font", StyleConverter.getFontConverter(),
                     Font.getDefault());
         }
 

@@ -1,6 +1,5 @@
 package org.fxmisc.richtext.skin;
 
-import static com.sun.javafx.PlatformUtil.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static javafx.scene.input.KeyEvent.*;
@@ -31,17 +30,23 @@ import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import com.sun.javafx.PlatformUtil;
-
 /**
  * Controller for StyledTextArea.
  */
 public class StyledTextAreaBehavior implements Behavior {
 
+    private static final boolean isMac;
+    private static final boolean isWindows;
+    static {
+        String os = System.getProperty("os.name");
+        isMac = os.startsWith("Mac");
+        isWindows = os.startsWith("Windows");
+    }
+
     private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_PRESSED_TEMPLATE;
     private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_TYPED_TEMPLATE;
     static {
-        SelectionPolicy selPolicy = PlatformUtil.isMac()
+        SelectionPolicy selPolicy = isMac
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
@@ -132,7 +137,7 @@ public class StyledTextAreaBehavior implements Behavior {
                 // filter out control keys
                 (!e.isControlDown() && !e.isMetaDown())
                 // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
-                || (isWindows() && !e.isMetaDown());
+                || (isWindows && !e.isMetaDown());
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
@@ -409,7 +414,7 @@ public class StyledTextAreaBehavior implements Behavior {
                 // switching anchor and caret if necessary.
                 area.moveTo(
                         hit.getInsertionIndex(),
-                        isMac() ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
+                        isMac ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
             } else {
                 switch (e.getClickCount()) {
                     case 1: firstLeftPress(hit); break;
