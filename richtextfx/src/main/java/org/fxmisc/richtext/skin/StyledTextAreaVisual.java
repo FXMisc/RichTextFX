@@ -108,9 +108,7 @@ class StyledTextAreaView<S> extends Region {
 
     private Subscription subscriptions = () -> {};
 
-    private final BooleanPulse caretPulse = new BooleanPulse(javafx.util.Duration.seconds(.5));
-
-    private final BooleanBinding caretVisible;
+    private final Binding<Boolean> caretVisible;
 
     private final Val<UnaryOperator<Point2D>> popupAnchorAdjustment;
 
@@ -165,22 +163,19 @@ class StyledTextAreaView<S> extends Region {
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         subscribeTo(caretDirty, x -> requestFollowCaret());
 
-        // blink caret only when focused
-        manageSubscription(EventStreams.valuesOf(area.focusedProperty()).subscribe(isFocused -> {
-            if(isFocused) {
-                caretPulse.start(true);
-            } else {
-                caretPulse.stop(false);
-            }
-        }));
-        manageSubscription(() -> caretPulse.stop());
-
-        // The caret is visible in periodic intervals, but only when
-        // the code area is focused, editable and not disabled.
-        caretVisible = caretPulse
-                .and(area.focusedProperty())
+        // whether or not to animate the caret
+        BooleanBinding blinkCaret = area.focusedProperty()
                 .and(area.editableProperty())
                 .and(area.disabledProperty().not());
+        manageBinding(blinkCaret);
+
+        // The caret is visible in periodic intervals,
+        // but only when blinkCaret is true.
+        caretVisible = EventStreams.valuesOf(blinkCaret)
+                .flatMap(blink -> blink
+                        ? booleanPulse(Duration.ofMillis(500))
+                        : valuesOf(Val.constant(false)))
+                .toBinding(false);
         manageBinding(caretVisible);
 
         // Adjust popup anchor by either a user-provided function,
@@ -546,5 +541,9 @@ class StyledTextAreaView<S> extends Region {
                         b.getMinX() - w, b.getMinY(),
                         b.getWidth() + w, b.getHeight());
         }
+    }
+
+    private static EventStream<Boolean> booleanPulse(Duration duration) {
+        return EventStreams.ticks(duration).accumulate(true, (b, x) -> !b);
     }
 }
