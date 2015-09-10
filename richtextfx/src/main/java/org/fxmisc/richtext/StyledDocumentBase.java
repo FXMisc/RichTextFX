@@ -21,7 +21,7 @@ implements StyledDocument<S> {
         this.paragraphs = paragraphs;
         navigator = new TwoLevelNavigator(
                 () -> paragraphs.size(),
-                i -> paragraphs.get(i).fullLength());
+                i -> paragraphs.get(i).length() + (i == paragraphs.size() - 1 ? 0 : 1));
     }
 
 
@@ -50,9 +50,9 @@ implements StyledDocument<S> {
     public String getText(int start, int end) {
         return sub(
                 start, end,
-                Paragraph::fullText,
+                Paragraph::toString,
                 Paragraph::substring,
-                StyledDocumentBase::concat);
+                pars -> String.join("\n", pars));
     }
 
     @Override
@@ -91,18 +91,10 @@ implements StyledDocument<S> {
         List<Paragraph<S>> pars2 = that.getParagraphs();
         int n1 = pars1.size();
         int n2 = pars2.size();
-        Paragraph<S> pars1last = pars1.get(n1 - 1);
-        List<Paragraph<S>> pars;
-        if(pars1last.isTerminated()) {
-            pars = new ArrayList<>(n1 + n2);
-            pars.addAll(pars1);
-            pars.addAll(pars2);
-        } else {
-            pars = new ArrayList<>(n1 + n2 - 1);
-            pars.addAll(pars1.subList(0, n1 - 1));
-            pars.add(pars1last.concat(pars2.get(0)));
-            pars.addAll(pars2.subList(1, n2));
-        }
+        List<Paragraph<S>> pars = new ArrayList<>(n1 + n2 - 1);
+        pars.addAll(pars1.subList(0, n1 - 1));
+        pars.add(pars1.get(n1 - 1).concat(pars2.get(0)));
+        pars.addAll(pars2.subList(1, n2));
         return new ReadOnlyStyledDocument<S>(pars, ADOPT);
     }
 
@@ -162,11 +154,11 @@ implements StyledDocument<S> {
             subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
             Paragraph<S> startPar = paragraphs.get(startParIdx);
-            subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.fullLength()));
+            subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1));
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
                 Paragraph<S> par = paragraphs.get(i);
-                subSpans.add(par.getStyleSpans(0, par.fullLength()));
+                subSpans.add(par.getStyleSpans(0, par.length() + 1));
             }
 
             Paragraph<S> endPar = paragraphs.get(endParIdx);
@@ -253,7 +245,7 @@ implements StyledDocument<S> {
             pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
         } else {
             Paragraph<S> par1 = paragraphs.get(p1);
-            pars.add(subMap.subrange(par1, col1, par1.fullLength()));
+            pars.add(subMap.subrange(par1, col1, par1.length()));
 
             for(int i = p1 + 1; i < p2; ++i) {
                 pars.add(map.apply(paragraphs.get(i)));
@@ -263,17 +255,5 @@ implements StyledDocument<S> {
         }
 
         return combine.apply(pars);
-    }
-
-    /**
-     * Joins a list of strings, using the given separator string.
-     */
-    private static String concat(List<String> list) {
-        int len = list.stream().mapToInt(String::length).sum();
-        StringBuilder sb = new StringBuilder(len);
-        for(String s: list){
-            sb.append(s);
-        }
-        return sb.toString();
     }
 }

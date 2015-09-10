@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
@@ -35,6 +36,8 @@ import org.reactfx.value.Var;
  */
 final class EditableStyledDocument<S>
 extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
+
+    private static final Pattern LINE_TERMINATOR = Pattern.compile("\r\n|\r|\n");
 
     /* ********************************************************************** *
      *                                                                        *
@@ -307,7 +310,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                 if(q != firstPar) {
                     paragraphs.set(firstParIdx, q);
                 }
-                spansFrom = spansTo.offsetBy(firstPar.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
+                spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
                     Paragraph<S> par = paragraphs.get(i);
@@ -316,7 +319,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                     if(q != par) {
                         paragraphs.set(i, q);
                     }
-                    spansFrom = spansTo.offsetBy(par.getLineTerminator().map(LineTerminator::length).orElse(0), Forward); // skip the newline
+                    spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
                 }
 
                 Paragraph<S> lastPar = paragraphs.get(lastParIdx);
@@ -353,7 +356,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * ********************************************************************** */
 
     private static <S> List<Paragraph<S>> stringToParagraphs(String str, S style) {
-        Matcher m = LineTerminator.regex().matcher(str);
+        Matcher m = LINE_TERMINATOR.matcher(str);
 
         int n = 1;
         while(m.find()) ++n;
@@ -363,8 +366,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            LineTerminator t = LineTerminator.from(m.group());
-            res.add(new Paragraph<S>(s, style).terminate(t));
+            res.add(new Paragraph<S>(s, style));
             start = m.end();
         }
         String last = str.substring(start);
@@ -381,7 +383,12 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         if(par < 0 || par >= paragraphs.size()) {
             throw new IllegalArgumentException(par + " is not a valid paragraph index. Must be from [0, " + paragraphs.size() + ")");
         }
-        ensureValidRange(start, end, paragraphs.get(par).fullLength());
+        ensureValidRange(start, end, fullLength(par));
+    }
+
+    private int fullLength(int par) {
+        int n = paragraphs.size();
+        return paragraphs.get(par).length() + (par == n-1 ? 0 : 1);
     }
 
     private void ensureValidRange(int start, int end, int len) {
@@ -399,10 +406,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     private int terminatorLengthToSkip(Position pos) {
         Paragraph<S> par = paragraphs.get(pos.getMajor());
         int skipSum = 0;
-        while(pos.getMinor() >= par.length() && pos.getMinor() < par.fullLength()) {
-            int skipLen = par.fullLength() - pos.getMinor();
-            skipSum += skipLen;
-            pos = pos.offsetBy(skipLen, Forward); // will jump to the next paragraph, if not at the end
+        while(pos.getMinor() == par.length() && pos.getMajor() < paragraphs.size() - 1) {
+            skipSum += 1;
+            pos = pos.offsetBy(1, Forward); // will jump to the next paragraph
             par = paragraphs.get(pos.getMajor());
         }
         return skipSum;
@@ -412,9 +418,9 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int parLen = paragraphs.get(pos.getMajor()).length();
         int trimSum = 0;
         while(pos.getMinor() > parLen) {
-            int trimLen = pos.getMinor() - parLen;
-            trimSum += trimLen;
-            pos = pos.offsetBy(-trimLen, Backward); // may jump to the end of previous paragraph, if parLen was 0
+            assert pos.getMinor() - parLen == 1;
+            trimSum += 1;
+            pos = pos.offsetBy(-1, Backward); // may jump to the end of previous paragraph, if parLen was 0
             parLen = paragraphs.get(pos.getMajor()).length();
         }
         return trimSum;
@@ -477,35 +483,16 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     private List<Paragraph<S>> join(Paragraph<S> first, List<Paragraph<S>> middle, Paragraph<S> last) {
         int m = middle.size();
         if(m == 0) {
-            return join(first, last);
-        } else if(!first.isTerminated()) {
-            first = first.concat(middle.get(0));
-            middle = middle.subList(1, m);
-            return join(first, middle, last);
+            return Arrays.asList(first.concat(last));
+        } else if(m == 1) {
+            return Arrays.asList(first.concat(middle.get(0)).concat(last));
         } else {
-            Paragraph<S> lastMiddle = middle.get(m - 1);
-            if(lastMiddle.isTerminated()) {
-                int n = 1 + m + 1;
-                List<Paragraph<S>> res = new ArrayList<>(n);
-                res.add(first);
-                res.addAll(middle);
-                res.add(last);
-                return res;
-            } else {
-                int n = 1 + m;
-                List<Paragraph<S>> res = new ArrayList<>(n);
-                res.add(first);
-                res.addAll(middle.subList(0, m - 1));
-                res.add(lastMiddle.concat(last));
-                return res;
-            }
+            List<Paragraph<S>> res = new ArrayList<>(middle.size());
+            res.add(first.concat(middle.get(0)));
+            res.addAll(middle.subList(1, m - 1));
+            res.add(middle.get(m-1).concat(last));
+            return res;
         }
-    }
-
-    private List<Paragraph<S>> join(Paragraph<S> first, Paragraph<S> last) {
-        return first.isTerminated()
-                ? Arrays.asList(first, last)
-                : Arrays.asList(first.concat(last));
     }
 
     // TODO: Replace with ObservableList.setAll(from, to, col) when implemented.

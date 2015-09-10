@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragraph<S>>> {
 
@@ -42,10 +41,6 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     private static <S> Codec<Paragraph<S>> paragraphCodec(Codec<S> styleCodec) {
         return new Codec<Paragraph<S>>() {
             private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(styleCodec));
-            private final byte LT_NONE = 0;
-            private final byte LT_CR   = 1;
-            private final byte LT_LF   = 2;
-            private final byte LT_CRLF = 3;
 
             @Override
             public String getName() {
@@ -55,28 +50,12 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
             @Override
             public void encode(DataOutputStream os, Paragraph<S> p) throws IOException {
                 segmentsCodec.encode(os, p.getSegments());
-                if(p.isTerminated()) {
-                    switch(p.getLineTerminator().get()) {
-                        case CR:   os.writeByte(LT_CR);   break;
-                        case LF:   os.writeByte(LT_LF);   break;
-                        case CRLF: os.writeByte(LT_CRLF); break;
-                    }
-                } else {
-                    os.writeByte(LT_NONE);
-                }
             }
 
             @Override
             public Paragraph<S> decode(DataInputStream is) throws IOException {
                 List<StyledText<S>> segments = segmentsCodec.decode(is);
-                byte lt = is.readByte();
-                switch(lt) {
-                    case LT_NONE: return new Paragraph<>(segments, Optional.empty());
-                    case LT_CR:   return new Paragraph<>(segments, LineTerminator.CR);
-                    case LT_LF:   return new Paragraph<>(segments, LineTerminator.LF);
-                    case LT_CRLF: return new Paragraph<>(segments, LineTerminator.CRLF);
-                }
-                throw new IllegalArgumentException("unexpected byte value");
+                return new Paragraph<>(segments);
             }
         };
     }
@@ -135,6 +114,6 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
     }
 
     private int computeLength() {
-        return paragraphs.stream().mapToInt(p -> p.fullLength()).sum();
+        return paragraphs.stream().mapToInt(Paragraph::length).sum() + paragraphs.size() - 1;
     }
 }

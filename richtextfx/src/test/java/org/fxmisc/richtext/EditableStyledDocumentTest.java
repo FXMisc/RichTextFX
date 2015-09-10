@@ -37,30 +37,6 @@ public class EditableStyledDocumentTest {
     }
 
     @Test
-    public void testUnixNewlinePreservation() {
-        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
-        String text = "X\nY";
-        document.replaceText(0, 0, text);
-        assertEquals(text, document.getText());
-    }
-
-    @Test
-    public void testMacNewlinePreservation() {
-        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
-        String text = "X\rY";
-        document.replaceText(0, 0, text);
-        assertEquals(text, document.getText());
-    }
-
-    @Test
-    public void testWinNewlinePreservation() {
-        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
-        String text = "X\r\nY";
-        document.replaceText(0, 0, text);
-        assertEquals(text, document.getText());
-    }
-
-    @Test
     public void testUnixParagraphCount() {
         EditableStyledDocument<String> document = new EditableStyledDocument<>("");
         String text = "X\nY";

@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javafx.scene.control.IndexRange;
 
@@ -28,7 +27,6 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     private final List<StyledText<S>> segments;
-    private final Optional<LineTerminator> terminator;
     private final TwoLevelNavigator navigator;
 
     public Paragraph(String text, S style) {
@@ -37,29 +35,16 @@ public final class Paragraph<S> implements CharSequence {
 
     @SafeVarargs
     public Paragraph(StyledText<S> text, StyledText<S>... texts) {
-        this(list(text, texts), Optional.empty());
+        this(list(text, texts));
     }
 
-    private Paragraph(String text, S style, LineTerminator terminator) {
-        this(text, style, Optional.of(terminator));
+    private Paragraph(StyledText<S> text) {
+        this(Arrays.asList(text));
     }
 
-    private Paragraph(String text, S style, Optional<LineTerminator> terminator) {
-        this(new StyledText<>(text, style), terminator);
-    }
-
-    private Paragraph(StyledText<S> text, Optional<LineTerminator> terminator) {
-        this(Arrays.asList(text), terminator);
-    }
-
-    Paragraph(List<StyledText<S>> segments, LineTerminator terminator) {
-        this(segments, Optional.of(terminator));
-    }
-
-    Paragraph(List<StyledText<S>> segments, Optional<LineTerminator> terminator) {
+    Paragraph(List<StyledText<S>> segments) {
         assert !segments.isEmpty();
         this.segments = segments;
-        this.terminator = terminator;
         navigator = new TwoLevelNavigator(
                 () -> segments.size(),
                 i -> segments.get(i).length());
@@ -67,10 +52,6 @@ public final class Paragraph<S> implements CharSequence {
 
     public List<StyledText<S>> getSegments() {
         return Collections.unmodifiableList(segments);
-    }
-
-    public Optional<LineTerminator> getLineTerminator() {
-        return terminator;
     }
 
     private int length = -1;
@@ -82,26 +63,6 @@ public final class Paragraph<S> implements CharSequence {
         return length;
     }
 
-    private int fullLength = -1;
-    public int fullLength() {
-        if(fullLength == -1) {
-            fullLength = length() + terminator.map(LineTerminator::length).orElse(0);
-        }
-        return fullLength;
-    }
-
-    public boolean isTerminated() {
-        return terminator.isPresent();
-    }
-
-    public Paragraph<S> terminate(LineTerminator terminator) {
-        if(isTerminated()) {
-            throw new IllegalStateException("Paragraph alread terminated.");
-        }
-
-        return new Paragraph<>(segments, terminator);
-    }
-
     @Override
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
@@ -109,28 +70,20 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public String substring(int from, int to) {
-        return fullText().substring(from, Math.min(to, fullLength()));
+        return toString().substring(from, Math.min(to, length()));
     }
 
     public String substring(int from) {
-        return fullText().substring(from);
+        return toString().substring(from);
     }
 
     public Paragraph<S> concat(Paragraph<S> p) {
-        if(isTerminated()) {
-            throw new IllegalStateException("Cannot append to a paragraph with line terminator.");
-        }
-
         if(length() == 0) {
             return p;
         }
 
-        if(p.fullLength() == 0) {
-            return this;
-        }
-
         if(p.length() == 0) {
-            return new Paragraph<S>(segments, p.terminator);
+            return this;
         }
 
         StyledText<S> left = segments.get(segments.size()-1);
@@ -141,20 +94,16 @@ public final class Paragraph<S> implements CharSequence {
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
             segs.addAll(p.segments.subList(1, p.segments.size()));
-            return new Paragraph<S>(segs, p.terminator);
+            return new Paragraph<S>(segs);
         } else {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
             segs.addAll(segments);
             segs.addAll(p.segments);
-            return new Paragraph<S>(segs, p.terminator);
+            return new Paragraph<S>(segs);
         }
     }
 
     public Paragraph<S> concat(CharSequence str) {
-        if(isTerminated()) {
-            throw new IllegalStateException("Cannot append to a paragraph with line terminator.");
-        }
-
         if(str.length() == 0) {
             return this;
         }
@@ -162,12 +111,13 @@ public final class Paragraph<S> implements CharSequence {
         List<StyledText<S>> segs = new ArrayList<>(segments);
         int lastIdx = segments.size() - 1;
         segs.set(lastIdx, segments.get(lastIdx).concat(str));
-        return new Paragraph<S>(segs, Optional.empty());
+        return new Paragraph<S>(segs);
     }
 
     public Paragraph<S> insert(int offset, CharSequence str) {
-        if(offset < 0 || offset > length())
+        if(offset < 0 || offset > length()) {
             throw new IndexOutOfBoundsException(String.valueOf(offset));
+        }
 
         Position pos = navigator.offsetToPosition(offset, Backward);
         int segIdx = pos.getMajor();
@@ -176,7 +126,7 @@ public final class Paragraph<S> implements CharSequence {
         StyledText<S> replacement = seg.spliced(segPos, segPos, str);
         List<StyledText<S>> segs = new ArrayList<>(segments);
         segs.set(segIdx, replacement);
-        return new Paragraph<S>(segs, terminator);
+        return new Paragraph<S>(segs);
     }
 
     @Override
@@ -185,20 +135,15 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public Paragraph<S> trim(int length) {
-        if(length >= fullLength()) {
+        if(length >= length()) {
             return this;
-        } else if(length > length()) { // slicing the line terminator
-            LineTerminator newTerminator = terminator.get().trim(length - length());
-            return new Paragraph<>(segments, newTerminator);
-        } else if(length == length()) { // cut off the line terminator
-            return new Paragraph<>(segments, Optional.empty());
-        } else { // length < length()
+        } else {
             Position pos = navigator.offsetToPosition(length, Backward);
             int segIdx = pos.getMajor();
             List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<S>(segs, Optional.empty());
+            return new Paragraph<S>(segs);
         }
     }
 
@@ -207,22 +152,13 @@ public final class Paragraph<S> implements CharSequence {
             throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
         } else if(start == 0) {
             return this;
-        } else if(start < length()) {
+        } else if(start <= length()) {
             Position pos = navigator.offsetToPosition(start, Forward);
             int segIdx = pos.getMajor();
             List<StyledText<S>> segs = new ArrayList<>(segments.size() - segIdx);
             segs.add(segments.get(segIdx).subSequence(pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            return new Paragraph<S>(segs, terminator);
-        } else if(start < fullLength()) {
-            LineTerminator newTerminator = terminator.get().subSequence(start - length());
-            S lastStyle = segments.get(segments.size() - 1).getStyle();
-            return new Paragraph<>("", lastStyle, newTerminator);
-        } else if(isTerminated()) {
-            throw new IndexOutOfBoundsException(start + " not in [0, " + fullLength() + ")");
-        } else if(start == fullLength()) { // == length()
-            S lastStyle = segments.get(segments.size() - 1).getStyle();
-            return new Paragraph<>("", lastStyle);
+            return new Paragraph<S>(segs);
         } else {
             throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
         }
@@ -233,7 +169,7 @@ public final class Paragraph<S> implements CharSequence {
     }
 
     public Paragraph<S> restyle(S style) {
-        return new Paragraph<S>(toString(), style, terminator);
+        return new Paragraph<S>(toString(), style);
     }
 
     public Paragraph<S> restyle(int from, int to, S style) {
@@ -266,7 +202,7 @@ public final class Paragraph<S> implements CharSequence {
             middleSegs.add(new StyledText<>(text, span.getStyle()));
             offset = end;
         }
-        Paragraph<S> middle = new Paragraph<>(middleSegs, Optional.empty());
+        Paragraph<S> middle = new Paragraph<>(middleSegs);
 
         return left.concat(middle).concat(right);
     }
@@ -372,28 +308,11 @@ public final class Paragraph<S> implements CharSequence {
         return text;
     }
 
-    private String fullText = null;
-    /**
-     * Returns the string content of this paragraph,
-     * including the line terminator.
-     */
-    public String fullText() {
-        if(fullText == null) {
-            if(isTerminated()) {
-                fullText = toString() + terminator.get().asString();
-            } else {
-                fullText = toString();
-            }
-        }
-        return fullText;
-    }
-
     @Override
     public boolean equals(Object other) {
         if(other instanceof Paragraph) {
             Paragraph<?> that = (Paragraph<?>) other;
-            return Objects.equals(this.segments, that.segments)
-                && Objects.equals(this.terminator, that.terminator);
+            return Objects.equals(this.segments, that.segments);
         } else {
             return false;
         }
@@ -401,6 +320,6 @@ public final class Paragraph<S> implements CharSequence {
 
     @Override
     public int hashCode() {
-        return Objects.hash(segments, terminator);
+        return segments.hashCode();
     }
 }
