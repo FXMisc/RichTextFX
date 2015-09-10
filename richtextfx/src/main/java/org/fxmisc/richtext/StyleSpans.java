@@ -5,6 +5,7 @@ import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Spliterator;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -150,6 +151,10 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
             builder.add(mapper.apply(span.getStyle()), span.getLength());
         }
         return builder.create();
+    }
+
+    default StyleSpans<S> overlay(StyleSpans<S> that, BiFunction<? super S, ? super S, ? extends S> f) {
+        return StyleSpansBuilder.overlay(this, that, f);
     }
 
     default Stream<S> styleStream() {

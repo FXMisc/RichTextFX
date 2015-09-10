@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiFunction;
 
 public class StyleSpansBuilder<S> {
 
@@ -38,6 +39,52 @@ public class StyleSpansBuilder<S> {
         @Override
         public StyleSpan<S> getStyleSpan(int index) {
             return spans.get(index);
+        }
+    }
+
+    static <S> StyleSpans<S> overlay(
+            StyleSpans<S> s1,
+            StyleSpans<S> s2,
+            BiFunction<? super S, ? super S, ? extends S> f) {
+
+        StyleSpansBuilder<S> acc = new StyleSpansBuilder<>(s1.getSpanCount() + s2.getSpanCount());
+
+        Iterator<StyleSpan<S>> t1 = s1.iterator();
+        Iterator<StyleSpan<S>> t2 = s2.iterator();
+
+        StyleSpan<S> h1 = t1.next(); // remember that all StyleSpans have at least one StyleSpan
+        StyleSpan<S> h2 = t2.next(); // remember that all StyleSpans have at least one StyleSpan
+
+        while(true) {
+            int len1 = h1.getLength();
+            int len2 = h2.getLength();
+            if(len1 == len2) {
+                acc.add(f.apply(h1.getStyle(), h2.getStyle()), len1);
+                if(!t1.hasNext()) {
+                    return acc.addAll(t2).create();
+                } else if(!t2.hasNext()) {
+                    return acc.addAll(t1).create();
+                } else {
+                    h1 = t1.next();
+                    h2 = t2.next();
+                }
+            } else if(len1 < len2) {
+                acc.add(f.apply(h1.getStyle(), h2.getStyle()), len1);
+                h2 = new StyleSpan<>(h2.getStyle(), len2 - len1);
+                if(t1.hasNext()) {
+                    h1 = t1.next();
+                } else {
+                    return acc.add(h2).addAll(t2).create();
+                }
+            } else { // len1 > len2
+                acc.add(f.apply(h1.getStyle(), h2.getStyle()), len2);
+                h1 = new StyleSpan<>(h1.getStyle(), len1 - len2);
+                if(t2.hasNext()) {
+                    h2 = t2.next();
+                } else {
+                    return acc.add(h1).addAll(t1).create();
+                }
+            }
         }
     }
 
@@ -76,6 +123,14 @@ public class StyleSpansBuilder<S> {
         ensureNotCreated();
         for(StyleSpan<S> span: styleSpans) {
             _add(span);
+        }
+        return this;
+    }
+
+    public StyleSpansBuilder<S> addAll(Iterator<? extends StyleSpan<S>> styleSpans) {
+        ensureNotCreated();
+        while(styleSpans.hasNext()) {
+            _add(styleSpans.next());
         }
         return this;
     }
