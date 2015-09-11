@@ -334,9 +334,9 @@ class StyledTextAreaView<S> extends Region {
     CharacterHit hit(CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
-            return CharacterHit.before(0);
+            return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
-            return CharacterHit.after(area.getLength() - 1);
+            return CharacterHit.insertionAt(area.getLength());
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);
@@ -350,9 +350,9 @@ class StyledTextAreaView<S> extends Region {
     CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<S>, ParagraphBox<S>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
-            return CharacterHit.before(0);
+            return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
-            return CharacterHit.after(area.getLength() - 1);
+            return CharacterHit.insertionAt(area.getLength());
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);

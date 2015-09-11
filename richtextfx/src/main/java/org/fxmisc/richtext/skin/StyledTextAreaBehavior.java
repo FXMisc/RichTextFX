@@ -433,8 +433,9 @@ public class StyledTextAreaBehavior implements Behavior {
         IndexRange selection = area.getSelection();
         if(area.isEditable() &&
                 selection.getLength() != 0 &&
-                hit.getCharacterIndex() >= selection.getStart() &&
-                hit.getCharacterIndex() < selection.getEnd()) {
+                hit.getCharacterIndex().isPresent() &&
+                hit.getCharacterIndex().getAsInt() >= selection.getStart() &&
+                hit.getCharacterIndex().getAsInt() < selection.getEnd()) {
             // press inside selection
             dragSelection = DragState.POTENTIAL_DRAG;
         } else {

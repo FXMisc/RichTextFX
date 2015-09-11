@@ -4,6 +4,7 @@ import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
@@ -113,9 +114,9 @@ class ParagraphBox<S> extends Region {
         EventStream<Either<Point2D, Void>> stationaryEvents = new MouseStationaryHelper(this).events(delay);
         EventStream<Tuple2<Point2D, Integer>> hits = stationaryEvents.filterMap(Either::asLeft)
                 .filterMap(p -> {
-                    CharacterHit hit = hit(p);
-                    if(hit.isCharacterHit()) {
-                        return Optional.of(t(p, hit.getCharacterIndex()));
+                    OptionalInt charIdx = hit(p).getCharacterIndex();
+                    if(charIdx.isPresent()) {
+                        return Optional.of(t(p, charIdx.getAsInt()));
                     } else {
                         return Optional.empty();
                     }

@@ -1,65 +1,43 @@
 package org.fxmisc.richtext.skin;
 
-import static org.fxmisc.richtext.skin.CharacterHit.CharacterHitType.*;
+import java.util.OptionalInt;
 
 class CharacterHit {
-    public static enum CharacterHitType {
-        LEADING_HALF,
-        TRAILING_HALF,
-        BEFORE,
-        AFTER,
-    }
 
-    public static CharacterHit before(int charIdx) {
-        return new CharacterHit(charIdx, BEFORE);
-    }
-
-    public static CharacterHit after(int charIdx) {
-        return new CharacterHit(charIdx, AFTER);
+    public static CharacterHit insertionAt(int insertionIndex) {
+        return new CharacterHit(OptionalInt.empty(), insertionIndex);
     }
 
     public static CharacterHit leadingHalfOf(int charIdx) {
-        return new CharacterHit(charIdx, LEADING_HALF);
+        return new CharacterHit(OptionalInt.of(charIdx), charIdx);
     }
 
     public static CharacterHit trailingHalfOf(int charIdx) {
-        return new CharacterHit(charIdx, TRAILING_HALF);
+        return new CharacterHit(OptionalInt.of(charIdx), charIdx + 1);
     }
 
 
-    private final int charIdx;
-    private final CharacterHitType hitType;
+    private final OptionalInt charIdx;
+    private final int insertionIndex;
 
-    CharacterHit(int charIdx, CharacterHitType hitType) {
+    private CharacterHit(OptionalInt charIdx, int insertionIndex) {
         this.charIdx = charIdx;
-        this.hitType = hitType;
+        this.insertionIndex = insertionIndex;
     }
 
-    public int getCharacterIndex() {
+    public OptionalInt getCharacterIndex() {
         return charIdx;
     }
 
     public int getInsertionIndex() {
-        switch(hitType) {
-        case LEADING_HALF: // fall through
-        case BEFORE:
-            return charIdx;
-        case TRAILING_HALF: // fall through
-        case AFTER:
-            return charIdx + 1;
-        }
-        throw new AssertionError("Unreachable code");
-    }
-
-    public CharacterHitType getHitType() {
-        return hitType;
-    }
-
-    public boolean isCharacterHit() {
-        return hitType == LEADING_HALF || hitType == TRAILING_HALF;
+        return insertionIndex;
     }
 
     public CharacterHit offset(int offset) {
-        return new CharacterHit(charIdx + offset, hitType);
+        return new CharacterHit(
+                charIdx.isPresent()
+                        ? OptionalInt.of(charIdx.getAsInt() + offset)
+                        : charIdx,
+                insertionIndex + offset);
     }
 }

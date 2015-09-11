@@ -80,7 +80,7 @@ class TextFlowExt extends TextFlow {
 
         int lineIdx = getLineIndex((float) y);
         if(lineIdx >= getLineCount()) {
-            return CharacterHit.after(getCharCount() - 1);
+            return CharacterHit.insertionAt(getCharCount());
         }
 
         TextLine line = getLines()[lineIdx];
@@ -88,9 +88,9 @@ class TextFlowExt extends TextFlow {
 
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {
             if(hit.isLeading()) {
-                return CharacterHit.before(charIdx);
+                return CharacterHit.insertionAt(charIdx);
             } else {
-                return CharacterHit.after(charIdx);
+                return CharacterHit.insertionAt(charIdx + 1);
             }
         } else {
             if(hit.isLeading()) {
