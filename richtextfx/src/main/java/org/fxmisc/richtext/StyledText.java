@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import java.util.Objects;
+
 
 public class StyledText<S> implements CharSequence {
     private final String text;
@@ -7,7 +9,7 @@ public class StyledText<S> implements CharSequence {
 
     public StyledText(String text, S style) {
         this.text = text;
-        this.style= style;
+        this.style = style;
     }
 
     @Override
@@ -50,5 +52,21 @@ public class StyledText<S> implements CharSequence {
 
     public void setStyle(S style) {
         this.style = style;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof StyledText) {
+            StyledText<?> that = (StyledText<?>) obj;
+            return Objects.equals(this.text, that.text)
+                && Objects.equals(this.style, that.style);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(text, style);
     }
 }
