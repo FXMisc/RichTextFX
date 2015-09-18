@@ -141,13 +141,13 @@ Demos
 
 #### Run using the pre-built JAR
 
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-demos-fat-0.6.8.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-demos-fat-0.6.9.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.6.8.jar org.fxmisc.richtext.demo.JavaKeywords
+    java -cp richtextfx-demos-fat-0.6.9.jar org.fxmisc.richtext.demo.JavaKeywords
 
 or
 
-    java -cp richtextfx-demos-fat-0.6.8.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
+    java -cp richtextfx-demos-fat-0.6.9.jar org.fxmisc.richtext.demo.JavaKeywordsAsync
 
 #### Run from the source repo
 
@@ -172,9 +172,9 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 
 #### Run using the pre-built JAR
 
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-demos-fat-0.6.8.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-demos-fat-0.6.9.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.6.8.jar org.fxmisc.richtext.demo.XMLEditor
+    java -cp richtextfx-demos-fat-0.6.9.jar org.fxmisc.richtext.demo.XMLEditor
 
 #### Run from the source repo
 
@@ -190,9 +190,9 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
 
 #### Run using the pre-built JAR
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-demos-fat-0.6.8.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-demos-fat-0.6.9.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.6.8.jar org.fxmisc.richtext.demo.RichText
+    java -cp richtextfx-demos-fat-0.6.9.jar org.fxmisc.richtext.demo.RichText
 
 #### Run from the source repo
 
@@ -210,9 +210,9 @@ When the mouse pauses over the text area, you can get index of the character und
 ![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/tooltip-demo.png)
 
 #### Run using the pre-built JAR
-[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-demos-fat-0.6.8.jar) the pre-built "fat" JAR file and run
+[Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-demos-fat-0.6.9.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.6.8.jar org.fxmisc.richtext.demo.TooltipDemo
+    java -cp richtextfx-demos-fat-0.6.9.jar org.fxmisc.richtext.demo.TooltipDemo
 
 #### Run from the source repo
 
@@ -228,31 +228,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.6.8.
+Current stable release is 0.6.9.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.6.8   |
+| org.fxmisc.richtext | richtextfx  | 0.6.9   |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.6.8'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.6.9'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.6.8"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.6.9"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-0.6.8.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.8/richtextfx-fat-0.6.8.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-0.6.9.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.9/richtextfx-fat-0.6.9.jar) and place it on your classpath.
 
 
 ### Snapshot releases
