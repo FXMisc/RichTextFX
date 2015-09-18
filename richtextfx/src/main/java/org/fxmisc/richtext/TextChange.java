@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public abstract class TextChange<S extends CharSequence, Self extends TextChange<S, Self>> {
@@ -17,6 +18,7 @@ public abstract class TextChange<S extends CharSequence, Self extends TextChange
     public int getPosition() { return position; };
     public S getRemoved() { return removed; }
     public S getInserted() { return inserted; }
+    public Self invert() { return create(position, inserted, removed); }
 
     protected abstract S concat(S a, S b);
     protected abstract S sub(S s, int from, int to);
@@ -54,5 +56,22 @@ public abstract class TextChange<S extends CharSequence, Self extends TextChange
         else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other instanceof TextChange) {
+            TextChange<?, ?> that = (TextChange<?, ?>) other;
+            return Objects.equals(this.position, that.position)
+                && Objects.equals(this.removed,  that.removed )
+                && Objects.equals(this.inserted, that.inserted);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(position, removed, inserted);
     }
 }

@@ -791,16 +791,14 @@ implements
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        Consumer<PlainTextChange> undo = change -> replaceText(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
-        return factory.create(plainTextChanges(), apply, undo, merge);
+        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
         Consumer<RichTextChange<S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        Consumer<RichTextChange<S>> undo = change -> replace(change.getPosition(), change.getPosition() + change.getInserted().length(), change.getRemoved());
         BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
-        return factory.create(richChanges(), apply, undo, merge);
+        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 
     private Guard suspend(Suspendable... suspendables) {
