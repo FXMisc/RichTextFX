@@ -59,4 +59,21 @@ public class EditableStyledDocumentTest {
         document.replaceText(0, 0, text);
         assertEquals(2, document.getParagraphs().size());
     }
+
+    @Test
+    public void testGetTextWithEndAfterNewline() {
+        EditableStyledDocument<Boolean> doc = new EditableStyledDocument<>(true);
+
+        doc.replaceText(0, 0, "123\n");
+        String txt1 = doc.getText(0, 4);
+        assertEquals(4, txt1.length());
+
+        doc.replaceText(4, 4, "567");
+        String txt2 = doc.getText(2, 4);
+        assertEquals(2, txt2.length());
+
+        doc.replaceText(4, 4, "\n");
+        String txt3 = doc.getText(2, 4);
+        assertEquals(2, txt3.length());
+    }
 }

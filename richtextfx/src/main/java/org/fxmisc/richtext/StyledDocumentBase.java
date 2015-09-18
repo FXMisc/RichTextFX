@@ -233,7 +233,7 @@ implements StyledDocument<S> {
         Position start2D = navigator.offsetToPosition(start, Forward);
         Position end2D = end == start
                 ? start2D
-                : start2D.offsetBy(end - start, Backward);
+                : start2D.offsetBy(end - start, Forward);
         int p1 = start2D.getMajor();
         int col1 = start2D.getMinor();
         int p2 = end2D.getMajor();
