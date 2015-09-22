@@ -3,6 +3,7 @@ package org.fxmisc.richtext.demo;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -19,7 +20,6 @@ import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
 import org.reactfx.EventStream;
-import org.reactfx.util.Try;
 
 public class JavaKeywordsAsync extends Application {
 
@@ -95,7 +95,14 @@ public class JavaKeywordsAsync extends Application {
                 .successionEnds(Duration.ofMillis(500))
                 .supplyTask(this::computeHighlightingAsync)
                 .awaitLatest(richChanges)
-                .map(Try::get)
+                .filterMap(t -> {
+                    if(t.isSuccess()) {
+                        return Optional.of(t.get());
+                    } else {
+                        t.getFailure().printStackTrace();
+                        return Optional.empty();
+                    }
+                })
                 .subscribe(this::applyHighlighting);
         codeArea.replaceText(0, 0, sampleCode);
 
