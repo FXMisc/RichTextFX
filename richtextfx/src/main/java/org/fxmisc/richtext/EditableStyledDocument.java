@@ -470,7 +470,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         setAll(firstParIdx, lastParIdx + 1, newPars);
 
         // update length, invalidate text
-        int newLength = length.getValue() - (end - start) + replacement.length();
+        int replacementLength =
+                replacementPars.stream().mapToInt(Paragraph::length).sum() +
+                replacementPars.size() - 1;
+        int newLength = length.getValue() - (end - start) + replacementLength;
         length.suspendWhile(() -> { // don't publish length change until text is invalidated
             length.setValue(newLength);
             text.invalidate();

@@ -76,4 +76,11 @@ public class EditableStyledDocumentTest {
         String txt3 = doc.getText(2, 4);
         assertEquals(2, txt3.length());
     }
+
+    @Test
+    public void testWinDocumentLength() {
+        EditableStyledDocument<String> document = new EditableStyledDocument<>("");
+        document.replaceText(0, 0, "X\r\nY");
+        assertEquals(document.getText().length(), document.getLength());
+    }
 }
