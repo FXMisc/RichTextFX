@@ -713,15 +713,9 @@ implements
 
     @Override
     public void replaceText(int start, int end, String text) {
-        try(Guard g = omniSuspendable.suspend()) {
-            start = clamp(0, start, getLength());
-            end = clamp(0, end, getLength());
-
-            content.replaceText(start, end, text);
-
-            int newCaretPos = start + text.length();
-            selectRange(newCaretPos, newCaretPos);
-        }
+        StyledDocument<S> doc = ReadOnlyStyledDocument.fromString(
+                text, content.getStyleForInsertionAt(start));
+        replace(start, end, doc);
     }
 
     @Override

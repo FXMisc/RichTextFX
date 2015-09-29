@@ -1,13 +1,39 @@
 package org.fxmisc.richtext;
 
+import static org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy.*;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragraph<S>>> {
+
+    private static final Pattern LINE_TERMINATOR = Pattern.compile("\r\n|\r|\n");
+
+    public static <S> ReadOnlyStyledDocument<S> fromString(String str, S style) {
+        Matcher m = LINE_TERMINATOR.matcher(str);
+
+        int n = 1;
+        while(m.find()) ++n;
+        List<Paragraph<S>> res = new ArrayList<>(n);
+
+        int start = 0;
+        m.reset();
+        while(m.find()) {
+            String s = str.substring(start, m.start());
+            res.add(new Paragraph<S>(s, style));
+            start = m.end();
+        }
+        String last = str.substring(start);
+        res.add(new Paragraph<>(last, style));
+
+        return new ReadOnlyStyledDocument<>(res, ADOPT);
+    }
 
     static enum ParagraphsPolicy {
         ADOPT,
@@ -83,6 +109,7 @@ public class ReadOnlyStyledDocument<S> extends StyledDocumentBase<S, List<Paragr
 
         };
     }
+
 
     private int length = -1;
 
