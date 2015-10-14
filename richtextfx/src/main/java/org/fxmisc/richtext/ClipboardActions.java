@@ -43,9 +43,9 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
             content.putString(getSelectedText());
 
             getStyleCodec().ifPresent(styleCodec -> {
-                Codec<StyledDocument<S>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+                Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(styleCodec);
                 DataFormat format = dataFormat(codec.getName());
-                StyledDocument<S> doc = subDocument(selection.getStart(), selection.getEnd());
+                StyledDocument<S, PS> doc = subDocument(selection.getStart(), selection.getEnd());
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(os);
                 try {
@@ -71,13 +71,13 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
 
         if(getStyleCodec().isPresent()) {
             Codec<S> styleCodec = getStyleCodec().get();
-            Codec<StyledDocument<S>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+            Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(styleCodec);
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
                 byte[] bytes = (byte[]) clipboard.getContent(format);
                 ByteArrayInputStream is = new ByteArrayInputStream(bytes);
                 DataInputStream dis = new DataInputStream(is);
-                StyledDocument<S> doc = null;
+                StyledDocument<S, PS> doc = null;
                 try {
                     doc = codec.decode(dis);
                 } catch (IOException e) {

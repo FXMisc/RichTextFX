@@ -749,7 +749,7 @@ implements
     @Override
     public void replaceText(int start, int end, String text) {
         StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, content.getStyleForInsertionAt(start));
+                text, content.getStyleForInsertionAt(start), content.getParagraphStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 

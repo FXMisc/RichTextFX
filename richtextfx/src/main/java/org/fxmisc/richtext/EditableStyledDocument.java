@@ -178,7 +178,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     public void replaceText(int start, int end, String text) {
         StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, getStyleForInsertionAt(start));
+                text, getStyleForInsertionAt(start), getParagraphStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 
@@ -463,7 +463,11 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         }
     }
 
-    private PS getParagraphStyleForInsertionAt(Position insertionPos) {
+    PS getParagraphStyleForInsertionAt(int pos) {
+        return getParagraphStyleForInsertionAt(navigator.offsetToPosition(pos, Forward));
+    }
+
+    PS getParagraphStyleForInsertionAt(Position insertionPos) {
         if(useInitialStyleForInsertion.get()) {
             return initialParagraphStyle;
         } else {

@@ -136,7 +136,7 @@ public interface EditActions<S, PS> extends TextEditingArea<S, PS> {
             // no move, just position the caret
             selectRange(pos, pos);
         } else {
-            StyledDocument<S> text = this.subDocument(sel.getStart(), sel.getEnd());
+            StyledDocument<S, PS> text = this.subDocument(sel.getStart(), sel.getEnd());
             if(pos > sel.getEnd())
                 pos -= sel.getLength();
             deleteText(sel);
