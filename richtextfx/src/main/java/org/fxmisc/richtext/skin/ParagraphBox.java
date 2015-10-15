@@ -74,11 +74,6 @@ public class ParagraphBox<S, PS> extends Region {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
         applyParagraphStyle.accept(this.text, initialParagraphStyle);
-        par.paragraphStyle().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                applyParagraphStyle.accept(this.text, newValue);
-            }
-        });
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
         graphic = Val.combine(

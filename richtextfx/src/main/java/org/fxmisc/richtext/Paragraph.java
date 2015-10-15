@@ -3,14 +3,10 @@ package org.fxmisc.richtext;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
@@ -24,17 +20,17 @@ public final class Paragraph<S, PS> implements CharSequence {
         } else {
             ArrayList<T> list = new ArrayList<>(1 + tail.length);
             list.add(head);
-            for(T t: tail) list.add(t);
+            Collections.addAll(list, tail);
             return list;
         }
     }
 
     private final List<StyledText<S>> segments;
     private final TwoLevelNavigator navigator;
-    private ObjectProperty<PS> paragraphStyle;
+    private final PS paragraphStyle;
 
     public Paragraph(String text, S style, PS paragraphStyle) {
-        this(paragraphStyle, new StyledText<S>(text, style));
+        this(paragraphStyle, new StyledText<>(text, style));
     }
 
     @SafeVarargs
@@ -43,15 +39,14 @@ public final class Paragraph<S, PS> implements CharSequence {
     }
 
     private Paragraph(StyledText<S> text, PS paragraphStyle) {
-        this(Arrays.asList(text), paragraphStyle);
+        this(Collections.singletonList(text), paragraphStyle);
     }
 
     Paragraph(List<StyledText<S>> segments, PS paragraphStyle) {
         assert !segments.isEmpty();
         this.segments = segments;
-        this.paragraphStyle = new SimpleObjectProperty<>(paragraphStyle);
-        navigator = new TwoLevelNavigator(
-                () -> segments.size(),
+        this.paragraphStyle = paragraphStyle;
+        navigator = new TwoLevelNavigator(segments::size,
                 i -> segments.get(i).length());
     }
 
@@ -59,11 +54,15 @@ public final class Paragraph<S, PS> implements CharSequence {
         return Collections.unmodifiableList(segments);
     }
 
+    public PS getParagraphStyle() {
+        return paragraphStyle;
+    }
+
     private int length = -1;
     @Override
     public int length() {
         if(length == -1) {
-            length = segments.stream().mapToInt(s -> s.length()).sum();
+            length = segments.stream().mapToInt(StyledText::length).sum();
         }
         return length;
     }
@@ -99,12 +98,12 @@ public final class Paragraph<S, PS> implements CharSequence {
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
             segs.addAll(p.segments.subList(1, p.segments.size()));
-            return new Paragraph<>(segs, paragraphStyle.get());
+            return new Paragraph<>(segs, paragraphStyle);
         } else {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
             segs.addAll(segments);
             segs.addAll(p.segments);
-            return new Paragraph<>(segs, paragraphStyle.get());
+            return new Paragraph<>(segs, paragraphStyle);
         }
     }
 
@@ -116,7 +115,7 @@ public final class Paragraph<S, PS> implements CharSequence {
         List<StyledText<S>> segs = new ArrayList<>(segments);
         int lastIdx = segments.size() - 1;
         segs.set(lastIdx, segments.get(lastIdx).concat(str));
-        return new Paragraph<>(segs, paragraphStyle.get());
+        return new Paragraph<>(segs, paragraphStyle);
     }
 
     public Paragraph<S, PS> insert(int offset, CharSequence str) {
@@ -131,7 +130,7 @@ public final class Paragraph<S, PS> implements CharSequence {
         StyledText<S> replacement = seg.spliced(segPos, segPos, str);
         List<StyledText<S>> segs = new ArrayList<>(segments);
         segs.set(segIdx, replacement);
-        return new Paragraph<>(segs, paragraphStyle.get());
+        return new Paragraph<>(segs, paragraphStyle);
     }
 
     @Override
@@ -148,7 +147,7 @@ public final class Paragraph<S, PS> implements CharSequence {
             List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<>(segs, paragraphStyle.get());
+            return new Paragraph<>(segs, paragraphStyle);
         }
     }
 
@@ -163,7 +162,7 @@ public final class Paragraph<S, PS> implements CharSequence {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() - segIdx);
             segs.add(segments.get(segIdx).subSequence(pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            return new Paragraph<>(segs, paragraphStyle.get());
+            return new Paragraph<>(segs, paragraphStyle);
         } else {
             throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
         }
@@ -174,7 +173,7 @@ public final class Paragraph<S, PS> implements CharSequence {
     }
 
     public Paragraph<S, PS> restyle(S style) {
-        return new Paragraph<>(toString(), style, paragraphStyle.get());
+        return new Paragraph<>(toString(), style, paragraphStyle);
     }
 
     public Paragraph<S, PS> restyle(int from, int to, S style) {
@@ -183,7 +182,7 @@ public final class Paragraph<S, PS> implements CharSequence {
         } else {
             to = Math.min(to, length());
             Paragraph<S, PS> left = subSequence(0, from);
-            Paragraph<S, PS> middle = new Paragraph<S, PS>(substring(from, to), style, paragraphStyle.get());
+            Paragraph<S, PS> middle = new Paragraph<>(substring(from, to), style, paragraphStyle);
             Paragraph<S, PS> right = subSequence(to);
             return left.concat(middle).concat(right);
         }
@@ -207,9 +206,13 @@ public final class Paragraph<S, PS> implements CharSequence {
             middleSegs.add(new StyledText<>(text, span.getStyle()));
             offset = end;
         }
-        Paragraph<S, PS> middle = new Paragraph<>(middleSegs, paragraphStyle.get());
+        Paragraph<S, PS> middle = new Paragraph<>(middleSegs, paragraphStyle);
 
         return left.concat(middle).concat(right);
+    }
+
+    public Paragraph<S, PS> setParagraphStyle(PS paragraphStyle) {
+        return new Paragraph<>(segments, paragraphStyle);
     }
 
     /**
@@ -328,15 +331,4 @@ public final class Paragraph<S, PS> implements CharSequence {
         return segments.hashCode();
     }
 
-    public PS getParagraphStyle() {
-        return paragraphStyle.get();
-    }
-
-    public ObservableObjectValue<PS> paragraphStyle() {
-        return paragraphStyle;
-    }
-
-    public void setParagraphStyle(PS paragraphStyle) {
-        this.paragraphStyle.set(paragraphStyle);
-    }
 }

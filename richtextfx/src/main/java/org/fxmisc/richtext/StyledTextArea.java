@@ -713,7 +713,7 @@ implements
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
         if (paragraph >= 0 && paragraph < paragraphs.size()) {
-            paragraphs.get(paragraph).setParagraphStyle(paragraphStyle);
+            paragraphs.set(paragraph, paragraphs.get(paragraph).setParagraphStyle(paragraphStyle));
         }
     }
 
