@@ -18,7 +18,6 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.Cell;
@@ -39,8 +38,12 @@ import java.util.stream.Stream;
 
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
+import static org.reactfx.EventStreams.valuesOf;
 
-public class StyledTextAreaView<S, PS> extends Region {
+/**
+ * StyledTextArea skin.
+ */
+class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -71,9 +74,7 @@ public class StyledTextAreaView<S, PS> extends Region {
 
     private Subscription subscriptions = () -> {};
 
-    private final BooleanPulse caretPulse = new BooleanPulse(javafx.util.Duration.seconds(.5));
-
-    private final BooleanBinding caretVisible;
+    private final Binding<Boolean> caretVisible;
 
     private final Val<UnaryOperator<Point2D>> popupAnchorAdjustment;
 
@@ -94,7 +95,7 @@ public class StyledTextAreaView<S, PS> extends Region {
 
     public StyledTextAreaView(
             StyledTextArea<S, PS> styledTextArea,
-            BiConsumer<Text, S> applyStyle,
+            BiConsumer<? super TextExt, S> applyStyle,
             PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.area = styledTextArea;
@@ -134,22 +135,19 @@ public class StyledTextAreaView<S, PS> extends Region {
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         subscribeTo(caretDirty, x -> requestFollowCaret());
 
-        // blink caret only when focused
-        manageSubscription(EventStreams.valuesOf(area.focusedProperty()).subscribe(isFocused -> {
-            if(isFocused) {
-                caretPulse.start(true);
-            } else {
-                caretPulse.stop(false);
-            }
-        }));
-        manageSubscription(() -> caretPulse.stop());
-
-        // The caret is visible in periodic intervals, but only when
-        // the code area is focused, editable and not disabled.
-        caretVisible = caretPulse
-                .and(area.focusedProperty())
+        // whether or not to animate the caret
+        BooleanBinding blinkCaret = area.focusedProperty()
                 .and(area.editableProperty())
                 .and(area.disabledProperty().not());
+        manageBinding(blinkCaret);
+
+        // The caret is visible in periodic intervals,
+        // but only when blinkCaret is true.
+        caretVisible = EventStreams.valuesOf(blinkCaret)
+                .flatMap(blink -> blink
+                        ? booleanPulse(Duration.ofMillis(500))
+                        : valuesOf(Val.constant(false)))
+                .toBinding(false);
         manageBinding(caretVisible);
 
         // Adjust popup anchor by either a user-provided function,
@@ -183,9 +181,6 @@ public class StyledTextAreaView<S, PS> extends Region {
         virtualFlow.dispose();
     }
 
-    public VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> getVirtualFlow() {
-        return virtualFlow;
-    }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -290,56 +285,53 @@ public class StyledTextAreaView<S, PS> extends Region {
     }
 
     /**
-     * Returns x coordinate of the caret relative to the current TextFlow, not
-     * relative to the skin.
+     * Returns x coordinate of the caret in the current paragraph.
      */
-    double getCaretOffsetX() {
+    ParagraphBox.CaretOffsetX getCaretOffsetX() {
         int idx = area.getCurrentParagraph();
-        return idx == -1 ? 0 : getCell(idx).getCaretOffsetX();
+        return getCell(idx).getCaretOffsetX();
     }
 
     double getViewportHeight() {
         return virtualFlow.getViewportHeight();
     }
 
-    @Deprecated
-    int getInsertionIndex(double textX, TwoDimensional.Position targetLine) {
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
-        int parInsertionIndex = getCellInsertionIndex(cell, textX, targetLine.getMinor());
-        return getParagraphOffset(parIdx) + parInsertionIndex;
+        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
+        return parHit.offset(getParagraphOffset(parIdx));
     }
 
-    @Deprecated
-    int getInsertionIndex(double textX, double y) {
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
-            return 0;
+            return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
-            return area.getLength();
+            return CharacterHit.insertionAt(area.getLength());
         } else {
             int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<S, PS> cell = hit.getCell().getNode();
-            double cellY = hit.getCellOffset().getY();
-            int parInsertionIndex = getCellInsertionIndex(cell, textX, cellY);
-            return getParagraphOffset(parIdx) + parInsertionIndex;
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
+            return parHit.offset(parOffset);
         }
     }
 
     CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
-            return CharacterHit.before(0);
+            return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
-            return CharacterHit.after(area.getLength() - 1);
+            return CharacterHit.insertionAt(area.getLength());
         } else {
+            int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<S, PS> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
-            CharacterHit cellHit = cell.hit(cellOffset);
-            int parOffset = getParagraphOffset(cell.getIndex());
-            return new CharacterHit(
-                    parOffset + cellHit.getCharacterIndex(),
-                    cellHit.getHitType());
+            CharacterHit parHit = cell.hit(cellOffset);
+            return parHit.offset(parOffset);
         }
     }
 
@@ -371,7 +363,7 @@ public class StyledTextAreaView<S, PS> extends Region {
 
     private Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> createCell(
             Paragraph<S, PS> paragraph,
-            BiConsumer<Text, S> applyStyle,
+            BiConsumer<? super TextExt, S> applyStyle,
             PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
@@ -439,16 +431,6 @@ public class StyledTextAreaView<S, PS> extends Region {
         return virtualFlow.getCell(index).getNode();
     }
 
-    @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S, PS> cell, double x, int line) {
-        return cell.hitTextLine(x, line).getInsertionIndex();
-    }
-
-    @Deprecated
-    private int getCellInsertionIndex(ParagraphBox<S, PS> cell, double x, double y) {
-        return cell.hitText(x, y).getInsertionIndex();
-    }
-
     private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S, PS>> cells, Duration delay) {
         return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
                 l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
@@ -499,9 +481,9 @@ public class StyledTextAreaView<S, PS> extends Region {
 
         Bounds[] bounds = virtualFlow.visibleCells().stream()
                 .map(c -> c.getNode().getSelectionBoundsOnScreen())
-                .filter(opt -> opt.isPresent())
-                .map(opt -> opt.get())
-                .toArray(n -> new Bounds[n]);
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toArray(Bounds[]::new);
 
         if(bounds.length == 0) {
             return Optional.empty();
@@ -522,7 +504,7 @@ public class StyledTextAreaView<S, PS> extends Region {
     }
 
     private void manageBinding(Binding<?> binding) {
-        subscriptions = subscriptions.and(() -> binding.dispose());
+        subscriptions = subscriptions.and(binding::dispose);
     }
 
     private static Bounds extendLeft(Bounds b, double w) {
@@ -533,5 +515,9 @@ public class StyledTextAreaView<S, PS> extends Region {
                     b.getMinX() - w, b.getMinY(),
                     b.getWidth() + w, b.getHeight());
         }
+    }
+
+    private static EventStream<Boolean> booleanPulse(Duration duration) {
+        return EventStreams.ticks(duration).accumulate(true, (b, x) -> !b);
     }
 }
