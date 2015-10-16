@@ -7,7 +7,7 @@ import javafx.scene.control.IndexRange;
 /**
  * Navigation actions for {@link TextEditingArea}.
  */
-public interface NavigationActions<S> extends TextEditingArea<S> {
+public interface NavigationActions<S, PS> extends TextEditingArea<S, PS> {
 
     /**
      * Indicates how to treat selection when caret is moved.

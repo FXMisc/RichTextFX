@@ -36,6 +36,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
 
 import org.fxmisc.richtext.CssProperties.EditableProperty;
@@ -94,12 +95,12 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S> extends Control
+public class StyledTextArea<S, PS> extends Control
 implements
-        TextEditingArea<S>,
-        EditActions<S>,
-        ClipboardActions<S>,
-        NavigationActions<S>,
+        TextEditingArea<S, PS>,
+        EditActions<S, PS>,
+        ClipboardActions<S, PS>,
+        NavigationActions<S, PS>,
         UndoActions<S>,
         TwoDimensional {
 
@@ -278,7 +279,7 @@ implements
     @Override public final ObservableValue<String> textProperty() { return text; }
 
     // rich text
-    @Override public final StyledDocument<S> getDocument() { return content.snapshot(); };
+    @Override public final StyledDocument<S, PS> getDocument() { return content.snapshot(); };
 
     // length
     private final SuspendableVal<Integer> length;
@@ -318,8 +319,8 @@ implements
     @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    private final SuspendableList<Paragraph<S>> paragraphs;
-    @Override public ObservableList<Paragraph<S>> getParagraphs() {
+    private final SuspendableList<Paragraph<S, PS>> paragraphs;
+    @Override public ObservableList<Paragraph<S, PS>> getParagraphs() {
         return paragraphs;
     }
 
@@ -341,9 +342,9 @@ implements
     public final EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
     // rich text changes
-    private final SuspendableEventStream<RichTextChange<S>> richTextChanges;
+    private final SuspendableEventStream<RichTextChange<S, PS>> richTextChanges;
     @Override
-    public final EventStream<RichTextChange<S>> richChanges() { return richTextChanges; }
+    public final EventStream<RichTextChange<S, PS>> richChanges() { return richTextChanges; }
 
 
     /* ********************************************************************** *
@@ -358,7 +359,7 @@ implements
     /**
      * content model
      */
-    private final EditableStyledDocument<S> content;
+    private final EditableStyledDocument<S, PS> content;
 
     /**
      * Style used by default when no other style is provided.
@@ -366,9 +367,19 @@ implements
     private final S initialStyle;
 
     /**
+     * Style used by default when no other style is provided.
+     */
+    private final PS initialParagraphStyle;
+
+    /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
+
+    /**
+     * Style applicator used by the default skin.
+     */
+    private final BiConsumer<TextFlow, PS> applyParagraphStyle;
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -394,17 +405,25 @@ implements
      * @param applyStyle function that, given a {@link Text} node and
      * a style, applies the style to the text node. This function is
      * used by the default skin to apply style to text nodes.
+     * @param initialParagraphStyle style to use in places where no other style is
+     * specified (yet).
+     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
+     * a style, applies the style to the paragraph node. This function is
+     * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle) {
-        this(initialStyle, applyStyle, true);
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
     }
 
     public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+            PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
             boolean preserveStyle) {
         this.initialStyle = initialStyle;
+        this.initialParagraphStyle = initialParagraphStyle;
         this.applyStyle = applyStyle;
+        this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
-        content = new EditableStyledDocument<>(initialStyle);
+        content = new EditableStyledDocument<>(initialStyle, initialParagraphStyle);
         paragraphs = LiveList.suspendable(content.getParagraphs());
 
         text = Val.suspendable(content.textProperty());
@@ -478,17 +497,17 @@ implements
         return paragraphs.get(paragraph).toString();
     }
 
-    public Paragraph<S> getParagraph(int index) {
+    public Paragraph<S, PS> getParagraph(int index) {
         return paragraphs.get(index);
     }
 
     @Override
-    public StyledDocument<S> subDocument(int start, int end) {
+    public StyledDocument<S, PS> subDocument(int start, int end) {
         return content.subSequence(start, end);
     }
 
     @Override
-    public StyledDocument<S> subDocument(int paragraphIndex) {
+    public StyledDocument<S, PS> subDocument(int paragraphIndex) {
         return content.subDocument(paragraphIndex);
     }
 
@@ -690,6 +709,15 @@ implements
     }
 
     /**
+     * Sets style for the whole paragraph.
+     */
+    public void setParagraphStyle(int paragraph, PS paragraphStyle) {
+        if (paragraph >= 0 && paragraph < paragraphs.size()) {
+            paragraphs.set(paragraph, paragraphs.get(paragraph).setParagraphStyle(paragraphStyle));
+        }
+    }
+
+    /**
      * Resets the style of the given range to the initial style.
      */
     public void clearStyle(int from, int to) {
@@ -711,15 +739,22 @@ implements
         setStyle(paragraph, from, to, initialStyle);
     }
 
+    /**
+     * Resets the style of the given paragraph to the initial style.
+     */
+    public void clearParagraphStyle(int paragraph) {
+        setParagraphStyle(paragraph, initialParagraphStyle);
+    }
+
     @Override
     public void replaceText(int start, int end, String text) {
-        StyledDocument<S> doc = ReadOnlyStyledDocument.fromString(
-                text, content.getStyleForInsertionAt(start));
+        StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
+                text, content.getStyleForInsertionAt(start), content.getParagraphStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 
     @Override
-    public void replace(int start, int end, StyledDocument<S> replacement) {
+    public void replace(int start, int end, StyledDocument<S, PS> replacement) {
         try(Guard g = omniSuspendable.suspend()) {
             start = clamp(0, start, getLength());
             end = clamp(0, end, getLength());
@@ -759,9 +794,9 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return Skins.<StyledTextArea<S>, StyledTextAreaVisual<S>>createSimpleSkin(
+        return Skins.<StyledTextArea<S, PS>, StyledTextAreaVisual<S, PS>>createSimpleSkin(
                 this,
-                area -> new StyledTextAreaVisual<>(area, applyStyle),
+                area -> new StyledTextAreaVisual<>(area, applyStyle, initialParagraphStyle, applyParagraphStyle),
                 StyledTextAreaBehavior::new);
     }
 
@@ -790,8 +825,8 @@ implements
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<S>, RichTextChange<S>, Optional<RichTextChange<S>>> merge = (change1, change2) -> change1.mergeWith(change2);
+        Consumer<RichTextChange<S, PS>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        BiFunction<RichTextChange<S, PS>, RichTextChange<S, PS>, Optional<RichTextChange<S, PS>>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 

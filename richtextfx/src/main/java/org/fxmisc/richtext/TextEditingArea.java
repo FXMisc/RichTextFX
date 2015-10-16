@@ -15,7 +15,7 @@ import org.reactfx.EventStream;
  *
  * @param <S> type of style that can be applied to text.
  */
-public interface TextEditingArea<S> {
+public interface TextEditingArea<S, PS> {
 
     /*******************
      *                 *
@@ -40,7 +40,7 @@ public interface TextEditingArea<S> {
      * The returned document is immutable, it does not reflect
      * subsequent edits of this text-editing area.
      */
-    StyledDocument<S> getDocument();
+    StyledDocument<S, PS> getDocument();
 
     /**
      * The current position of the caret, as a character offset in the text.
@@ -91,7 +91,7 @@ public interface TextEditingArea<S> {
     /**
      * Unmodifiable observable list of paragraphs in this text area.
      */
-    ObservableList<Paragraph<S>> getParagraphs();
+    ObservableList<Paragraph<S, PS>> getParagraphs();
 
 
     /*********************
@@ -108,7 +108,7 @@ public interface TextEditingArea<S> {
     /**
      * Stream of rich text changes.
      */
-    EventStream<RichTextChange<S>> richChanges();
+    EventStream<RichTextChange<S, PS>> richChanges();
 
 
     /***************
@@ -130,12 +130,12 @@ public interface TextEditingArea<S> {
     /**
      * Returns rich-text content of the given paragraph.
      */
-    StyledDocument<S> subDocument(int paragraphIndex);
+    StyledDocument<S, PS> subDocument(int paragraphIndex);
 
     /**
      * Returns rich-text content of the given character range.
      */
-    StyledDocument<S> subDocument(int start, int end);
+    StyledDocument<S, PS> subDocument(int start, int end);
 
 
     /******************
@@ -189,7 +189,7 @@ public interface TextEditingArea<S> {
     /**
      * Replaces a range of characters with the given rich-text document.
      */
-    void replace(int start, int end, StyledDocument<S> replacement);
+    void replace(int start, int end, StyledDocument<S, PS> replacement);
 
     /**
      * Replaces a range of characters with the given text.
@@ -208,7 +208,7 @@ public interface TextEditingArea<S> {
      * Equivalent to
      * {@code replace(range.getStart(), range.getEnd(), replacement)}.
      */
-    default void replace(IndexRange range, StyledDocument<S> replacement) {
+    default void replace(IndexRange range, StyledDocument<S, PS> replacement) {
         replace(range.getStart(), range.getEnd(), replacement);
     }
 

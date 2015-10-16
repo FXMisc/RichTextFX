@@ -11,8 +11,8 @@ import java.util.function.Function;
 
 import javafx.scene.control.IndexRange;
 
-abstract class StyledDocumentBase<S, L extends List<Paragraph<S>>>
-implements StyledDocument<S> {
+abstract class StyledDocumentBase<S, PS, L extends List<Paragraph<S, PS>>>
+implements StyledDocument<S, PS> {
 
     protected final L paragraphs;
     protected final TwoLevelNavigator navigator;
@@ -67,35 +67,35 @@ implements StyledDocument<S> {
     }
 
     @Override
-    public StyledDocument<S> subSequence(IndexRange range) {
+    public StyledDocument<S, PS> subSequence(IndexRange range) {
         return subSequence(range.getStart(), range.getEnd());
     }
 
     @Override
-    public StyledDocument<S> subSequence(int start, int end) {
+    public StyledDocument<S, PS> subSequence(int start, int end) {
         return sub(
                 start, end,
                 p -> p,
                 (p, a, b) -> p.subSequence(a, b),
-                (List<Paragraph<S>> pars) -> new ReadOnlyStyledDocument<S>(pars, ADOPT));
+                (List<Paragraph<S, PS>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
     }
 
     @Override
-    public StyledDocument<S> subDocument(int paragraphIndex) {
+    public StyledDocument<S, PS> subDocument(int paragraphIndex) {
         return new ReadOnlyStyledDocument<>(Arrays.asList(paragraphs.get(paragraphIndex)), ADOPT);
     }
 
     @Override
-    public final StyledDocument<S> concat(StyledDocument<S> that) {
-        List<Paragraph<S>> pars1 = this.getParagraphs();
-        List<Paragraph<S>> pars2 = that.getParagraphs();
+    public final StyledDocument<S, PS> concat(StyledDocument<S, PS> that) {
+        List<Paragraph<S, PS>> pars1 = this.getParagraphs();
+        List<Paragraph<S, PS>> pars2 = that.getParagraphs();
         int n1 = pars1.size();
         int n2 = pars2.size();
-        List<Paragraph<S>> pars = new ArrayList<>(n1 + n2 - 1);
+        List<Paragraph<S, PS>> pars = new ArrayList<>(n1 + n2 - 1);
         pars.addAll(pars1.subList(0, n1 - 1));
         pars.add(pars1.get(n1 - 1).concat(pars2.get(0)));
         pars.addAll(pars2.subList(1, n2));
-        return new ReadOnlyStyledDocument<S>(pars, ADOPT);
+        return new ReadOnlyStyledDocument<>(pars, ADOPT);
     }
 
     @Override
@@ -150,18 +150,18 @@ implements StyledDocument<S> {
         List<StyleSpans<S>> subSpans = new ArrayList<>(affectedPars);
 
         if(startParIdx == endParIdx) {
-            Paragraph<S> par = paragraphs.get(startParIdx);
+            Paragraph<S, PS> par = paragraphs.get(startParIdx);
             subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
-            Paragraph<S> startPar = paragraphs.get(startParIdx);
+            Paragraph<S, PS> startPar = paragraphs.get(startParIdx);
             subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1));
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
-                Paragraph<S> par = paragraphs.get(i);
+                Paragraph<S, PS> par = paragraphs.get(i);
                 subSpans.add(par.getStyleSpans(0, par.length() + 1));
             }
 
-            Paragraph<S> endPar = paragraphs.get(endParIdx);
+            Paragraph<S, PS> endPar = paragraphs.get(endParIdx);
             subSpans.add(endPar.getStyleSpans(0, end.getMinor()));
         }
 
@@ -189,7 +189,7 @@ implements StyledDocument<S> {
     @Override
     public final boolean equals(Object other) {
         if(other instanceof StyledDocument) {
-            StyledDocument<?> that = (StyledDocument<?>) other;
+            StyledDocument<?, ?> that = (StyledDocument<?, ?>) other;
             return Objects.equals(this.paragraphs, that.getParagraphs());
         } else {
             return false;
@@ -226,8 +226,8 @@ implements StyledDocument<S> {
      */
     private <P, R> R sub(
             int start, int end,
-            Function<Paragraph<S>, P> map,
-            SubMap<Paragraph<S>, P> subMap,
+            Function<Paragraph<S, PS>, P> map,
+            SubMap<Paragraph<S, PS>, P> subMap,
             Function<List<P>, R> combine) {
 
         Position start2D = navigator.offsetToPosition(start, Forward);
@@ -244,7 +244,7 @@ implements StyledDocument<S> {
         if(p1 == p2) {
             pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
         } else {
-            Paragraph<S> par1 = paragraphs.get(p1);
+            Paragraph<S, PS> par1 = paragraphs.get(p1);
             pars.add(subMap.subrange(par1, col1, par1.length()));
 
             for(int i = p1 + 1; i < p2; ++i) {

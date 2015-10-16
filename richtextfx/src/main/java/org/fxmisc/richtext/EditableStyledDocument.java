@@ -30,8 +30,7 @@ import org.reactfx.value.Var;
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class EditableStyledDocument<S>
-extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
+final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, ObservableList<Paragraph<S, PS>>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -64,14 +63,14 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * Unmodifiable observable list of styled paragraphs of this document.
      */
     @Override
-    public ObservableList<Paragraph<S>> getParagraphs() {
+    public ObservableList<Paragraph<S, PS>> getParagraphs() {
         return FXCollections.unmodifiableObservableList(paragraphs);
     }
 
     /**
      * Read-only snapshot of the current state of this document.
      */
-    public ReadOnlyStyledDocument<S> snapshot() {
+    public ReadOnlyStyledDocument<S, PS> snapshot() {
         return new ReadOnlyStyledDocument<>(paragraphs, ParagraphsPolicy.COPY);
     }
 
@@ -105,22 +104,22 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     private final EventSource<String> insertedText = new EventSource<>();
 
-    private final EventSource<StyledDocument<S>> insertedDocument = new EventSource<>();
+    private final EventSource<StyledDocument<S, PS>> insertedDocument = new EventSource<>();
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
     private final EventStream<PlainTextChange> plainTextChanges;
     public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
-    private final EventStream<RichTextChange<S>> richChanges;
-    public EventStream<RichTextChange<S>> richChanges() { return richChanges; }
+    private final EventStream<RichTextChange<S, PS>> richChanges;
+    public EventStream<RichTextChange<S, PS>> richChanges() { return richChanges; }
 
     {
         EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).map(t2 -> t2.map((a, b) -> getText(a, b)));
         EventStream<Integer> changePosition = EventStreams.merge(textChangePosition, styleChangePosition);
         EventStream<Integer> removalEnd = EventStreams.merge(textRemovalEnd, styleChangeEnd);
-        EventStream<StyledDocument<S>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b)));
+        EventStream<StyledDocument<S, PS>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b)));
         EventStream<Integer> insertionEnd = styleChangeEnd.emitOn(styleChangeDone);
-        EventStream<StyledDocument<S>> insertedDocument = EventStreams.merge(
+        EventStream<StyledDocument<S, PS>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b))));
 
@@ -130,7 +129,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
         richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
-                .map(t3 -> t3.map((pos, removed, inserted) -> new RichTextChange<S>(pos, removed, inserted)));
+                .map(t3 -> t3.map((pos, removed, inserted) -> new RichTextChange<>(pos, removed, inserted)));
     }
 
 
@@ -151,6 +150,8 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     private final S initialStyle;
 
+    private final PS initialParagraphStyle;
+
 
     /* ********************************************************************** *
      *                                                                        *
@@ -159,9 +160,10 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
-    EditableStyledDocument(S initialStyle) {
-        super(FXCollections.observableArrayList(new Paragraph<S>("", initialStyle)));
+    EditableStyledDocument(S initialStyle, PS initialParagraphStyle) {
+        super(FXCollections.observableArrayList(new Paragraph<>("", initialStyle, initialParagraphStyle)));
         this.initialStyle = initialStyle;
+        this.initialParagraphStyle = initialParagraphStyle;
     }
 
 
@@ -175,12 +177,12 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
      * ********************************************************************** */
 
     public void replaceText(int start, int end, String text) {
-        StyledDocument<S> doc = ReadOnlyStyledDocument.fromString(
-                text, getStyleForInsertionAt(start));
+        StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
+                text, getStyleForInsertionAt(start), getParagraphStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 
-    public void replace(int start, int end, StyledDocument<S> replacement) {
+    public void replace(int start, int end, StyledDocument<S, PS> replacement) {
         ensureValidRange(start, end);
 
         textChangePosition.push(start);
@@ -194,12 +196,12 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int lastParTo = end2D.getMinor();
 
         // Get the leftovers after cutting out the deletion
-        Paragraph<S> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
-        Paragraph<S> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
+        Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
+        Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
 
-        List<Paragraph<S>> replacementPars = replacement.getParagraphs();
+        List<Paragraph<S, PS>> replacementPars = replacement.getParagraphs();
 
-        List<Paragraph<S>> newPars = join(firstPar, replacementPars, lastPar);
+        List<Paragraph<S, PS>> newPars = join(firstPar, replacementPars, lastPar);
         setAll(firstParIdx, lastParIdx + 1, newPars);
 
         // update length, invalidate text
@@ -214,7 +216,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
         // complete the change events
         insertedText.push(replacement.toString());
-        StyledDocument<S> doc =
+        StyledDocument<S, PS> doc =
                 replacement instanceof ReadOnlyStyledDocument
                 ? replacement
                 : new ReadOnlyStyledDocument<>(replacement.getParagraphs(), COPY);
@@ -235,22 +237,22 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
             int lastParTo = end.getMinor();
 
             if(firstParIdx == lastParIdx) {
-                Paragraph<S> p = paragraphs.get(firstParIdx);
+                Paragraph<S, PS> p = paragraphs.get(firstParIdx);
                 p = p.restyle(firstParFrom, lastParTo, style);
                 paragraphs.set(firstParIdx, p);
             } else {
                 int affectedPars = lastParIdx - firstParIdx + 1;
-                List<Paragraph<S>> restyledPars = new ArrayList<>(affectedPars);
+                List<Paragraph<S, PS>> restyledPars = new ArrayList<>(affectedPars);
 
-                Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+                Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx);
                 restyledPars.add(firstPar.restyle(firstParFrom, firstPar.length(), style));
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
-                    Paragraph<S> p = paragraphs.get(i);
+                    Paragraph<S, PS> p = paragraphs.get(i);
                     restyledPars.add(p.restyle(style));
                 }
 
-                Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+                Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx);
                 restyledPars.add(lastPar.restyle(0, lastParTo, style));
 
                 setAll(firstParIdx, lastParIdx + 1, restyledPars);
@@ -259,7 +261,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     public void setStyle(int paragraph, S style) {
-        Paragraph<S> p = paragraphs.get(paragraph);
+        Paragraph<S, PS> p = paragraphs.get(paragraph);
         int start = position(paragraph, 0).toOffset();
         int end = start + p.length();
 
@@ -276,7 +278,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int end = parOffset + toCol;
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
-            Paragraph<S> p = paragraphs.get(paragraph);
+            Paragraph<S, PS> p = paragraphs.get(paragraph);
             p = p.restyle(fromCol, toCol, style);
             paragraphs.set(paragraph, p);
         }
@@ -307,23 +309,23 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
             int lastParTo = end.getMinor();
 
             if(firstParIdx == lastParIdx) {
-                Paragraph<S> p = paragraphs.get(firstParIdx);
-                Paragraph<S> q = p.restyle(firstParFrom, styleSpans);
+                Paragraph<S, PS> p = paragraphs.get(firstParIdx);
+                Paragraph<S, PS> q = p.restyle(firstParFrom, styleSpans);
                 if(q != p) {
                     paragraphs.set(firstParIdx, q);
                 }
             } else {
-                Paragraph<S> firstPar = paragraphs.get(firstParIdx);
+                Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx);
                 Position spansFrom = styleSpans.position(0, 0);
                 Position spansTo = spansFrom.offsetBy(firstPar.length() - firstParFrom, Backward);
-                Paragraph<S> q = firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo));
+                Paragraph<S, PS> q = firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo));
                 if(q != firstPar) {
                     paragraphs.set(firstParIdx, q);
                 }
                 spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
-                    Paragraph<S> par = paragraphs.get(i);
+                    Paragraph<S, PS> par = paragraphs.get(i);
                     spansTo = spansFrom.offsetBy(par.length(), Backward);
                     q = par.restyle(0, styleSpans.subView(spansFrom, spansTo));
                     if(q != par) {
@@ -332,7 +334,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
                     spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
                 }
 
-                Paragraph<S> lastPar = paragraphs.get(lastParIdx);
+                Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx);
                 spansTo = spansFrom.offsetBy(lastParTo, Backward);
                 q = lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo));
                 if(q != lastPar) {
@@ -350,8 +352,8 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         int end = start + len;
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
-            Paragraph<S> p = paragraphs.get(paragraph);
-            Paragraph<S> q = p.restyle(from, styleSpans);
+            Paragraph<S, PS> p = paragraphs.get(paragraph);
+            Paragraph<S, PS> q = p.restyle(from, styleSpans);
             if(q != p) {
                 paragraphs.set(paragraph, q);
             }
@@ -394,7 +396,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
     }
 
     private int terminatorLengthToSkip(Position pos) {
-        Paragraph<S> par = paragraphs.get(pos.getMajor());
+        Paragraph<S, PS> par = paragraphs.get(pos.getMajor());
         int skipSum = 0;
         while(pos.getMinor() == par.length() && pos.getMajor() < paragraphs.size() - 1) {
             skipSum += 1;
@@ -422,14 +424,14 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         return () -> styleChangeDone.push(null);
     }
 
-    private List<Paragraph<S>> join(Paragraph<S> first, List<Paragraph<S>> middle, Paragraph<S> last) {
+    private List<Paragraph<S, PS>> join(Paragraph<S, PS> first, List<Paragraph<S, PS>> middle, Paragraph<S, PS> last) {
         int m = middle.size();
         if(m == 0) {
             return Arrays.asList(first.concat(last));
         } else if(m == 1) {
             return Arrays.asList(first.concat(middle.get(0)).concat(last));
         } else {
-            List<Paragraph<S>> res = new ArrayList<>(middle.size());
+            List<Paragraph<S, PS>> res = new ArrayList<>(middle.size());
             res.add(first.concat(middle.get(0)));
             res.addAll(middle.subList(1, m - 1));
             res.add(middle.get(m-1).concat(last));
@@ -439,7 +441,7 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
 
     // TODO: Replace with ObservableList.setAll(from, to, col) when implemented.
     // See https://javafx-jira.kenai.com/browse/RT-32655.
-    private void setAll(int startIdx, int endIdx, Collection<Paragraph<S>> pars) {
+    private void setAll(int startIdx, int endIdx, Collection<Paragraph<S, PS>> pars) {
         if(startIdx > 0 || endIdx < paragraphs.size()) {
             paragraphs.subList(startIdx, endIdx).clear(); // note that paragraphs remains non-empty at all times
             paragraphs.addAll(startIdx, pars);
@@ -456,8 +458,21 @@ extends StyledDocumentBase<S, ObservableList<Paragraph<S>>> {
         if(useInitialStyleForInsertion.get()) {
             return initialStyle;
         } else {
-            Paragraph<S> par = paragraphs.get(insertionPos.getMajor());
+            Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
             return par.getStyleAtPosition(insertionPos.getMinor());
+        }
+    }
+
+    PS getParagraphStyleForInsertionAt(int pos) {
+        return getParagraphStyleForInsertionAt(navigator.offsetToPosition(pos, Forward));
+    }
+
+    PS getParagraphStyleForInsertionAt(Position insertionPos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialParagraphStyle;
+        } else {
+            Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
+            return par.getParagraphStyle();
         }
     }
 }

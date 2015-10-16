@@ -5,7 +5,7 @@ import javafx.scene.control.IndexRange;
 /**
  * Extended edit actions for {@link TextEditingArea}.
  */
-public interface EditActions<S> extends TextEditingArea<S> {
+public interface EditActions<S, PS> extends TextEditingArea<S, PS> {
 
     /**
      * Appends the given text to the end of the text content.
@@ -17,7 +17,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
     /**
      * Appends the given rich-text content to the end of this text-editing area.
      */
-    default void append(StyledDocument<S> document) {
+    default void append(StyledDocument<S, PS> document) {
         insert(getLength(), document);
     }
 
@@ -37,7 +37,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
      * @param index The location to insert the text.
      * @param document The rich-text content to insert.
      */
-    default void insert(int index, StyledDocument<S> document) {
+    default void insert(int index, StyledDocument<S, PS> document) {
         replace(index, index, document);
     }
 
@@ -105,7 +105,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
     /**
      * Replaces the entire content with the given rich-text content.
      */
-    default void replace(StyledDocument<S> replacement) {
+    default void replace(StyledDocument<S, PS> replacement) {
         replace(0, getLength(), replacement);
     }
 
@@ -125,7 +125,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
      * caret position. If there was a selection, then the selection is cleared
      * and the given replacement text is inserted.
      */
-    default void replaceSelection(StyledDocument<S> replacement) {
+    default void replaceSelection(StyledDocument<S, PS> replacement) {
         replace(getSelection(), replacement);
     }
 
@@ -136,7 +136,7 @@ public interface EditActions<S> extends TextEditingArea<S> {
             // no move, just position the caret
             selectRange(pos, pos);
         } else {
-            StyledDocument<S> text = this.subDocument(sel.getStart(), sel.getEnd());
+            StyledDocument<S, PS> text = this.subDocument(sel.getStart(), sel.getEnd());
             if(pos > sel.getEnd())
                 pos -= sel.getLength();
             deleteText(sel);
