@@ -712,8 +712,8 @@ implements
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        if (paragraph >= 0 && paragraph < paragraphs.size()) {
-            paragraphs.set(paragraph, paragraphs.get(paragraph).setParagraphStyle(paragraphStyle));
+        try(Guard g = omniSuspendable.suspend()) {
+            content.setParagraphStyle(paragraph, paragraphStyle);
         }
     }
 

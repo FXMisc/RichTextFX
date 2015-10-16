@@ -21,6 +21,7 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -360,12 +361,29 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         }
     }
 
+    public void setParagraphStyle(int parIdx, PS style) {
+        ensureValidParagraphIndex(parIdx);
+        Paragraph<S, PS> par = paragraphs.get(parIdx);
+        int len = par.length();
+        int start = position(parIdx, 0).toOffset();
+        int end = start + len;
+
+        try(Guard commitOnClose = beginStyleChange(start, end)) {
+            Paragraph<S, PS> q = par.setParagraphStyle(style);
+            paragraphs.set(parIdx, q);
+        }
+    }
+
 
     /* ********************************************************************** *
      *                                                                        *
      * Private and package private methods                                    *
      *                                                                        *
      * ********************************************************************** */
+
+    private void ensureValidParagraphIndex(int parIdx) {
+        Lists.checkIndex(parIdx, paragraphs.size());
+    }
 
     private void ensureValidRange(int start, int end) {
         ensureValidRange(start, end, length());
