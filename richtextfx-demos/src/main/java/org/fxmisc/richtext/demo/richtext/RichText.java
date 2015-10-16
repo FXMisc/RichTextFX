@@ -6,6 +6,10 @@
 
 package org.fxmisc.richtext.demo.richtext;
 
+import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.application.Application;
@@ -18,11 +22,14 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.IndexRange;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import org.fxmisc.richtext.InlineStyleTextArea;
@@ -63,6 +70,11 @@ public class RichText extends Application {
         Button italicBtn = createButton("italic", this::toggleItalic);
         Button underlineBtn = createButton("underline", this::toggleUnderline);
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
+        ToggleGroup alignmentGrp = new ToggleGroup();
+        ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
+        ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
+        ToggleButton alignRightBtn = createToggleButton(alignmentGrp, "align-right", this::alignRight);
+        ToggleButton alignJustifyBtn = createToggleButton(alignmentGrp, "align-justify", this::alignJustify);
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
         sizeCombo.getSelectionModel().select(Integer.valueOf(12));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
@@ -93,6 +105,7 @@ public class RichText extends Application {
         area.beingUpdatedProperty().addListener((o, old, beingUpdated) -> {
             if(!beingUpdated) {
                 boolean bold, italic, underline, strike;
+                Optional<TextAlignment> alignment;
                 Integer fontSize;
                 String fontFamily;
                 Color textColor;
@@ -127,6 +140,13 @@ public class RichText extends Application {
                     backgroundColor = style.backgroundColor.orElse(null);
                 }
 
+                int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
+                int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
+                List<Paragraph<TextStyle, ParStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
+                @SuppressWarnings("unchecked")
+                Optional<TextAlignment>[] alignments = pars.stream().map(p -> p.getParagraphStyle().alignment).distinct().toArray(Optional[]::new);
+                alignment = alignments.length == 1 ? alignments[0] : Optional.empty();
+
                 updatingToolbar.suspendWhile(() -> {
                     if(bold) {
                         if(!boldBtn.getStyleClass().contains("pressed")) {
@@ -160,6 +180,18 @@ public class RichText extends Application {
                         strikeBtn.getStyleClass().remove("pressed");
                     }
 
+                    if(alignment.isPresent()) {
+                        TextAlignment al = alignment.get();
+                        switch(al) {
+                            case LEFT: alignmentGrp.selectToggle(alignLeftBtn); break;
+                            case CENTER: alignmentGrp.selectToggle(alignCenterBtn); break;
+                            case RIGHT: alignmentGrp.selectToggle(alignRightBtn); break;
+                            case JUSTIFY: alignmentGrp.selectToggle(alignJustifyBtn); break;
+                        }
+                    } else {
+                        alignmentGrp.selectToggle(null);
+                    }
+
                     if(fontSize != -1) {
                         sizeCombo.getSelectionModel().select(fontSize);
                     } else {
@@ -183,7 +215,10 @@ public class RichText extends Application {
 
         HBox panel1 = new HBox(3.0);
         HBox panel2 = new HBox(3.0);
-        panel1.getChildren().addAll(wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn, boldBtn, italicBtn, underlineBtn, strikeBtn);
+        panel1.getChildren().addAll(
+                wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
+                boldBtn, italicBtn, underlineBtn, strikeBtn,
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
         VBox vbox = new VBox();
@@ -201,7 +236,20 @@ public class RichText extends Application {
     private Button createButton(String styleClass, Runnable action) {
         Button button = new Button();
         button.getStyleClass().add(styleClass);
-        button.setOnAction((evt) -> {
+        button.setOnAction(evt -> {
+            action.run();
+            area.requestFocus();
+        });
+        button.setPrefWidth(20);
+        button.setPrefHeight(20);
+        return button;
+    }
+
+    private ToggleButton createToggleButton(ToggleGroup grp, String styleClass, Runnable action) {
+        ToggleButton button = new ToggleButton();
+        button.setToggleGroup(grp);
+        button.getStyleClass().add(styleClass);
+        button.setOnAction(evt -> {
             action.run();
             area.requestFocus();
         });
@@ -211,19 +259,35 @@ public class RichText extends Application {
     }
 
     private void toggleBold() {
-        updateStyleInSelection(spans -> TextStyle.EMPTY.updateBold(!spans.styleStream().allMatch(style -> style.bold.orElse(false))));
+        updateStyleInSelection(spans -> TextStyle.bold(!spans.styleStream().allMatch(style -> style.bold.orElse(false))));
     }
 
     private void toggleItalic() {
-        updateStyleInSelection(spans -> TextStyle.EMPTY.updateItalic(!spans.styleStream().allMatch(style -> style.italic.orElse(false))));
+        updateStyleInSelection(spans -> TextStyle.italic(!spans.styleStream().allMatch(style -> style.italic.orElse(false))));
     }
 
     private void toggleUnderline() {
-        updateStyleInSelection(spans -> TextStyle.EMPTY.updateUnderline(!spans.styleStream().allMatch(style -> style.underline.orElse(false))));
+        updateStyleInSelection(spans -> TextStyle.underline(!spans.styleStream().allMatch(style -> style.underline.orElse(false))));
     }
 
     private void toggleStrikethrough() {
-        updateStyleInSelection(spans -> TextStyle.EMPTY.updateStrikethrough(!spans.styleStream().allMatch(style -> style.strikethrough.orElse(false))));
+        updateStyleInSelection(spans -> TextStyle.strikethrough(!spans.styleStream().allMatch(style -> style.strikethrough.orElse(false))));
+    }
+
+    private void alignLeft() {
+        updateParagraphStyleInSelection(ParStyle.alignLeft());
+    }
+
+    private void alignCenter() {
+        updateParagraphStyleInSelection(ParStyle.alignCenter());
+    }
+
+    private void alignRight() {
+        updateParagraphStyleInSelection(ParStyle.alignRight());
+    }
+
+    private void alignJustify() {
+        updateParagraphStyleInSelection(ParStyle.alignJustify());
     }
 
     private void updateStyleInSelection(Function<StyleSpans<TextStyle>, TextStyle> mixinGetter) {
@@ -246,9 +310,17 @@ public class RichText extends Application {
     }
 
     private void updateParagraphStyleInSelection(Function<ParStyle, ParStyle> updater) {
-        int parIdx = area.getCurrentParagraph();
-        Paragraph<TextStyle, ParStyle> paragraph = area.getParagraph(parIdx);
-        area.setParagraphStyle(parIdx, updater.apply(paragraph.getParagraphStyle()));
+        IndexRange selection = area.getSelection();
+        int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
+        int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
+        for(int i = startPar; i <= endPar; ++i) {
+            Paragraph<TextStyle, ParStyle> paragraph = area.getParagraph(i);
+            area.setParagraphStyle(i, updater.apply(paragraph.getParagraphStyle()));
+        }
+    }
+
+    private void updateParagraphStyleInSelection(ParStyle mixin) {
+        updateParagraphStyleInSelection(style -> style.updateWith(mixin));
     }
 
     private void updateFontSize(Integer size) {

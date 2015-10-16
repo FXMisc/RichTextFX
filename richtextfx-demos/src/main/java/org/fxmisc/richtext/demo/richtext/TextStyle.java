@@ -134,6 +134,10 @@ class TextStyle {
         }
     };
 
+    public static TextStyle bold(boolean bold) { return EMPTY.updateBold(bold); }
+    public static TextStyle italic(boolean italic) { return EMPTY.updateItalic(italic); }
+    public static TextStyle underline(boolean underline) { return EMPTY.updateUnderline(underline); }
+    public static TextStyle strikethrough(boolean strikethrough) { return EMPTY.updateStrikethrough(strikethrough); }
     public static TextStyle fontSize(int fontSize) { return EMPTY.updateFontSize(fontSize); }
     public static TextStyle fontFamily(String family) { return EMPTY.updateFontFamily(family); }
     public static TextStyle textColor(Color color) { return EMPTY.updateTextColor(color); }

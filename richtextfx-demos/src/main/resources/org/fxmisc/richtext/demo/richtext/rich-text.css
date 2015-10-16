@@ -1,6 +1,6 @@
 .button.pressed { -fx-background-color: ghostwhite; }
 
-.button {
+.button, .toggle-button {
     -fx-background-position: center;
     -fx-background-repeat: no-repeat;
 }
@@ -14,3 +14,8 @@
 .button.italic { -fx-background-image: url(italic.png); }
 .button.underline { -fx-background-image: url(underline.png); }
 .button.strikethrough { -fx-background-image: url(strikethrough.png); }
+
+.toggle-button.align-left { -fx-background-image: url(align-left.png); }
+.toggle-button.align-center { -fx-background-image: url(align-center.png); }
+.toggle-button.align-right { -fx-background-image: url(align-right.png); }
+.toggle-button.align-justify { -fx-background-image: url(align-justify.png); }
