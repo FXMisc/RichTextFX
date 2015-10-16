@@ -386,31 +386,17 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     }
 
     private void ensureValidRange(int start, int end) {
-        ensureValidRange(start, end, length());
+        Lists.checkRange(start, end, length());
     }
 
     private void ensureValidParagraphRange(int par, int start, int end) {
-        if(par < 0 || par >= paragraphs.size()) {
-            throw new IllegalArgumentException(par + " is not a valid paragraph index. Must be from [0, " + paragraphs.size() + ")");
-        }
-        ensureValidRange(start, end, fullLength(par));
+        ensureValidParagraphIndex(par);
+        Lists.checkRange(start, end, fullLength(par));
     }
 
     private int fullLength(int par) {
         int n = paragraphs.size();
         return paragraphs.get(par).length() + (par == n-1 ? 0 : 1);
-    }
-
-    private void ensureValidRange(int start, int end, int len) {
-        if(start < 0) {
-            throw new IllegalArgumentException("start cannot be negative: " + start);
-        }
-        if(end > len) {
-            throw new IllegalArgumentException("end is greater than length: " + end + " > " + len);
-        }
-        if(start > end) {
-            throw new IllegalArgumentException("start is greater than end: " + start + " > " + end);
-        }
     }
 
     private int terminatorLengthToSkip(Position pos) {
