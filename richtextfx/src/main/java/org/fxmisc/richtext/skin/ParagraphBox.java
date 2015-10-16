@@ -70,10 +70,10 @@ public class ParagraphBox<S, PS> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    public ParagraphBox(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle,  BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    public ParagraphBox(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
-        applyParagraphStyle.accept(this.text, initialParagraphStyle);
+        applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
         graphic = Val.combine(
