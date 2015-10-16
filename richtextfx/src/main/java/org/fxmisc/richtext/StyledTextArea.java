@@ -245,9 +245,9 @@ implements
      * inserted into this text area. When {@code false}, the style immediately
      * preceding the insertion position is used. Default value is {@code false}.
      */
+    public BooleanProperty useInitialStyleForInsertionProperty() { return content.useInitialStyleForInsertion; }
     public void setUseInitialStyleForInsertion(boolean value) { content.useInitialStyleForInsertion.set(value); }
     public boolean getUseInitialStyleForInsertion() { return content.useInitialStyleForInsertion.get(); }
-    public BooleanProperty useInitialStyleForInsertionProperty() { return content.useInitialStyleForInsertion; }
 
     private Optional<Codec<S>> styleCodec = Optional.empty();
     /**
