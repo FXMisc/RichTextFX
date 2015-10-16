@@ -265,8 +265,9 @@ public class RichText extends Application {
     }
 
     private void updateParagraphStyleInSelection(Function<StyleInfo, StyleInfo> updater) {
-        Paragraph<StyleInfo, StyleInfo> paragraph = area.getParagraph(area.getCurrentParagraph());
-        paragraph.setParagraphStyle(updater.apply(paragraph.getParagraphStyle()));
+        int parIdx = area.getCurrentParagraph();
+        Paragraph<StyleInfo, StyleInfo> paragraph = area.getParagraph(parIdx);
+        area.setParagraphStyle(parIdx, updater.apply(paragraph.getParagraphStyle()));
     }
 
     private void updateFontSize(Integer size) {
