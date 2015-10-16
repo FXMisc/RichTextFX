@@ -4,7 +4,7 @@
  * The author dedicates this file to the public domain.
  */
 
-package org.fxmisc.richtext.demo;
+package org.fxmisc.richtext.demo.richtext;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

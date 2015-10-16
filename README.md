@@ -192,7 +192,7 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 #### Run using the pre-built JAR
 [Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-demos-fat-0.6.10.jar) the pre-built "fat" JAR file and run
 
-    java -cp richtextfx-demos-fat-0.6.10.jar org.fxmisc.richtext.demo.RichText
+    java -cp richtextfx-demos-fat-0.6.10.jar org.fxmisc.richtext.demo.richtext.RichText
 
 #### Run from the source repo
 
@@ -200,7 +200,7 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 
 #### Source code
 
-[RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/RichText.java)
+[RichText.java](https://github.com/TomasMikula/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/richtext/RichText.java)
 
 
 ### Custom tooltips

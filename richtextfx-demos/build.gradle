@@ -31,7 +31,7 @@ task ManualHighlighting(type: JavaExec, dependsOn: classes) {
 }
 
 task RichText(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.RichText'
+    main = 'org.fxmisc.richtext.demo.richtext.RichText'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
