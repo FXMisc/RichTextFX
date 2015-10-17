@@ -143,7 +143,7 @@ class TextStyle {
     public static TextStyle textColor(Color color) { return EMPTY.updateTextColor(color); }
     public static TextStyle backgroundColor(Color color) { return EMPTY.updateBackgroundColor(color); }
 
-    private static String cssColor(Color color) {
+    static String cssColor(Color color) {
         int red = (int) (color.getRed() * 255);
         int green = (int) (color.getGreen() * 255);
         int blue = (int) (color.getBlue() * 255);

@@ -24,6 +24,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -75,6 +76,7 @@ public class RichText extends Application {
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
         ToggleButton alignRightBtn = createToggleButton(alignmentGrp, "align-right", this::alignRight);
         ToggleButton alignJustifyBtn = createToggleButton(alignmentGrp, "align-justify", this::alignJustify);
+        ColorPicker paragraphBackgroundPicker = new ColorPicker();
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
         sizeCombo.getSelectionModel().select(Integer.valueOf(12));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
@@ -82,6 +84,11 @@ public class RichText extends Application {
         ColorPicker textColorPicker = new ColorPicker(Color.BLACK);
         ColorPicker backgroundColorPicker = new ColorPicker();
 
+        paragraphBackgroundPicker.setTooltip(new Tooltip("Paragraph background"));
+        textColorPicker.setTooltip(new Tooltip("Text color"));
+        backgroundColorPicker.setTooltip(new Tooltip("Text background"));
+
+        paragraphBackgroundPicker.valueProperty().addListener((o, old, color) -> updateParagraphBackground(color));
         sizeCombo.setOnAction(evt -> updateFontSize(sizeCombo.getValue()));
         familyCombo.setOnAction(evt -> updateFontFamily(familyCombo.getValue()));
         textColorPicker.valueProperty().addListener((o, old, color) -> updateTextColor(color));
@@ -105,7 +112,6 @@ public class RichText extends Application {
         area.beingUpdatedProperty().addListener((o, old, beingUpdated) -> {
             if(!beingUpdated) {
                 boolean bold, italic, underline, strike;
-                Optional<TextAlignment> alignment;
                 Integer fontSize;
                 String fontFamily;
                 Color textColor;
@@ -143,9 +149,14 @@ public class RichText extends Application {
                 int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
                 int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
                 List<Paragraph<TextStyle, ParStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
+
                 @SuppressWarnings("unchecked")
                 Optional<TextAlignment>[] alignments = pars.stream().map(p -> p.getParagraphStyle().alignment).distinct().toArray(Optional[]::new);
-                alignment = alignments.length == 1 ? alignments[0] : Optional.empty();
+                Optional<TextAlignment> alignment = alignments.length == 1 ? alignments[0] : Optional.empty();
+
+                @SuppressWarnings("unchecked")
+                Optional<Color>[] paragraphBackgrounds = pars.stream().map(p -> p.getParagraphStyle().backgroundColor).distinct().toArray(Optional[]::new);
+                Optional<Color> paragraphBackground = paragraphBackgrounds.length == 1 ? paragraphBackgrounds[0] : Optional.empty();
 
                 updatingToolbar.suspendWhile(() -> {
                     if(bold) {
@@ -192,6 +203,8 @@ public class RichText extends Application {
                         alignmentGrp.selectToggle(null);
                     }
 
+                    paragraphBackgroundPicker.setValue(paragraphBackground.orElse(null));
+
                     if(fontSize != -1) {
                         sizeCombo.getSelectionModel().select(fontSize);
                     } else {
@@ -218,7 +231,8 @@ public class RichText extends Application {
         panel1.getChildren().addAll(
                 wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
                 boldBtn, italicBtn, underlineBtn, strikeBtn,
-                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn);
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn,
+                paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
         VBox vbox = new VBox();
@@ -344,6 +358,12 @@ public class RichText extends Application {
     private void updateBackgroundColor(Color color) {
         if(!updatingToolbar.get()) {
             updateStyleInSelection(TextStyle.backgroundColor(color));
+        }
+    }
+
+    private void updateParagraphBackground(Color color) {
+        if(!updatingToolbar.get()) {
+            updateParagraphStyleInSelection(ParStyle.backgroundColor(color));
         }
     }
 }
