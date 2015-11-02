@@ -81,13 +81,12 @@ public interface NavigationActions<S, PS> extends TextEditingArea<S, PS> {
         }
     }
 
-
     /**
-     * Skips two word boundaries backwards.
+     * Skips n number of word boundaries backwards.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
      */
-    default void previousWord(SelectionPolicy selectionPolicy) {
+    default void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy) {
         if(getLength() == 0) {
             return;
         }
@@ -95,17 +94,19 @@ public interface NavigationActions<S, PS> extends TextEditingArea<S, PS> {
         BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
         wordBreakIterator.setText(getText());
         wordBreakIterator.preceding(getCaretPosition());
-        wordBreakIterator.previous();
+        for (int i = 1; i < n; i++) {
+            wordBreakIterator.previous();
+        }
 
         moveTo(wordBreakIterator.current(), selectionPolicy);
     }
 
     /**
-     * Skips two word boundaries forward.
+     * Skips n number of word boundaries forward.
      * Based on the given selection policy, anchor either moves with
      * the caret, stays put, or moves to the former caret position.
      */
-    default void nextWord(SelectionPolicy selectionPolicy) {
+    default void wordBreaksForwards(int n, SelectionPolicy selectionPolicy) {
         if(getLength() == 0) {
             return;
         }
@@ -113,7 +114,9 @@ public interface NavigationActions<S, PS> extends TextEditingArea<S, PS> {
         BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
         wordBreakIterator.setText(getText());
         wordBreakIterator.following(getCaretPosition());
-        wordBreakIterator.next();
+        for (int i = 1; i < n; i++) {
+            wordBreakIterator.next();
+        }
 
         moveTo(wordBreakIterator.current(), selectionPolicy);
     }
