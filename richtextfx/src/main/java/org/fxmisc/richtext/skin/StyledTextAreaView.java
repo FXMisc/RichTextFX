@@ -122,6 +122,16 @@ class StyledTextAreaView<S, PS> extends Region {
                 });
         getChildren().add(virtualFlow);
 
+        // bind scrolling API
+        area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
+        area.totalHeightEstimateProperty().bind(virtualFlow.totalHeightEstimateProperty());
+
+        // bind scroll X/Y values using simulated recursion binding
+        manageSubscription(area.estimatedScrollXProperty().values().feedTo(virtualFlow.estimatedScrollXProperty()));
+        manageSubscription(virtualFlow.estimatedScrollXProperty().values().feedTo(area.estimatedScrollXProperty()));
+        manageSubscription(area.estimatedScrollYProperty().values().feedTo(virtualFlow.estimatedScrollYProperty()));
+        manageSubscription(virtualFlow.estimatedScrollYProperty().values().feedTo(area.estimatedScrollYProperty()));
+
         // initialize navigator
         IntSupplier cellCount = () -> area.getParagraphs().size();
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
@@ -178,6 +188,8 @@ class StyledTextAreaView<S, PS> extends Region {
 
     public void dispose() {
         subscriptions.unsubscribe();
+        area.totalHeightEstimateProperty().unbind();
+        area.totalWidthEstimateProperty().unbind();
         virtualFlow.dispose();
     }
 

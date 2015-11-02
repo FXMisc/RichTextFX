@@ -14,10 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -262,6 +259,26 @@ implements
         return styleCodec;
     }
 
+    /**
+     * The <em>estimated</em> scrollX value. This can be set in order to scroll the content.
+     * Value is only accurate when area does not wrap lines and uses the same font size
+     * throughout the entire area.
+     */
+    private Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
+    public Var<Double> estimatedScrollXProperty() { return estimatedScrollX; }
+    public double getEstimatedScrollX() { return estimatedScrollX.getValue(); }
+    public void setEstimatedScrollX(double value) { estimatedScrollX.setValue(value); }
+
+    /**
+     * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
+     * Value is only accurate when area does not wrap lines and uses the same font size
+     * throughout the entire area.
+     */
+    private Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
+    public Var<Double> estimatedScrollYProperty() { return estimatedScrollY; }
+    public double getEstimatedScrollY() { return estimatedScrollY.getValue(); }
+    public void setEstimatedScrollY(double value) { estimatedScrollY.setValue(value); }
+
 
     /* ********************************************************************** *
      *                                                                        *
@@ -328,6 +345,26 @@ implements
     private final SuspendableNo beingUpdated = new SuspendableNo();
     public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
     public boolean isBeingUpdated() { return beingUpdated.get(); }
+
+    // total width estimate
+    /**
+     * The <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
+     * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
+     * the skin, not the user.
+     */
+    private final DoubleProperty totalWidthEstimate = new SimpleDoubleProperty(this, "totalWidthEstimate");
+    public DoubleProperty totalWidthEstimateProperty() { return totalWidthEstimate; }
+    public double getTotalWidthEstimate() { return totalWidthEstimate.get(); }
+
+    // total height estimate
+    /**
+     * The <em>estimated</em> height of the entire document. Accurate when area does not wrap lines and
+     * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
+     * the skin, not the user.
+     */
+    private final DoubleProperty totalHeightEstimate = new SimpleDoubleProperty(this, "totalHeightEstimate");
+    public DoubleProperty totalHeightEstimateProperty() { return totalHeightEstimate; }
+    public double getTotalHeightEstimate() { return totalHeightEstimate.get(); }
 
 
     /* ********************************************************************** *
