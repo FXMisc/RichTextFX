@@ -34,6 +34,7 @@ Who uses RichTextFX?
 [Xanthic](https://github.com/jrguenther/Xanthic)  
 [Arduino Harp](http://www.avrharp.org/)  
 [Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)  
+[OmniEditor](https://github.com/giancosta86/OmniEditor), which is then used by [Chronos IDE](https://github.com/giancosta86/Chronos-IDE)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
