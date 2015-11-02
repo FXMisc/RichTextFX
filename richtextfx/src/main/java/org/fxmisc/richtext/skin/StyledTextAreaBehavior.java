@@ -117,10 +117,10 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(END,      SHIFT_DOWN)).act((b, e) -> b.area.lineEnd(selPolicy))
                 .on(keyPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.start(selPolicy))
                 .on(keyPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.end(selPolicy))
-                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(1, selPolicy))
-                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(1, selPolicy))
-                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(1, selPolicy))
-                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(1, selPolicy))
+                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
+                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
                 .on(keyPressed(A, SHORTCUT_DOWN)).act((b, e) -> b.area.selectAll())
 
                 .create();
