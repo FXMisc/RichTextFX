@@ -260,8 +260,9 @@ implements
     }
 
     /**
-     * The <em>estimated</em> scrollX value. Accurate when area does not wrap lines and
-     * uses the same font size throughout the entire area.
+     * The <em>estimated</em> scrollX value. This can be set in order to scroll the content.
+     * Value is only accurate when area does not wrap lines and uses the same font size
+     * throughout the entire area.
      */
     private Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
     public Var<Double> estimatedScrollXProperty() { return estimatedScrollX; }
@@ -269,8 +270,9 @@ implements
     public void setEstimatedScrollX(double value) { estimatedScrollX.setValue(value); }
 
     /**
-     * The <em>estimated</em> scrollY value. Accurate when area does not wrap lines and
-     * uses the same font size throughout the entire area.
+     * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
+     * Value is only accurate when area does not wrap lines and uses the same font size
+     * throughout the entire area.
      */
     private Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
     public Var<Double> estimatedScrollYProperty() { return estimatedScrollY; }
@@ -347,7 +349,8 @@ implements
     // total width estimate
     /**
      * The <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
-     * uses the same font size throughout the entire area.
+     * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
+     * the skin, not the user.
      */
     private final DoubleProperty totalWidthEstimate = new SimpleDoubleProperty(this, "totalWidthEstimate");
     public DoubleProperty totalWidthEstimateProperty() { return totalWidthEstimate; }
@@ -356,7 +359,8 @@ implements
     // total height estimate
     /**
      * The <em>estimated</em> height of the entire document. Accurate when area does not wrap lines and
-     * uses the same font size throughout the entire area.
+     * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
+     * the skin, not the user.
      */
     private final DoubleProperty totalHeightEstimate = new SimpleDoubleProperty(this, "totalHeightEstimate");
     public DoubleProperty totalHeightEstimateProperty() { return totalHeightEstimate; }
