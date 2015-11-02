@@ -102,10 +102,10 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(KP_LEFT)) .act(StyledTextAreaBehavior::left)
                 .on(keyPressed(HOME))    .act((b, e) -> b.area.lineStart(SelectionPolicy.CLEAR))
                 .on(keyPressed(END))     .act((b, e) -> b.area.lineEnd(SelectionPolicy.CLEAR))
-                .on(keyPressed(RIGHT,    SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
-                .on(keyPressed(KP_RIGHT, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(SelectionPolicy.CLEAR))
-                .on(keyPressed(LEFT,     SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
-                .on(keyPressed(KP_LEFT,  SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(SelectionPolicy.CLEAR))
+                .on(keyPressed(RIGHT,    SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_RIGHT, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(LEFT,     SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_LEFT,  SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
                 .on(keyPressed(HOME,     SHORTCUT_DOWN)).act((b, e) -> b.area.start(SelectionPolicy.CLEAR))
                 .on(keyPressed(END,      SHORTCUT_DOWN)).act((b, e) -> b.area.end(SelectionPolicy.CLEAR))
                 // selection
@@ -117,10 +117,10 @@ public class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(END,      SHIFT_DOWN)).act((b, e) -> b.area.lineEnd(selPolicy))
                 .on(keyPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.start(selPolicy))
                 .on(keyPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.end(selPolicy))
-                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(selPolicy))
-                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.previousWord(selPolicy))
-                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(selPolicy))
-                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.nextWord(selPolicy))
+                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
+                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
                 .on(keyPressed(A, SHORTCUT_DOWN)).act((b, e) -> b.area.selectAll())
 
                 .create();
@@ -336,15 +336,15 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void selectWord() {
-        area.previousWord(SelectionPolicy.CLEAR);
-        area.nextWord(SelectionPolicy.ADJUST);
+        area.wordBreaksBackwards(1, SelectionPolicy.CLEAR);
+        area.wordBreaksForwards(1, SelectionPolicy.ADJUST);
     }
 
     private void deletePrevWord(KeyEvent ignore) {
         int end = area.getCaretPosition();
 
         if (end > 0) {
-            area.previousWord(SelectionPolicy.CLEAR);
+            area.wordBreaksBackwards(2, SelectionPolicy.CLEAR);
             int start = area.getCaretPosition();
             area.replaceText(start, end, "");
         }
@@ -354,7 +354,7 @@ public class StyledTextAreaBehavior implements Behavior {
         int start = area.getCaretPosition();
 
         if (start < area.getLength()) {
-            area.nextWord(SelectionPolicy.CLEAR);
+            area.wordBreaksForwards(2, SelectionPolicy.CLEAR);
             int end = area.getCaretPosition();
             area.replaceText(start, end, "");
         }
