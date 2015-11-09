@@ -1,6 +1,19 @@
 package org.fxmisc.richtext.skin;
 
 
+import static org.reactfx.EventStreams.*;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.IntSupplier;
+import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -20,25 +33,20 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
+
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
-import org.fxmisc.richtext.*;
+import org.fxmisc.richtext.MouseOverTextEvent;
+import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.PopupAlignment;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TwoDimensional;
+import org.fxmisc.richtext.TwoLevelNavigator;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.*;
-import java.util.stream.Stream;
-
-import static org.reactfx.EventStreams.invalidationsOf;
-import static org.reactfx.EventStreams.merge;
-import static org.reactfx.EventStreams.valuesOf;
 
 /**
  * StyledTextArea skin.
@@ -239,8 +247,8 @@ class StyledTextAreaView<S, PS> extends Region {
      * ********************************************************************** */
 
     void scrollBy(Point2D deltas) {
-        virtualFlow.scrollX(deltas.getX());
-        virtualFlow.scrollY(deltas.getY());
+        virtualFlow.scrollXBy(deltas.getX());
+        virtualFlow.scrollYBy(deltas.getY());
     }
 
     void show(double y) {
