@@ -320,7 +320,8 @@ public final class Paragraph<S, PS> implements CharSequence {
     public boolean equals(Object other) {
         if(other instanceof Paragraph) {
             Paragraph<?, ?> that = (Paragraph<?, ?>) other;
-            return Objects.equals(this.segments, that.segments);
+            return Objects.equals(this.paragraphStyle, that.paragraphStyle)
+                && Objects.equals(this.segments, that.segments);
         } else {
             return false;
         }
@@ -328,7 +329,7 @@ public final class Paragraph<S, PS> implements CharSequence {
 
     @Override
     public int hashCode() {
-        return segments.hashCode();
+        return Objects.hash(paragraphStyle, segments);
     }
 
 }
