@@ -14,12 +14,14 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 
+import org.reactfx.util.Tuple2;
+
 /**
  * Clipboard actions for {@link TextEditingArea}.
  */
 public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
 
-    Optional<Codec<S>> getStyleCodec();
+    Optional<Tuple2<Codec<S>, Codec<PS>>> getStyleCodecs();
 
     /**
      * Transfers the currently selected text to the clipboard,
@@ -42,8 +44,8 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
 
             content.putString(getSelectedText());
 
-            getStyleCodec().ifPresent(styleCodec -> {
-                Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+            getStyleCodecs().ifPresent(codecs -> {
+                Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
                 DataFormat format = dataFormat(codec.getName());
                 StyledDocument<S, PS> doc = subDocument(selection.getStart(), selection.getEnd());
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -69,9 +71,9 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
     default void paste() {
         Clipboard clipboard = Clipboard.getSystemClipboard();
 
-        if(getStyleCodec().isPresent()) {
-            Codec<S> styleCodec = getStyleCodec().get();
-            Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(styleCodec);
+        if(getStyleCodecs().isPresent()) {
+            Tuple2<Codec<S>, Codec<PS>> codecs = getStyleCodecs().get();
+            Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
                 byte[] bytes = (byte[]) clipboard.getContent(format);

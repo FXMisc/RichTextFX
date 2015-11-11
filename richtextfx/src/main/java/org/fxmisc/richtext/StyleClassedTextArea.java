@@ -17,7 +17,9 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
                 (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
                 preserveStyle);
 
-        setStyleCodec(SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)));
+        setStyleCodecs(
+                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)),
+                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)));
     }
 
     /**

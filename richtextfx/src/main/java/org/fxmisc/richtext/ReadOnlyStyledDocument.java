@@ -40,13 +40,13 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
         COPY,
     }
 
-    static <S, PS> Codec<StyledDocument<S, PS>> codec(Codec<S> styleCodec) {
+    static <S, PS> Codec<StyledDocument<S, PS>> codec(Codec<S> tCodec, Codec<PS> pCodec) {
         return new Codec<StyledDocument<S, PS>>() {
-            private final Codec<List<Paragraph<S, PS>>> codec = Codec.listCodec(paragraphCodec(styleCodec, null));
+            private final Codec<List<Paragraph<S, PS>>> codec = Codec.listCodec(paragraphCodec(tCodec, pCodec));
 
             @Override
             public String getName() {
-                return "application/richtextfx-styled-document<" + styleCodec.getName() + ">";
+                return "application/richtextfx-styled-document<" + tCodec.getName() + ";" + pCodec.getName() + ">";
             }
 
             @Override
@@ -64,22 +64,24 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
         };
     }
 
-    private static <S, PS> Codec<Paragraph<S, PS>> paragraphCodec(Codec<S> styleCodec, final PS paragraphStyle) {
+    private static <S, PS> Codec<Paragraph<S, PS>> paragraphCodec(Codec<S> tCodec, Codec<PS> pCodec) {
         return new Codec<Paragraph<S, PS>>() {
-            private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(styleCodec));
+            private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
             public String getName() {
-                return "paragraph<" + styleCodec.getName() + ">";
+                return "paragraph<" + tCodec.getName() + ";" + pCodec.getName() + ">";
             }
 
             @Override
             public void encode(DataOutputStream os, Paragraph<S, PS> p) throws IOException {
+                pCodec.encode(os, p.getParagraphStyle());
                 segmentsCodec.encode(os, p.getSegments());
             }
 
             @Override
             public Paragraph<S, PS> decode(DataInputStream is) throws IOException {
+                PS paragraphStyle = pCodec.decode(is);
                 List<StyledText<S>> segments = segmentsCodec.decode(is);
                 return new Paragraph<>(segments, paragraphStyle);
             }

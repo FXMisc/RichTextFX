@@ -52,7 +52,7 @@ public class RichText extends Application {
                     ParStyle::toCss);
     {
         area.setWrapText(true);
-        area.setStyleCodec(TextStyle.CODEC);
+        area.setStyleCodecs(TextStyle.CODEC, ParStyle.CODEC);
     }
 
     private final SuspendableNo updatingToolbar = new SuspendableNo();

@@ -2,11 +2,16 @@ package org.fxmisc.richtext.demo.richtext;
 
 import static javafx.scene.text.TextAlignment.*;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+
+import org.fxmisc.richtext.Codec;
 
 /**
  * Holds information about the style of a paragraph.
@@ -14,6 +19,33 @@ import javafx.scene.text.TextAlignment;
 class ParStyle {
 
     public static final ParStyle EMPTY = new ParStyle();
+
+    public static final Codec<ParStyle> CODEC = new Codec<ParStyle>() {
+
+        private final Codec<Optional<TextAlignment>> OPT_ALIGNMENT_CODEC =
+                Codec.optionalCodec(Codec.enumCodec(TextAlignment.class));
+        private final Codec<Optional<Color>> OPT_COLOR_CODEC =
+                Codec.optionalCodec(Codec.COLOR_CODEC);
+
+        @Override
+        public String getName() {
+            return "par-style";
+        }
+
+        @Override
+        public void encode(DataOutputStream os, ParStyle t) throws IOException {
+            OPT_ALIGNMENT_CODEC.encode(os, t.alignment);
+            OPT_COLOR_CODEC.encode(os, t.backgroundColor);
+        }
+
+        @Override
+        public ParStyle decode(DataInputStream is) throws IOException {
+            return new ParStyle(
+                    OPT_ALIGNMENT_CODEC.decode(is),
+                    OPT_COLOR_CODEC.decode(is));
+        }
+
+    };
 
     public static ParStyle alignLeft() { return EMPTY.updateAlignment(LEFT); }
     public static ParStyle alignCenter() { return EMPTY.updateAlignment(CENTER); }

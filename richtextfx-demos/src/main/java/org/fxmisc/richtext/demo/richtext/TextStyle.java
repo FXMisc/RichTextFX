@@ -20,36 +20,14 @@ class TextStyle {
 
     public static final Codec<TextStyle> CODEC = new Codec<TextStyle>() {
 
-        private final Codec<Color> COLOR_CODEC = new Codec<Color>() {
-
-            @Override
-            public String getName() {
-                return "color";
-            }
-
-            @Override
-            public void encode(DataOutputStream os, Color c)
-                    throws IOException {
-                os.writeDouble(c.getRed());
-                os.writeDouble(c.getGreen());
-                os.writeDouble(c.getBlue());
-                os.writeDouble(c.getOpacity());
-            }
-
-            @Override
-            public Color decode(DataInputStream is) throws IOException {
-                return Color.color(
-                        is.readDouble(),
-                        is.readDouble(),
-                        is.readDouble(),
-                        is.readDouble());
-            }
-
-        };
+        private final Codec<Optional<String>> OPT_STRING_CODEC =
+                Codec.optionalCodec(Codec.STRING_CODEC);
+        private final Codec<Optional<Color>> OPT_COLOR_CODEC =
+                Codec.optionalCodec(Codec.COLOR_CODEC);
 
         @Override
         public String getName() {
-            return "style-info";
+            return "text-style";
         }
 
         @Override
@@ -57,18 +35,18 @@ class TextStyle {
                 throws IOException {
             os.writeByte(encodeBoldItalicUnderlineStrikethrough(s));
             os.writeInt(encodeOptionalUint(s.fontSize));
-            encodeOptional(os, s.fontFamily, Codec.STRING_CODEC);
-            encodeOptional(os, s.textColor, COLOR_CODEC);
-            encodeOptional(os, s.backgroundColor, COLOR_CODEC);
+            OPT_STRING_CODEC.encode(os, s.fontFamily);
+            OPT_COLOR_CODEC.encode(os, s.textColor);
+            OPT_COLOR_CODEC.encode(os, s.backgroundColor);
         }
 
         @Override
         public TextStyle decode(DataInputStream is) throws IOException {
             byte bius = is.readByte();
             Optional<Integer> fontSize = decodeOptionalUint(is.readInt());
-            Optional<String> fontFamily = decodeOptional(is, Codec.STRING_CODEC);
-            Optional<Color> textColor = decodeOptional(is, COLOR_CODEC);
-            Optional<Color> bgrColor = decodeOptional(is, COLOR_CODEC);
+            Optional<String> fontFamily = OPT_STRING_CODEC.decode(is);
+            Optional<Color> textColor = OPT_COLOR_CODEC.decode(is);
+            Optional<Color> bgrColor = OPT_COLOR_CODEC.decode(is);
             return new TextStyle(
                     bold(bius), italic(bius), underline(bius), strikethrough(bius),
                     fontSize, fontFamily, textColor, bgrColor);
@@ -116,21 +94,6 @@ class TextStyle {
 
         private Optional<Integer> decodeOptionalUint(int i) {
             return (i < 0) ? Optional.empty() : Optional.of(i);
-        }
-
-        private <T> void encodeOptional(DataOutputStream os, Optional<T> ot, Codec<T> codec) throws IOException {
-            if(ot.isPresent()) {
-                os.writeBoolean(true);
-                codec.encode(os, ot.get());
-            } else {
-                os.writeBoolean(false);
-            }
-        }
-
-        private <T> Optional<T> decodeOptional(DataInputStream is, Codec<T> codec) throws IOException {
-            return is.readBoolean()
-                    ? Optional.of(codec.decode(is))
-                    : Optional.empty();
         }
     };
 

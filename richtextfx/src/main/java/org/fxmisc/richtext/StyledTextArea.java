@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -14,7 +15,12 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -51,6 +57,7 @@ import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.SuspendableList;
+import org.reactfx.util.Tuple2;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -246,17 +253,17 @@ implements
     public void setUseInitialStyleForInsertion(boolean value) { content.useInitialStyleForInsertion.set(value); }
     public boolean getUseInitialStyleForInsertion() { return content.useInitialStyleForInsertion.get(); }
 
-    private Optional<Codec<S>> styleCodec = Optional.empty();
+    private Optional<Tuple2<Codec<S>, Codec<PS>>> styleCodecs = Optional.empty();
     /**
-     * Sets the codec to encode/decode style information to/from binary format.
-     * Providing a codec enables clipboard actions to retain the style information.
+     * Sets codecs to encode/decode style information to/from binary format.
+     * Providing codecs enables clipboard actions to retain the style information.
      */
-    public void setStyleCodec(Codec<S> codec) {
-        styleCodec = Optional.of(codec);
+    public void setStyleCodecs(Codec<S> textStyleCodec, Codec<PS> paragraphStyleCodec) {
+        styleCodecs = Optional.of(t(textStyleCodec, paragraphStyleCodec));
     }
     @Override
-    public Optional<Codec<S>> getStyleCodec() {
-        return styleCodec;
+    public Optional<Tuple2<Codec<S>, Codec<PS>>> getStyleCodecs() {
+        return styleCodecs;
     }
 
     /**
@@ -264,7 +271,7 @@ implements
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
+    private final Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
     public Var<Double> estimatedScrollXProperty() { return estimatedScrollX; }
     public double getEstimatedScrollX() { return estimatedScrollX.getValue(); }
     public void setEstimatedScrollX(double value) { estimatedScrollX.setValue(value); }
@@ -274,7 +281,7 @@ implements
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
+    private final Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
     public Var<Double> estimatedScrollYProperty() { return estimatedScrollY; }
     public double getEstimatedScrollY() { return estimatedScrollY.getValue(); }
     public void setEstimatedScrollY(double value) { estimatedScrollY.setValue(value); }
