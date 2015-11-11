@@ -162,7 +162,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     @SuppressWarnings("unchecked")
     EditableStyledDocument(S initialStyle, PS initialParagraphStyle) {
-        super(FXCollections.observableArrayList(new Paragraph<>("", initialStyle, initialParagraphStyle)));
+        super(FXCollections.observableArrayList(new Paragraph<>(initialParagraphStyle, "", initialStyle)));
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
     }

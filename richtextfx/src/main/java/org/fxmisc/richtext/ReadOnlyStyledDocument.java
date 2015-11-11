@@ -26,11 +26,11 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            res.add(new Paragraph<>(s, style, paragraphStyle));
+            res.add(new Paragraph<>(paragraphStyle, s, style));
             start = m.end();
         }
         String last = str.substring(start);
-        res.add(new Paragraph<>(last, style, paragraphStyle));
+        res.add(new Paragraph<>(paragraphStyle, last, style));
 
         return new ReadOnlyStyledDocument<>(res, ADOPT);
     }
@@ -83,7 +83,7 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
             public Paragraph<S, PS> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
                 List<StyledText<S>> segments = segmentsCodec.decode(is);
-                return new Paragraph<>(segments, paragraphStyle);
+                return new Paragraph<>(paragraphStyle, segments);
             }
         };
     }
