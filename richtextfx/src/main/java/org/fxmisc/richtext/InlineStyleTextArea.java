@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
+
 import java.util.function.Function;
 
 /**
@@ -22,6 +24,11 @@ public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
                 (text, style) -> text.setStyle(styleToCss.apply(style)),
                 initialParagraphStyle,
                 (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)));
+    }
+
+    public static <S, PS> VirtualizedScrollPane<InlineStyleTextArea<S, PS>> withScrollBars(S initialStyle,
+           Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss) {
+        return new VirtualizedScrollPane<>(new InlineStyleTextArea<>(initialStyle, styleToCss, initialParagraphStyle, paragraphStyleToCss));
     }
 
 }
