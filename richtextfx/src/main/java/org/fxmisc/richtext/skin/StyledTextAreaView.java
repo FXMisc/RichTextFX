@@ -164,7 +164,7 @@ class StyledTextAreaView<S, PS> extends Region {
         caretVisible = EventStreams.valuesOf(blinkCaret)
                 .flatMap(blink -> blink
                         ? booleanPulse(Duration.ofMillis(500))
-                        : valuesOf(Val.constant(false)))
+                        : EventStreams.valuesOf(Val.constant(false)))
                 .toBinding(false);
         manageBinding(caretVisible);
 
