@@ -627,18 +627,6 @@ implements
         // Refactor: <-- Imported from StyledTextAreaBehavior
     }
 
-    public static <S, PS> VirtualizedScrollPane<StyledTextArea<S, PS>> withScrollBars(S initialStyle,
-          BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle,
-          BiConsumer<TextFlow, PS> applyParagraphStyle) {
-        return withScrollBars(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
-    }
-
-    public static <S, PS> VirtualizedScrollPane<StyledTextArea<S, PS>> withScrollBars(S initialStyle,
-          BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle,
-          BiConsumer<TextFlow, PS> applyParagraphStyle, boolean preserveStyle) {
-        return new VirtualizedScrollPane<>(new StyledTextArea<S, PS>(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, preserveStyle));
-    }
-
 
     /* ********************************************************************** *
      *                                                                        *
