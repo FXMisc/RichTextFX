@@ -17,14 +17,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.IndexRange;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -33,9 +26,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
-import org.fxmisc.richtext.InlineStyleTextArea;
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyleSpans;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.*;
 import org.reactfx.SuspendableNo;
 
 public class RichText extends Application {
@@ -236,8 +228,9 @@ public class RichText extends Application {
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
         VBox vbox = new VBox();
-        VBox.setVgrow(area, Priority.ALWAYS);
-        vbox.getChildren().addAll(panel1, panel2, area);
+        VirtualizedScrollPane<InlineStyleTextArea> vsPane = new VirtualizedScrollPane<>(area);
+        VBox.setVgrow(vsPane, Priority.ALWAYS);
+        vbox.getChildren().addAll(panel1, panel2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(RichText.class.getResource("rich-text.css").toExternalForm());

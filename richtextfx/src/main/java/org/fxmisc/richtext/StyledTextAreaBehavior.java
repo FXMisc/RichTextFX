@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
@@ -18,10 +18,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
+import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
-import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.TwoDimensional.Position;
-import org.fxmisc.richtext.skin.ParagraphBox.CaretOffsetX;
+import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
@@ -33,7 +33,7 @@ import org.reactfx.value.Var;
 /**
  * Controller for StyledTextArea.
  */
-public class StyledTextAreaBehavior implements Behavior {
+public class StyledTextAreaBehavior {
 
     private static final boolean isMac;
     private static final boolean isWindows;
@@ -184,8 +184,9 @@ public class StyledTextAreaBehavior implements Behavior {
      * ********************************************************************** */
 
     private final StyledTextArea<?, ?> area;
-    private final StyledTextAreaVisual<?, ?> visual;
-    private final StyledTextAreaView<?, ?> view;
+    private final VirtualFlow<?, ?> view;
+//    private final StyledTextAreaVisual<?, ?> visual;
+//    private final StyledTextAreaView<?, ?> view;
 
     private final Subscription subscription;
 
@@ -204,7 +205,7 @@ public class StyledTextAreaBehavior implements Behavior {
     }
     private CaretOffsetX getTargetCaretOffset() {
         if(!targetCaretOffset.isPresent())
-            targetCaretOffset = Optional.of(view.getCaretOffsetX());
+            targetCaretOffset = Optional.of(area.getCaretOffsetX());
         return targetCaretOffset.get();
     }
 
@@ -213,11 +214,15 @@ public class StyledTextAreaBehavior implements Behavior {
     /* ********************************************************************** *
      * Constructors                                                           *
      * ********************************************************************** */
-
-    public StyledTextAreaBehavior(StyledTextAreaVisual<?, ?> visual) {
-        this.area = visual.getControl();
-        this.visual = visual;
-        this.view = visual.getNode();
+    public StyledTextAreaBehavior(StyledTextArea area, VirtualFlow view) {
+        this.area = area;
+        this.view = view;
+//    }
+//
+//    public StyledTextAreaBehavior(StyledTextAreaVisual<?, ?> visual) {
+//        this.area = visual.getControl();
+//        this.visual = visual;
+//        this.view = visual.getNode();
 
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
@@ -251,7 +256,7 @@ public class StyledTextAreaBehavior implements Behavior {
                 ? never() // automatically stops the scroll animation
                 : deltas)
             .subscribe(ds -> {
-                view.scrollBy(ds);
+                area.scrollBy(ds);
                 projection.ifPresent(this::dragTo);
             });
     }
@@ -260,7 +265,7 @@ public class StyledTextAreaBehavior implements Behavior {
      * Public API (from Behavior)                                             *
      * ********************************************************************** */
 
-    @Override
+//    @Override
     public void dispose() {
         subscription.unsubscribe();
     }
@@ -361,14 +366,14 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void downLines(SelectionPolicy selectionPolicy, int nLines) {
-        Position currentLine = view.currentLine();
+        Position currentLine = area.currentLine();
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
             // compute new caret position
-            CharacterHit hit = view.hit(getTargetCaretOffset(), targetLine);
+            CharacterHit hit = area.hit(getTargetCaretOffset(), targetLine);
 
             // update model
-            visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+            area.moveTo(hit.getInsertionIndex(), selectionPolicy);
         }
     }
 
@@ -381,15 +386,15 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void prevPage(SelectionPolicy selectionPolicy) {
-        view.showCaretAtBottom();
-        CharacterHit hit = view.hit(getTargetCaretOffset(), 1.0);
-        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+        area.showCaretAtBottom();
+        CharacterHit hit = area.hit(getTargetCaretOffset(), 1.0);
+        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        view.showCaretAtTop();
-        CharacterHit hit = view.hit(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
-        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+        area.showCaretAtTop();
+        CharacterHit hit = area.hit(getTargetCaretOffset(), view.getHeight() - 1.0);
+        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
 
@@ -407,7 +412,7 @@ public class StyledTextAreaBehavior implements Behavior {
             // ensure focus
             area.requestFocus();
 
-            CharacterHit hit = view.hit(e.getX(), e.getY());
+            CharacterHit hit = area.hit(e.getX(), e.getY());
 
             if(e.isShiftDown()) {
                 // On Mac always extend selection,
@@ -474,7 +479,7 @@ public class StyledTextAreaBehavior implements Behavior {
     }
 
     private void dragTo(Point2D p) {
-        CharacterHit hit = view.hit(p.getX(), p.getY());
+        CharacterHit hit = area.hit(p.getX(), p.getY());
 
         if(dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
@@ -496,12 +501,12 @@ public class StyledTextAreaBehavior implements Behavior {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                CharacterHit hit = view.hit(e.getX(), e.getY());
+                CharacterHit hit = area.hit(e.getX(), e.getY());
                 area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
                 // move selection to the target position
-                CharacterHit h = view.hit(e.getX(), e.getY());
+                CharacterHit h = area.hit(e.getX(), e.getY());
                 area.moveSelectedText(h.getInsertionIndex());
                 // do nothing, handled by mouseDragReleased
             case NO_DRAG:

@@ -37,12 +37,7 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
-import org.fxmisc.richtext.MouseOverTextEvent;
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.PopupAlignment;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TwoDimensional;
-import org.fxmisc.richtext.TwoLevelNavigator;
+import org.fxmisc.richtext.*;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -131,8 +126,8 @@ class StyledTextAreaView<S, PS> extends Region {
         getChildren().add(virtualFlow);
 
         // bind scrolling API
-        area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
-        area.totalHeightEstimateProperty().bind(virtualFlow.totalHeightEstimateProperty());
+//        area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
+//        area.totalHeightEstimateProperty().bind(virtualFlow.totalHeightEstimateProperty());
 
         // bind scroll X/Y values using simulated recursion binding
         manageSubscription(area.estimatedScrollXProperty().values().feedTo(virtualFlow.estimatedScrollXProperty()));
@@ -196,8 +191,8 @@ class StyledTextAreaView<S, PS> extends Region {
 
     public void dispose() {
         subscriptions.unsubscribe();
-        area.totalHeightEstimateProperty().unbind();
-        area.totalWidthEstimateProperty().unbind();
+//        area.totalHeightEstimateProperty().unbind();
+//        area.totalWidthEstimateProperty().unbind();
         virtualFlow.dispose();
     }
 
@@ -280,7 +275,8 @@ class StyledTextAreaView<S, PS> extends Region {
         int parIdx = area.getCurrentParagraph();
         Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
-        double graphicWidth = cell.getNode().getGraphicPrefWidth();
+        double graphicWidth = 0;
+//        double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         virtualFlow.show(parIdx, region);
     }
@@ -313,47 +309,47 @@ class StyledTextAreaView<S, PS> extends Region {
     }
 
     double getViewportHeight() {
-        return virtualFlow.getViewportHeight();
+        return virtualFlow.getHeight();
     }
 
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
-        int parIdx = targetLine.getMajor();
-        ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
-        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
-        return parHit.offset(getParagraphOffset(parIdx));
-    }
+//    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
+//        int parIdx = targetLine.getMajor();
+//        ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
+//        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
+//        return parHit.offset(getParagraphOffset(parIdx));
+//    }
 
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
-        if(hit.isBeforeCells()) {
-            return CharacterHit.insertionAt(0);
-        } else if(hit.isAfterCells()) {
-            return CharacterHit.insertionAt(area.getLength());
-        } else {
-            int parIdx = hit.getCellIndex();
-            int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S, PS> cell = hit.getCell().getNode();
-            Point2D cellOffset = hit.getCellOffset();
-            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
-            return parHit.offset(parOffset);
-        }
-    }
+//    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+//        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
+//        if(hit.isBeforeCells()) {
+//            return CharacterHit.insertionAt(0);
+//        } else if(hit.isAfterCells()) {
+//            return CharacterHit.insertionAt(area.getLength());
+//        } else {
+//            int parIdx = hit.getCellIndex();
+//            int parOffset = getParagraphOffset(parIdx);
+//            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+//            Point2D cellOffset = hit.getCellOffset();
+//            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
+//            return parHit.offset(parOffset);
+//        }
+//    }
 
-    CharacterHit hit(double x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
-        if(hit.isBeforeCells()) {
-            return CharacterHit.insertionAt(0);
-        } else if(hit.isAfterCells()) {
-            return CharacterHit.insertionAt(area.getLength());
-        } else {
-            int parIdx = hit.getCellIndex();
-            int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S, PS> cell = hit.getCell().getNode();
-            Point2D cellOffset = hit.getCellOffset();
-            CharacterHit parHit = cell.hit(cellOffset);
-            return parHit.offset(parOffset);
-        }
-    }
+//    CharacterHit hit(double x, double y) {
+//        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
+//        if(hit.isBeforeCells()) {
+//            return CharacterHit.insertionAt(0);
+//        } else if(hit.isAfterCells()) {
+//            return CharacterHit.insertionAt(area.getLength());
+//        } else {
+//            int parIdx = hit.getCellIndex();
+//            int parOffset = getParagraphOffset(parIdx);
+//            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+//            Point2D cellOffset = hit.getCellOffset();
+//            CharacterHit parHit = cell.hit(cellOffset);
+//            return parHit.offset(parOffset);
+//        }
+//    }
 
     /**
      * Returns the current line as a two-level index.
@@ -393,7 +389,7 @@ class StyledTextAreaView<S, PS> extends Region {
         box.highlightTextFillProperty().bind(highlightTextFill);
         box.wrapTextProperty().bind(area.wrapTextProperty());
         box.graphicFactoryProperty().bind(area.paragraphGraphicFactoryProperty());
-        box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
+//        box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
 
         Val<Boolean> hasCaret = Val.combine(
                 box.indexProperty(),
@@ -436,7 +432,7 @@ class StyledTextAreaView<S, PS> extends Region {
                 box.highlightTextFillProperty().unbind();
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
-                box.graphicOffset.unbind();
+//                box.graphicOffset.unbind();
 
                 box.caretVisibleProperty().unbind();
                 box.caretPositionProperty().unbind();
