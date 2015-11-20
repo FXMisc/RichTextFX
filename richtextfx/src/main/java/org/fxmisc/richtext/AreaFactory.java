@@ -75,32 +75,7 @@ public class AreaFactory {
      * Text area that uses style classes to define style of text segments and paragraph segments.
      */
     public static StyledTextArea<Collection<String>, Collection<String>> styleClassedTextArea(boolean preserveStyle) {
-        StyledTextArea<Collection<String>, Collection<String>> area = styledTextArea(
-                Collections.<String>emptyList(),
-                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
-                Collections.<String>emptyList(),
-                (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
-                preserveStyle
-        );
-
-        area.setStyleCodecs(
-                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)),
-                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC))
-        );
-
-        /*
-            Note, this convenience method would be lost in this translation:
-            /
-            * Convenient method to assign a single style class.
-            /
-                public void setStyleClass(int from, int to, String styleClass) {
-                    List<String> styleClasses = new ArrayList<>(1);
-                    styleClasses.add(styleClass);
-                    setStyle(from, to, styleClasses);
-                }
-         */
-
-        return area;
+        return new StyleClassedTextArea(preserveStyle);
     }
 
     /**
@@ -115,20 +90,8 @@ public class AreaFactory {
      * with fixed-width font and an undo manager that observes
      * only plain text changes (not styled changes).
      */
-    public static StyledTextArea<Collection<String>, Collection<String>> codeArea() {
-        StyledTextArea<Collection<String>, Collection<String>> area = styleClassedTextArea(false);
-
-        // The below part of the translation seems awkward
-
-        area.getStyleClass().add("code-area");
-
-        // load the default style that defines a fixed-width font
-        area.getStylesheets().add(StyledTextArea.class.getResource("code-area.css").toExternalForm());
-
-        // don't apply preceding style to typed text
-        area.setUseInitialStyleForInsertion(true);
-
-        return area;
+    public static CodeArea codeArea() {
+        return new CodeArea();
     }
 
     /**
@@ -137,17 +100,8 @@ public class AreaFactory {
      *
      * @param text Initial text content.
      */
-    public static StyledTextArea<Collection<String>, Collection<String>> codeArea(String text) {
-        StyledTextArea<Collection<String>, Collection<String>> area = codeArea();
-
-        area.appendText(text);
-        area.getUndoManager().forgetHistory();
-        area.getUndoManager().mark();
-
-        // position the caret at the beginning
-        area.selectRange(0, 0);
-
-        return area;
+    public static CodeArea codeArea(String text) {
+        return new CodeArea(text);
     }
 
     // Embedded StyledTextArea factory methods
@@ -177,19 +131,19 @@ public class AreaFactory {
         return new VirtualizedScrollPane<>(inlineCssTextArea(text));
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<Collection<String>, Collection<String>>> embeddedStyleClassedTextArea(boolean preserveStyle) {
-        return new VirtualizedScrollPane<>(styleClassedTextArea(preserveStyle));
+    public static VirtualizedScrollPane<StyleClassedTextArea> embeddedStyleClassedTextArea(boolean preserveStyle) {
+            return new VirtualizedScrollPane<>(styleClassedTextArea(preserveStyle));
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<Collection<String>, Collection<String>>> embeddedStyleClassedTextArea() {
+    public static VirtualizedScrollPane<StyleClassedTextArea> embeddedStyleClassedTextArea() {
         return new VirtualizedScrollPane<>(styleClassedTextArea());
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<Collection<String>, Collection<String>>> embeddedCodeArea() {
+    public static VirtualizedScrollPane<CodeArea> embeddedCodeArea() {
         return new VirtualizedScrollPane<>(codeArea());
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<Collection<String>, Collection<String>>> embeddedCodeArea(String text) {
+    public static VirtualizedScrollPane<CodeArea> embeddedCodeArea(String text) {
         return new VirtualizedScrollPane<>(codeArea(text));
     }
 }
