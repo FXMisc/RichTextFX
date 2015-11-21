@@ -37,6 +37,7 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.PopupAlignment;
@@ -128,7 +129,7 @@ class StyledTextAreaView<S, PS> extends Region {
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
-        getChildren().add(virtualFlow);
+        getChildren().add(new VirtualizedScrollPane<>(virtualFlow));
 
         // bind scrolling API
         area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
@@ -313,7 +314,7 @@ class StyledTextAreaView<S, PS> extends Region {
     }
 
     double getViewportHeight() {
-        return virtualFlow.getViewportHeight();
+        return virtualFlow.getHeight();
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
