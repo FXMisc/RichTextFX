@@ -52,7 +52,7 @@ import org.reactfx.value.Val;
 /**
  * StyledTextArea skin.
  */
-class StyledTextAreaView<S, PS> extends Region {
+public class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
