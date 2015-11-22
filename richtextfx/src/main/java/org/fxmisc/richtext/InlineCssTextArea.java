@@ -3,10 +3,13 @@ package org.fxmisc.richtext;
 /**
  * Text area that uses inline css to define style of text segments and paragraph segments.
  */
-public class InlineCssTextArea extends InlineStyleTextArea<String, String> {
+public class InlineCssTextArea extends StyledTextArea<String, String> {
 
     public InlineCssTextArea() {
-        super("", css -> css, "", css -> css);
+        super(
+                "", (text, style) -> text.setStyle(style),
+                "", (paragraph, style) -> paragraph.setStyle(style)
+        );
     }
 
     /**

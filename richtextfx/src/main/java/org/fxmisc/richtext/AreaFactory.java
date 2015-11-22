@@ -73,31 +73,46 @@ public class AreaFactory {
         return new VirtualizedScrollPane<>(codeArea(text));
     }
 
-    public static <S, PS> InlineStyleTextArea<S, PS> inlineStyleTextArea(
+    /**
+     * Creates a text area that uses inline css derived from the style info to define
+     * style of text segments.
+     *
+     * @param <S> type of text style information.
+     * @param <PS> type of paragraph style information.
+     * @param initialStyle style to use for text ranges where no other
+     *     style is set via {@code setStyle(...)} methods.
+     * @param styleToCss function that converts an instance of {@code S}
+     *     to a CSS string.
+     */
+    public static <S, PS> StyledTextArea<S, PS> inlineStyleTextArea(
             S initialStyle, Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss
     ) {
-        return new InlineStyleTextArea<>(initialStyle, styleToCss, initialParagraphStyle, paragraphStyleToCss);
+        return styledTextArea(
+                initialStyle,
+                (text, style) -> text.setStyle(styleToCss.apply(style)),
+                initialParagraphStyle,
+                (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)));
     }
 
-    public static <S, PS> VirtualizedScrollPane<InlineStyleTextArea<S, PS>> embeddedInlineStyleTextArea(
+    public static <S, PS> VirtualizedScrollPane<StyledTextArea<S, PS>> embeddedInlineStyleTextArea(
             S initialStyle, Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss
     ) {
         return new VirtualizedScrollPane<>(inlineStyleTextArea(initialStyle, styleToCss, initialParagraphStyle, paragraphStyleToCss));
     }
 
-    public static InlineCssTextArea inlineCssTextArea() {
+    public static StyledTextArea<String, String> inlineCssTextArea() {
         return new InlineCssTextArea();
     }
 
-    public static InlineCssTextArea inlineCssTextArea(String text) {
+    public static StyledTextArea<String, String> inlineCssTextArea(String text) {
         return new InlineCssTextArea(text);
     }
 
-    public static VirtualizedScrollPane<InlineCssTextArea> embeddedInlineCssTextArea() {
+    public static VirtualizedScrollPane<StyledTextArea<String, String>> embeddedInlineCssTextArea() {
         return new VirtualizedScrollPane<>(inlineCssTextArea());
     }
 
-    public static VirtualizedScrollPane<InlineCssTextArea> embeddedInlineCssTextArea(String text) {
+    public static VirtualizedScrollPane<StyledTextArea<String, String>> embeddedInlineCssTextArea(String text) {
         return new VirtualizedScrollPane<>(inlineCssTextArea(text));
     }
 }
