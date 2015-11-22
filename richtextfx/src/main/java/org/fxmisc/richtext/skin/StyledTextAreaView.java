@@ -37,6 +37,7 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.PopupAlignment;
@@ -88,6 +89,8 @@ class StyledTextAreaView<S, PS> extends Region {
 
     private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
 
+    private final VirtualizedScrollPane<VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>>> vsPane;
+
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
@@ -128,7 +131,8 @@ class StyledTextAreaView<S, PS> extends Region {
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
-        getChildren().add(virtualFlow);
+        vsPane = new VirtualizedScrollPane<>(virtualFlow);
+        getChildren().add(vsPane);
 
         // bind scrolling API
         area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
@@ -210,7 +214,7 @@ class StyledTextAreaView<S, PS> extends Region {
 
     @Override
     protected void layoutChildren() {
-        virtualFlow.resize(getWidth(), getHeight());
+        vsPane.resize(getWidth(), getHeight());
         if(followCaretRequested) {
             followCaretRequested = false;
             followCaret();
@@ -313,7 +317,7 @@ class StyledTextAreaView<S, PS> extends Region {
     }
 
     double getViewportHeight() {
-        return virtualFlow.getViewportHeight();
+        return virtualFlow.getHeight();
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
