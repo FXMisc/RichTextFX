@@ -184,7 +184,6 @@ public class StyledTextAreaBehavior implements Behavior {
      * ********************************************************************** */
 
     private final StyledTextArea<?, ?> area;
-    private final StyledTextAreaVisual<?, ?> visual;
     private final StyledTextAreaView<?, ?> view;
 
     private final Subscription subscription;
@@ -214,10 +213,9 @@ public class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    public StyledTextAreaBehavior(StyledTextAreaVisual<?, ?> visual) {
-        this.area = visual.getControl();
-        this.visual = visual;
-        this.view = visual.getNode();
+    public StyledTextAreaBehavior(StyledTextArea<?, ?> area, StyledTextAreaView<?, ?> view) {
+        this.area = area;
+        this.view = view;
 
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
@@ -368,7 +366,7 @@ public class StyledTextAreaBehavior implements Behavior {
             CharacterHit hit = view.hit(getTargetCaretOffset(), targetLine);
 
             // update model
-            visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+            area.moveTo(hit.getInsertionIndex(), selectionPolicy);
         }
     }
 
@@ -383,13 +381,13 @@ public class StyledTextAreaBehavior implements Behavior {
     private void prevPage(SelectionPolicy selectionPolicy) {
         view.showCaretAtBottom();
         CharacterHit hit = view.hit(getTargetCaretOffset(), 1.0);
-        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
         view.showCaretAtTop();
         CharacterHit hit = view.hit(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
-        visual.getControl().moveTo(hit.getInsertionIndex(), selectionPolicy);
+        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
 

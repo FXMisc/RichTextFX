@@ -45,11 +45,10 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
-import org.fxmisc.richtext.skin.StyledTextAreaVisual;
+import org.fxmisc.richtext.skin.StyledTextAreaView;
 import org.fxmisc.richtext.skin.TextExt;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
-import org.fxmisc.wellbehaved.skin.Skins;
 import org.reactfx.EventStream;
 import org.reactfx.Guard;
 import org.reactfx.Suspendable;
@@ -520,6 +519,10 @@ implements
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
+
+        StyledTextAreaView<S, PS> view = new StyledTextAreaView<S, PS>(this, applyStyle, initialParagraphStyle, applyParagraphStyle);
+        new StyledTextAreaBehavior(this, view);
+        getChildren().add(view);
     }
 
 
@@ -838,10 +841,7 @@ implements
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return Skins.<StyledTextArea<S, PS>, StyledTextAreaVisual<S, PS>>createSimpleSkin(
-                this,
-                area -> new StyledTextAreaVisual<>(area, applyStyle, initialParagraphStyle, applyParagraphStyle),
-                StyledTextAreaBehavior::new);
+        return null;
     }
 
     @Override
