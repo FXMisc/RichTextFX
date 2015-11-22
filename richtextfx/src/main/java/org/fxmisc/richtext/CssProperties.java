@@ -7,9 +7,9 @@ import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.control.Control;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
-
-import org.fxmisc.richtext.skin.PropertyCssMetaData;
 
 
 /**
@@ -20,9 +20,9 @@ class CssProperties {
     static final PseudoClass PSEUDO_CLASS_READONLY
             = PseudoClass.getPseudoClass("readonly");
 
-    static class EditableProperty<C extends Control> extends SimpleBooleanProperty {
-        public EditableProperty(C control) {
-            super(control, "editable", true);
+    static class EditableProperty<R extends Region> extends SimpleBooleanProperty {
+        public EditableProperty(R region) {
+            super(region, "editable", true);
         }
 
         @Override protected void invalidated() {
@@ -49,6 +49,64 @@ class CssProperties {
 
         @Override
         public CssMetaData<S, Font> getCssMetaData() {
+            return cssMetaData;
+        }
+    }
+
+    static class HighlightFillProperty extends StyleableObjectProperty<Paint> {
+        private final Object bean;
+
+        private final CssMetaData<? extends Styleable, Paint> cssMetaData;
+
+        public HighlightFillProperty(Object bean, Paint initialValue) {
+            super(initialValue);
+            this.bean = bean;
+            cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
+                    this, "-fx-highlight-fill",
+                    StyleConverter.getPaintConverter(), initialValue);
+        }
+
+        @Override
+        public Object getBean() {
+            return bean;
+        }
+
+        @Override
+        public String getName() {
+            return "highlightFill";
+        }
+
+        @Override
+        public CssMetaData<? extends Styleable, Paint> getCssMetaData() {
+            return cssMetaData;
+        }
+    };
+
+    static class HighlightTextFillProperty extends StyleableObjectProperty<Paint> {
+        private final Object bean;
+
+        private final CssMetaData<? extends Styleable, Paint> cssMetaData;
+
+        public HighlightTextFillProperty(Object bean, Paint initialValue) {
+            super(initialValue);
+            this.bean = bean;
+            cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
+                    this, "-fx-highlight-text-fill",
+                    StyleConverter.getPaintConverter(), initialValue);
+        }
+
+        @Override
+        public Object getBean() {
+            return bean;
+        }
+
+        @Override
+        public String getName() {
+            return "highlightTextFill";
+        }
+
+        @Override
+        public CssMetaData<? extends Styleable, Paint> getCssMetaData() {
             return cssMetaData;
         }
     }

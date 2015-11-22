@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
@@ -7,8 +7,6 @@ import java.lang.reflect.Method;
 
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
-
-import org.fxmisc.richtext.TwoLevelNavigator;
 
 import com.sun.javafx.geom.RectBounds;
 import com.sun.javafx.scene.text.HitInfo;

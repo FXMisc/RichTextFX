@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 
 import static org.reactfx.EventStreams.*;
@@ -38,12 +38,6 @@ import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.MouseOverTextEvent;
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.PopupAlignment;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TwoDimensional;
-import org.fxmisc.richtext.TwoLevelNavigator;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -52,7 +46,7 @@ import org.reactfx.value.Val;
 /**
  * StyledTextArea skin.
  */
-public class StyledTextAreaView<S, PS> extends Region {
+class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *

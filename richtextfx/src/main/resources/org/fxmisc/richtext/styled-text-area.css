@@ -1,4 +1,4 @@
-.styled-text-area .virtual-flow .virtual-flow-content {
+.styled-text-area .virtualized-scroll-pane .virtual-flow {
     -fx-cursor: text;
 }
 
