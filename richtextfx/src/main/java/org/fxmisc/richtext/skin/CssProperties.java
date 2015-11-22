@@ -5,6 +5,7 @@ import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.paint.Paint;
+import org.fxmisc.richtext.PropertyCssMetaData;
 
 class CssProperties {
 

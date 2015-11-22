@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 import java.util.OptionalInt;
 

@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 import javafx.css.CssMetaData;
 import javafx.css.StyleConverter;

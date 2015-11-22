@@ -38,12 +38,6 @@ import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.MouseOverTextEvent;
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.PopupAlignment;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TwoDimensional;
-import org.fxmisc.richtext.TwoLevelNavigator;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
@@ -52,7 +46,8 @@ import org.reactfx.value.Val;
 /**
  * StyledTextArea skin.
  */
-public class StyledTextAreaView<S, PS> extends Region {
+/*
+class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -63,14 +58,14 @@ public class StyledTextAreaView<S, PS> extends Region {
     /**
      * Background fill for highlighted text.
      */
-    private final StyleableObjectProperty<Paint> highlightFill
-            = new CssProperties.HighlightFillProperty(this, Color.DODGERBLUE);
+//    private final StyleableObjectProperty<Paint> highlightFill
+//            = new CssProperties.HighlightFillProperty(this, Color.DODGERBLUE);
 
     /**
      * Text color for highlighted text.
      */
-    private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
+//    private final StyleableObjectProperty<Paint> highlightTextFill
+//            = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
 
 
     /* ********************************************************************** *
@@ -78,7 +73,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Private fields                                                         *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     private final StyledTextArea<S, PS> area;
 
     private Subscription subscriptions = () -> {};
@@ -101,7 +96,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Constructors                                                           *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     public StyledTextAreaView(
             StyledTextArea<S, PS> styledTextArea,
             BiConsumer<? super TextExt, S> applyStyle,
@@ -194,7 +189,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Public API                                                             *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     public void dispose() {
         subscriptions.unsubscribe();
         area.totalHeightEstimateProperty().unbind();
@@ -208,7 +203,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Layout                                                                 *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     @Override
     protected void layoutChildren() {
         virtualFlow.resize(getWidth(), getHeight());
@@ -232,7 +227,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Look &amp; feel                                                        *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
         return Arrays.<CssMetaData<? extends Styleable, ?>>asList(
@@ -246,7 +241,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Actions                                                                *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     void scrollBy(Point2D deltas) {
         virtualFlow.scrollXBy(deltas.getX());
         virtualFlow.scrollYBy(deltas.getY());
@@ -297,6 +292,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Returns caret bounds relative to the viewport, i.e. the visual bounds
      * of the embedded VirtualFlow.
      */
+/*
     Optional<Bounds> getCaretBounds() {
         return virtualFlow.getCellIfVisible(area.getCurrentParagraph())
                 .map(c -> {
@@ -308,6 +304,7 @@ public class StyledTextAreaView<S, PS> extends Region {
     /**
      * Returns x coordinate of the caret in the current paragraph.
      */
+/*
     ParagraphBox.CaretOffsetX getCaretOffsetX() {
         int idx = area.getCurrentParagraph();
         return getCell(idx).getCaretOffsetX();
@@ -364,6 +361,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * <p>This method has a side-effect of bringing the current
      * paragraph to the viewport if it is not already visible.
      */
+/*
     TwoDimensional.Position currentLine() {
         int parIdx = area.getCurrentParagraph();
         Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
@@ -381,7 +379,7 @@ public class StyledTextAreaView<S, PS> extends Region {
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
-
+/*
     private Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> createCell(
             Paragraph<S, PS> paragraph,
             BiConsumer<? super TextExt, S> applyStyle,
@@ -542,3 +540,4 @@ public class StyledTextAreaView<S, PS> extends Region {
         return EventStreams.ticks(duration).accumulate(true, (b, x) -> !b);
     }
 }
+*/

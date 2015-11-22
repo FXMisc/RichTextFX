@@ -8,8 +8,9 @@ import javafx.css.Styleable;
 import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TextExt;
 import org.fxmisc.wellbehaved.skin.SimpleVisualBase;
-
+/*
 public class StyledTextAreaVisual<S, PS> extends SimpleVisualBase<StyledTextArea<S, PS>> {
     private final StyledTextAreaView<S, PS> node;
 
@@ -36,3 +37,4 @@ public class StyledTextAreaVisual<S, PS> extends SimpleVisualBase<StyledTextArea
         return node.getCssMetaData();
     }
 }
+*/

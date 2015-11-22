@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.skin;
+package org.fxmisc.richtext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyledText;
-import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
