@@ -3,12 +3,6 @@ apply plugin: 'signing'
 
 group = 'org.fxmisc.richtext'
 
-repositories {
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
-}
-
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '2.0-M4u1'
     compile group: 'org.fxmisc.undo', name: 'undofx', version: '1.2'

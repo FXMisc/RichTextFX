@@ -8,6 +8,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class FontSizeSwitcher extends Application {
@@ -32,8 +33,9 @@ public class FontSizeSwitcher extends Application {
         }
 
         VBox vbox = new VBox();
-        VBox.setVgrow(area, Priority.ALWAYS);
-        vbox.getChildren().addAll(panel, area);
+        VirtualizedScrollPane<StyleClassedTextArea> vsPane = new VirtualizedScrollPane<>(area);
+        VBox.setVgrow(vsPane, Priority.ALWAYS);
+        vbox.getChildren().addAll(panel, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
         primaryStage.setScene(scene);

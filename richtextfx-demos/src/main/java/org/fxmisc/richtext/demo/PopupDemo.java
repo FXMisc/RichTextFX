@@ -9,8 +9,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
-import org.fxmisc.richtext.InlineCssTextArea;
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.PopupAlignment;
+import org.fxmisc.richtext.StyledTextArea;
 
 public class PopupDemo extends Application {
 
@@ -20,7 +21,7 @@ public class PopupDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        InlineCssTextArea area = new InlineCssTextArea("Hello popup!");
+        StyledTextArea<String, String> area = AreaFactory.inlineCssTextArea("Hello popup!");
         area.setWrapText(true);
 
         Popup popup = new Popup();
