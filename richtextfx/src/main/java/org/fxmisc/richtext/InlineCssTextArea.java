@@ -2,7 +2,9 @@ package org.fxmisc.richtext;
 
 /**
  * Text area that uses inline css to define style of text segments and paragraph segments.
+ * @deprecated Use {@link AreaFactory#inlineCssTextArea()} instead.
  */
+@Deprecated
 public class InlineCssTextArea extends InlineStyleTextArea<String, String> {
 
     public InlineCssTextArea() {
