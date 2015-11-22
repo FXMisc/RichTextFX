@@ -52,7 +52,7 @@ import org.reactfx.value.Val;
 /**
  * StyledTextArea skin.
  */
-class StyledTextAreaView<S, PS> extends Region {
+public class StyledTextAreaView<S, PS> extends Region {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -88,8 +88,6 @@ class StyledTextAreaView<S, PS> extends Region {
     private final Val<UnaryOperator<Point2D>> popupAnchorAdjustment;
 
     private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
-
-    private final VirtualizedScrollPane<VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>>> vsPane;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -131,8 +129,7 @@ class StyledTextAreaView<S, PS> extends Region {
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
-        vsPane = new VirtualizedScrollPane<>(virtualFlow);
-        getChildren().add(vsPane);
+        getChildren().add(new VirtualizedScrollPane<>(virtualFlow));
 
         // bind scrolling API
         area.totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
@@ -168,7 +165,7 @@ class StyledTextAreaView<S, PS> extends Region {
         caretVisible = EventStreams.valuesOf(blinkCaret)
                 .flatMap(blink -> blink
                         ? booleanPulse(Duration.ofMillis(500))
-                        : EventStreams.valuesOf(Val.constant(false)))
+                        : valuesOf(Val.constant(false)))
                 .toBinding(false);
         manageBinding(caretVisible);
 
@@ -214,7 +211,7 @@ class StyledTextAreaView<S, PS> extends Region {
 
     @Override
     protected void layoutChildren() {
-        vsPane.resize(getWidth(), getHeight());
+        virtualFlow.resize(getWidth(), getHeight());
         if(followCaretRequested) {
             followCaretRequested = false;
             followCaret();
