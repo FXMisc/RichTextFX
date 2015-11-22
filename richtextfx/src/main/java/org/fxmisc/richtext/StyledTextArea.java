@@ -23,10 +23,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
@@ -55,6 +53,7 @@ import javafx.stage.PopupWindow;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
+import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
@@ -82,6 +81,11 @@ import org.reactfx.value.Var;
  *
  * <p>Subclassing is allowed to define the type of style, e.g. inline
  * style or style classes.</p>
+ *
+ * <p>Note: Scroll bars no longer appear when the content spans outside
+ * of the viewport. To add scroll bars, the area needs to be embedded in
+ * a {@link VirtualizedScrollPane}. {@link AreaFactory} is provided to make
+ * this more convenient.</p>
  *
  * <h3>Overriding keyboard shortcuts</h3>
  *
@@ -118,7 +122,8 @@ implements
         ClipboardActions<S, PS>,
         NavigationActions<S, PS>,
         UndoActions<S>,
-        TwoDimensional {
+        TwoDimensional,
+        Virtualized {
 
     /**
      * Index range [0, 0).
@@ -295,20 +300,18 @@ implements
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private final Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
-    public Var<Double> estimatedScrollXProperty() { return estimatedScrollX; }
-    public double getEstimatedScrollX() { return estimatedScrollX.getValue(); }
-    public void setEstimatedScrollX(double value) { estimatedScrollX.setValue(value); }
+    public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
+    public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
+    public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
 
     /**
      * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private final Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
-    public Var<Double> estimatedScrollYProperty() { return estimatedScrollY; }
-    public double getEstimatedScrollY() { return estimatedScrollY.getValue(); }
-    public void setEstimatedScrollY(double value) { estimatedScrollY.setValue(value); }
+    public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
+    public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
+    public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
 
     /* ********************************************************************** *
@@ -383,9 +386,8 @@ implements
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    private final DoubleProperty totalWidthEstimate = new SimpleDoubleProperty(this, "totalWidthEstimate");
-    public DoubleProperty totalWidthEstimateProperty() { return totalWidthEstimate; }
-    public double getTotalWidthEstimate() { return totalWidthEstimate.get(); }
+    public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
+    public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
     // total height estimate
     /**
@@ -393,9 +395,8 @@ implements
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    private final DoubleProperty totalHeightEstimate = new SimpleDoubleProperty(this, "totalHeightEstimate");
-    public DoubleProperty totalHeightEstimateProperty() { return totalHeightEstimate; }
-    public double getTotalHeightEstimate() { return totalHeightEstimate.get(); }
+    public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
+    public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
 
     /* ********************************************************************** *
@@ -585,16 +586,6 @@ implements
                 });
         virtualizedScrollPane = new VirtualizedScrollPane<>(virtualFlow);
         getChildren().add(virtualizedScrollPane);
-
-        // bind scrolling API
-        totalWidthEstimateProperty().bind(virtualFlow.totalWidthEstimateProperty());
-        totalHeightEstimateProperty().bind(virtualFlow.totalHeightEstimateProperty());
-
-        // bind scroll X/Y values using simulated recursion binding
-        manageSubscription(estimatedScrollXProperty().values().feedTo(virtualFlow.estimatedScrollXProperty()));
-        manageSubscription(virtualFlow.estimatedScrollXProperty().values().feedTo(estimatedScrollXProperty()));
-        manageSubscription(estimatedScrollYProperty().values().feedTo(virtualFlow.estimatedScrollYProperty()));
-        manageSubscription(virtualFlow.estimatedScrollYProperty().values().feedTo(estimatedScrollYProperty()));
 
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
@@ -1082,8 +1073,6 @@ implements
 
     public void dispose() {
         subscriptions.unsubscribe();
-        totalHeightEstimateProperty().unbind();
-        totalWidthEstimateProperty().unbind();
         behavior.dispose();
         virtualFlow.dispose();
     }
