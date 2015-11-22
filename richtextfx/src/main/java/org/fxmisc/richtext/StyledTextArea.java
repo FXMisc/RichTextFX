@@ -566,9 +566,6 @@ implements
 
         // CONSTRUCT THE SKIN
 
-        // load the default style
-        getStylesheets().add(StyledTextAreaView.class.getResource("styled-text-area.css").toExternalForm());
-
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
         ObservableSet<ParagraphBox<S, PS>> nonEmptyCells = FXCollections.observableSet();
