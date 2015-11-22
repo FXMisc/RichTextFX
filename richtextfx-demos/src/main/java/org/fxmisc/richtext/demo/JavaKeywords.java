@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StyleSpans;
@@ -86,7 +87,7 @@ public class JavaKeywords extends Application {
         });
         codeArea.replaceText(0, 0, sampleCode);
 
-        Scene scene = new Scene(new StackPane(codeArea), 600, 400);
+        Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
         scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");

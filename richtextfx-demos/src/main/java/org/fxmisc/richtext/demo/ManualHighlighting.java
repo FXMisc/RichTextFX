@@ -13,6 +13,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class ManualHighlighting extends Application {
@@ -31,9 +32,10 @@ public class ManualHighlighting extends Application {
         Button bold = createBoldButton("bold");
         HBox panel = new HBox(red, green, blue, bold);
 
-        VBox.setVgrow(area, Priority.ALWAYS);
+        VirtualizedScrollPane<StyleClassedTextArea> vsPane = new VirtualizedScrollPane<>(area);
+        VBox.setVgrow(vsPane, Priority.ALWAYS);
         area.setWrapText(true);
-        VBox vbox = new VBox(panel, area);
+        VBox vbox = new VBox(panel, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());

@@ -33,9 +33,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.InlineStyleTextArea;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyleSpans;
+import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.SuspendableNo;
 
 public class RichText extends Application {
@@ -44,8 +47,8 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final InlineStyleTextArea<TextStyle, ParStyle> area =
-            new InlineStyleTextArea<>(
+    private final StyledTextArea<TextStyle, ParStyle> area =
+            AreaFactory.inlineStyleTextArea(
                     TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
                     TextStyle::toCss,
                     ParStyle.EMPTY,
@@ -235,9 +238,10 @@ public class RichText extends Application {
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
+        VirtualizedScrollPane<StyledTextArea<TextStyle, ParStyle>> vsPane = new VirtualizedScrollPane<>(area);
         VBox vbox = new VBox();
-        VBox.setVgrow(area, Priority.ALWAYS);
-        vbox.getChildren().addAll(panel1, panel2, area);
+        VBox.setVgrow(vsPane, Priority.ALWAYS);
+        vbox.getChildren().addAll(panel1, panel2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(RichText.class.getResource("rich-text.css").toExternalForm());
