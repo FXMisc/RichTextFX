@@ -1095,7 +1095,7 @@ public class StyledTextArea<S, PS> extends Region
         // position popup
         PopupWindow popup = getPopupWindow();
         PopupAlignment alignment = getPopupAlignment();
-        UnaryOperator<Point2D> adjustment = popupAnchorAdjustment.getValue();
+        UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
         if(popup != null) {
             positionPopup(popup, alignment, adjustment);
         }
