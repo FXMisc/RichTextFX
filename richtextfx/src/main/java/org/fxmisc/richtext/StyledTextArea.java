@@ -2,55 +2,65 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.reactfx.EventStreams.invalidationsOf;
+import static org.reactfx.EventStreams.merge;
+import static org.reactfx.EventStreams.valuesOf;
 import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
+import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
+import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.CssMetaData;
-import javafx.css.Styleable;
+import javafx.collections.ObservableSet;
 import javafx.css.StyleableObjectProperty;
+import javafx.event.Event;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.Control;
 import javafx.scene.control.IndexRange;
-import javafx.scene.control.Skin;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
 
+import org.fxmisc.flowless.Cell;
+import org.fxmisc.flowless.VirtualFlow;
+import org.fxmisc.flowless.VirtualFlowHit;
+import org.fxmisc.flowless.Virtualized;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.CssProperties.FontProperty;
-import org.fxmisc.richtext.skin.StyledTextAreaBehavior;
-import org.fxmisc.richtext.skin.StyledTextAreaVisual;
-import org.fxmisc.richtext.skin.TextExt;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
-import org.fxmisc.wellbehaved.skin.Skins;
 import org.reactfx.EventStream;
+import org.reactfx.EventStreams;
 import org.reactfx.Guard;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
@@ -70,6 +80,11 @@ import org.reactfx.value.Var;
  *
  * <p>Subclassing is allowed to define the type of style, e.g. inline
  * style or style classes.</p>
+ *
+ * <p>Note: Scroll bars no longer appear when the content spans outside
+ * of the viewport. To add scroll bars, the area needs to be embedded in
+ * a {@link VirtualizedScrollPane}. {@link AreaFactory} is provided to make
+ * this more convenient.</p>
  *
  * <h3>Overriding keyboard shortcuts</h3>
  *
@@ -99,14 +114,15 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S, PS> extends Control
-implements
+public class StyledTextArea<S, PS> extends Region
+        implements
         TextEditingArea<S, PS>,
         EditActions<S, PS>,
         ClipboardActions<S, PS>,
         NavigationActions<S, PS>,
         UndoActions<S>,
-        TwoDimensional {
+        TwoDimensional,
+        Virtualized {
 
     /**
      * Index range [0, 0).
@@ -134,6 +150,18 @@ implements
      * set by the client code.                                                *
      *                                                                        *
      * ********************************************************************** */
+
+    /**
+     * Background fill for highlighted text.
+     */
+    private final StyleableObjectProperty<Paint> highlightFill
+            = new CssProperties.HighlightFillProperty(this, Color.DODGERBLUE);
+
+    /**
+     * Text color for highlighted text.
+     */
+    private final StyleableObjectProperty<Paint> highlightTextFill
+            = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
 
     // editable property
     private final BooleanProperty editable = new EditableProperty<>(this);
@@ -271,20 +299,18 @@ implements
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private final Var<Double> estimatedScrollX = Var.newSimpleVar(0.0);
-    public Var<Double> estimatedScrollXProperty() { return estimatedScrollX; }
-    public double getEstimatedScrollX() { return estimatedScrollX.getValue(); }
-    public void setEstimatedScrollX(double value) { estimatedScrollX.setValue(value); }
+    public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
+    public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
+    public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
 
     /**
      * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    private final Var<Double> estimatedScrollY = Var.newSimpleVar(0.0);
-    public Var<Double> estimatedScrollYProperty() { return estimatedScrollY; }
-    public double getEstimatedScrollY() { return estimatedScrollY.getValue(); }
-    public void setEstimatedScrollY(double value) { estimatedScrollY.setValue(value); }
+    public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
+    public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
+    public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
 
     /* ********************************************************************** *
@@ -359,9 +385,8 @@ implements
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    private final DoubleProperty totalWidthEstimate = new SimpleDoubleProperty(this, "totalWidthEstimate");
-    public DoubleProperty totalWidthEstimateProperty() { return totalWidthEstimate; }
-    public double getTotalWidthEstimate() { return totalWidthEstimate.get(); }
+    public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
+    public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
     // total height estimate
     /**
@@ -369,9 +394,8 @@ implements
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    private final DoubleProperty totalHeightEstimate = new SimpleDoubleProperty(this, "totalHeightEstimate");
-    public DoubleProperty totalHeightEstimateProperty() { return totalHeightEstimate; }
-    public double getTotalHeightEstimate() { return totalHeightEstimate.get(); }
+    public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
+    public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
 
     /* ********************************************************************** *
@@ -396,6 +420,21 @@ implements
      * Private fields                                                         *
      *                                                                        *
      * ********************************************************************** */
+
+    private final Binding<Boolean> caretVisible;
+
+    // TODO: this is initialized but never used. Should it be removed?
+    private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
+
+    private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
+
+    private final VirtualizedScrollPane<VirtualFlow> virtualizedScrollPane;
+
+    // used for two-level navigation, where on the higher level are
+    // paragraphs and on the lower level are lines within a paragraph
+    private final TwoLevelNavigator navigator;
+
+    private boolean followCaretRequested = false;
 
     private Position selectionStart2D;
     private Position selectionEnd2D;
@@ -520,6 +559,75 @@ implements
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
+
+        // CONSTRUCT THE SKIN
+
+        // keeps track of currently used non-empty cells
+        @SuppressWarnings("unchecked")
+        ObservableSet<ParagraphBox<S, PS>> nonEmptyCells = FXCollections.observableSet();
+
+        // Initialize content
+        virtualFlow = VirtualFlow.createVertical(
+                getParagraphs(),
+                par -> {
+                    Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = createCell(
+                            par,
+                            applyStyle,
+                            initialParagraphStyle,
+                            applyParagraphStyle);
+                    nonEmptyCells.add(cell.getNode());
+                    return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
+                            .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
+                });
+        virtualizedScrollPane = new VirtualizedScrollPane<>(virtualFlow);
+        getChildren().add(virtualizedScrollPane);
+
+        // initialize navigator
+        IntSupplier cellCount = () -> getParagraphs().size();
+        IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
+        navigator = new TwoLevelNavigator(cellCount, cellLength);
+
+        // follow the caret every time the caret position or paragraphs change
+        EventStream<?> caretPosDirty = invalidationsOf(caretPositionProperty());
+        EventStream<?> paragraphsDirty = invalidationsOf(getParagraphs());
+        EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
+        // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
+        EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
+        caretDirty.subscribe(x -> requestFollowCaret());
+
+        // whether or not to animate the caret
+        BooleanBinding blinkCaret = focusedProperty()
+                .and(editableProperty())
+                .and(disabledProperty().not());
+
+        // The caret is visible in periodic intervals,
+        // but only when blinkCaret is true.
+        caretVisible = EventStreams.valuesOf(blinkCaret)
+                .flatMap(blink -> blink
+                        ? booleanPulse(Duration.ofMillis(500))
+                        : valuesOf(Val.constant(false)))
+                .toBinding(false);
+
+        // Adjust popup anchor by either a user-provided function,
+        // or user-provided offset, or don't adjust at all.
+        Val<UnaryOperator<Point2D>> userOffset = Val.map(
+                popupAnchorOffsetProperty(),
+                offset -> anchor -> anchor.add(offset));
+        _popupAnchorAdjustment =
+                Val.orElse(
+                        popupAnchorAdjustmentProperty(),
+                        userOffset)
+                        .orElseConst(UnaryOperator.identity());
+
+        // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
+        EventStreams.valuesOf(mouseOverTextDelayProperty())
+                .flatMap(delay -> delay != null
+                        ? mouseOverTextEvents(nonEmptyCells, delay)
+                        : EventStreams.never())
+                .subscribe(evt -> Event.fireEvent(this, evt));
+
+        new StyledTextAreaBehavior(this);
+        getChildren().add(virtualFlow);
     }
 
 
@@ -530,6 +638,88 @@ implements
      * Queries are parameterized observables.                                 *
      *                                                                        *
      * ********************************************************************** */
+
+    /**
+     * Returns caret bounds relative to the viewport, i.e. the visual bounds
+     * of the embedded VirtualFlow.
+     */
+    Optional<Bounds> getCaretBounds() {
+        return virtualFlow.getCellIfVisible(getCurrentParagraph())
+                .map(c -> {
+                    Bounds cellBounds = c.getNode().getCaretBounds();
+                    return virtualFlow.cellToViewport(c, cellBounds);
+                });
+    }
+
+    /**
+     * Returns x coordinate of the caret in the current paragraph.
+     */
+    ParagraphBox.CaretOffsetX getCaretOffsetX() {
+        int idx = getCurrentParagraph();
+        return getCell(idx).getCaretOffsetX();
+    }
+
+    double getViewportHeight() {
+        return virtualFlow.getHeight();
+    }
+
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
+        int parIdx = targetLine.getMajor();
+        ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
+        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
+        return parHit.offset(getParagraphOffset(parIdx));
+    }
+
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
+        if(hit.isBeforeCells()) {
+            return CharacterHit.insertionAt(0);
+        } else if(hit.isAfterCells()) {
+            return CharacterHit.insertionAt(getLength());
+        } else {
+            int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
+            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
+            return parHit.offset(parOffset);
+        }
+    }
+
+    CharacterHit hit(double x, double y) {
+        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
+        if(hit.isBeforeCells()) {
+            return CharacterHit.insertionAt(0);
+        } else if(hit.isAfterCells()) {
+            return CharacterHit.insertionAt(getLength());
+        } else {
+            int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
+            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit parHit = cell.hit(cellOffset);
+            return parHit.offset(parOffset);
+        }
+    }
+
+    /**
+     * Returns the current line as a two-level index.
+     * The major number is the paragraph index, the minor
+     * number is the line number within the paragraph.
+     *
+     * <p>This method has a side-effect of bringing the current
+     * paragraph to the viewport if it is not already visible.
+     */
+    TwoDimensional.Position currentLine() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        int lineIdx = cell.getNode().getCurrentLineIndex();
+        return _position(parIdx, lineIdx);
+    }
+
+    TwoDimensional.Position _position(int par, int line) {
+        return navigator.position(par, line);
+    }
 
     @Override
     public final String getText(int start, int end) {
@@ -693,6 +883,45 @@ implements
      *                                                                        *
      * ********************************************************************** */
 
+    void scrollBy(Point2D deltas) {
+        virtualFlow.scrollXBy(deltas.getX());
+        virtualFlow.scrollYBy(deltas.getY());
+    }
+
+    void show(double y) {
+        virtualFlow.show(y);
+    }
+
+    void showCaretAtBottom() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMaxY();
+        virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
+    }
+
+    void showCaretAtTop() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMinY();
+        virtualFlow.showAtOffset(parIdx, -y);
+    }
+
+    void requestFollowCaret() {
+        followCaretRequested = true;
+        requestLayout();
+    }
+
+    private void followCaret() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double graphicWidth = cell.getNode().getGraphicPrefWidth();
+        Bounds region = extendLeft(caretBounds, graphicWidth);
+        virtualFlow.show(parIdx, region);
+    }
+
     /**
      * Sets style for the given character range.
      */
@@ -829,38 +1058,182 @@ implements
         }
     }
 
-
     /* ********************************************************************** *
      *                                                                        *
-     * Look &amp; feel                                                        *
+     * Layout                                                                 *
      *                                                                        *
      * ********************************************************************** */
 
     @Override
-    protected Skin<?> createDefaultSkin() {
-        return Skins.<StyledTextArea<S, PS>, StyledTextAreaVisual<S, PS>>createSimpleSkin(
-                this,
-                area -> new StyledTextAreaVisual<>(area, applyStyle, initialParagraphStyle, applyParagraphStyle),
-                StyledTextAreaBehavior::new);
-    }
+    protected void layoutChildren() {
+        virtualizedScrollPane.resize(getWidth(), getHeight());
+        if(followCaretRequested) {
+            followCaretRequested = false;
+            followCaret();
+        }
 
-    @Override
-    public List<CssMetaData<? extends Styleable, ?>> getControlCssMetaData() {
-        List<CssMetaData<? extends Styleable, ?>> superMetaData = super.getControlCssMetaData();
-        List<CssMetaData<? extends Styleable, ?>> myMetaData = Arrays.<CssMetaData<? extends Styleable, ?>>asList(
-                font.getCssMetaData());
-        List<CssMetaData<? extends Styleable, ?>> res = new ArrayList<>(superMetaData.size() + myMetaData.size());
-        res.addAll(superMetaData);
-        res.addAll(myMetaData);
-        return res;
+        // position popup
+        PopupWindow popup = getPopupWindow();
+        PopupAlignment alignment = getPopupAlignment();
+        UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
+        if(popup != null) {
+            positionPopup(popup, alignment, adjustment);
+        }
     }
-
 
     /* ********************************************************************** *
      *                                                                        *
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
+
+    private Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> createCell(
+            Paragraph<S, PS> paragraph,
+            BiConsumer<? super TextExt, S> applyStyle,
+            PS initialParagraphStyle,
+            BiConsumer<TextFlow, PS> applyParagraphStyle) {
+
+        ParagraphBox<S, PS> box = new ParagraphBox<>(paragraph, applyStyle, applyParagraphStyle);
+
+        box.highlightFillProperty().bind(highlightFill);
+        box.highlightTextFillProperty().bind(highlightTextFill);
+        box.wrapTextProperty().bind(wrapTextProperty());
+        box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
+        box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
+
+        Val<Boolean> hasCaret = Val.combine(
+                box.indexProperty(),
+                currentParagraphProperty(),
+                (bi, cp) -> bi.intValue() == cp.intValue());
+
+        // caret is visible only in the paragraph with the caret
+        Val<Boolean> cellCaretVisible = Val.combine(hasCaret, caretVisible, (a, b) -> a && b);
+        box.caretVisibleProperty().bind(cellCaretVisible);
+
+        // bind cell's caret position to area's caret column,
+        // when the cell is the one with the caret
+        box.caretPositionProperty().bind(hasCaret.flatMap(has -> has
+                ? caretColumnProperty()
+                : Val.constant(0)));
+
+        // keep paragraph selection updated
+        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
+            int idx = box.getIndex();
+            return idx != -1
+                    ? getParagraphSelection(idx)
+                    : StyledTextArea.EMPTY_RANGE;
+        }, selectionProperty(), box.indexProperty());
+        box.selectionProperty().bind(cellSelection);
+
+        return new Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>() {
+            @Override
+            public ParagraphBox<S, PS> getNode() {
+                return box;
+            }
+
+            @Override
+            public void updateIndex(int index) {
+                box.setIndex(index);
+            }
+
+            @Override
+            public void dispose() {
+                box.highlightFillProperty().unbind();
+                box.highlightTextFillProperty().unbind();
+                box.wrapTextProperty().unbind();
+                box.graphicFactoryProperty().unbind();
+                box.graphicOffset.unbind();
+
+                box.caretVisibleProperty().unbind();
+                box.caretPositionProperty().unbind();
+
+                box.selectionProperty().unbind();
+                cellSelection.dispose();
+            }
+        };
+    }
+
+    private ParagraphBox<S, PS> getCell(int index) {
+        return virtualFlow.getCell(index).getNode();
+    }
+
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S, PS>> cells, Duration delay) {
+        return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
+                l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
+                r -> MouseOverTextEvent.end())));
+    }
+
+    private int getParagraphOffset(int parIdx) {
+        return position(parIdx, 0).toOffset();
+    }
+
+    private void positionPopup(
+            PopupWindow popup,
+            PopupAlignment alignment,
+            UnaryOperator<Point2D> adjustment) {
+        Optional<Bounds> bounds = null;
+        switch(alignment.getAnchorObject()) {
+            case CARET: bounds = getCaretBoundsOnScreen(); break;
+            case SELECTION: bounds = getSelectionBoundsOnScreen(); break;
+        }
+        bounds.ifPresent(b -> {
+            double x = 0, y = 0;
+            switch(alignment.getHorizontalAlignment()) {
+                case LEFT: x = b.getMinX(); break;
+                case H_CENTER: x = (b.getMinX() + b.getMaxX()) / 2; break;
+                case RIGHT: x = b.getMaxX(); break;
+            }
+            switch(alignment.getVerticalAlignment()) {
+                case TOP: y = b.getMinY();
+                case V_CENTER: y = (b.getMinY() + b.getMaxY()) / 2; break;
+                case BOTTOM: y = b.getMaxY(); break;
+            }
+            Point2D anchor = adjustment.apply(new Point2D(x, y));
+            popup.setAnchorX(anchor.getX());
+            popup.setAnchorY(anchor.getY());
+        });
+    }
+
+    private Optional<Bounds> getCaretBoundsOnScreen() {
+        return virtualFlow.getCellIfVisible(getCurrentParagraph())
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
+    }
+
+    private Optional<Bounds> getSelectionBoundsOnScreen() {
+        IndexRange selection = getSelection();
+        if(selection.getLength() == 0) {
+            return getCaretBoundsOnScreen();
+        }
+
+        Bounds[] bounds = virtualFlow.visibleCells().stream()
+                .map(c -> c.getNode().getSelectionBoundsOnScreen())
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toArray(Bounds[]::new);
+
+        if(bounds.length == 0) {
+            return Optional.empty();
+        }
+        double minX = Stream.of(bounds).mapToDouble(Bounds::getMinX).min().getAsDouble();
+        double maxX = Stream.of(bounds).mapToDouble(Bounds::getMaxX).max().getAsDouble();
+        double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
+        double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
+        return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
+    }
+
+    private static Bounds extendLeft(Bounds b, double w) {
+        if(w == 0) {
+            return b;
+        } else {
+            return new BoundingBox(
+                    b.getMinX() - w, b.getMinY(),
+                    b.getWidth() + w, b.getHeight());
+        }
+    }
+
+    private static EventStream<Boolean> booleanPulse(Duration duration) {
+        return EventStreams.ticks(duration).accumulate(true, (b, x) -> !b);
+    }
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
