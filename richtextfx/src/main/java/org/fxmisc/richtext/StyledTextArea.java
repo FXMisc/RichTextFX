@@ -626,7 +626,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        new StyledTextAreaBehavior(this, virtualFlow);
+        new StyledTextAreaBehavior(this);
         getChildren().add(virtualFlow);
     }
 

@@ -184,7 +184,6 @@ class StyledTextAreaBehavior implements Behavior {
      * ********************************************************************** */
 
     private final StyledTextArea<?, ?> area;
-    private final VirtualFlow<?, ?> view;
 
     private final Subscription subscription;
 
@@ -213,9 +212,8 @@ class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    StyledTextAreaBehavior(StyledTextArea<?, ?> area, VirtualFlow<?, ?> view) {
+    StyledTextAreaBehavior(StyledTextArea<?, ?> area) {
         this.area = area;
-        this.view = view;
 
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
@@ -236,7 +234,7 @@ class StyledTextAreaBehavior implements Behavior {
         // setup auto-scroll
         Val<Point2D> projection = Val.combine(
                 autoscrollTo,
-                view.layoutBoundsProperty(),
+                area.layoutBoundsProperty(),
                 StyledTextAreaBehavior::project);
         Val<Point2D> distance = Val.combine(
                 autoscrollTo,
@@ -461,7 +459,7 @@ class StyledTextAreaBehavior implements Behavior {
         }
 
         Point2D p = new Point2D(e.getX(), e.getY());
-        if(view.getLayoutBounds().contains(p)) {
+        if(area.getLayoutBounds().contains(p)) {
             dragTo(p);
             autoscrollTo.setValue(null); // stops auto-scroll
         } else {
