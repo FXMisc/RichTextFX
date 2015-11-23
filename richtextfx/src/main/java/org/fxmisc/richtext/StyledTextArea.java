@@ -62,7 +62,6 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
-import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
@@ -422,10 +421,6 @@ public class StyledTextArea<S, PS> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private final StyledTextAreaBehavior behavior;
-
-    private Subscription subscriptions = () -> {};
-
     private final Binding<Boolean> caretVisible;
 
     // TODO: this is initialized but never used. Should it be removed?
@@ -598,13 +593,12 @@ public class StyledTextArea<S, PS> extends Region
         EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-        subscribeTo(caretDirty, x -> requestFollowCaret());
+        caretDirty.subscribe(x -> requestFollowCaret());
 
         // whether or not to animate the caret
         BooleanBinding blinkCaret = focusedProperty()
                 .and(editableProperty())
                 .and(disabledProperty().not());
-        manageBinding(blinkCaret);
 
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
@@ -613,7 +607,6 @@ public class StyledTextArea<S, PS> extends Region
                         ? booleanPulse(Duration.ofMillis(500))
                         : valuesOf(Val.constant(false)))
                 .toBinding(false);
-        manageBinding(caretVisible);
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
@@ -633,7 +626,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        behavior = new StyledTextAreaBehavior(this, virtualFlow);
+        new StyledTextAreaBehavior(this, virtualFlow);
         getChildren().add(virtualFlow);
     }
 
@@ -1067,19 +1060,6 @@ public class StyledTextArea<S, PS> extends Region
 
     /* ********************************************************************** *
      *                                                                        *
-     * Public API                                                             *
-     *                                                                        *
-     * ********************************************************************** */
-
-    public void dispose() {
-        subscriptions.unsubscribe();
-        behavior.dispose();
-        virtualFlow.dispose();
-    }
-
-
-    /* ********************************************************************** *
-     *                                                                        *
      * Layout                                                                 *
      *                                                                        *
      * ********************************************************************** */
@@ -1239,18 +1219,6 @@ public class StyledTextArea<S, PS> extends Region
         double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
         double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
-    }
-
-    private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
-        manageSubscription(src.subscribe(consumer));
-    }
-
-    private void manageSubscription(Subscription subscription) {
-        subscriptions = subscriptions.and(subscription);
-    }
-
-    private void manageBinding(Binding<?> binding) {
-        subscriptions = subscriptions.and(binding::dispose);
     }
 
     private static Bounds extendLeft(Bounds b, double w) {
