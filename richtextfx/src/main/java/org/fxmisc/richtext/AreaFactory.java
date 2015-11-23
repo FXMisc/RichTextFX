@@ -100,19 +100,19 @@ public class AreaFactory {
         return new VirtualizedScrollPane<>(inlineStyleTextArea(initialStyle, styleToCss, initialParagraphStyle, paragraphStyleToCss));
     }
 
-    public static StyledTextArea<String, String> inlineCssTextArea() {
+    public static InlineCssTextArea inlineCssTextArea() {
         return new InlineCssTextArea();
     }
 
-    public static StyledTextArea<String, String> inlineCssTextArea(String text) {
+    public static InlineCssTextArea inlineCssTextArea(String text) {
         return new InlineCssTextArea(text);
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<String, String>> embeddedInlineCssTextArea() {
+    public static VirtualizedScrollPane<InlineCssTextArea> embeddedInlineCssTextArea() {
         return new VirtualizedScrollPane<>(inlineCssTextArea());
     }
 
-    public static VirtualizedScrollPane<StyledTextArea<String, String>> embeddedInlineCssTextArea(String text) {
+    public static VirtualizedScrollPane<InlineCssTextArea> embeddedInlineCssTextArea(String text) {
         return new VirtualizedScrollPane<>(inlineCssTextArea(text));
     }
 }
