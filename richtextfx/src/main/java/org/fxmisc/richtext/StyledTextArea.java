@@ -187,15 +187,6 @@ public class StyledTextArea<S, PS> extends Region
                 : createPlainUndoManager(undoManagerFactory);
     }
 
-    // font property
-    /**
-     * The default font to use where font is not specified otherwise.
-     */
-    private final StyleableObjectProperty<Font> font = new FontProperty<>(this);
-    public final StyleableObjectProperty<Font> fontProperty() { return font; }
-    public final void setFont(Font value) { font.setValue(value); }
-    public final Font getFont() { return font.getValue(); }
-
     /**
      * Popup window that will be positioned by this text area relative to the
      * caret or selection. Use {@link #popupAlignmentProperty()} to specify
