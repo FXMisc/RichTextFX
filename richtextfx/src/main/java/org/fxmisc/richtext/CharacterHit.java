@@ -2,7 +2,7 @@ package org.fxmisc.richtext;
 
 import java.util.OptionalInt;
 
-class CharacterHit {
+public class CharacterHit {
 
     public static CharacterHit insertionAt(int insertionIndex) {
         return new CharacterHit(OptionalInt.empty(), insertionIndex);

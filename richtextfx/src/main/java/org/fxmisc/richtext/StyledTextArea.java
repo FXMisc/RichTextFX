@@ -654,14 +654,14 @@ public class StyledTextArea<S, PS> extends Region
         return virtualFlow.getHeight();
     }
 
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
+    protected CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
         CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
         return parHit.offset(getParagraphOffset(parIdx));
     }
 
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+    protected CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
@@ -677,7 +677,7 @@ public class StyledTextArea<S, PS> extends Region
         }
     }
 
-    CharacterHit hit(double x, double y) {
+    protected CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
