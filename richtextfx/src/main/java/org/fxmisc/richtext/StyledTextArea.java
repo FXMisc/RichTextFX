@@ -2,9 +2,7 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-import static org.reactfx.EventStreams.invalidationsOf;
-import static org.reactfx.EventStreams.merge;
-import static org.reactfx.EventStreams.valuesOf;
+import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
@@ -45,7 +43,6 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
@@ -56,7 +53,6 @@ import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
-import org.fxmisc.richtext.CssProperties.FontProperty;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -290,6 +286,7 @@ public class StyledTextArea<S, PS> extends Region
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
+    @Override
     public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
     public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
     public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
@@ -299,6 +296,7 @@ public class StyledTextArea<S, PS> extends Region
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
+    @Override
     public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
     public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
     public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
@@ -376,6 +374,7 @@ public class StyledTextArea<S, PS> extends Region
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
+    @Override
     public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
     public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
@@ -385,6 +384,7 @@ public class StyledTextArea<S, PS> extends Region
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
+    @Override
     public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
     public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
@@ -596,7 +596,7 @@ public class StyledTextArea<S, PS> extends Region
         caretVisible = EventStreams.valuesOf(blinkCaret)
                 .flatMap(blink -> blink
                         ? booleanPulse(Duration.ofMillis(500))
-                        : valuesOf(Val.constant(false)))
+                        : EventStreams.valuesOf(Val.constant(false)))
                 .toBinding(false);
 
         // Adjust popup anchor by either a user-provided function,
