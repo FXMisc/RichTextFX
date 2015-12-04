@@ -654,14 +654,14 @@ public class StyledTextArea<S, PS> extends Region
         return virtualFlow.getHeight();
     }
 
-    protected CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
         CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
         return parHit.offset(getParagraphOffset(parIdx));
     }
 
-    protected CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
@@ -677,7 +677,23 @@ public class StyledTextArea<S, PS> extends Region
         }
     }
 
-    protected CharacterHit hit(double x, double y) {
+    /**
+     * Helpful for determining which letter is at point x, y:
+     * <pre>
+     *     {@code
+     *     StyledTextArea area = // creation code
+     *     area.addEventHandler(MouseEvent.MOUSE_PRESSED, (MouseEvent e) -> {
+     *         CharacterHit hit = area.hit(e.getX(), e.getY());
+     *         int characterPosition = hit.getInsertionIndex();
+     *
+     *         // move the caret to that character's position
+     *         area.moveTo(characterPosition, SelectionPolicy.CLEAR);
+     *     }}
+     * </pre>
+     * @param x
+     * @param y
+     */
+    public CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
