@@ -677,7 +677,23 @@ public class StyledTextArea<S, PS> extends Region
         }
     }
 
-    CharacterHit hit(double x, double y) {
+    /**
+     * Helpful for determining which letter is at point x, y:
+     * <pre>
+     *     {@code
+     *     StyledTextArea area = // creation code
+     *     area.addEventHandler(MouseEvent.MOUSE_PRESSED, (MouseEvent e) -> {
+     *         CharacterHit hit = area.hit(e.getX(), e.getY());
+     *         int characterPosition = hit.getInsertionIndex();
+     *
+     *         // move the caret to that character's position
+     *         area.moveTo(characterPosition, SelectionPolicy.CLEAR);
+     *     }}
+     * </pre>
+     * @param x
+     * @param y
+     */
+    public CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
