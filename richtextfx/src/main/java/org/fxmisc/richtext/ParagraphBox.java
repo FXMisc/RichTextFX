@@ -31,7 +31,7 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-public class ParagraphBox<S, PS> extends Region {
+class ParagraphBox<S, PS> extends Region {
 
     /**
      * An opaque class representing horizontal caret offset.
