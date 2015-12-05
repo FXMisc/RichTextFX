@@ -45,6 +45,11 @@ class StyledTextAreaBehavior implements Behavior {
 
     private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_PRESSED_TEMPLATE;
     private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super KeyEvent> KEY_TYPED_TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super MouseEvent> MOUSE_PRESSED_TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super MouseEvent> MOUSE_DRAGGED_TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super MouseEvent> DRAG_DETECTED_TEMPLATE;
+    private static final EventHandlerTemplate<StyledTextAreaBehavior, ? super MouseEvent> MOUSE_RELEASED_TEMPLATE;
+
     static {
         SelectionPolicy selPolicy = isMac
                 ? SelectionPolicy.EXTEND
@@ -163,6 +168,26 @@ class StyledTextAreaBehavior implements Behavior {
 
                 .create()
                 .onlyWhen(b -> b.area.isEditable());
+
+        MOUSE_PRESSED_TEMPLATE = EventHandlerTemplate
+                .on(MouseEvent.MOUSE_PRESSED)
+                .act(StyledTextAreaBehavior::mousePressed)
+                .create();
+
+        MOUSE_DRAGGED_TEMPLATE = EventHandlerTemplate
+                .on(MouseEvent.MOUSE_DRAGGED)
+                .act(StyledTextAreaBehavior::mouseDragged)
+                .create();
+
+        DRAG_DETECTED_TEMPLATE = EventHandlerTemplate
+                .on(MouseEvent.DRAG_DETECTED)
+                .act(StyledTextAreaBehavior::dragDetected)
+                .create();
+
+        MOUSE_RELEASED_TEMPLATE = EventHandlerTemplate
+                .on(MouseEvent.MOUSE_RELEASED)
+                .act(StyledTextAreaBehavior::mouseReleased)
+                .create();
     }
 
     /**
@@ -218,18 +243,28 @@ class StyledTextAreaBehavior implements Behavior {
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
 
+        EventHandler<? super MouseEvent> mousePressedHandler = MOUSE_PRESSED_TEMPLATE.bind(this);
+        EventHandler<? super MouseEvent> mouseDraggedHandler = MOUSE_DRAGGED_TEMPLATE.bind(this);
+        EventHandler<? super MouseEvent> dragDetectedHandler = DRAG_DETECTED_TEMPLATE.bind(this);
+        EventHandler<? super MouseEvent> mouseReleasedHandler = MOUSE_RELEASED_TEMPLATE.bind(this);
+
         EventHandlerHelper.installAfter(area.onKeyPressedProperty(), keyPressedHandler);
         EventHandlerHelper.installAfter(area.onKeyTypedProperty(), keyTypedHandler);
 
-        subscription = Subscription.multi(
-                eventsOf(area, MouseEvent.MOUSE_PRESSED).subscribe(this::mousePressed),
-                eventsOf(area, MouseEvent.MOUSE_DRAGGED).subscribe(this::mouseDragged),
-                eventsOf(area, MouseEvent.DRAG_DETECTED).subscribe(this::dragDetected),
-                eventsOf(area, MouseEvent.MOUSE_RELEASED).subscribe(this::mouseReleased),
-                () -> {
+        EventHandlerHelper.installAfter(area.onMousePressedProperty(), mousePressedHandler);
+        EventHandlerHelper.installAfter(area.onMouseDraggedProperty(), mouseDraggedHandler);
+        EventHandlerHelper.installAfter(area.onDragDetectedProperty(), dragDetectedHandler);
+        EventHandlerHelper.installAfter(area.onMouseReleasedProperty(), mouseReleasedHandler);
+
+        subscription = () -> {
                     EventHandlerHelper.remove(area.onKeyPressedProperty(), keyPressedHandler);
                     EventHandlerHelper.remove(area.onKeyTypedProperty(), keyTypedHandler);
-                });
+
+                    EventHandlerHelper.remove(area.onMousePressedProperty(), mousePressedHandler);
+                    EventHandlerHelper.remove(area.onMouseDraggedProperty(), mouseDraggedHandler);
+                    EventHandlerHelper.remove(area.onDragDetectedProperty(), dragDetectedHandler);
+                    EventHandlerHelper.remove(area.onMouseReleasedProperty(), mouseReleasedHandler);
+                };
 
         // setup auto-scroll
         Val<Point2D> projection = Val.combine(
