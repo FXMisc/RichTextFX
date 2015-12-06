@@ -58,6 +58,7 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.StateMachine;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
@@ -595,7 +596,7 @@ public class StyledTextArea<S, PS> extends Region
         // but only when blinkCaret is true.
         caretVisible = EventStreams.valuesOf(blinkCaret)
                 .flatMap(blink -> blink
-                        ? booleanPulse(Duration.ofMillis(500))
+                        ? booleanPulse(Duration.ofMillis(500), caretDirty)
                         : EventStreams.valuesOf(Val.constant(false)))
                 .toBinding(false);
 
@@ -1222,8 +1223,12 @@ public class StyledTextArea<S, PS> extends Region
         }
     }
 
-    private static EventStream<Boolean> booleanPulse(Duration duration) {
-        return EventStreams.ticks(duration).accumulate(true, (b, x) -> !b);
+    private static EventStream<Boolean> booleanPulse(Duration duration, EventStream<?> restartImpulse) {
+        EventStream<?> ticks = EventStreams.restartableTicks(duration, restartImpulse);
+        return StateMachine.init(false)
+                .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
+                .on(ticks).transition((state, tick) -> !state)
+                .toStateStream();
     }
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
