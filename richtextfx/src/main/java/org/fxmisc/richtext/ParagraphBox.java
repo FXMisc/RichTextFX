@@ -31,7 +31,7 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-public class ParagraphBox<S, PS> extends Region {
+class ParagraphBox<S, PS> extends Region {
 
     /**
      * An opaque class representing horizontal caret offset.
@@ -69,7 +69,7 @@ public class ParagraphBox<S, PS> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    public ParagraphBox(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    ParagraphBox(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
