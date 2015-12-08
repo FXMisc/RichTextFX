@@ -1115,7 +1115,7 @@ public class StyledTextArea<S, PS> extends Region
                 (bi, cp) -> bi.intValue() == cp.intValue());
 
         // caret is visible only in the paragraph with the caret
-        Val<Boolean> cellCaretVisible = Val.combine(hasCaret, caretVisible, (a, b) -> a && b);
+        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? caretVisible : Val.constant(false));
         box.caretVisibleProperty().bind(cellCaretVisible);
 
         // bind cell's caret position to area's caret column,
