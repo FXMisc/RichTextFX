@@ -389,6 +389,22 @@ public class StyledTextArea<S, PS> extends Region
     public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
     public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Overridable Methods                                                    *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Indicates whether selection is being dragged by the user.
+     */
+    private DragState dragState;
+    protected final DragState getDragState() {
+        return dragState;
+    }
+    protected final void setDragState(DragState state) {
+        dragState = state;
+    }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -618,6 +634,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
+        dragState = DragState.NO_DRAG;
         new StyledTextAreaBehavior(this);
         getChildren().add(virtualFlow);
     }

@@ -190,20 +190,6 @@ class StyledTextAreaBehavior implements Behavior {
                 .create();
     }
 
-    /**
-     * Possible dragging states.
-     */
-    private enum DragState {
-        /** No dragging is happening. */
-        NO_DRAG,
-
-        /** Mouse has been pressed, but drag has not been detected yet. */
-        POTENTIAL_DRAG,
-
-        /** Drag in progress. */
-        DRAG,
-    }
-
     /* ********************************************************************** *
      * Fields                                                                 *
      * ********************************************************************** */
@@ -212,11 +198,6 @@ class StyledTextAreaBehavior implements Behavior {
 
     private final Subscription subscription;
 
-
-    /**
-     * Indicates whether selection is being dragged by the user.
-     */
-    private DragState dragSelection = DragState.NO_DRAG;
 
     /**
      * Remembers horizontal position when traversing up / down.
@@ -468,16 +449,16 @@ class StyledTextAreaBehavior implements Behavior {
                 hit.getCharacterIndex().getAsInt() >= selection.getStart() &&
                 hit.getCharacterIndex().getAsInt() < selection.getEnd()) {
             // press inside selection
-            dragSelection = DragState.POTENTIAL_DRAG;
+            area.setDragState(DragState.POTENTIAL_DRAG);
         } else {
-            dragSelection = DragState.NO_DRAG;
+            area.setDragState(DragState.NO_DRAG);
             area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
         }
     }
 
     private void dragDetected(MouseEvent e) {
-        if(dragSelection == DragState.POTENTIAL_DRAG) {
-            dragSelection = DragState.DRAG;
+        if(area.getDragState() == DragState.POTENTIAL_DRAG) {
+            area.setDragState(DragState.DRAG);
         }
         e.consume();
     }
@@ -507,8 +488,9 @@ class StyledTextAreaBehavior implements Behavior {
     private void dragTo(Point2D p) {
         CharacterHit hit = area.hit(p.getX(), p.getY());
 
-        if(dragSelection == DragState.DRAG ||
-                dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
+        DragState dragState = area.getDragState();
+        if(dragState == DragState.DRAG ||
+                dragState == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
             area.positionCaret(hit.getInsertionIndex());
         } else {
             area.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
@@ -524,7 +506,7 @@ class StyledTextAreaBehavior implements Behavior {
             return;
         }
 
-        switch(dragSelection) {
+        switch(area.getDragState()) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
                 CharacterHit hit = area.hit(e.getX(), e.getY());
@@ -538,7 +520,7 @@ class StyledTextAreaBehavior implements Behavior {
             case NO_DRAG:
                 // do nothing, caret already repositioned in mousePressed
         }
-        dragSelection = DragState.NO_DRAG;
+        area.setDragState(DragState.NO_DRAG);
         e.consume();
     }
 
