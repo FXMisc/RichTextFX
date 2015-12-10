@@ -412,6 +412,8 @@ public class StyledTextArea<S, PS> extends Region
      *                                                                        *
      * ********************************************************************** */
 
+    private final StyledTextAreaBehavior behavior;
+
     private Subscription subscriptions = () -> {};
 
     private final Binding<Boolean> caretVisible;
@@ -624,7 +626,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        new StyledTextAreaBehavior(this);
+        behavior = new StyledTextAreaBehavior(this);
         getChildren().add(virtualFlow);
     }
 
@@ -1067,6 +1069,7 @@ public class StyledTextArea<S, PS> extends Region
 
     public void dispose() {
         subscriptions.unsubscribe();
+        behavior.dispose();
         virtualFlow.dispose();
     }
 
