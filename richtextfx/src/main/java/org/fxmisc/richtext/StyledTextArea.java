@@ -327,8 +327,7 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final ObservableValue<Integer> lengthProperty() { return length; }
 
     // caret position
-    private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
-    private final SuspendableVal<Integer> caretPosition = internalCaretPosition.suspendable();
+    private final SuspendableVal<Integer> caretPosition;
     @Override public final int getCaretPosition() { return caretPosition.getValue(); }
     @Override public final ObservableValue<Integer> caretPositionProperty() { return caretPosition; }
 
@@ -338,8 +337,7 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final ObservableValue<Integer> anchorProperty() { return anchor; }
 
     // selection
-    private final Var<IndexRange> internalSelection = Var.newSimpleVar(EMPTY_RANGE);
-    private final SuspendableVal<IndexRange> selection = internalSelection.suspendable();
+    private final SuspendableVal<IndexRange> selection;
     @Override public final IndexRange getSelection() { return selection.getValue(); }
     @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
 
@@ -428,9 +426,6 @@ public class StyledTextArea<S, PS> extends Region
 
     private boolean followCaretRequested = false;
 
-    private Position selectionStart2D;
-    private Position selectionEnd2D;
-
     /**
      * content model
      */
@@ -490,15 +485,29 @@ public class StyledTextArea<S, PS> extends Region
         this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
     }
 
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          boolean preserveStyle) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
+            new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle),
+                preserveStyle);
+    }
+
+    public StyledTextArea<S, PS> createClone() {
+        return new StyledTextArea<>(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
+                content, preserveStyle);
+    }
+
     public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+            EditableStyledDocument<S, PS> document,
             boolean preserveStyle) {
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
-        content = new EditableStyledDocument<>(initialStyle, initialParagraphStyle);
+        content = document;
         paragraphs = LiveList.suspendable(content.getParagraphs());
 
         text = Val.suspendable(content.textProperty());
@@ -510,26 +519,17 @@ public class StyledTextArea<S, PS> extends Region
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
+        caretPosition = Val.suspendable(content.caretPositionProperty());
+
         Val<Position> caretPosition2D = Val.create(
-                () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
-                internalCaretPosition, paragraphs);
+                () -> content.offsetToPosition(content.getCaretPosition(), Forward),
+                content.caretPositionProperty(), paragraphs);
 
         currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
         caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
 
-        selectionStart2D = position(0, 0);
-        selectionEnd2D = position(0, 0);
-        internalSelection.addListener(obs -> {
-            IndexRange sel = internalSelection.getValue();
-            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
-            selectionEnd2D = sel.getLength() == 0
-                    ? selectionStart2D
-                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
-        });
-
-        selectedText = Val.create(
-                () -> content.getText(internalSelection.getValue()),
-                internalSelection, content.getParagraphs()).suspendable();
+        selection = Val.suspendable(content.selectionProperty());
+        selectedText = Val.suspendable(content.selectedTextProperty());
 
         omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
@@ -757,20 +757,7 @@ public class StyledTextArea<S, PS> extends Region
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
-        int startPar = selectionStart2D.getMajor();
-        int endPar = selectionEnd2D.getMajor();
-
-        if(paragraph < startPar || paragraph > endPar) {
-            return EMPTY_RANGE;
-        }
-
-        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
-        int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
-
-        // force selectionProperty() to be valid
-        getSelection();
-
-        return new IndexRange(start, end);
+        return content.getParagraphSelection(paragraph);
     }
 
     /**
@@ -1053,16 +1040,16 @@ public class StyledTextArea<S, PS> extends Region
                 this.caretPosition, currentParagraph,
                 caretColumn, this.anchor,
                 selection, selectedText)) {
-            this.internalCaretPosition.setValue(clamp(0, caretPosition, getLength()));
+            content.setCaretPosition(clamp(0, caretPosition, getLength()));
             this.anchor.setValue(clamp(0, anchor, getLength()));
-            this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
+            content.setSelection(IndexRange.normalize(getAnchor(), getCaretPosition()));
         }
     }
 
     @Override
     public void positionCaret(int pos) {
         try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.setValue(pos);
+            content.setCaretPosition(pos);
         }
     }
 
