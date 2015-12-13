@@ -388,7 +388,6 @@ public class StyledTextArea<S, PS> extends Region
     public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
     public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
-
     /* ********************************************************************** *
      *                                                                        *
      * Event streams                                                          *
@@ -404,7 +403,6 @@ public class StyledTextArea<S, PS> extends Region
     private final SuspendableEventStream<RichTextChange<S, PS>> richTextChanges;
     @Override
     public final EventStream<RichTextChange<S, PS>> richChanges() { return richTextChanges; }
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -432,26 +430,41 @@ public class StyledTextArea<S, PS> extends Region
      * content model
      */
     private final EditableStyledDocument<S, PS> content;
+    protected final EditableStyledDocument<S, PS> getCloneDocument() {
+        return content;
+    }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final S initialStyle;
+    protected final S getInitialStyle() {
+        return initialStyle;
+    }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final PS initialParagraphStyle;
+    protected final PS getInitialParagraphStyle() {
+        return initialParagraphStyle;
+    }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
+    protected final BiConsumer<? super TextExt, S> getApplyStyle() {
+        return applyStyle;
+    }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
+    protected final BiConsumer<TextFlow, PS> getApplyParagraphStyle() {
+        return applyParagraphStyle;
+    }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -459,6 +472,9 @@ public class StyledTextArea<S, PS> extends Region
      * TODO: Currently, only undo/redo respect this flag.
      */
     private final boolean preserveStyle;
+    protected final boolean isPreserveStyle() {
+        return preserveStyle;
+    }
 
     private final Suspendable omniSuspendable;
 
@@ -483,27 +499,37 @@ public class StyledTextArea<S, PS> extends Region
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle
+    ) {
         this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
+    }
+
+    public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              boolean preserveStyle
+    ) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
+                new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle), preserveStyle);
+    }
+
+    /**
+     * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
+     * this constructor can be used to create another {@code StyledTextArea} object that
+     * shares the same {@link EditableStyledDocument}.
+     */
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          EditableStyledDocument<S, PS> document
+    ) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, document, true);
+
     }
 
     public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
                           PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          boolean preserveStyle) {
-        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
-            new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle),
-                preserveStyle);
-    }
-
-    public StyledTextArea<S, PS> createClone() {
-        return new StyledTextArea<>(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
-                content, preserveStyle);
-    }
-
-    public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-            PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            EditableStyledDocument<S, PS> document,
-            boolean preserveStyle) {
+                          EditableStyledDocument<S, PS> document, boolean preserveStyle
+    ) {
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.applyStyle = applyStyle;

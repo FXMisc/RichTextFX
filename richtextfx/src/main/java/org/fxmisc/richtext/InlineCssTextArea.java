@@ -8,7 +8,17 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
     public InlineCssTextArea() {
         super(
                 "", (text, style) -> text.setStyle(style),
-                "", (paragraph, style) -> paragraph.setStyle(style)
+                "", (paragraph, style) -> paragraph.setStyle(style),
+                new EditableStyledDocument<String, String>("", "")
+        );
+    }
+
+    public InlineCssTextArea(EditableStyledDocument<String, String> document) {
+        super(
+                "", (text, style) -> text.setStyle(style),
+                "", (paragraph, style) -> paragraph.setStyle(style),
+                document,
+                true
         );
     }
 
@@ -30,5 +40,4 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         // position the caret at the beginning
         selectRange(0, 0);
     }
-
 }

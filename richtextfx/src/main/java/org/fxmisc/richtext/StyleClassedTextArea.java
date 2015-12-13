@@ -10,16 +10,22 @@ import java.util.List;
  */
 public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Collection<String>> {
 
-    public StyleClassedTextArea(boolean preserveStyle) {
+    public StyleClassedTextArea(EditableStyledDocument<Collection<String>, Collection<String>> document, boolean preserveStyle) {
         super(Collections.<String>emptyList(),
                 (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
                 Collections.<String>emptyList(),
                 (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
-                preserveStyle);
+                document, preserveStyle
+        );
 
         setStyleCodecs(
                 SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)),
-                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)));
+                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC))
+        );
+    }
+    public StyleClassedTextArea(boolean preserveStyle) {
+        this(
+            new EditableStyledDocument<Collection<String>, Collection<String>>(Collections.<String>emptyList(), Collections.<String>emptyList()), true);
     }
 
     /**
