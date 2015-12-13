@@ -415,7 +415,6 @@ public class StyledTextArea<S, PS> extends Region
 
     private final Binding<Boolean> caretVisible;
 
-    // TODO: this is initialized but never used. Should it be removed?
     private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
 
     private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
