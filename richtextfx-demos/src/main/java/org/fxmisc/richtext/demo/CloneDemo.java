@@ -82,9 +82,4 @@ public class CloneDemo extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
-
-    void printAreaCarePosition(String areaName, StyledTextArea area) {
-        System.out.println("Caret position of " + areaName + ": " + String.valueOf(area.getCaretPosition()));
-    }
-
 }
