@@ -22,6 +22,8 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.collection.LiveList;
+import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -66,9 +68,12 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     private Position selectionEnd2D = position(0, 0);
     Position getSelectionEnd2D() { return selectionEnd2D; }
 
+    private final SuspendableList<Paragraph<S, PS>> suspendablePars = LiveList.suspendable(paragraphs);
+    SuspendableList<Paragraph<S, PS>> getSuspendablePars() { return suspendablePars; }
+
     private final Val<String> selectedText = Val.create(
                 () -> getText(selection.getValue()),
-                selection, paragraphs);
+                selection, suspendablePars);
     Val<String> selectedTextProperty() { return selectedText; }
 
     /**

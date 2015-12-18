@@ -536,7 +536,7 @@ public class StyledTextArea<S, PS> extends Region
         this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
         content = document;
-        paragraphs = LiveList.suspendable(content.getParagraphs());
+        paragraphs = content.getSuspendablePars();
 
         text = Val.suspendable(content.textProperty());
         length = Val.suspendable(content.lengthProperty());
