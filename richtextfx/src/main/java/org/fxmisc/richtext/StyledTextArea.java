@@ -433,8 +433,6 @@ public class StyledTextArea<S, PS> extends Region
 
     private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
 
-    private final VirtualizedScrollPane<VirtualFlow> virtualizedScrollPane;
-
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator navigator;
@@ -584,8 +582,7 @@ public class StyledTextArea<S, PS> extends Region
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
-        virtualizedScrollPane = new VirtualizedScrollPane<>(virtualFlow);
-        getChildren().add(virtualizedScrollPane);
+        getChildren().add(virtualFlow);
 
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
@@ -632,7 +629,6 @@ public class StyledTextArea<S, PS> extends Region
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new StyledTextAreaBehavior(this);
-        getChildren().add(virtualFlow);
     }
 
 
@@ -1087,7 +1083,7 @@ public class StyledTextArea<S, PS> extends Region
 
     @Override
     protected void layoutChildren() {
-        virtualizedScrollPane.resize(getWidth(), getHeight());
+        virtualFlow.resize(getWidth(), getHeight());
         if(followCaretRequested) {
             followCaretRequested = false;
             followCaret();
