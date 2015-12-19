@@ -16,11 +16,14 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.collection.LiveList;
+import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -28,10 +31,14 @@ import org.reactfx.value.Var;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
- * on styled text, but not worrying about additional aspects such as
- * caret or selection.
+ * on styled text and tracks caret and selection.
  */
 final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, ObservableList<Paragraph<S, PS>>> {
+
+    /**
+     * Index range [0, 0).
+     */
+    public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
     /* ********************************************************************** *
      *                                                                        *
@@ -42,6 +49,32 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      * response to user input and/or API actions.                             *
      *                                                                        *
      * ********************************************************************** */
+
+    // caret position
+    private final Var<Integer> caretPosition = Var.newSimpleVar(0);
+    Var<Integer> caretPositionProperty() { return caretPosition; }
+    int getCaretPosition() { return caretPosition.getValue(); }
+    void setCaretPosition(int position) { caretPosition.setValue(position); }
+
+    // internal selection
+    private final Var<IndexRange> selection = Var.newSimpleVar(EMPTY_RANGE);
+    Var<IndexRange> selectionProperty() { return selection; }
+    IndexRange getSelection() { return selection.getValue(); }
+    void setSelection(IndexRange range) { selection.setValue(range); }
+
+    private Position selectionStart2D = position(0, 0);
+    Position getSelectionStart2D() { return selectionStart2D; }
+
+    private Position selectionEnd2D = position(0, 0);
+    Position getSelectionEnd2D() { return selectionEnd2D; }
+
+    private final SuspendableList<Paragraph<S, PS>> suspendablePars = LiveList.suspendable(paragraphs);
+    SuspendableList<Paragraph<S, PS>> getSuspendablePars() { return suspendablePars; }
+
+    private final Val<String> selectedText = Val.create(
+                () -> getText(selection.getValue()),
+                selection, suspendablePars);
+    Val<String> selectedTextProperty() { return selectedText; }
 
     /**
      * Content of this {@code StyledDocument}.
@@ -165,8 +198,42 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         super(FXCollections.observableArrayList(new Paragraph<>(initialParagraphStyle, "", initialStyle)));
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
+        selection.addListener(obs -> {
+            IndexRange sel = selection.getValue();
+            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
+            selectionEnd2D = sel.getLength() == 0
+                    ? selectionStart2D
+                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
+        });
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Queries                                                                *
+     *                                                                        *
+     * Queries are parameterized observables.                                 *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Returns the selection range in the given paragraph.
+     */
+    IndexRange getParagraphSelection(int paragraph) {
+        int startPar = selectionStart2D.getMajor();
+        int endPar = selectionEnd2D.getMajor();
+
+        if(paragraph < startPar || paragraph > endPar) {
+            return EMPTY_RANGE;
+        }
+
+        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
+        int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
+
+        // force selectionProperty() to be valid
+        getSelection();
+
+        return new IndexRange(start, end);
+    }
 
     /* ********************************************************************** *
      *                                                                        *
