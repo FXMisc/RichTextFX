@@ -533,7 +533,7 @@ class StyledTextAreaBehavior implements Behavior {
             case DRAG:
                 // move selection to the target position
                 CharacterHit h = area.hit(e.getX(), e.getY());
-                area.moveSelectedText(h.getInsertionIndex());
+                area.getOnSelectionDrop().accept(h.getInsertionIndex());
                 // do nothing, handled by mouseDragReleased
             case NO_DRAG:
                 // do nothing, caret already repositioned in mousePressed
