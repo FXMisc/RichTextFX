@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
@@ -22,6 +23,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -254,6 +256,18 @@ public class StyledTextArea<S, PS> extends Region
     public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
     public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
     public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
+
+    /**
+     * Defines how to handle an event in which the user has selected some text, dragged it to a
+     * new location within the area, and released the mouse at some character {@code index}
+     * within the area.
+     *
+     * <p>By default, this will relocate the selected text to the character index where the mouse
+     * was released. To override it, use {@link #setOnSelectionDrop(IntConsumer)}.
+     */
+    private Property<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
+    public final void setOnSelectionDrop(IntConsumer consumer) { onSelectionDrop.setValue(consumer); }
+    public final IntConsumer getOnSelectionDrop() { return onSelectionDrop.getValue(); }
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
