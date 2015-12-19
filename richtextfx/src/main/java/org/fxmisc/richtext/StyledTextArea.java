@@ -562,6 +562,32 @@ public class StyledTextArea<S, PS> extends Region
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
+        Binding<Boolean> notBeingUpdated = Bindings.not(beingUpdated);
+        manageBinding(notBeingUpdated);
+
+        EventStream<PlainTextChange> cloneChangesToContent = content
+                .plainTextChanges()
+                .retainLatestWhen(notBeingUpdated);
+        subscribeTo(cloneChangesToContent, plainTextChange -> {
+            int changeInAreaLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
+            if (changeInAreaLength != 0) {
+                int indexOfChange = plainTextChange.getPosition();
+                if (indexOfChange < getCaretPosition()) {
+                    positionCaret(getCaretPosition() + changeInAreaLength);
+                }
+                int selectionStart = getSelection().getStart();
+                int selectionEnd = getSelection().getEnd();
+                selectRange(
+                        indexOfChange < selectionStart
+                            ? selectionStart + changeInAreaLength
+                            : selectionStart,
+                        indexOfChange < selectionEnd
+                            ? selectionEnd + changeInAreaLength
+                            : selectionEnd
+                );
+            }
+        });
+
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
