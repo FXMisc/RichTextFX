@@ -494,8 +494,6 @@ public class StyledTextArea<S, PS> extends Region
         return preserveStyle;
     }
 
-    private final Suspendable omniSuspendable;
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -626,7 +624,7 @@ public class StyledTextArea<S, PS> extends Region
                 () -> content.getText(internalSelection.getValue()),
                 internalSelection, content.getParagraphs()).suspendable();
 
-        omniSuspendable = Suspendable.combine(
+        Suspendable omniSuspendable = Suspendable.combine(
                 content.beingUpdatedProperty(), // must be first, to be the last one to release
                 text,
                 length,
@@ -643,6 +641,7 @@ public class StyledTextArea<S, PS> extends Region
 
                 // paragraphs to be released first
                 paragraphs);
+        content.addSuspendable(omniSuspendable);
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
@@ -1029,27 +1028,27 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setStyle(from, to, style);
-        }
+        content.suspendAll();
+        content.setStyle(from, to, style);
+        content.unsuspendAll();
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setStyle(paragraph, style);
-        }
+        content.suspendAll();
+        content.setStyle(paragraph, style);
+        content.unsuspendAll();
     }
 
     /**
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setStyle(paragraph, from, to, style);
-        }
+        content.suspendAll();
+        content.setStyle(paragraph, from, to, style);
+        content.unsuspendAll();
     }
 
     /**
@@ -1063,9 +1062,9 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setStyleSpans(from, styleSpans);
-        }
+        content.suspendAll();
+        content.setStyleSpans(from, styleSpans);
+        content.unsuspendAll();
     }
 
     /**
@@ -1079,18 +1078,18 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setStyleSpans(paragraph, from, styleSpans);
-        }
+        content.suspendAll();
+        content.setStyleSpans(paragraph, from, styleSpans);
+        content.unsuspendAll();
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        try(Guard g = omniSuspendable.suspend()) {
-            content.setParagraphStyle(paragraph, paragraphStyle);
-        }
+        content.suspendAll();
+        content.setParagraphStyle(paragraph, paragraphStyle);
+        content.unsuspendAll();
     }
 
     /**
@@ -1131,15 +1130,15 @@ public class StyledTextArea<S, PS> extends Region
 
     @Override
     public void replace(int start, int end, StyledDocument<S, PS> replacement) {
-        try(Guard g = omniSuspendable.suspend()) {
-            start = clamp(0, start, getLength());
-            end = clamp(0, end, getLength());
+        content.suspendAll();
+        start = clamp(0, start, getLength());
+        end = clamp(0, end, getLength());
 
-            content.replace(start, end, replacement);
+        content.replace(start, end, replacement);
 
-            int newCaretPos = start + replacement.length();
-            selectRange(newCaretPos, newCaretPos);
-        }
+        int newCaretPos = start + replacement.length();
+        selectRange(newCaretPos, newCaretPos);
+        content.unsuspendAll();
     }
 
     @Override
