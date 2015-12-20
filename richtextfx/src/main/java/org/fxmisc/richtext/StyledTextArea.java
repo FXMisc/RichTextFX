@@ -560,6 +560,9 @@ public class StyledTextArea<S, PS> extends Region
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
+        // when content is updated by an area, update the caret
+        // and selection ranges of all the other
+        // clones that also share this document
         subscribeTo(content.plainTextChanges(), plainTextChange -> {
             int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
             if (changeLength != 0) {
