@@ -596,6 +596,13 @@ public class StyledTextArea<S, PS> extends Region
                                 : selectionEnd + changeLength;
                     }
                     selectRange(selectionStart, selectionEnd);
+                } else {
+                    // force-update internalSelection in case caret is
+                    // at the end of area and a character was deleted
+                    // (prevents a StringIndexOutOfBoundsException because
+                    // selection's end is one char farther than area's length).
+                    int internalCaretPos = internalCaretPosition.getValue();
+                    selectRange(internalCaretPos, internalCaretPos);
                 }
             }
         });
