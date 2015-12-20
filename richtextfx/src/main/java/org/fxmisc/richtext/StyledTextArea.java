@@ -380,8 +380,9 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     // beingUpdated
-    public ObservableBooleanValue beingUpdatedProperty() { return content.beingUpdatedProperty(); }
-    public boolean isBeingUpdated() { return content.isBeingUpdated(); }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     /**
@@ -625,7 +626,7 @@ public class StyledTextArea<S, PS> extends Region
                 internalSelection, content.getParagraphs()).suspendable();
 
         Suspendable omniSuspendable = Suspendable.combine(
-                content.beingUpdatedProperty(), // must be first, to be the last one to release
+                beingUpdated, // must be first, to be the last one to release
                 text,
                 length,
                 caretPosition,
@@ -1378,6 +1379,6 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     private Guard suspend(Suspendable... suspendables) {
-        return Suspendable.combine(content.beingUpdatedProperty(), Suspendable.combine(suspendables)).suspend();
+        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
     }
 }

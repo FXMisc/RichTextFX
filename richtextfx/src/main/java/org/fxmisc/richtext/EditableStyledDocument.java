@@ -63,14 +63,6 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     public int length() { return length.getValue(); }
 
     /**
-     * Used by each StyledTextArea that is attached to this document
-     * to insure that published updates are consistent.
-     */
-    private final SuspendableNo beingUpdated = new SuspendableNo();
-    SuspendableNo beingUpdatedProperty() { return beingUpdated; }
-    public boolean isBeingUpdated() { return beingUpdated.get(); }
-
-    /**
      * Unmodifiable observable list of styled paragraphs of this document.
      */
     @Override
