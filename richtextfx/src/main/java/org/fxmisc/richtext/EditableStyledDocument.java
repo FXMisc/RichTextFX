@@ -21,6 +21,7 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.SuspendableNo;
 import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -59,6 +60,10 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     public Val<Integer> lengthProperty() { return length; }
     @Override
     public int length() { return length.getValue(); }
+
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.get(); }
 
     /**
      * Unmodifiable observable list of styled paragraphs of this document.
