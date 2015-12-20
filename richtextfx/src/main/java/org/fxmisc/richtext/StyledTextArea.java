@@ -562,13 +562,7 @@ public class StyledTextArea<S, PS> extends Region
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
-        Binding<Boolean> notBeingUpdated = Bindings.not(beingUpdated);
-        manageBinding(notBeingUpdated);
-
-        EventStream<PlainTextChange> cloneChangesToContent = content
-                .plainTextChanges()
-                .retainLatestWhen(notBeingUpdated);
-        subscribeTo(cloneChangesToContent, plainTextChange -> {
+        subscribeTo(content.plainTextChanges(), plainTextChange -> {
             int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
             if (changeLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
