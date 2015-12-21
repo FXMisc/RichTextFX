@@ -1040,27 +1040,27 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        content.suspendAll();
-        content.setStyle(from, to, style);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setStyle(from, to, style);
+        }
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        content.suspendAll();
-        content.setStyle(paragraph, style);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setStyle(paragraph, style);
+        }
     }
 
     /**
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        content.suspendAll();
-        content.setStyle(paragraph, from, to, style);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setStyle(paragraph, from, to, style);
+        }
     }
 
     /**
@@ -1074,9 +1074,9 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        content.suspendAll();
-        content.setStyleSpans(from, styleSpans);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setStyleSpans(from, styleSpans);
+        }
     }
 
     /**
@@ -1090,18 +1090,18 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        content.suspendAll();
-        content.setStyleSpans(paragraph, from, styleSpans);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setStyleSpans(paragraph, from, styleSpans);
+        }
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        content.suspendAll();
-        content.setParagraphStyle(paragraph, paragraphStyle);
-        content.unsuspendAll();
+        try (Guard g = content.suspendAll()) {
+            content.setParagraphStyle(paragraph, paragraphStyle);
+        }
     }
 
     /**
@@ -1142,15 +1142,15 @@ public class StyledTextArea<S, PS> extends Region
 
     @Override
     public void replace(int start, int end, StyledDocument<S, PS> replacement) {
-        content.suspendAll();
-        start = clamp(0, start, getLength());
-        end = clamp(0, end, getLength());
+        try (Guard g = content.suspendAll()) {
+            start = clamp(0, start, getLength());
+            end = clamp(0, end, getLength());
 
-        content.replace(start, end, replacement);
+            content.replace(start, end, replacement);
 
-        int newCaretPos = start + replacement.length();
-        selectRange(newCaretPos, newCaretPos);
-        content.unsuspendAll();
+            int newCaretPos = start + replacement.length();
+            selectRange(newCaretPos, newCaretPos);
+        }
     }
 
     @Override

@@ -387,18 +387,12 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     void addSuspendable(Suspendable omniSuspendable) {suspendables.add(omniSuspendable);}
     void removeSuspendable(Suspendable omnisuspendable) {suspendables.remove(omnisuspendable);}
 
-    private List<Guard> guards = null;
-    void suspendAll() {
-        guards = new ArrayList<>(suspendables.size());
-        for (Suspendable omni : suspendables) {
-            guards.add(omni.suspend());
+    Guard suspendAll() {
+        Suspendable[] suspendablesArray = new Suspendable[suspendables.size()];
+        for (int i = 0; i < suspendables.size(); i++) {
+            suspendablesArray[i] = suspendables.get(i);
         }
-    }
-    void unsuspendAll() {
-        for (Guard g : guards) {
-            g.close();
-        }
-        guards = null;
+        return Suspendable.combine(suspendablesArray).suspend();
     }
 
     private void ensureValidParagraphIndex(int parIdx) {
