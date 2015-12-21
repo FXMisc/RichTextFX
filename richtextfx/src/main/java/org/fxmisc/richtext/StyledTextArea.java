@@ -653,6 +653,7 @@ public class StyledTextArea<S, PS> extends Region
                 // paragraphs to be released first
                 paragraphs);
         content.addSuspendable(omniSuspendable);
+        manageSubscription(() -> content.removeSuspendable(omniSuspendable));
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
