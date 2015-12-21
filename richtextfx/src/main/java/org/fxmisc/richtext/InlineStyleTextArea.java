@@ -7,7 +7,7 @@ import java.util.function.Function;
  * style of text segments.
  *
  * @param <S> type of style information.
- * @deprecated Use {@link AreaFactory#inlineStyleTextArea(Object, Function, Object, Function)} instead
+ * @deprecated
  */
 @Deprecated
 public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
