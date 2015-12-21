@@ -562,6 +562,56 @@ public class StyledTextArea<S, PS> extends Region
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
+        // when content is updated by an area, update the caret
+        // and selection ranges of all the other
+        // clones that also share this document
+        subscribeTo(content.plainTextChanges(), plainTextChange -> {
+            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
+            if (changeLength != 0) {
+                int indexOfChange = plainTextChange.getPosition();
+                // in case of a replacement: "hello there" -> "hi."
+                int endOfChange = indexOfChange + Math.abs(changeLength);
+
+                // update caret
+                int caretPosition = getCaretPosition();
+                if (indexOfChange < caretPosition) {
+                    // if caret is within the changed content, move it to indexOfChange
+                    // otherwise offset it by changeLength
+                    positionCaret(
+                        caretPosition < endOfChange
+                            ? indexOfChange
+                            : caretPosition + changeLength
+                    );
+                }
+                // update selection
+                int selectionStart = getSelection().getStart();
+                int selectionEnd = getSelection().getEnd();
+                if (selectionStart != selectionEnd) {
+                    // if start/end is within the changed content, move it to indexOfChange
+                    // otherwise, offset it by changeLength
+                    // Note: if both are moved to indexOfChange, selection is empty.
+                    if (indexOfChange < selectionStart) {
+                        selectionStart = selectionStart < endOfChange
+                                ? indexOfChange
+                                : selectionStart + changeLength;
+                    }
+                    if (indexOfChange < selectionEnd) {
+                        selectionEnd = selectionEnd < endOfChange
+                                ? indexOfChange
+                                : selectionEnd + changeLength;
+                    }
+                    selectRange(selectionStart, selectionEnd);
+                } else {
+                    // force-update internalSelection in case caret is
+                    // at the end of area and a character was deleted
+                    // (prevents a StringIndexOutOfBoundsException because
+                    // selection's end is one char farther than area's length).
+                    int internalCaretPos = internalCaretPosition.getValue();
+                    selectRange(internalCaretPos, internalCaretPos);
+                }
+            }
+        });
+
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
