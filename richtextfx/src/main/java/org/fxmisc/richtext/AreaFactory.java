@@ -4,7 +4,6 @@ import javafx.scene.text.TextFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * AreaFactory is a convenience class used to create StyledTextArea
@@ -63,7 +62,7 @@ public class AreaFactory {
     public static <S, PS> StyledTextArea<S, PS> cloneStyleTextArea(StyledTextArea<S, PS> area) {
         return new StyledTextArea<S, PS>(area.getInitialStyle(), area.getApplyStyle(),
                 area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
-                area.getCloneDocument(), area.isPreserveStyle());
+                area.getContent(), area.isPreserveStyle());
     }
 
     // Embeds cloned StyledTextArea
@@ -106,7 +105,7 @@ public class AreaFactory {
 
     // Clones StyleClassedTextArea
     public static StyleClassedTextArea cloneStyleClassedTextArea(StyleClassedTextArea area) {
-        return new StyleClassedTextArea(area.getCloneDocument(), area.isPreserveStyle());
+        return new StyleClassedTextArea(area.getContent(), area.isPreserveStyle());
     }
 
     // Embeds cloned StyleClassedTextArea
@@ -149,7 +148,7 @@ public class AreaFactory {
 
     // Clones CodeArea
     public static CodeArea cloneCodeArea(CodeArea area) {
-        return new CodeArea(area.getCloneDocument());
+        return new CodeArea(area.getContent());
     }
 
     // Embeds a cloned CodeArea
@@ -190,7 +189,7 @@ public class AreaFactory {
 
     // Clones InlineCssTextArea
     public static InlineCssTextArea cloneInlineCssTextArea(InlineCssTextArea area) {
-        return new InlineCssTextArea(area.getCloneDocument());
+        return new InlineCssTextArea(area.getContent());
     }
 
     // Embeds a cloned InlineCssTextArea

@@ -448,7 +448,7 @@ public class StyledTextArea<S, PS> extends Region
      * content model
      */
     private final EditableStyledDocument<S, PS> content;
-    protected final EditableStyledDocument<S, PS> getCloneDocument() {
+    protected final EditableStyledDocument<S, PS> getContent() {
         return content;
     }
 
