@@ -380,8 +380,9 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     // beingUpdated
-    public ObservableBooleanValue beingUpdatedProperty() { return content.beingUpdatedProperty(); }
-    public boolean isBeingUpdated() { return content.isBeingUpdated(); }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     /**
@@ -643,7 +644,7 @@ public class StyledTextArea<S, PS> extends Region
                 internalSelection, content.getParagraphs()).suspendable();
 
         omniSuspendable = Suspendable.combine(
-                // must be first, to be the last one to release
+                beingUpdated, // must be first, to be the last one to release
                 text,
                 length,
                 caretPosition,
@@ -1046,7 +1047,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(from, to, style);
         }
     }
@@ -1055,7 +1056,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -1064,7 +1065,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -1080,7 +1081,7 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -1096,7 +1097,7 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -1105,7 +1106,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setParagraphStyle(paragraph, paragraphStyle);
         }
     }
@@ -1148,7 +1149,7 @@ public class StyledTextArea<S, PS> extends Region
 
     @Override
     public void replace(int start, int end, StyledDocument<S, PS> replacement) {
-        try (Guard g = suspend(omniSuspendable)) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             start = clamp(0, start, getLength());
             end = clamp(0, end, getLength());
 
@@ -1396,6 +1397,6 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     private Guard suspend(Suspendable... suspendables) {
-        return Suspendable.combine(content.beingUpdatedProperty(), Suspendable.combine(suspendables)).suspend();
+        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
     }
 }
