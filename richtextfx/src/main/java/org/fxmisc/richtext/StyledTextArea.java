@@ -61,6 +61,7 @@ import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
 import org.reactfx.StateMachine;
+import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
@@ -403,7 +404,6 @@ public class StyledTextArea<S, PS> extends Region
     public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
     public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
-
     /* ********************************************************************** *
      *                                                                        *
      * Event streams                                                          *
@@ -420,12 +420,15 @@ public class StyledTextArea<S, PS> extends Region
     @Override
     public final EventStream<RichTextChange<S, PS>> richChanges() { return richTextChanges; }
 
-
     /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
      * ********************************************************************** */
+
+    private final StyledTextAreaBehavior behavior;
+
+    private Subscription subscriptions = () -> {};
 
     private final Binding<Boolean> caretVisible;
 
@@ -448,24 +451,45 @@ public class StyledTextArea<S, PS> extends Region
     private final EditableStyledDocument<S, PS> content;
 
     /**
+     * Usually used to create another area (View) that shares
+     * the same document (Model).
+     * @return this area's {@link EditableStyledDocument}
+     */
+    protected final EditableStyledDocument<S, PS> getContent() {
+        return content;
+    }
+
+    /**
      * Style used by default when no other style is provided.
      */
     private final S initialStyle;
+    protected final S getInitialStyle() {
+        return initialStyle;
+    }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final PS initialParagraphStyle;
+    protected final PS getInitialParagraphStyle() {
+        return initialParagraphStyle;
+    }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
+    protected final BiConsumer<? super TextExt, S> getApplyStyle() {
+        return applyStyle;
+    }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
+    protected final BiConsumer<TextFlow, PS> getApplyParagraphStyle() {
+        return applyParagraphStyle;
+    }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -473,6 +497,9 @@ public class StyledTextArea<S, PS> extends Region
      * TODO: Currently, only undo/redo respect this flag.
      */
     private final boolean preserveStyle;
+    protected final boolean isPreserveStyle() {
+        return preserveStyle;
+    }
 
     private final Suspendable omniSuspendable;
 
@@ -497,25 +524,99 @@ public class StyledTextArea<S, PS> extends Region
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle, PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle
+    ) {
         this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
     }
 
     public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-            PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            boolean preserveStyle) {
+                              PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              boolean preserveStyle
+    ) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
+                new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle), preserveStyle);
+    }
+
+    /**
+     * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
+     * this constructor can be used to create another {@code StyledTextArea} object that
+     * shares the same {@link EditableStyledDocument}.
+     */
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          EditableStyledDocument<S, PS> document
+    ) {
+        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, document, true);
+
+    }
+
+    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          EditableStyledDocument<S, PS> document, boolean preserveStyle
+    ) {
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
-        content = new EditableStyledDocument<>(initialStyle, initialParagraphStyle);
+        content = document;
         paragraphs = LiveList.suspendable(content.getParagraphs());
 
         text = Val.suspendable(content.textProperty());
         length = Val.suspendable(content.lengthProperty());
         plainTextChanges = content.plainTextChanges().pausable();
         richTextChanges = content.richChanges().pausable();
+
+        // when content is updated by an area, update the caret
+        // and selection ranges of all the other
+        // clones that also share this document
+        subscribeTo(content.plainTextChanges(), plainTextChange -> {
+            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
+            if (changeLength != 0) {
+                int indexOfChange = plainTextChange.getPosition();
+                // in case of a replacement: "hello there" -> "hi."
+                int endOfChange = indexOfChange + Math.abs(changeLength);
+
+                // update caret
+                int caretPosition = getCaretPosition();
+                if (indexOfChange < caretPosition) {
+                    // if caret is within the changed content, move it to indexOfChange
+                    // otherwise offset it by changeLength
+                    positionCaret(
+                        caretPosition < endOfChange
+                            ? indexOfChange
+                            : caretPosition + changeLength
+                    );
+                }
+                // update selection
+                int selectionStart = getSelection().getStart();
+                int selectionEnd = getSelection().getEnd();
+                if (selectionStart != selectionEnd) {
+                    // if start/end is within the changed content, move it to indexOfChange
+                    // otherwise, offset it by changeLength
+                    // Note: if both are moved to indexOfChange, selection is empty.
+                    if (indexOfChange < selectionStart) {
+                        selectionStart = selectionStart < endOfChange
+                                ? indexOfChange
+                                : selectionStart + changeLength;
+                    }
+                    if (indexOfChange < selectionEnd) {
+                        selectionEnd = selectionEnd < endOfChange
+                                ? indexOfChange
+                                : selectionEnd + changeLength;
+                    }
+                    selectRange(selectionStart, selectionEnd);
+                } else {
+                    // force-update internalSelection in case caret is
+                    // at the end of area and a character was deleted
+                    // (prevents a StringIndexOutOfBoundsException because
+                    // selection's end is one char farther than area's length).
+                    int internalCaretPos = internalCaretPosition.getValue();
+                    selectRange(internalCaretPos, internalCaretPos);
+                }
+            }
+        });
 
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
@@ -559,6 +660,7 @@ public class StyledTextArea<S, PS> extends Region
 
                 // paragraphs to be released first
                 paragraphs);
+        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
@@ -595,12 +697,13 @@ public class StyledTextArea<S, PS> extends Region
         EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
         // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-        caretDirty.subscribe(x -> requestFollowCaret());
+        subscribeTo(caretDirty, x -> requestFollowCaret());
 
         // whether or not to animate the caret
         BooleanBinding blinkCaret = focusedProperty()
                 .and(editableProperty())
                 .and(disabledProperty().not());
+        manageBinding(blinkCaret);
 
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
@@ -609,6 +712,7 @@ public class StyledTextArea<S, PS> extends Region
                         ? booleanPulse(Duration.ofMillis(500), caretDirty)
                         : EventStreams.valuesOf(Val.constant(false)))
                 .toBinding(false);
+        manageBinding(caretVisible);
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
@@ -628,7 +732,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        new StyledTextAreaBehavior(this);
+        behavior = new StyledTextAreaBehavior(this);
     }
 
 
@@ -943,7 +1047,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(from, to, style);
         }
     }
@@ -952,7 +1056,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(paragraph, style);
         }
     }
@@ -961,7 +1065,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyle(paragraph, from, to, style);
         }
     }
@@ -977,7 +1081,7 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyleSpans(from, styleSpans);
         }
     }
@@ -993,7 +1097,7 @@ public class StyledTextArea<S, PS> extends Region
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setStyleSpans(paragraph, from, styleSpans);
         }
     }
@@ -1002,7 +1106,7 @@ public class StyledTextArea<S, PS> extends Region
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             content.setParagraphStyle(paragraph, paragraphStyle);
         }
     }
@@ -1045,7 +1149,7 @@ public class StyledTextArea<S, PS> extends Region
 
     @Override
     public void replace(int start, int end, StyledDocument<S, PS> replacement) {
-        try(Guard g = omniSuspendable.suspend()) {
+        try (Guard g = content.beingUpdatedProperty().suspend()) {
             start = clamp(0, start, getLength());
             end = clamp(0, end, getLength());
 
@@ -1073,6 +1177,18 @@ public class StyledTextArea<S, PS> extends Region
         try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
             internalCaretPosition.setValue(pos);
         }
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Public API                                                             *
+     *                                                                        *
+     * ********************************************************************** */
+
+    public void dispose() {
+        subscriptions.unsubscribe();
+        behavior.dispose();
+        virtualFlow.dispose();
     }
 
     /* ********************************************************************** *
@@ -1236,6 +1352,18 @@ public class StyledTextArea<S, PS> extends Region
         double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
         double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
+    }
+
+    private <T> void subscribeTo(EventStream<T> src, Consumer<T> cOnsumer) {
+        manageSubscription(src.subscribe(cOnsumer));
+    }
+
+    private void manageSubscription(Subscription subscription) {
+        subscriptions = subscriptions.and(subscription);
+    }
+
+    private void manageBinding(Binding<?> binding) {
+        subscriptions = subscriptions.and(binding::dispose);
     }
 
     private static Bounds extendLeft(Bounds b, double w) {

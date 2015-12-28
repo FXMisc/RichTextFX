@@ -21,6 +21,7 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
+import org.reactfx.SuspendableNo;
 import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -380,6 +381,10 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      * Private and package private methods                                    *
      *                                                                        *
      * ********************************************************************** */
+
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     private void ensureValidParagraphIndex(int parIdx) {
         Lists.checkIndex(parIdx, paragraphs.size());

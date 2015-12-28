@@ -35,7 +35,6 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.AreaFactory;
-import org.fxmisc.richtext.InlineStyleTextArea;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyledTextArea;
@@ -48,11 +47,11 @@ public class RichText extends Application {
     }
 
     private final StyledTextArea<TextStyle, ParStyle> area =
-            AreaFactory.inlineStyleTextArea(
+            AreaFactory.<TextStyle, ParStyle>styledTextArea(
                     TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
-                    TextStyle::toCss,
+                    ( text, style) -> text.setStyle(style.toCss()),
                     ParStyle.EMPTY,
-                    ParStyle::toCss);
+                    ( paragraph, style) -> paragraph.setStyle(style.toCss()));
     {
         area.setWrapText(true);
         area.setStyleCodecs(TextStyle.CODEC, ParStyle.CODEC);

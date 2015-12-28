@@ -1,6 +1,8 @@
 package org.fxmisc.richtext;
 
 
+import java.util.Collection;
+
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
  * with fixed-width font and an undo manager that observes
@@ -16,6 +18,10 @@ public class CodeArea extends StyleClassedTextArea {
 
         // don't apply preceding style to typed text
         setUseInitialStyleForInsertion(true);
+    }
+
+    public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document) {
+        super(document, false);
     }
 
     public CodeArea() {
