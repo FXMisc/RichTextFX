@@ -21,7 +21,7 @@ import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
-import org.reactfx.Suspendable;
+import org.reactfx.SuspendableNo;
 import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
@@ -382,19 +382,9 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      *                                                                        *
      * ********************************************************************** */
 
-    private final List<Suspendable> suspendables = new ArrayList<>(1);
-
-    void addSuspendable(Suspendable omniSuspendable) {suspendables.add(omniSuspendable);}
-
-    void removeSuspendable(Suspendable omnisuspendable) {suspendables.remove(omnisuspendable);}
-
-    Guard suspendAll() {
-        Suspendable[] suspendablesArray = new Suspendable[suspendables.size()];
-        for (int i = 0; i < suspendables.size(); i++) {
-            suspendablesArray[i] = suspendables.get(i);
-        }
-        return Suspendable.combine(suspendablesArray).suspend();
-    }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     private void ensureValidParagraphIndex(int parIdx) {
         Lists.checkIndex(parIdx, paragraphs.size());
