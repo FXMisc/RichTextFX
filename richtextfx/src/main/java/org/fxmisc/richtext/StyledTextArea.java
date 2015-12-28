@@ -448,6 +448,12 @@ public class StyledTextArea<S, PS> extends Region
      * content model
      */
     private final EditableStyledDocument<S, PS> content;
+
+    /**
+     * Usually used to create another area (View) that shares
+     * the same document (Model).
+     * @return this area's {@link EditableStyledDocument}
+     */
     protected final EditableStyledDocument<S, PS> getContent() {
         return content;
     }
