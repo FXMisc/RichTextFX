@@ -560,6 +560,10 @@ public class StyledTextArea<S, PS> extends Region
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
         this.preserveStyle = preserveStyle;
+
+        // allow tab traversal into area
+        setFocusTraversable(true);
+
         content = document;
         paragraphs = LiveList.suspendable(content.getParagraphs());
 
