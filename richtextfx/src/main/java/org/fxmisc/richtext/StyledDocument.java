@@ -29,5 +29,5 @@ public interface StyledDocument<S, PS> extends CharSequence, TwoDimensional {
     StyleSpans<S> getStyleSpans(int paragraph);
     StyleSpans<S> getStyleSpans(int paragraph, int from, int to);
 
-    List<Paragraph<S, PS>> getParagraphs();
+    List<NormalParagraph<S, PS>> getParagraphs();
 }

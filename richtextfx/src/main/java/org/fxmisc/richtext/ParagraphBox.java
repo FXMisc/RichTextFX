@@ -69,7 +69,7 @@ class ParagraphBox<S, PS> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    ParagraphBox(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
+    ParagraphBox(NormalParagraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle, BiConsumer<TextFlow, PS> applyParagraphStyle) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, applyStyle);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
@@ -107,7 +107,7 @@ class ParagraphBox<S, PS> extends Region {
 
     public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 
-    Paragraph<S, PS> getParagraph() {
+    NormalParagraph<S, PS> getParagraph() {
         return text.getParagraph();
     }
 

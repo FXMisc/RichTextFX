@@ -11,7 +11,7 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
 
-public final class Paragraph<S, PS> implements CharSequence {
+public final class NormalParagraph<S, PS> implements CharSequence {
 
     @SafeVarargs
     private static <T> List<T> list(T head, T... tail) {
@@ -29,16 +29,16 @@ public final class Paragraph<S, PS> implements CharSequence {
     private final TwoLevelNavigator navigator;
     private final PS paragraphStyle;
 
-    public Paragraph(PS paragraphStyle, String text, S style) {
+    public NormalParagraph(PS paragraphStyle, String text, S style) {
         this(paragraphStyle, new StyledText<>(text, style));
     }
 
     @SafeVarargs
-    public Paragraph(PS paragraphStyle, StyledText<S> text, StyledText<S>... texts) {
+    public NormalParagraph(PS paragraphStyle, StyledText<S> text, StyledText<S>... texts) {
         this(paragraphStyle, list(text, texts));
     }
 
-    Paragraph(PS paragraphStyle, List<StyledText<S>> segments) {
+    NormalParagraph(PS paragraphStyle, List<StyledText<S>> segments) {
         assert !segments.isEmpty();
         this.segments = segments;
         this.paragraphStyle = paragraphStyle;
@@ -77,7 +77,7 @@ public final class Paragraph<S, PS> implements CharSequence {
         return toString().substring(from);
     }
 
-    public Paragraph<S, PS> concat(Paragraph<S, PS> p) {
+    public NormalParagraph<S, PS> concat(NormalParagraph<S, PS> p) {
         if(length() == 0) {
             return p;
         }
@@ -94,16 +94,16 @@ public final class Paragraph<S, PS> implements CharSequence {
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
             segs.addAll(p.segments.subList(1, p.segments.size()));
-            return new Paragraph<>(paragraphStyle, segs);
+            return new NormalParagraph<>(paragraphStyle, segs);
         } else {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
             segs.addAll(segments);
             segs.addAll(p.segments);
-            return new Paragraph<>(paragraphStyle, segs);
+            return new NormalParagraph<>(paragraphStyle, segs);
         }
     }
 
-    public Paragraph<S, PS> concat(CharSequence str) {
+    public NormalParagraph<S, PS> concat(CharSequence str) {
         if(str.length() == 0) {
             return this;
         }
@@ -111,10 +111,10 @@ public final class Paragraph<S, PS> implements CharSequence {
         List<StyledText<S>> segs = new ArrayList<>(segments);
         int lastIdx = segments.size() - 1;
         segs.set(lastIdx, segments.get(lastIdx).concat(str));
-        return new Paragraph<>(paragraphStyle, segs);
+        return new NormalParagraph<>(paragraphStyle, segs);
     }
 
-    public Paragraph<S, PS> insert(int offset, CharSequence str) {
+    public NormalParagraph<S, PS> insert(int offset, CharSequence str) {
         if(offset < 0 || offset > length()) {
             throw new IndexOutOfBoundsException(String.valueOf(offset));
         }
@@ -126,15 +126,15 @@ public final class Paragraph<S, PS> implements CharSequence {
         StyledText<S> replacement = seg.spliced(segPos, segPos, str);
         List<StyledText<S>> segs = new ArrayList<>(segments);
         segs.set(segIdx, replacement);
-        return new Paragraph<>(paragraphStyle, segs);
+        return new NormalParagraph<>(paragraphStyle, segs);
     }
 
     @Override
-    public Paragraph<S, PS> subSequence(int start, int end) {
+    public NormalParagraph<S, PS> subSequence(int start, int end) {
         return trim(end).subSequence(start);
     }
 
-    public Paragraph<S, PS> trim(int length) {
+    public NormalParagraph<S, PS> trim(int length) {
         if(length >= length()) {
             return this;
         } else {
@@ -143,11 +143,11 @@ public final class Paragraph<S, PS> implements CharSequence {
             List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<>(paragraphStyle, segs);
+            return new NormalParagraph<>(paragraphStyle, segs);
         }
     }
 
-    public Paragraph<S, PS> subSequence(int start) {
+    public NormalParagraph<S, PS> subSequence(int start) {
         if(start < 0) {
             throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
         } else if(start == 0) {
@@ -158,40 +158,40 @@ public final class Paragraph<S, PS> implements CharSequence {
             List<StyledText<S>> segs = new ArrayList<>(segments.size() - segIdx);
             segs.add(segments.get(segIdx).subSequence(pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            return new Paragraph<>(paragraphStyle, segs);
+            return new NormalParagraph<>(paragraphStyle, segs);
         } else {
             throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
         }
     }
 
-    public Paragraph<S, PS> delete(int start, int end) {
+    public NormalParagraph<S, PS> delete(int start, int end) {
         return trim(start).concat(subSequence(end));
     }
 
-    public Paragraph<S, PS> restyle(S style) {
-        return new Paragraph<>(paragraphStyle, toString(), style);
+    public NormalParagraph<S, PS> restyle(S style) {
+        return new NormalParagraph<>(paragraphStyle, toString(), style);
     }
 
-    public Paragraph<S, PS> restyle(int from, int to, S style) {
+    public NormalParagraph<S, PS> restyle(int from, int to, S style) {
         if(from >= length()) {
             return this;
         } else {
             to = Math.min(to, length());
-            Paragraph<S, PS> left = subSequence(0, from);
-            Paragraph<S, PS> middle = new Paragraph<>(paragraphStyle, substring(from, to), style);
-            Paragraph<S, PS> right = subSequence(to);
+            NormalParagraph<S, PS> left = subSequence(0, from);
+            NormalParagraph<S, PS> middle = new NormalParagraph<>(paragraphStyle, substring(from, to), style);
+            NormalParagraph<S, PS> right = subSequence(to);
             return left.concat(middle).concat(right);
         }
     }
 
-    public Paragraph<S, PS> restyle(int from, StyleSpans<? extends S> styleSpans) {
+    public NormalParagraph<S, PS> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         if(styleSpans.equals(getStyleSpans(from, from + len))) {
             return this;
         }
 
-        Paragraph<S, PS> left = trim(from);
-        Paragraph<S, PS> right = subSequence(from + len);
+        NormalParagraph<S, PS> left = trim(from);
+        NormalParagraph<S, PS> right = subSequence(from + len);
 
         String middleString = substring(from, from + len);
         List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
@@ -202,13 +202,13 @@ public final class Paragraph<S, PS> implements CharSequence {
             middleSegs.add(new StyledText<>(text, span.getStyle()));
             offset = end;
         }
-        Paragraph<S, PS> middle = new Paragraph<>(paragraphStyle, middleSegs);
+        NormalParagraph<S, PS> middle = new NormalParagraph<>(paragraphStyle, middleSegs);
 
         return left.concat(middle).concat(right);
     }
 
-    public Paragraph<S, PS> setParagraphStyle(PS paragraphStyle) {
-        return new Paragraph<>(paragraphStyle, segments);
+    public NormalParagraph<S, PS> setParagraphStyle(PS paragraphStyle) {
+        return new NormalParagraph<>(paragraphStyle, segments);
     }
 
     /**
@@ -314,8 +314,8 @@ public final class Paragraph<S, PS> implements CharSequence {
 
     @Override
     public boolean equals(Object other) {
-        if(other instanceof Paragraph) {
-            Paragraph<?, ?> that = (Paragraph<?, ?>) other;
+        if(other instanceof NormalParagraph) {
+            NormalParagraph<?, ?> that = (NormalParagraph<?, ?>) other;
             return Objects.equals(this.paragraphStyle, that.paragraphStyle)
                 && Objects.equals(this.segments, that.segments);
         } else {

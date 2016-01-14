@@ -35,7 +35,7 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.AreaFactory;
-import org.fxmisc.richtext.Paragraph;
+import org.fxmisc.richtext.NormalParagraph;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.SuspendableNo;
@@ -150,7 +150,7 @@ public class RichText extends Application {
 
                 int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
                 int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
-                List<Paragraph<TextStyle, ParStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
+                List<NormalParagraph<TextStyle, ParStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
 
                 @SuppressWarnings("unchecked")
                 Optional<TextAlignment>[] alignments = pars.stream().map(p -> p.getParagraphStyle().alignment).distinct().toArray(Optional[]::new);
@@ -331,7 +331,7 @@ public class RichText extends Application {
         int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
         int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
         for(int i = startPar; i <= endPar; ++i) {
-            Paragraph<TextStyle, ParStyle> paragraph = area.getParagraph(i);
+            NormalParagraph<TextStyle, ParStyle> paragraph = area.getParagraph(i);
             area.setParagraphStyle(i, updater.apply(paragraph.getParagraphStyle()));
         }
     }

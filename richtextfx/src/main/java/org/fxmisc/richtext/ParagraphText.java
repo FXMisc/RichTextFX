@@ -39,7 +39,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
-    private final Paragraph<S, PS> paragraph;
+    private final NormalParagraph<S, PS> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -53,7 +53,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    public ParagraphText(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle) {
+    public ParagraphText(NormalParagraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -118,7 +118,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
         }
     }
 
-    public Paragraph<S, PS> getParagraph() {
+    public NormalParagraph<S, PS> getParagraph() {
         return paragraph;
     }
 
