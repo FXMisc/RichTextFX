@@ -374,8 +374,8 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    private final SuspendableList<NormalParagraph<S, PS>> paragraphs;
-    @Override public ObservableList<NormalParagraph<S, PS>> getParagraphs() {
+    private final SuspendableList<Paragraph<S, PS>> paragraphs;
+    @Override public ObservableList<Paragraph<S, PS>> getParagraphs() {
         return paragraphs;
     }
 
@@ -434,7 +434,7 @@ public class StyledTextArea<S, PS> extends Region
 
     private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
 
-    private final VirtualFlow<NormalParagraph<S, PS>, Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
+    private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -679,7 +679,7 @@ public class StyledTextArea<S, PS> extends Region
         virtualFlow = VirtualFlow.createVertical(
                 getParagraphs(),
                 par -> {
-                    Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> cell = createCell(
+                    Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = createCell(
                             par,
                             applyStyle,
                             initialParagraphStyle,
@@ -780,7 +780,7 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
-        VirtualFlowHit<Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
+        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -812,7 +812,7 @@ public class StyledTextArea<S, PS> extends Region
      * @param y
      */
     public CharacterHit hit(double x, double y) {
-        VirtualFlowHit<Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
+        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -837,7 +837,7 @@ public class StyledTextArea<S, PS> extends Region
      */
     TwoDimensional.Position currentLine() {
         int parIdx = getCurrentParagraph();
-        Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return _position(parIdx, lineIdx);
     }
@@ -856,7 +856,7 @@ public class StyledTextArea<S, PS> extends Region
         return paragraphs.get(paragraph).toString();
     }
 
-    public NormalParagraph<S, PS> getParagraph(int index) {
+    public Paragraph<S, PS> getParagraph(int index) {
         return paragraphs.get(index);
     }
 
@@ -1019,7 +1019,7 @@ public class StyledTextArea<S, PS> extends Region
 
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
-        Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMaxY();
         virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
@@ -1027,7 +1027,7 @@ public class StyledTextArea<S, PS> extends Region
 
     void showCaretAtTop() {
         int parIdx = getCurrentParagraph();
-        Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMinY();
         virtualFlow.showAtOffset(parIdx, -y);
@@ -1040,7 +1040,7 @@ public class StyledTextArea<S, PS> extends Region
 
     private void followCaret() {
         int parIdx = getCurrentParagraph();
-        Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
@@ -1224,8 +1224,8 @@ public class StyledTextArea<S, PS> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>> createCell(
-            NormalParagraph<S, PS> paragraph,
+    private Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> createCell(
+            Paragraph<S, PS> paragraph,
             BiConsumer<? super TextExt, S> applyStyle,
             PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
@@ -1262,7 +1262,7 @@ public class StyledTextArea<S, PS> extends Region
         }, selectionProperty(), box.indexProperty());
         box.selectionProperty().bind(cellSelection);
 
-        return new Cell<NormalParagraph<S, PS>, ParagraphBox<S, PS>>() {
+        return new Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>() {
             @Override
             public ParagraphBox<S, PS> getNode() {
                 return box;

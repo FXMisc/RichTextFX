@@ -39,7 +39,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
-    private final NormalParagraph<S, PS> paragraph;
+    private final Paragraph<S, PS> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -53,7 +53,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    public ParagraphText(NormalParagraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle) {
+    public ParagraphText(Paragraph<S, PS> par, BiConsumer<? super TextExt, S> applyStyle) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -93,17 +93,37 @@ class ParagraphText<S, PS> extends TextFlowExt {
 //            }
 //        });
 
-        // populate with text nodes
-        for(StyledText<S> segment: par.getSegments()) {
-            TextExt t = new TextExt(segment.toString());
+        if (par instanceof NormalParagraph) {
+            // populate with text nodes
+            for (StyledText<S> segment : par.getSegments()) {
+                TextExt t = new TextExt(segment.toString());
+                t.setTextOrigin(VPos.TOP);
+                t.getStyleClass().add("text");
+                applyStyle.accept(t, segment.getStyle());
+
+                // XXX: binding selectionFill to textFill,
+                // see the note at highlightTextFill
+                t.impl_selectionFillProperty().bind(t.fillProperty());
+
+                getChildren().add(t);
+
+                // add corresponding background node (empty)
+
+                Path backgroundShape = new Path();
+                backgroundShape.setManaged(false);
+                backgroundShape.setStrokeWidth(0);
+                backgroundShape.layoutXProperty().bind(leftInset);
+                backgroundShape.layoutYProperty().bind(topInset);
+                backgroundShapes.add(backgroundShape);
+                getChildren().add(0, backgroundShape);
+            }
+        } else {
+            // insure that caret appears
+            // by insuring that this region takes up space
+            // by adding an empty TextExt
+            TextExt t = new TextExt("");
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
-            applyStyle.accept(t, segment.getStyle());
-
-            // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
-            t.impl_selectionFillProperty().bind(t.fillProperty());
-
             getChildren().add(t);
 
             // add corresponding background node (empty)
@@ -118,7 +138,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
         }
     }
 
-    public NormalParagraph<S, PS> getParagraph() {
+    public Paragraph<S, PS> getParagraph() {
         return paragraph;
     }
 

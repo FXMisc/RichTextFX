@@ -91,7 +91,7 @@ public interface TextEditingArea<S, PS> {
     /**
      * Unmodifiable observable list of paragraphs in this text area.
      */
-    ObservableList<NormalParagraph<S, PS>> getParagraphs();
+    ObservableList<Paragraph<S, PS>> getParagraphs();
 
 
     /*********************
