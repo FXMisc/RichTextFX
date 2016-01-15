@@ -26,11 +26,17 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            res.add(new Paragraph<>(paragraphStyle, s, style));
+            res.add(s.isEmpty()
+                ? new EmptyParagraph<>(paragraphStyle, style)
+                : new NormalParagraph<>(paragraphStyle, s, style)
+            );
             start = m.end();
         }
         String last = str.substring(start);
-        res.add(new Paragraph<>(paragraphStyle, last, style));
+        res.add(last.isEmpty()
+                ? new EmptyParagraph<>(paragraphStyle, style)
+                : new NormalParagraph<>(paragraphStyle, last, style)
+        );
 
         return new ReadOnlyStyledDocument<>(res, ADOPT);
     }
@@ -76,14 +82,22 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
             @Override
             public void encode(DataOutputStream os, Paragraph<S, PS> p) throws IOException {
                 pCodec.encode(os, p.getParagraphStyle());
-                segmentsCodec.encode(os, p.getSegments());
+                if (p instanceof EmptyParagraph) {
+                    List<StyledText<S>> list = new ArrayList<>(1);
+                    list.add(new StyledText<S>("", p.getStyleAtPosition(0)));
+                    segmentsCodec.encode(os, list);
+                } else {
+                    segmentsCodec.encode(os, p.getSegments());
+                }
             }
 
             @Override
             public Paragraph<S, PS> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
                 List<StyledText<S>> segments = segmentsCodec.decode(is);
-                return new Paragraph<>(paragraphStyle, segments);
+                return segments.get(0).length() == 0
+                        ? new EmptyParagraph<>(paragraphStyle, segments.get(0).getStyle())
+                        : new NormalParagraph<>(paragraphStyle, segments);
             }
         };
     }

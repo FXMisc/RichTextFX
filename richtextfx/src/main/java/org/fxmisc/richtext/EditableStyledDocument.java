@@ -163,7 +163,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     @SuppressWarnings("unchecked")
     EditableStyledDocument(S initialStyle, PS initialParagraphStyle) {
-        super(FXCollections.observableArrayList(new Paragraph<>(initialParagraphStyle, "", initialStyle)));
+        super(FXCollections.observableArrayList(new EmptyParagraph<>(initialParagraphStyle, initialStyle)));
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
     }
@@ -197,9 +197,15 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         int lastParIdx = end2D.getMajor();
         int lastParTo = end2D.getMinor();
 
-        // Get the leftovers after cutting out the deletion
-        Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
+        Paragraph<S, PS> firstParCheck = paragraphs.get(firstParIdx);
+        Paragraph<S, PS> firstPar = firstParFrom == 0
+                // If firstParFrom is 0, then the trimmed NormalParagraph's length == 0
+                ? new EmptyParagraph<>(initialParagraphStyle, initialStyle)
+                // Get the leftovers after cutting out the deletion
+                : firstParCheck.trim(firstParFrom);
+
         Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
+        if (lastPar.length() == 0) lastPar = new EmptyParagraph<>(initialParagraphStyle, initialStyle);
 
         List<Paragraph<S, PS>> replacementPars = replacement.getParagraphs();
 
@@ -468,7 +474,9 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             return initialStyle;
         } else {
             Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
-            return par.getStyleAtPosition(insertionPos.getMinor());
+            return par instanceof EmptyParagraph
+                    ? initialStyle
+                    : par.getStyleAtPosition(insertionPos.getMinor());
         }
     }
 
@@ -483,5 +491,19 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
             return par.getParagraphStyle();
         }
+    }
+
+    @Override
+    public StyledDocument<S, PS> subSequence(int start, int end) {
+        return sub(
+                start, end,
+                p -> p,
+                (p, a, b) -> {
+                    Paragraph<S, PS> unknownPar = p.subSequence(a, b);
+                    return unknownPar.length() == 0
+                            ? new EmptyParagraph<S, PS>(initialParagraphStyle, initialStyle)
+                            : unknownPar;
+                },
+                (List<Paragraph<S, PS>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
     }
 }
