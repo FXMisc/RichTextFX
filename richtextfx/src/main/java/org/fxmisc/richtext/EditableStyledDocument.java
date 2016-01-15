@@ -492,4 +492,18 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             return par.getParagraphStyle();
         }
     }
+
+    @Override
+    public StyledDocument<S, PS> subSequence(int start, int end) {
+        return sub(
+                start, end,
+                p -> p,
+                (p, a, b) -> {
+                    Paragraph<S, PS> unknownPar = p.subSequence(a, b);
+                    return unknownPar.length() == 0
+                            ? new EmptyParagraph<S, PS>(initialParagraphStyle, initialStyle)
+                            : unknownPar;
+                },
+                (List<Paragraph<S, PS>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
+    }
 }

@@ -204,11 +204,11 @@ implements StyledDocument<S, PS> {
 
     /**************************************************************************
      *                                                                        *
-     * Private methods                                                        *
+     * Package-Private methods                                                *
      *                                                                        *
      **************************************************************************/
 
-    private interface SubMap<A, B> {
+    interface SubMap<A, B> {
         B subrange(A par, int start, int end);
     }
 
@@ -224,7 +224,7 @@ implements StyledDocument<S, PS> {
      * @param <P> type to which paragraphs are mapped.
      * @param <R> type of the resulting sub-document.
      */
-    private <P, R> R sub(
+    final <P, R> R sub(
             int start, int end,
             Function<Paragraph<S, PS>, P> map,
             SubMap<Paragraph<S, PS>, P> subMap,
