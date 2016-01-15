@@ -11,7 +11,7 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
 
-public final class NormalParagraph<S, PS> implements CharSequence {
+public final class NormalParagraph<S, PS> implements Paragraph<S, PS> {
 
     @SafeVarargs
     private static <T> List<T> list(T head, T... tail) {
@@ -77,7 +77,7 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         return toString().substring(from);
     }
 
-    public NormalParagraph<S, PS> concat(NormalParagraph<S, PS> p) {
+    public Paragraph<S, PS> concat(Paragraph<S, PS> p) {
         if(length() == 0) {
             return p;
         }
@@ -87,23 +87,23 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         }
 
         StyledText<S> left = segments.get(segments.size() - 1);
-        StyledText<S> right = p.segments.get(0);
+        StyledText<S> right = p.getSegments().get(0);
         if(Objects.equals(left.getStyle(), right.getStyle())) {
             StyledText<S> segment = left.concat(right);
-            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
+            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.getSegments().size() - 1);
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
-            segs.addAll(p.segments.subList(1, p.segments.size()));
+            segs.addAll(p.getSegments().subList(1, p.getSegments().size()));
             return new NormalParagraph<>(paragraphStyle, segs);
         } else {
-            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
+            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.getSegments().size());
             segs.addAll(segments);
-            segs.addAll(p.segments);
+            segs.addAll(p.getSegments());
             return new NormalParagraph<>(paragraphStyle, segs);
         }
     }
 
-    public NormalParagraph<S, PS> concat(CharSequence str) {
+    public Paragraph<S, PS> concat(CharSequence str) {
         if(str.length() == 0) {
             return this;
         }
@@ -114,7 +114,7 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         return new NormalParagraph<>(paragraphStyle, segs);
     }
 
-    public NormalParagraph<S, PS> insert(int offset, CharSequence str) {
+    public Paragraph<S, PS> insert(int offset, CharSequence str) {
         if(offset < 0 || offset > length()) {
             throw new IndexOutOfBoundsException(String.valueOf(offset));
         }
@@ -130,11 +130,11 @@ public final class NormalParagraph<S, PS> implements CharSequence {
     }
 
     @Override
-    public NormalParagraph<S, PS> subSequence(int start, int end) {
+    public Paragraph<S, PS> subSequence(int start, int end) {
         return trim(end).subSequence(start);
     }
 
-    public NormalParagraph<S, PS> trim(int length) {
+    public Paragraph<S, PS> trim(int length) {
         if(length >= length()) {
             return this;
         } else {
@@ -147,7 +147,7 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         }
     }
 
-    public NormalParagraph<S, PS> subSequence(int start) {
+    public Paragraph<S, PS> subSequence(int start) {
         if(start < 0) {
             throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
         } else if(start == 0) {
@@ -164,34 +164,34 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         }
     }
 
-    public NormalParagraph<S, PS> delete(int start, int end) {
+    public Paragraph<S, PS> delete(int start, int end) {
         return trim(start).concat(subSequence(end));
     }
 
-    public NormalParagraph<S, PS> restyle(S style) {
+    public Paragraph<S, PS> restyle(S style) {
         return new NormalParagraph<>(paragraphStyle, toString(), style);
     }
 
-    public NormalParagraph<S, PS> restyle(int from, int to, S style) {
+    public Paragraph<S, PS> restyle(int from, int to, S style) {
         if(from >= length()) {
             return this;
         } else {
             to = Math.min(to, length());
-            NormalParagraph<S, PS> left = subSequence(0, from);
-            NormalParagraph<S, PS> middle = new NormalParagraph<>(paragraphStyle, substring(from, to), style);
-            NormalParagraph<S, PS> right = subSequence(to);
+            Paragraph<S, PS> left = subSequence(0, from);
+            Paragraph<S, PS> middle = new NormalParagraph<>(paragraphStyle, substring(from, to), style);
+            Paragraph<S, PS> right = subSequence(to);
             return left.concat(middle).concat(right);
         }
     }
 
-    public NormalParagraph<S, PS> restyle(int from, StyleSpans<? extends S> styleSpans) {
+    public Paragraph<S, PS> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         if(styleSpans.equals(getStyleSpans(from, from + len))) {
             return this;
         }
 
-        NormalParagraph<S, PS> left = trim(from);
-        NormalParagraph<S, PS> right = subSequence(from + len);
+        Paragraph<S, PS> left = trim(from);
+        Paragraph<S, PS> right = subSequence(from + len);
 
         String middleString = substring(from, from + len);
         List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
@@ -207,7 +207,7 @@ public final class NormalParagraph<S, PS> implements CharSequence {
         return left.concat(middle).concat(right);
     }
 
-    public NormalParagraph<S, PS> setParagraphStyle(PS paragraphStyle) {
+    public Paragraph<S, PS> setParagraphStyle(PS paragraphStyle) {
         return new NormalParagraph<>(paragraphStyle, segments);
     }
 
