@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import javafx.scene.control.IndexRange;
 
-abstract class StyledDocumentBase<S, PS, L extends List<NormalParagraph<S, PS>>>
+abstract class StyledDocumentBase<S, PS, L extends List<Paragraph<S, PS>>>
 implements StyledDocument<S, PS> {
 
     protected final L paragraphs;
@@ -50,8 +50,8 @@ implements StyledDocument<S, PS> {
     public String getText(int start, int end) {
         return sub(
                 start, end,
-                NormalParagraph::toString,
-                NormalParagraph::substring,
+                Paragraph::toString,
+                Paragraph::substring,
                 pars -> String.join("\n", pars));
     }
 
@@ -77,7 +77,7 @@ implements StyledDocument<S, PS> {
                 start, end,
                 p -> p,
                 (p, a, b) -> p.subSequence(a, b),
-                (List<NormalParagraph<S, PS>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
+                (List<Paragraph<S, PS>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
     }
 
     @Override
@@ -87,11 +87,11 @@ implements StyledDocument<S, PS> {
 
     @Override
     public final StyledDocument<S, PS> concat(StyledDocument<S, PS> that) {
-        List<NormalParagraph<S, PS>> pars1 = this.getParagraphs();
-        List<NormalParagraph<S, PS>> pars2 = that.getParagraphs();
+        List<Paragraph<S, PS>> pars1 = this.getParagraphs();
+        List<Paragraph<S, PS>> pars2 = that.getParagraphs();
         int n1 = pars1.size();
         int n2 = pars2.size();
-        List<NormalParagraph<S, PS>> pars = new ArrayList<>(n1 + n2 - 1);
+        List<Paragraph<S, PS>> pars = new ArrayList<>(n1 + n2 - 1);
         pars.addAll(pars1.subList(0, n1 - 1));
         pars.add(pars1.get(n1 - 1).concat(pars2.get(0)));
         pars.addAll(pars2.subList(1, n2));
@@ -150,18 +150,18 @@ implements StyledDocument<S, PS> {
         List<StyleSpans<S>> subSpans = new ArrayList<>(affectedPars);
 
         if(startParIdx == endParIdx) {
-            NormalParagraph<S, PS> par = paragraphs.get(startParIdx);
+            Paragraph<S, PS> par = paragraphs.get(startParIdx);
             subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
-            NormalParagraph<S, PS> startPar = paragraphs.get(startParIdx);
+            Paragraph<S, PS> startPar = paragraphs.get(startParIdx);
             subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1));
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
-                NormalParagraph<S, PS> par = paragraphs.get(i);
+                Paragraph<S, PS> par = paragraphs.get(i);
                 subSpans.add(par.getStyleSpans(0, par.length() + 1));
             }
 
-            NormalParagraph<S, PS> endPar = paragraphs.get(endParIdx);
+            Paragraph<S, PS> endPar = paragraphs.get(endParIdx);
             subSpans.add(endPar.getStyleSpans(0, end.getMinor()));
         }
 
@@ -226,8 +226,8 @@ implements StyledDocument<S, PS> {
      */
     private <P, R> R sub(
             int start, int end,
-            Function<NormalParagraph<S, PS>, P> map,
-            SubMap<NormalParagraph<S, PS>, P> subMap,
+            Function<Paragraph<S, PS>, P> map,
+            SubMap<Paragraph<S, PS>, P> subMap,
             Function<List<P>, R> combine) {
 
         Position start2D = navigator.offsetToPosition(start, Forward);
@@ -244,7 +244,7 @@ implements StyledDocument<S, PS> {
         if(p1 == p2) {
             pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
         } else {
-            NormalParagraph<S, PS> par1 = paragraphs.get(p1);
+            Paragraph<S, PS> par1 = paragraphs.get(p1);
             pars.add(subMap.subrange(par1, col1, par1.length()));
 
             for(int i = p1 + 1; i < p2; ++i) {

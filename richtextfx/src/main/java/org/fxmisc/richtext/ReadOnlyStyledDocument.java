@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, List<NormalParagraph<S, PS>>> {
+public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, List<Paragraph<S, PS>>> {
 
     private static final Pattern LINE_TERMINATOR = Pattern.compile("\r\n|\r|\n");
 
@@ -20,17 +20,23 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
 
         int n = 1;
         while(m.find()) ++n;
-        List<NormalParagraph<S, PS>> res = new ArrayList<>(n);
+        List<Paragraph<S, PS>> res = new ArrayList<>(n);
 
         int start = 0;
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            res.add(new NormalParagraph<>(paragraphStyle, s, style));
+            res.add(s.isEmpty()
+                ? new EmptyParagraph<>(paragraphStyle, style)
+                : new NormalParagraph<>(paragraphStyle, s, style)
+            );
             start = m.end();
         }
         String last = str.substring(start);
-        res.add(new NormalParagraph<>(paragraphStyle, last, style));
+        res.add(last.isEmpty()
+                ? new EmptyParagraph<>(paragraphStyle, style)
+                : new NormalParagraph<>(paragraphStyle, last, style)
+        );
 
         return new ReadOnlyStyledDocument<>(res, ADOPT);
     }
@@ -42,7 +48,7 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
 
     static <S, PS> Codec<StyledDocument<S, PS>> codec(Codec<S> tCodec, Codec<PS> pCodec) {
         return new Codec<StyledDocument<S, PS>>() {
-            private final Codec<List<NormalParagraph<S, PS>>> codec = Codec.listCodec(paragraphCodec(tCodec, pCodec));
+            private final Codec<List<Paragraph<S, PS>>> codec = Codec.listCodec(paragraphCodec(tCodec, pCodec));
 
             @Override
             public String getName() {
@@ -64,8 +70,8 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
         };
     }
 
-    private static <S, PS> Codec<NormalParagraph<S, PS>> paragraphCodec(Codec<S> tCodec, Codec<PS> pCodec) {
-        return new Codec<NormalParagraph<S, PS>>() {
+    private static <S, PS> Codec<Paragraph<S, PS>> paragraphCodec(Codec<S> tCodec, Codec<PS> pCodec) {
+        return new Codec<Paragraph<S, PS>>() {
             private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
@@ -74,16 +80,24 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
             }
 
             @Override
-            public void encode(DataOutputStream os, NormalParagraph<S, PS> p) throws IOException {
+            public void encode(DataOutputStream os, Paragraph<S, PS> p) throws IOException {
                 pCodec.encode(os, p.getParagraphStyle());
-                segmentsCodec.encode(os, p.getSegments());
+                if (p instanceof EmptyParagraph) {
+                    List<StyledText<S>> list = new ArrayList<>(1);
+                    list.add(new StyledText<S>("", p.getStyleAtPosition(0)));
+                    segmentsCodec.encode(os, list);
+                } else {
+                    segmentsCodec.encode(os, p.getSegments());
+                }
             }
 
             @Override
-            public NormalParagraph<S, PS> decode(DataInputStream is) throws IOException {
+            public Paragraph<S, PS> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
                 List<StyledText<S>> segments = segmentsCodec.decode(is);
-                return new NormalParagraph<>(paragraphStyle, segments);
+                return segments.get(0).length() == 0
+                        ? new EmptyParagraph<>(paragraphStyle, segments.get(0).getStyle())
+                        : new NormalParagraph<>(paragraphStyle, segments);
             }
         };
     }
@@ -117,7 +131,7 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
 
     private String text = null;
 
-    ReadOnlyStyledDocument(List<NormalParagraph<S, PS>> paragraphs, ParagraphsPolicy policy) {
+    ReadOnlyStyledDocument(List<Paragraph<S, PS>> paragraphs, ParagraphsPolicy policy) {
         super(policy == ParagraphsPolicy.ADOPT ? paragraphs : new ArrayList<>(paragraphs));
     }
 
@@ -138,11 +152,11 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
     }
 
     @Override
-    public List<NormalParagraph<S, PS>> getParagraphs() {
+    public List<Paragraph<S, PS>> getParagraphs() {
         return Collections.unmodifiableList(paragraphs);
     }
 
     private int computeLength() {
-        return paragraphs.stream().mapToInt(NormalParagraph::length).sum() + paragraphs.size() - 1;
+        return paragraphs.stream().mapToInt(Paragraph::length).sum() + paragraphs.size() - 1;
     }
 }
