@@ -75,12 +75,6 @@ public class StyledTextAreaModel<S, PS>
      *                                                                        *
      * ********************************************************************** */
 
-    // wrapText property
-    private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
-    @Override public final boolean isWrapText() { return wrapText.get(); }
-    @Override public final void setWrapText(boolean value) { wrapText.set(value); }
-    @Override public final BooleanProperty wrapTextProperty() { return wrapText; }
-
     // undo manager
     private UndoManager undoManager;
     @Override
@@ -274,7 +268,7 @@ public class StyledTextAreaModel<S, PS>
      * ********************************************************************** */
 
     /**
-     * Creates a text area with empty text content.
+     * Creates a text area model with empty text content.
      *
      * @param initialStyle style to use in places where no other style is
      * specified (yet).
@@ -303,7 +297,7 @@ public class StyledTextAreaModel<S, PS>
 
     /**
      * The same as {@link #StyledTextAreaModel(Object, BiConsumer, Object, BiConsumer)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
+     * this constructor can be used to create another {@code StyledTextAreaModel} object that
      * shares the same {@link EditableStyledDocument}.
      */
     public StyledTextAreaModel(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,

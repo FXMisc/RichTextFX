@@ -137,23 +137,6 @@ public interface TextEditingArea<S, PS> {
      */
     StyledDocument<S, PS> subDocument(int start, int end);
 
-
-    /******************
-     *                *
-     *   Properties   *
-     *                *
-     ******************/
-
-    /**
-     * When a run of text exceeds the width of the text region,
-     * then this property indicates whether the text should wrap
-     * onto another line.
-     */
-    boolean isWrapText();
-    void setWrapText(boolean value);
-    BooleanProperty wrapTextProperty();
-
-
     /***************
      *             *
      *   Actions   *
