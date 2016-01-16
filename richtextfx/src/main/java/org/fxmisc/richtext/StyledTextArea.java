@@ -572,7 +572,7 @@ public class StyledTextArea<S, PS> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        behavior = new StyledTextAreaBehavior(this);
+        behavior = new StyledTextAreaBehavior(this, model);
     }
 
 
