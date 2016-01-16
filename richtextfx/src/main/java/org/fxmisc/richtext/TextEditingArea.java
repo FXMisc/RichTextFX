@@ -145,14 +145,6 @@ public interface TextEditingArea<S, PS> {
      ******************/
 
     /**
-     * Indicates whether this text area can be edited by the user.
-     * Note that this property doesn't affect editing through the API.
-     */
-    boolean isEditable();
-    void setEditable(boolean value);
-    BooleanProperty editableProperty();
-
-    /**
      * When a run of text exceeds the width of the text region,
      * then this property indicates whether the text should wrap
      * onto another line.
