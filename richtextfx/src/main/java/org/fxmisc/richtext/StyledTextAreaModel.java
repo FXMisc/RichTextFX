@@ -744,6 +744,10 @@ public class StyledTextAreaModel<S, PS>
      *                                                                        *
      * ********************************************************************** */
 
+    StyledTextAreaModel<S, PS> cloneModel() {
+        return new StyledTextAreaModel<S, PS>(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, content, preserveStyle);
+    }
+
     private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
         manageSubscription(src.subscribe(consumer));
     }

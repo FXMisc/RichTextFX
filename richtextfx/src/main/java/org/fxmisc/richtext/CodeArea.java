@@ -20,8 +20,8 @@ public class CodeArea extends StyleClassedTextArea {
         setUseInitialStyleForInsertion(true);
     }
 
-    public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document) {
-        super(document, false);
+    public CodeArea(StyledTextAreaModel<Collection<String>, Collection<String>> model) {
+        super(model);
     }
 
     public CodeArea() {
