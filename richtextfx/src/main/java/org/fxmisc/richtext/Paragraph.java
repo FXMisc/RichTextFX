@@ -318,7 +318,7 @@ public final class Paragraph<S, PS> implements CharSequence {
             Paragraph<?, ?> that = (Paragraph<?, ?>) other;
             return Objects.equals(this.paragraphStyle, that.paragraphStyle)
                 && (
-                    (this.length() == 0 && that.length() == 0)
+                    (segments.get(0).length() == 0 && that.getSegments().get(0).length() == 0)
                     || Objects.equals(this.segments, that.segments
                 )
             );
