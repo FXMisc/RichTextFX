@@ -20,10 +20,11 @@ public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
      *     to a CSS string.
      */
     public  InlineStyleTextArea(S initialStyle, Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss) {
-        super(initialStyle,
+        super(new StyledTextAreaModel<S, PS>(
+                initialStyle,
                 (text, style) -> text.setStyle(styleToCss.apply(style)),
                 initialParagraphStyle,
-                (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)));
+                (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style))));
     }
 
 }

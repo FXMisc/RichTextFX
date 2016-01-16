@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import javafx.scene.text.TextFlow;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,13 +12,8 @@ import java.util.List;
  */
 public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Collection<String>> {
 
-    public StyleClassedTextArea(EditableStyledDocument<Collection<String>, Collection<String>> document, boolean preserveStyle) {
-        super(Collections.<String>emptyList(),
-                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
-                Collections.<String>emptyList(),
-                (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
-                document, preserveStyle
-        );
+    public StyleClassedTextArea(StyledTextAreaModel<Collection<String>, Collection<String>> model) {
+        super(model);
 
         setStyleCodecs(
                 SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)),
@@ -24,10 +21,15 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
         );
     }
     public StyleClassedTextArea(boolean preserveStyle) {
-        this(
+        this(new StyledTextAreaModel<Collection<String>, Collection<String>>(
+                Collections.<String>emptyList(),
+                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
+                Collections.<String>emptyList(),
+                (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
                 new EditableStyledDocument<Collection<String>, Collection<String>>(
-                    Collections.<String>emptyList(), Collections.<String>emptyList()
-                ), preserveStyle);
+                        Collections.<String>emptyList(), Collections.<String>emptyList()
+                ), preserveStyle)
+        );
     }
 
     /**

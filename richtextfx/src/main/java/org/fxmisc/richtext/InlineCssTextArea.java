@@ -5,17 +5,17 @@ package org.fxmisc.richtext;
  */
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
-    public InlineCssTextArea() {
-        this(new EditableStyledDocument<String, String>("", ""));
+    public InlineCssTextArea(StyledTextAreaModel<String, String> model) {
+        super(model);
     }
 
-    public InlineCssTextArea(EditableStyledDocument<String, String> document) {
-        super(
+    public InlineCssTextArea() {
+        this(new StyledTextAreaModel<String, String>(
                 "", (text, style) -> text.setStyle(style),
                 "", (paragraph, style) -> paragraph.setStyle(style),
-                document,
+                new EditableStyledDocument<String, String>("", ""),
                 true
-        );
+        ));
     }
 
     /**
