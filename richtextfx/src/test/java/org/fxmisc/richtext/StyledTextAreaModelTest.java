@@ -12,8 +12,6 @@ public class StyledTextAreaModelTest {
 
     @Test
     public void testUndoWithWinNewlines() {
-        new JFXPanel(); // initialize JavaFX
-
         String text1 = "abc\r\ndef";
         String text2 = "A\r\nB\r\nC";
         StyledTextAreaModel<Collection<String>, Collection<String>> model = new StyledTextAreaModel<>(
