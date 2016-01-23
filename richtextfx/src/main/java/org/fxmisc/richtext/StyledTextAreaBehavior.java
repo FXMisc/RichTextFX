@@ -18,7 +18,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
@@ -62,28 +61,28 @@ class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(DELETE,     SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deleteNextWord)
                 .on(keyPressed(BACK_SPACE, SHORTCUT_DOWN)).act(StyledTextAreaBehavior::deletePrevWord)
                 // cut
-                .on(keyPressed(CUT))               .act((b, e) -> b.area.cut())
-                .on(keyPressed(X, SHORTCUT_DOWN))  .act((b, e) -> b.area.cut())
-                .on(keyPressed(DELETE, SHIFT_DOWN)).act((b, e) -> b.area.cut())
+                .on(keyPressed(CUT))               .act((b, e) -> b.view.cut())
+                .on(keyPressed(X, SHORTCUT_DOWN))  .act((b, e) -> b.view.cut())
+                .on(keyPressed(DELETE, SHIFT_DOWN)).act((b, e) -> b.view.cut())
                 // paste
-                .on(keyPressed(PASTE))             .act((b, e) -> b.area.paste())
-                .on(keyPressed(V, SHORTCUT_DOWN))  .act((b, e) -> b.area.paste())
-                .on(keyPressed(INSERT, SHIFT_DOWN)).act((b, e) -> b.area.paste())
+                .on(keyPressed(PASTE))             .act((b, e) -> b.view.paste())
+                .on(keyPressed(V, SHORTCUT_DOWN))  .act((b, e) -> b.view.paste())
+                .on(keyPressed(INSERT, SHIFT_DOWN)).act((b, e) -> b.view.paste())
                 // tab & newline
-                .on(keyPressed(ENTER)).act((b, e) -> b.area.replaceSelection("\n"))
-                .on(keyPressed(TAB))  .act((b, e) -> b.area.replaceSelection("\t"))
+                .on(keyPressed(ENTER)).act((b, e) -> b.model.replaceSelection("\n"))
+                .on(keyPressed(TAB))  .act((b, e) -> b.model.replaceSelection("\t"))
                 // undo/redo,
-                .on(keyPressed(Z, SHORTCUT_DOWN))            .act((b, e) -> b.area.undo())
-                .on(keyPressed(Y, SHORTCUT_DOWN))            .act((b, e) -> b.area.redo())
-                .on(keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)).act((b, e) -> b.area.redo())
+                .on(keyPressed(Z, SHORTCUT_DOWN))            .act((b, e) -> b.model.undo())
+                .on(keyPressed(Y, SHORTCUT_DOWN))            .act((b, e) -> b.model.redo())
+                .on(keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)).act((b, e) -> b.model.redo())
 
                 .create()
-                .onlyWhen(b -> b.area.isEditable());
+                .onlyWhen(b -> b.view.isEditable());
 
         EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> verticalNavigation = EventHandlerTemplate
                 .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
                 // vertical caret movement
-                 on(keyPressed(UP))       .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
+                on(keyPressed(UP))       .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
                 .on(keyPressed(KP_UP))    .act((b, e) -> b.prevLine(SelectionPolicy.CLEAR))
                 .on(keyPressed(DOWN))     .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
                 .on(keyPressed(KP_DOWN))  .act((b, e) -> b.nextLine(SelectionPolicy.CLEAR))
@@ -105,37 +104,37 @@ class StyledTextAreaBehavior implements Behavior {
                 .on(keyPressed(KP_RIGHT)).act(StyledTextAreaBehavior::right)
                 .on(keyPressed(LEFT))    .act(StyledTextAreaBehavior::left)
                 .on(keyPressed(KP_LEFT)) .act(StyledTextAreaBehavior::left)
-                .on(keyPressed(HOME))    .act((b, e) -> b.area.lineStart(SelectionPolicy.CLEAR))
-                .on(keyPressed(END))     .act((b, e) -> b.area.lineEnd(SelectionPolicy.CLEAR))
-                .on(keyPressed(RIGHT,    SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, SelectionPolicy.CLEAR))
-                .on(keyPressed(KP_RIGHT, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, SelectionPolicy.CLEAR))
-                .on(keyPressed(LEFT,     SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
-                .on(keyPressed(KP_LEFT,  SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
-                .on(keyPressed(HOME,     SHORTCUT_DOWN)).act((b, e) -> b.area.start(SelectionPolicy.CLEAR))
-                .on(keyPressed(END,      SHORTCUT_DOWN)).act((b, e) -> b.area.end(SelectionPolicy.CLEAR))
+                .on(keyPressed(HOME))    .act((b, e) -> b.model.lineStart(SelectionPolicy.CLEAR))
+                .on(keyPressed(END))     .act((b, e) -> b.model.lineEnd(SelectionPolicy.CLEAR))
+                .on(keyPressed(RIGHT,    SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksForwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_RIGHT, SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksForwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(LEFT,     SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(KP_LEFT,  SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksBackwards(2, SelectionPolicy.CLEAR))
+                .on(keyPressed(HOME,     SHORTCUT_DOWN)).act((b, e) -> b.model.start(SelectionPolicy.CLEAR))
+                .on(keyPressed(END,      SHORTCUT_DOWN)).act((b, e) -> b.model.end(SelectionPolicy.CLEAR))
                 // selection
                 .on(keyPressed(RIGHT,    SHIFT_DOWN)).act(StyledTextAreaBehavior::selectRight)
                 .on(keyPressed(KP_RIGHT, SHIFT_DOWN)).act(StyledTextAreaBehavior::selectRight)
                 .on(keyPressed(LEFT,     SHIFT_DOWN)).act(StyledTextAreaBehavior::selectLeft)
                 .on(keyPressed(KP_LEFT,  SHIFT_DOWN)).act(StyledTextAreaBehavior::selectLeft)
-                .on(keyPressed(HOME,     SHIFT_DOWN)).act((b, e) -> b.area.lineStart(selPolicy))
-                .on(keyPressed(END,      SHIFT_DOWN)).act((b, e) -> b.area.lineEnd(selPolicy))
-                .on(keyPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.start(selPolicy))
-                .on(keyPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.end(selPolicy))
-                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
-                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksBackwards(2, selPolicy))
-                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
-                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.area.wordBreaksForwards(2, selPolicy))
-                .on(keyPressed(A, SHORTCUT_DOWN)).act((b, e) -> b.area.selectAll())
+                .on(keyPressed(HOME,     SHIFT_DOWN)).act((b, e) -> b.model.lineStart(selPolicy))
+                .on(keyPressed(END,      SHIFT_DOWN)).act((b, e) -> b.model.lineEnd(selPolicy))
+                .on(keyPressed(HOME,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.start(selPolicy))
+                .on(keyPressed(END,      SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.end(selPolicy))
+                .on(keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksBackwards(2, selPolicy))
+                .on(keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksForwards(2, selPolicy))
+                .on(keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)).act((b, e) -> b.model.wordBreaksForwards(2, selPolicy))
+                .on(keyPressed(A, SHORTCUT_DOWN)).act((b, e) -> b.model.selectAll())
 
                 .create();
 
         EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> otherActions = EventHandlerTemplate
                 .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
                 // copy
-                 on(keyPressed(COPY))                 .act((b, e) -> b.area.copy())
-                .on(keyPressed(C,      SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
-                .on(keyPressed(INSERT, SHORTCUT_DOWN)).act((b, e) -> b.area.copy())
+                on(keyPressed(COPY))                 .act((b, e) -> b.view.copy())
+                .on(keyPressed(C,      SHORTCUT_DOWN)).act((b, e) -> b.view.copy())
+                .on(keyPressed(INSERT, SHORTCUT_DOWN)).act((b, e) -> b.view.copy())
                 .create();
 
         Predicate<KeyEvent> noControlKeys = e ->
@@ -151,7 +150,7 @@ class StyledTextAreaBehavior implements Behavior {
 
         EventHandlerTemplate<StyledTextAreaBehavior, KeyEvent> charPressConsumer = EventHandlerTemplate
                 .<StyledTextAreaBehavior, KeyEvent, KeyEvent>
-                 on(keyPressed()).where(isChar.and(noControlKeys)).act((b, e) -> {})
+                on(keyPressed()).where(isChar.and(noControlKeys)).act((b, e) -> {})
                 .create();
 
         KEY_PRESSED_TEMPLATE = edits.orElse(otherNavigation).ifConsumed((b, e) -> b.clearTargetCaretOffset())
@@ -167,7 +166,7 @@ class StyledTextAreaBehavior implements Behavior {
                 .act(StyledTextAreaBehavior::keyTyped)
 
                 .create()
-                .onlyWhen(b -> b.area.isEditable());
+                .onlyWhen(b -> b.view.isEditable());
 
         MOUSE_PRESSED_TEMPLATE = EventHandlerTemplate
                 .on(MouseEvent.MOUSE_PRESSED)
@@ -208,7 +207,9 @@ class StyledTextAreaBehavior implements Behavior {
      * Fields                                                                 *
      * ********************************************************************** */
 
-    private final StyledTextArea<?, ?> area;
+    private final StyledTextArea<?, ?> view;
+
+    private final StyledTextAreaModel<?, ?> model;
 
     private final Subscription subscription;
 
@@ -227,7 +228,7 @@ class StyledTextAreaBehavior implements Behavior {
     }
     private CaretOffsetX getTargetCaretOffset() {
         if(!targetCaretOffset.isPresent())
-            targetCaretOffset = Optional.of(area.getCaretOffsetX());
+            targetCaretOffset = Optional.of(view.getCaretOffsetX());
         return targetCaretOffset.get();
     }
 
@@ -238,7 +239,8 @@ class StyledTextAreaBehavior implements Behavior {
      * ********************************************************************** */
 
     StyledTextAreaBehavior(StyledTextArea<?, ?> area) {
-        this.area = area;
+        this.view = area;
+        this.model = area.getModel();
 
         EventHandler<? super KeyEvent> keyPressedHandler = KEY_PRESSED_TEMPLATE.bind(this);
         EventHandler<? super KeyEvent> keyTypedHandler = KEY_TYPED_TEMPLATE.bind(this);
@@ -309,7 +311,7 @@ class StyledTextAreaBehavior implements Behavior {
             return;
         }
 
-        area.replaceSelection(text);
+        model.replaceSelection(text);
     }
 
     private static boolean isLegal(String text) {
@@ -323,83 +325,83 @@ class StyledTextAreaBehavior implements Behavior {
     }
 
     private void deleteBackward(KeyEvent ignore) {
-        IndexRange selection = area.getSelection();
+        IndexRange selection = model.getSelection();
         if(selection.getLength() == 0) {
-            area.deletePreviousChar();
+            model.deletePreviousChar();
         } else {
-            area.replaceSelection("");
+            model.replaceSelection("");
         }
     }
 
     private void deleteForward(KeyEvent ignore) {
-        IndexRange selection = area.getSelection();
+        IndexRange selection = model.getSelection();
         if(selection.getLength() == 0) {
-            area.deleteNextChar();
+            model.deleteNextChar();
         } else {
-            area.replaceSelection("");
+            model.replaceSelection("");
         }
     }
 
     private void left(KeyEvent ignore) {
-        IndexRange sel = area.getSelection();
+        IndexRange sel = model.getSelection();
         if(sel.getLength() == 0) {
-            area.previousChar(SelectionPolicy.CLEAR);
+            model.previousChar(SelectionPolicy.CLEAR);
         } else {
-            area.moveTo(sel.getStart(), SelectionPolicy.CLEAR);
+            model.moveTo(sel.getStart(), SelectionPolicy.CLEAR);
         }
     }
 
     private void right(KeyEvent ignore) {
-        IndexRange sel = area.getSelection();
+        IndexRange sel = model.getSelection();
         if(sel.getLength() == 0) {
-            area.nextChar(SelectionPolicy.CLEAR);
+            model.nextChar(SelectionPolicy.CLEAR);
         } else {
-            area.moveTo(sel.getEnd(), SelectionPolicy.CLEAR);
+            model.moveTo(sel.getEnd(), SelectionPolicy.CLEAR);
         }
     }
 
     private void selectLeft(KeyEvent ignore) {
-        area.previousChar(SelectionPolicy.ADJUST);
+        model.previousChar(SelectionPolicy.ADJUST);
     }
 
     private void selectRight(KeyEvent ignore) {
-        area.nextChar(SelectionPolicy.ADJUST);
+        model.nextChar(SelectionPolicy.ADJUST);
     }
 
     private void selectWord() {
-        area.wordBreaksBackwards(1, SelectionPolicy.CLEAR);
-        area.wordBreaksForwards(1, SelectionPolicy.ADJUST);
+        model.wordBreaksBackwards(1, SelectionPolicy.CLEAR);
+        model.wordBreaksForwards(1, SelectionPolicy.ADJUST);
     }
 
     private void deletePrevWord(KeyEvent ignore) {
-        int end = area.getCaretPosition();
+        int end = model.getCaretPosition();
 
         if (end > 0) {
-            area.wordBreaksBackwards(2, SelectionPolicy.CLEAR);
-            int start = area.getCaretPosition();
-            area.replaceText(start, end, "");
+            model.wordBreaksBackwards(2, SelectionPolicy.CLEAR);
+            int start = model.getCaretPosition();
+            model.replaceText(start, end, "");
         }
     }
 
     private void deleteNextWord(KeyEvent ignore) {
-        int start = area.getCaretPosition();
+        int start = model.getCaretPosition();
 
-        if (start < area.getLength()) {
-            area.wordBreaksForwards(2, SelectionPolicy.CLEAR);
-            int end = area.getCaretPosition();
-            area.replaceText(start, end, "");
+        if (start < model.getLength()) {
+            model.wordBreaksForwards(2, SelectionPolicy.CLEAR);
+            int end = model.getCaretPosition();
+            model.replaceText(start, end, "");
         }
     }
 
     private void downLines(SelectionPolicy selectionPolicy, int nLines) {
-        Position currentLine = area.currentLine();
+        Position currentLine = view.currentLine();
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
         if(!currentLine.sameAs(targetLine)) {
             // compute new caret position
-            CharacterHit hit = area.hit(getTargetCaretOffset(), targetLine);
+            CharacterHit hit = view.hit(getTargetCaretOffset(), targetLine);
 
             // update model
-            area.moveTo(hit.getInsertionIndex(), selectionPolicy);
+            model.moveTo(hit.getInsertionIndex(), selectionPolicy);
         }
     }
 
@@ -412,15 +414,15 @@ class StyledTextAreaBehavior implements Behavior {
     }
 
     private void prevPage(SelectionPolicy selectionPolicy) {
-        area.showCaretAtBottom();
-        CharacterHit hit = area.hit(getTargetCaretOffset(), 1.0);
-        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
+        view.showCaretAtBottom();
+        CharacterHit hit = view.hit(getTargetCaretOffset(), 1.0);
+        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     private void nextPage(SelectionPolicy selectionPolicy) {
-        area.showCaretAtTop();
-        CharacterHit hit = area.hit(getTargetCaretOffset(), area.getViewportHeight() - 1.0);
-        area.moveTo(hit.getInsertionIndex(), selectionPolicy);
+        view.showCaretAtTop();
+        CharacterHit hit = view.hit(getTargetCaretOffset(), view.getViewportHeight() - 1.0);
+        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
 
@@ -430,27 +432,27 @@ class StyledTextAreaBehavior implements Behavior {
 
     private void mousePressed(MouseEvent e) {
         // don't respond if disabled
-        if(area.isDisabled()) {
+        if(view.isDisabled()) {
             return;
         }
 
         if(e.getButton() == MouseButton.PRIMARY) {
             // ensure focus
-            area.requestFocus();
+            view.requestFocus();
 
-            CharacterHit hit = area.hit(e.getX(), e.getY());
+            CharacterHit hit = view.hit(e.getX(), e.getY());
 
             if(e.isShiftDown()) {
                 // On Mac always extend selection,
                 // switching anchor and caret if necessary.
-                area.moveTo(
+                model.moveTo(
                         hit.getInsertionIndex(),
                         isMac ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
             } else {
                 switch (e.getClickCount()) {
                     case 1: firstLeftPress(hit); break;
                     case 2: selectWord(); break;
-                    case 3: area.selectLine(); break;
+                    case 3: model.selectLine(); break;
                     default: // do nothing
                 }
             }
@@ -461,8 +463,8 @@ class StyledTextAreaBehavior implements Behavior {
 
     private void firstLeftPress(CharacterHit hit) {
         clearTargetCaretOffset();
-        IndexRange selection = area.getSelection();
-        if(area.isEditable() &&
+        IndexRange selection = model.getSelection();
+        if(view.isEditable() &&
                 selection.getLength() != 0 &&
                 hit.getCharacterIndex().isPresent() &&
                 hit.getCharacterIndex().getAsInt() >= selection.getStart() &&
@@ -471,7 +473,7 @@ class StyledTextAreaBehavior implements Behavior {
             dragSelection = DragState.POTENTIAL_DRAG;
         } else {
             dragSelection = DragState.NO_DRAG;
-            area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            model.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
         }
     }
 
@@ -484,7 +486,7 @@ class StyledTextAreaBehavior implements Behavior {
 
     private void mouseDragged(MouseEvent e) {
         // don't respond if disabled
-        if(area.isDisabled()) {
+        if(view.isDisabled()) {
             return;
         }
 
@@ -494,7 +496,7 @@ class StyledTextAreaBehavior implements Behavior {
         }
 
         Point2D p = new Point2D(e.getX(), e.getY());
-        if(area.getLayoutBounds().contains(p)) {
+        if(view.getLayoutBounds().contains(p)) {
             dragTo(p);
             autoscrollTo.setValue(null); // stops auto-scroll
         } else {
@@ -505,13 +507,13 @@ class StyledTextAreaBehavior implements Behavior {
     }
 
     private void dragTo(Point2D p) {
-        CharacterHit hit = area.hit(p.getX(), p.getY());
+        CharacterHit hit = view.hit(p.getX(), p.getY());
 
         if(dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
-            area.positionCaret(hit.getInsertionIndex());
+            model.positionCaret(hit.getInsertionIndex());
         } else {
-            area.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+            model.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
     }
 
@@ -520,20 +522,20 @@ class StyledTextAreaBehavior implements Behavior {
         autoscrollTo.setValue(null);
 
         // don't respond if disabled
-        if(area.isDisabled()) {
+        if(view.isDisabled()) {
             return;
         }
 
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // drag didn't happen, position caret
-                CharacterHit hit = area.hit(e.getX(), e.getY());
-                area.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+                CharacterHit hit = view.hit(e.getX(), e.getY());
+                model.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
                 // move selection to the target position
-                CharacterHit h = area.hit(e.getX(), e.getY());
-                area.getOnSelectionDrop().accept(h.getInsertionIndex());
+                CharacterHit h = view.hit(e.getX(), e.getY());
+                view.getOnSelectionDrop().accept(h.getInsertionIndex());
                 // do nothing, handled by mouseDragReleased
             case NO_DRAG:
                 // do nothing, caret already repositioned in mousePressed
