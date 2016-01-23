@@ -154,12 +154,21 @@ public class StyledTextArea<S, PS> extends Region
             = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
 
     // editable property
+    /**
+     * Indicates whether this text area can be edited by the user.
+     * Note that this property doesn't affect editing through the API.
+     */
     private final BooleanProperty editable = new EditableProperty<>(this);
     public final boolean isEditable() { return editable.get(); }
     public final void setEditable(boolean value) { editable.set(value); }
     public final BooleanProperty editableProperty() { return editable; }
 
     // wrapText property
+    /**
+     * When a run of text exceeds the width of the text region,
+     * then this property indicates whether the text should wrap
+     * onto another line.
+     */
     private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
     public final boolean isWrapText() { return wrapText.get(); }
     public final void setWrapText(boolean value) { wrapText.set(value); }
