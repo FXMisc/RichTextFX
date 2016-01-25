@@ -104,12 +104,12 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<S, PS> extends Region
+public class StyledTextArea<PS, S> extends Region
         implements
-        TextEditingArea<S, PS>,
-        EditActions<S, PS>,
-        ClipboardActions<S, PS>,
-        NavigationActions<S, PS>,
+        TextEditingArea<PS, S>,
+        EditActions<PS, S>,
+        ClipboardActions<PS, S>,
+        NavigationActions<PS, S>,
         UndoActions,
         TwoDimensional,
         Virtualized {
@@ -268,16 +268,16 @@ public class StyledTextArea<S, PS> extends Region
     public void setUseInitialStyleForInsertion(boolean value) { model.setUseInitialStyleForInsertion(value); }
     public boolean getUseInitialStyleForInsertion() { return model.getUseInitialStyleForInsertion(); }
 
-    private Optional<Tuple2<Codec<S>, Codec<PS>>> styleCodecs = Optional.empty();
+    private Optional<Tuple2<Codec<PS>, Codec<S>>> styleCodecs = Optional.empty();
     /**
      * Sets codecs to encode/decode style information to/from binary format.
      * Providing codecs enables clipboard actions to retain the style information.
      */
-    public void setStyleCodecs(Codec<S> textStyleCodec, Codec<PS> paragraphStyleCodec) {
-        styleCodecs = Optional.of(t(textStyleCodec, paragraphStyleCodec));
+    public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<S> textStyleCodec) {
+        styleCodecs = Optional.of(t(paragraphStyleCodec, textStyleCodec));
     }
     @Override
-    public Optional<Tuple2<Codec<S>, Codec<PS>>> getStyleCodecs() {
+    public Optional<Tuple2<Codec<PS>, Codec<S>>> getStyleCodecs() {
         return styleCodecs;
     }
 
@@ -317,7 +317,7 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final ObservableValue<String> textProperty() { return model.textProperty(); }
 
     // rich text
-    @Override public final StyledDocument<S, PS> getDocument() { return model.getDocument(); };
+    @Override public final StyledDocument<PS, S> getDocument() { return model.getDocument(); };
 
     // length
     @Override public final int getLength() { return model.getLength(); }
@@ -348,7 +348,7 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final ObservableValue<Integer> caretColumnProperty() { return model.caretColumnProperty(); }
 
     // paragraphs
-    @Override public ObservableList<Paragraph<S, PS>> getParagraphs() { return model.getParagraphs(); }
+    @Override public ObservableList<Paragraph<PS, S>> getParagraphs() { return model.getParagraphs(); }
 
     // beingUpdated
     public ObservableBooleanValue beingUpdatedProperty() { return model.beingUpdatedProperty(); }
@@ -384,7 +384,7 @@ public class StyledTextArea<S, PS> extends Region
     @Override public final EventStream<PlainTextChange> plainTextChanges() { return model.plainTextChanges(); }
 
     // rich text changes
-    @Override public final EventStream<RichTextChange<S, PS>> richChanges() { return model.richChanges(); }
+    @Override public final EventStream<RichTextChange<PS, S>> richChanges() { return model.richChanges(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -400,7 +400,7 @@ public class StyledTextArea<S, PS> extends Region
 
     private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
 
-    private final VirtualFlow<Paragraph<S, PS>, Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> virtualFlow;
+    private final VirtualFlow<Paragraph<PS, S>, Cell<Paragraph<PS, S>, ParagraphBox<PS, S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -411,12 +411,12 @@ public class StyledTextArea<S, PS> extends Region
     /**
      * model
      */
-    private final StyledTextAreaModel<S, PS> model;
+    private final StyledTextAreaModel<PS, S> model;
 
     /**
      * @return this area's {@link StyledTextAreaModel}
      */
-    protected final StyledTextAreaModel<S, PS> getModel() {
+    protected final StyledTextAreaModel<PS, S> getModel() {
         return model;
     }
 
@@ -469,18 +469,18 @@ public class StyledTextArea<S, PS> extends Region
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle
+    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
-        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, true);
+        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle, true);
     }
 
-    public <C> StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-                              PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+    public <C> StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
                               boolean preserveStyle
     ) {
-        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle,
-                new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle), preserveStyle);
+        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle,
+                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
     }
 
     /**
@@ -488,19 +488,19 @@ public class StyledTextArea<S, PS> extends Region
      * this constructor can be used to create another {@code StyledTextArea} object that
      * shares the same {@link EditableStyledDocument}.
      */
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          EditableStyledDocument<S, PS> document
+    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          EditableStyledDocument<PS, S> document
     ) {
-        this(initialStyle, applyStyle, initialParagraphStyle, applyParagraphStyle, document, true);
+        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle, document, true);
 
     }
 
-    public StyledTextArea(S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          EditableStyledDocument<S, PS> document, boolean preserveStyle
+    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
-        this.model = new StyledTextAreaModel<S, PS>(initialStyle, initialParagraphStyle, document, preserveStyle);
+        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialStyle, document, preserveStyle);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
@@ -512,13 +512,13 @@ public class StyledTextArea<S, PS> extends Region
 
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
-        ObservableSet<ParagraphBox<S, PS>> nonEmptyCells = FXCollections.observableSet();
+        ObservableSet<ParagraphBox<PS, S>> nonEmptyCells = FXCollections.observableSet();
 
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 getParagraphs(),
                 par -> {
-                    Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = createCell(
+                    Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = createCell(
                             par,
                             applyStyle,
                             initialParagraphStyle,
@@ -613,13 +613,13 @@ public class StyledTextArea<S, PS> extends Region
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
-        ParagraphBox<S, PS> cell = virtualFlow.getCell(parIdx).getNode();
+        ParagraphBox<PS, S> cell = virtualFlow.getCell(parIdx).getNode();
         CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
         return parHit.offset(getParagraphOffset(parIdx));
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(0.0, y);
+        VirtualFlowHit<Cell<Paragraph<PS, S>, ParagraphBox<PS, S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -627,7 +627,7 @@ public class StyledTextArea<S, PS> extends Region
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+            ParagraphBox<PS, S> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
             CharacterHit parHit = cell.hitText(x, cellOffset.getY());
             return parHit.offset(parOffset);
@@ -651,7 +651,7 @@ public class StyledTextArea<S, PS> extends Region
      * @param y
      */
     public CharacterHit hit(double x, double y) {
-        VirtualFlowHit<Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>> hit = virtualFlow.hit(x, y);
+        VirtualFlowHit<Cell<Paragraph<PS, S>, ParagraphBox<PS, S>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
@@ -659,7 +659,7 @@ public class StyledTextArea<S, PS> extends Region
         } else {
             int parIdx = hit.getCellIndex();
             int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<S, PS> cell = hit.getCell().getNode();
+            ParagraphBox<PS, S> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
             CharacterHit parHit = cell.hit(cellOffset);
             return parHit.offset(parOffset);
@@ -676,7 +676,7 @@ public class StyledTextArea<S, PS> extends Region
      */
     TwoDimensional.Position currentLine() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return _position(parIdx, lineIdx);
     }
@@ -695,17 +695,17 @@ public class StyledTextArea<S, PS> extends Region
         return model.getText(paragraph);
     }
 
-    public Paragraph<S, PS> getParagraph(int index) {
+    public Paragraph<PS, S> getParagraph(int index) {
         return model.getParagraph(index);
     }
 
     @Override
-    public StyledDocument<S, PS> subDocument(int start, int end) {
+    public StyledDocument<PS, S> subDocument(int start, int end) {
         return model.subDocument(start, end);
     }
 
     @Override
-    public StyledDocument<S, PS> subDocument(int paragraphIndex) {
+    public StyledDocument<PS, S> subDocument(int paragraphIndex) {
         return model.subDocument(paragraphIndex);
     }
 
@@ -845,7 +845,7 @@ public class StyledTextArea<S, PS> extends Region
 
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMaxY();
         virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
@@ -853,7 +853,7 @@ public class StyledTextArea<S, PS> extends Region
 
     void showCaretAtTop() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMinY();
         virtualFlow.showAtOffset(parIdx, -y);
@@ -866,7 +866,7 @@ public class StyledTextArea<S, PS> extends Region
 
     private void followCaret() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> cell = virtualFlow.getCell(parIdx);
+        Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
@@ -964,7 +964,7 @@ public class StyledTextArea<S, PS> extends Region
     }
 
     @Override
-    public void replace(int start, int end, StyledDocument<S, PS> replacement) {
+    public void replace(int start, int end, StyledDocument<PS, S> replacement) {
         model.replace(start, end, replacement);
     }
 
@@ -1020,13 +1020,13 @@ public class StyledTextArea<S, PS> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private Cell<Paragraph<S, PS>, ParagraphBox<S, PS>> createCell(
-            Paragraph<S, PS> paragraph,
+    private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
+            Paragraph<PS, S> paragraph,
             BiConsumer<? super TextExt, S> applyStyle,
             PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
-        ParagraphBox<S, PS> box = new ParagraphBox<>(paragraph, applyStyle, applyParagraphStyle);
+        ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, applyStyle);
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
@@ -1058,9 +1058,9 @@ public class StyledTextArea<S, PS> extends Region
         }, selectionProperty(), box.indexProperty());
         box.selectionProperty().bind(cellSelection);
 
-        return new Cell<Paragraph<S, PS>, ParagraphBox<S, PS>>() {
+        return new Cell<Paragraph<PS, S>, ParagraphBox<PS, S>>() {
             @Override
-            public ParagraphBox<S, PS> getNode() {
+            public ParagraphBox<PS, S> getNode() {
                 return box;
             }
 
@@ -1086,11 +1086,11 @@ public class StyledTextArea<S, PS> extends Region
         };
     }
 
-    private ParagraphBox<S, PS> getCell(int index) {
+    private ParagraphBox<PS, S> getCell(int index) {
         return virtualFlow.getCell(index).getNode();
     }
 
-    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<S, PS>> cells, Duration delay) {
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<PS, S>> cells, Duration delay) {
         return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
                 l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
                 r -> MouseOverTextEvent.end())));

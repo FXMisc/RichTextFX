@@ -46,15 +46,15 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final StyledTextArea<TextStyle, ParStyle> area =
-            AreaFactory.<TextStyle, ParStyle>styledTextArea(
-                    TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
-                    ( text, style) -> text.setStyle(style.toCss()),
+    private final StyledTextArea<ParStyle, TextStyle> area =
+            AreaFactory.<ParStyle, TextStyle>styledTextArea(
                     ParStyle.EMPTY,
-                    ( paragraph, style) -> paragraph.setStyle(style.toCss()));
+                    ( paragraph, style) -> paragraph.setStyle(style.toCss()),
+                    TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
+                    ( text, style) -> text.setStyle(style.toCss()));
     {
         area.setWrapText(true);
-        area.setStyleCodecs(TextStyle.CODEC, ParStyle.CODEC);
+        area.setStyleCodecs(ParStyle.CODEC, TextStyle.CODEC);
     }
 
     private final SuspendableNo updatingToolbar = new SuspendableNo();
@@ -150,7 +150,7 @@ public class RichText extends Application {
 
                 int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
                 int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
-                List<Paragraph<TextStyle, ParStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
+                List<Paragraph<ParStyle, TextStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
 
                 @SuppressWarnings("unchecked")
                 Optional<TextAlignment>[] alignments = pars.stream().map(p -> p.getParagraphStyle().alignment).distinct().toArray(Optional[]::new);
@@ -237,7 +237,7 @@ public class RichText extends Application {
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
-        VirtualizedScrollPane<StyledTextArea<TextStyle, ParStyle>> vsPane = new VirtualizedScrollPane<>(area);
+        VirtualizedScrollPane<StyledTextArea<ParStyle, TextStyle>> vsPane = new VirtualizedScrollPane<>(area);
         VBox vbox = new VBox();
         VBox.setVgrow(vsPane, Priority.ALWAYS);
         vbox.getChildren().addAll(panel1, panel2, vsPane);
@@ -331,7 +331,7 @@ public class RichText extends Application {
         int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
         int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
         for(int i = startPar; i <= endPar; ++i) {
-            Paragraph<TextStyle, ParStyle> paragraph = area.getParagraph(i);
+            Paragraph<ParStyle, TextStyle> paragraph = area.getParagraph(i);
             area.setParagraphStyle(i, updater.apply(paragraph.getParagraphStyle()));
         }
     }

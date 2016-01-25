@@ -19,9 +19,9 @@ import org.reactfx.util.Tuple2;
 /**
  * Clipboard actions for {@link TextEditingArea}.
  */
-public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
+public interface ClipboardActions<PS, S> extends EditActions<PS, S> {
 
-    Optional<Tuple2<Codec<S>, Codec<PS>>> getStyleCodecs();
+    Optional<Tuple2<Codec<PS>, Codec<S>>> getStyleCodecs();
 
     /**
      * Transfers the currently selected text to the clipboard,
@@ -45,9 +45,9 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
             content.putString(getSelectedText());
 
             getStyleCodecs().ifPresent(codecs -> {
-                Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
+                Codec<StyledDocument<PS, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
                 DataFormat format = dataFormat(codec.getName());
-                StyledDocument<S, PS> doc = subDocument(selection.getStart(), selection.getEnd());
+                StyledDocument<PS, S> doc = subDocument(selection.getStart(), selection.getEnd());
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(os);
                 try {
@@ -72,14 +72,14 @@ public interface ClipboardActions<S, PS> extends EditActions<S, PS> {
         Clipboard clipboard = Clipboard.getSystemClipboard();
 
         if(getStyleCodecs().isPresent()) {
-            Tuple2<Codec<S>, Codec<PS>> codecs = getStyleCodecs().get();
-            Codec<StyledDocument<S, PS>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
+            Tuple2<Codec<PS>, Codec<S>> codecs = getStyleCodecs().get();
+            Codec<StyledDocument<PS, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
                 byte[] bytes = (byte[]) clipboard.getContent(format);
                 ByteArrayInputStream is = new ByteArrayInputStream(bytes);
                 DataInputStream dis = new DataInputStream(is);
-                StyledDocument<S, PS> doc = null;
+                StyledDocument<PS, S> doc = null;
                 try {
                     doc = codec.decode(dis);
                 } catch (IOException e) {

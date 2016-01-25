@@ -14,7 +14,7 @@ import org.reactfx.EventStream;
  *
  * @param <S> type of style that can be applied to text.
  */
-public interface TextEditingArea<S, PS> {
+public interface TextEditingArea<PS, S> {
 
     /*******************
      *                 *
@@ -39,7 +39,7 @@ public interface TextEditingArea<S, PS> {
      * The returned document is immutable, it does not reflect
      * subsequent edits of this text-editing area.
      */
-    StyledDocument<S, PS> getDocument();
+    StyledDocument<PS, S> getDocument();
 
     /**
      * The current position of the caret, as a character offset in the text.
@@ -90,7 +90,7 @@ public interface TextEditingArea<S, PS> {
     /**
      * Unmodifiable observable list of paragraphs in this text area.
      */
-    ObservableList<Paragraph<S, PS>> getParagraphs();
+    ObservableList<Paragraph<PS, S>> getParagraphs();
 
 
     /*********************
@@ -107,7 +107,7 @@ public interface TextEditingArea<S, PS> {
     /**
      * Stream of rich text changes.
      */
-    EventStream<RichTextChange<S, PS>> richChanges();
+    EventStream<RichTextChange<PS, S>> richChanges();
 
 
     /***************
@@ -129,12 +129,12 @@ public interface TextEditingArea<S, PS> {
     /**
      * Returns rich-text content of the given paragraph.
      */
-    StyledDocument<S, PS> subDocument(int paragraphIndex);
+    StyledDocument<PS, S> subDocument(int paragraphIndex);
 
     /**
      * Returns rich-text content of the given character range.
      */
-    StyledDocument<S, PS> subDocument(int start, int end);
+    StyledDocument<PS, S> subDocument(int start, int end);
 
     /***************
      *             *
@@ -163,7 +163,7 @@ public interface TextEditingArea<S, PS> {
     /**
      * Replaces a range of characters with the given rich-text document.
      */
-    void replace(int start, int end, StyledDocument<S, PS> replacement);
+    void replace(int start, int end, StyledDocument<PS, S> replacement);
 
     /**
      * Replaces a range of characters with the given text.
@@ -182,7 +182,7 @@ public interface TextEditingArea<S, PS> {
      * Equivalent to
      * {@code replace(range.getStart(), range.getEnd(), replacement)}.
      */
-    default void replace(IndexRange range, StyledDocument<S, PS> replacement) {
+    default void replace(IndexRange range, StyledDocument<PS, S> replacement) {
         replace(range.getStart(), range.getEnd(), replacement);
     }
 

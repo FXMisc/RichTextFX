@@ -34,11 +34,11 @@ import org.reactfx.value.Var;
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph
  */
-public class StyledTextAreaModel<S, PS>
+public class StyledTextAreaModel<PS, S>
         implements
-        TextEditingArea<S, PS>,
-        EditActions<S, PS>,
-        NavigationActions<S, PS>,
+        TextEditingArea<PS, S>,
+        EditActions<PS, S>,
+        NavigationActions<PS, S>,
         UndoActions,
         TwoDimensional {
 
@@ -105,7 +105,7 @@ public class StyledTextAreaModel<S, PS>
     @Override public final ObservableValue<String> textProperty() { return text; }
 
     // rich text
-    @Override public final StyledDocument<S, PS> getDocument() { return content.snapshot(); };
+    @Override public final StyledDocument<PS, S> getDocument() { return content.snapshot(); };
 
     // length
     private final SuspendableVal<Integer> length;
@@ -145,8 +145,8 @@ public class StyledTextAreaModel<S, PS>
     @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    private final SuspendableList<Paragraph<S, PS>> paragraphs;
-    @Override public ObservableList<Paragraph<S, PS>> getParagraphs() { return paragraphs; }
+    private final SuspendableList<Paragraph<PS, S>> paragraphs;
+    @Override public ObservableList<Paragraph<PS, S>> getParagraphs() { return paragraphs; }
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
@@ -165,9 +165,9 @@ public class StyledTextAreaModel<S, PS>
     public final EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
     // rich text changes
-    private final SuspendableEventStream<RichTextChange<S, PS>> richTextChanges;
+    private final SuspendableEventStream<RichTextChange<PS, S>> richTextChanges;
     @Override
-    public final EventStream<RichTextChange<S, PS>> richChanges() { return richTextChanges; }
+    public final EventStream<RichTextChange<PS, S>> richChanges() { return richTextChanges; }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -183,14 +183,14 @@ public class StyledTextAreaModel<S, PS>
     /**
      * content model
      */
-    private final EditableStyledDocument<S, PS> content;
+    private final EditableStyledDocument<PS, S> content;
 
     /**
      * Usually used to create another area (View) that shares
      * the same document (Model).
      * @return this area's {@link EditableStyledDocument}
      */
-    protected final EditableStyledDocument<S, PS> getContent() { return content; }
+    protected final EditableStyledDocument<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
@@ -229,14 +229,14 @@ public class StyledTextAreaModel<S, PS>
      * @param initialParagraphStyle style to use in places where no other style is
      * specified (yet).
      */
-    public StyledTextAreaModel(S initialStyle, PS initialParagraphStyle) {
-        this(initialStyle, initialParagraphStyle, true);
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle) {
+        this(initialParagraphStyle, initialStyle, true);
     }
 
-    public <C> StyledTextAreaModel(S initialStyle, PS initialParagraphStyle, boolean preserveStyle
+    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialStyle, boolean preserveStyle
     ) {
-        this(initialStyle, initialParagraphStyle,
-                new EditableStyledDocument<S, PS>(initialStyle, initialParagraphStyle), preserveStyle);
+        this(initialParagraphStyle, initialStyle,
+                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
     }
 
     /**
@@ -244,14 +244,14 @@ public class StyledTextAreaModel<S, PS>
      * this constructor can be used to create another {@code StyledTextArea} object that
      * shares the same {@link EditableStyledDocument}.
      */
-    public StyledTextAreaModel(S initialStyle, PS initialParagraphStyle,
-                               EditableStyledDocument<S, PS> document
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+                               EditableStyledDocument<PS, S> document
     ) {
-        this(initialStyle, initialParagraphStyle, document, true);
+        this(initialParagraphStyle, initialStyle, document, true);
     }
 
-    public StyledTextAreaModel(S initialStyle, PS initialParagraphStyle,
-                               EditableStyledDocument<S, PS> document, boolean preserveStyle
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+                               EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
@@ -379,17 +379,17 @@ public class StyledTextAreaModel<S, PS>
         return paragraphs.get(paragraph).getText();
     }
 
-    public Paragraph<S, PS> getParagraph(int index) {
+    public Paragraph<PS, S> getParagraph(int index) {
         return paragraphs.get(index);
     }
 
     @Override
-    public StyledDocument<S, PS> subDocument(int start, int end) {
+    public StyledDocument<PS, S> subDocument(int start, int end) {
         return content.subSequence(start, end);
     }
 
     @Override
-    public StyledDocument<S, PS> subDocument(int paragraphIndex) {
+    public StyledDocument<PS, S> subDocument(int paragraphIndex) {
         return content.subDocument(paragraphIndex);
     }
 
@@ -630,13 +630,13 @@ public class StyledTextAreaModel<S, PS>
 
     @Override
     public void replaceText(int start, int end, String text) {
-        StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, getStyleForInsertionAt(start), getParagraphStyleForInsertionAt(start));
+        StyledDocument<PS, S> doc = ReadOnlyStyledDocument.fromString(
+                text, getParagraphStyleForInsertionAt(start), getStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 
     @Override
-    public void replace(int start, int end, StyledDocument<S, PS> replacement) {
+    public void replace(int start, int end, StyledDocument<PS, S> replacement) {
         try (Guard g = content.beingUpdatedProperty().suspend()) {
             start = clamp(0, start, getLength());
             end = clamp(0, end, getLength());
@@ -714,8 +714,8 @@ public class StyledTextAreaModel<S, PS>
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<S, PS>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<S, PS>, RichTextChange<S, PS>, Optional<RichTextChange<S, PS>>> merge = (change1, change2) -> change1.mergeWith(change2);
+        Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 

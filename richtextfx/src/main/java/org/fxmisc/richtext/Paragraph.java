@@ -11,7 +11,7 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
 
-public final class Paragraph<S, PS> {
+public final class Paragraph<PS, S> {
 
     @SafeVarargs
     private static <T> List<T> list(T head, T... tail) {
@@ -75,7 +75,7 @@ public final class Paragraph<S, PS> {
         return getText().substring(from);
     }
 
-    public Paragraph<S, PS> concat(Paragraph<S, PS> p) {
+    public Paragraph<PS, S> concat(Paragraph<PS, S> p) {
         if(p.length() == 0) {
             return this;
         }
@@ -101,7 +101,7 @@ public final class Paragraph<S, PS> {
         }
     }
 
-    public Paragraph<S, PS> append(String str) {
+    public Paragraph<PS, S> append(String str) {
         if(str.length() == 0) {
             return this;
         }
@@ -112,7 +112,7 @@ public final class Paragraph<S, PS> {
         return new Paragraph<>(paragraphStyle, segs);
     }
 
-    public Paragraph<S, PS> insert(int offset, CharSequence str) {
+    public Paragraph<PS, S> insert(int offset, CharSequence str) {
         if(offset < 0 || offset > length()) {
             throw new IndexOutOfBoundsException(String.valueOf(offset));
         }
@@ -127,11 +127,11 @@ public final class Paragraph<S, PS> {
         return new Paragraph<>(paragraphStyle, segs);
     }
 
-    public Paragraph<S, PS> subSequence(int start, int end) {
+    public Paragraph<PS, S> subSequence(int start, int end) {
         return trim(end).subSequence(start);
     }
 
-    public Paragraph<S, PS> trim(int length) {
+    public Paragraph<PS, S> trim(int length) {
         if(length >= length()) {
             return this;
         } else {
@@ -144,7 +144,7 @@ public final class Paragraph<S, PS> {
         }
     }
 
-    public Paragraph<S, PS> subSequence(int start) {
+    public Paragraph<PS, S> subSequence(int start) {
         if(start < 0) {
             throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
         } else if(start == 0) {
@@ -161,34 +161,34 @@ public final class Paragraph<S, PS> {
         }
     }
 
-    public Paragraph<S, PS> delete(int start, int end) {
+    public Paragraph<PS, S> delete(int start, int end) {
         return trim(start).concat(subSequence(end));
     }
 
-    public Paragraph<S, PS> restyle(S style) {
+    public Paragraph<PS, S> restyle(S style) {
         return new Paragraph<>(paragraphStyle, getText(), style);
     }
 
-    public Paragraph<S, PS> restyle(int from, int to, S style) {
+    public Paragraph<PS, S> restyle(int from, int to, S style) {
         if(from >= length()) {
             return this;
         } else {
             to = Math.min(to, length());
-            Paragraph<S, PS> left = subSequence(0, from);
-            Paragraph<S, PS> middle = new Paragraph<>(paragraphStyle, substring(from, to), style);
-            Paragraph<S, PS> right = subSequence(to);
+            Paragraph<PS, S> left = subSequence(0, from);
+            Paragraph<PS, S> middle = new Paragraph<>(paragraphStyle, substring(from, to), style);
+            Paragraph<PS, S> right = subSequence(to);
             return left.concat(middle).concat(right);
         }
     }
 
-    public Paragraph<S, PS> restyle(int from, StyleSpans<? extends S> styleSpans) {
+    public Paragraph<PS, S> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         if(styleSpans.equals(getStyleSpans(from, from + len))) {
             return this;
         }
 
-        Paragraph<S, PS> left = trim(from);
-        Paragraph<S, PS> right = subSequence(from + len);
+        Paragraph<PS, S> left = trim(from);
+        Paragraph<PS, S> right = subSequence(from + len);
 
         String middleString = substring(from, from + len);
         List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
@@ -199,12 +199,12 @@ public final class Paragraph<S, PS> {
             middleSegs.add(new StyledText<>(text, span.getStyle()));
             offset = end;
         }
-        Paragraph<S, PS> middle = new Paragraph<>(paragraphStyle, middleSegs);
+        Paragraph<PS, S> middle = new Paragraph<>(paragraphStyle, middleSegs);
 
         return left.concat(middle).concat(right);
     }
 
-    public Paragraph<S, PS> setParagraphStyle(PS paragraphStyle) {
+    public Paragraph<PS, S> setParagraphStyle(PS paragraphStyle) {
         return new Paragraph<>(paragraphStyle, segments);
     }
 
