@@ -119,15 +119,6 @@ public class StyledTextArea<S, PS> extends Region
      */
     public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
-    /**
-     * Private helper method.
-     */
-    private static int clamp(int min, int val, int max) {
-        return val < min ? min
-             : val > max ? max
-             : val;
-    }
-
 
     /* ********************************************************************** *
      *                                                                        *

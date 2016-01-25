@@ -6,7 +6,6 @@ import javafx.css.PseudoClass;
 import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.scene.control.Control;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;

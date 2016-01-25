@@ -1,6 +1,5 @@
 package org.fxmisc.richtext;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
