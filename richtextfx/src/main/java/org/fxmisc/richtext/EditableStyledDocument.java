@@ -10,8 +10,6 @@ import java.util.List;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -137,35 +135,18 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     /* ********************************************************************** *
      *                                                                        *
-     * Properties                                                             *
-     *                                                                        *
-     * ********************************************************************** */
-
-    final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
-
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Fields                                                                 *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private final S initialStyle;
-
-    private final PS initialParagraphStyle;
-
-
-    /* ********************************************************************** *
-     *                                                                        *
      * Constructors                                                           *
      *                                                                        *
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
+    EditableStyledDocument(Paragraph<S, PS> initialParagraph) {
+        super(FXCollections.observableArrayList(initialParagraph));
+
+    }
+
     EditableStyledDocument(S initialStyle, PS initialParagraphStyle) {
-        super(FXCollections.observableArrayList(new Paragraph<>(initialParagraphStyle, "", initialStyle)));
-        this.initialStyle = initialStyle;
-        this.initialParagraphStyle = initialParagraphStyle;
+        this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 
 
@@ -178,9 +159,13 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      *                                                                        *
      * ********************************************************************** */
 
+    /**
+     * The style of the inserted text will be the style at position
+     * {@code start} in the current document.
+     */
     public void replaceText(int start, int end, String text) {
         StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, getStyleForInsertionAt(start), getParagraphStyleForInsertionAt(start));
+                text, getStyleAtPosition(start), getParagraphStyleAtPosition(start));
         replace(start, end, doc);
     }
 
@@ -456,32 +441,6 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             paragraphs.addAll(startIdx, pars);
         } else {
             paragraphs.setAll(pars);
-        }
-    }
-
-    S getStyleForInsertionAt(int pos) {
-        return getStyleForInsertionAt(navigator.offsetToPosition(pos, Forward));
-    }
-
-    S getStyleForInsertionAt(Position insertionPos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialStyle;
-        } else {
-            Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
-            return par.getStyleAtPosition(insertionPos.getMinor());
-        }
-    }
-
-    PS getParagraphStyleForInsertionAt(int pos) {
-        return getParagraphStyleForInsertionAt(navigator.offsetToPosition(pos, Forward));
-    }
-
-    PS getParagraphStyleForInsertionAt(Position insertionPos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialParagraphStyle;
-        } else {
-            Paragraph<S, PS> par = paragraphs.get(insertionPos.getMajor());
-            return par.getParagraphStyle();
         }
     }
 }

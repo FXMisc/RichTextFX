@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -83,9 +84,10 @@ public class StyledTextAreaModel<S, PS>
      * inserted into this text area. When {@code false}, the style immediately
      * preceding the insertion position is used. Default value is {@code false}.
      */
-    public BooleanProperty useInitialStyleForInsertionProperty() { return content.useInitialStyleForInsertion; }
-    public void setUseInitialStyleForInsertion(boolean value) { content.useInitialStyleForInsertion.set(value); }
-    public boolean getUseInitialStyleForInsertion() { return content.useInitialStyleForInsertion.get(); }
+    final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
+    public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
+    public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
+    public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -629,7 +631,7 @@ public class StyledTextAreaModel<S, PS>
     @Override
     public void replaceText(int start, int end, String text) {
         StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, content.getStyleForInsertionAt(start), content.getParagraphStyleForInsertionAt(start));
+                text, getStyleForInsertionAt(start), getParagraphStyleForInsertionAt(start));
         replace(start, end, doc);
     }
 
@@ -680,6 +682,22 @@ public class StyledTextAreaModel<S, PS>
      * Private methods                                                        *
      *                                                                        *
      * ********************************************************************** */
+
+    private S getStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialStyle;
+        } else {
+            return content.getStyleAtPosition(pos);
+        }
+    }
+
+    private PS getParagraphStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialParagraphStyle;
+        } else {
+            return content.getParagraphStyleAtPosition(pos);
+        }
+    }
 
     private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
         manageSubscription(src.subscribe(consumer));
