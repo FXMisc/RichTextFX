@@ -76,12 +76,12 @@ public final class Paragraph<S, PS> {
     }
 
     public Paragraph<S, PS> concat(Paragraph<S, PS> p) {
-        if(length() == 0) {
-            return p;
-        }
-
         if(p.length() == 0) {
             return this;
+        }
+
+        if(length() == 0) {
+            return p;
         }
 
         StyledText<S> left = segments.get(segments.size() - 1);
