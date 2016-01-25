@@ -7,6 +7,16 @@ public class RichTextChange<S, PS> extends TextChange<StyledDocument<S, PS>, Ric
     }
 
     @Override
+    protected int removedLength() {
+        return removed.length();
+    }
+
+    @Override
+    protected int insertedLength() {
+        return inserted.length();
+    }
+
+    @Override
     protected final StyledDocument<S, PS> concat(StyledDocument<S, PS> a, StyledDocument<S, PS> b) {
         return a.concat(b);
     }

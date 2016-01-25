@@ -11,7 +11,7 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.TwoDimensional.Position;
 
-public final class Paragraph<S, PS> implements CharSequence {
+public final class Paragraph<S, PS> {
 
     @SafeVarargs
     private static <T> List<T> list(T head, T... tail) {
@@ -55,7 +55,6 @@ public final class Paragraph<S, PS> implements CharSequence {
     }
 
     private int length = -1;
-    @Override
     public int length() {
         if(length == -1) {
             length = segments.stream().mapToInt(StyledText::length).sum();
@@ -63,18 +62,17 @@ public final class Paragraph<S, PS> implements CharSequence {
         return length;
     }
 
-    @Override
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
         return segments.get(pos.getMajor()).charAt(pos.getMinor());
     }
 
     public String substring(int from, int to) {
-        return toString().substring(from, Math.min(to, length()));
+        return getText().substring(from, Math.min(to, length()));
     }
 
     public String substring(int from) {
-        return toString().substring(from);
+        return getText().substring(from);
     }
 
     public Paragraph<S, PS> concat(Paragraph<S, PS> p) {
@@ -89,7 +87,7 @@ public final class Paragraph<S, PS> implements CharSequence {
         StyledText<S> left = segments.get(segments.size() - 1);
         StyledText<S> right = p.segments.get(0);
         if(Objects.equals(left.getStyle(), right.getStyle())) {
-            StyledText<S> segment = left.concat(right);
+            StyledText<S> segment = left.append(right.getText());
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
@@ -103,14 +101,14 @@ public final class Paragraph<S, PS> implements CharSequence {
         }
     }
 
-    public Paragraph<S, PS> concat(CharSequence str) {
+    public Paragraph<S, PS> append(String str) {
         if(str.length() == 0) {
             return this;
         }
 
         List<StyledText<S>> segs = new ArrayList<>(segments);
         int lastIdx = segments.size() - 1;
-        segs.set(lastIdx, segments.get(lastIdx).concat(str));
+        segs.set(lastIdx, segments.get(lastIdx).append(str));
         return new Paragraph<>(paragraphStyle, segs);
     }
 
@@ -129,7 +127,6 @@ public final class Paragraph<S, PS> implements CharSequence {
         return new Paragraph<>(paragraphStyle, segs);
     }
 
-    @Override
     public Paragraph<S, PS> subSequence(int start, int end) {
         return trim(end).subSequence(start);
     }
@@ -169,7 +166,7 @@ public final class Paragraph<S, PS> implements CharSequence {
     }
 
     public Paragraph<S, PS> restyle(S style) {
-        return new Paragraph<>(paragraphStyle, toString(), style);
+        return new Paragraph<>(paragraphStyle, getText(), style);
     }
 
     public Paragraph<S, PS> restyle(int from, int to, S style) {
@@ -298,18 +295,26 @@ public final class Paragraph<S, PS> implements CharSequence {
 
     private String text = null;
     /**
-     * Returns the string content of this paragraph,
-     * excluding the line terminator.
+     * Returns the plain text content of this paragraph,
+     * not including the line terminator.
      */
-    @Override
-    public String toString() {
+    public String getText() {
         if(text == null) {
             StringBuilder sb = new StringBuilder(length());
             for(StyledText<S> seg: segments)
-                sb.append(seg);
+                sb.append(seg.getText());
             text = sb.toString();
         }
         return text;
+    }
+
+    @Override
+    public String toString() {
+        return
+                "Par[" +
+                segments.stream().map(StyledText::toString)
+                        .reduce((s1, s2) -> s1 + "," + s2).orElse("") +
+                "]";
     }
 
     @Override

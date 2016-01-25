@@ -50,17 +50,20 @@ implements StyledDocument<S, PS> {
     public String getText(int start, int end) {
         return sub(
                 start, end,
-                Paragraph::toString,
+                Paragraph::getText,
                 Paragraph::substring,
                 pars -> String.join("\n", pars));
     }
 
     @Override
     public String toString() {
-        return getText();
+        return paragraphs
+                .stream()
+                .map(Paragraph::toString)
+                .reduce((p1, p2) -> p1 + "\n" + p2)
+                .orElse("");
     }
 
-    @Override
     public char charAt(int index) {
         Position pos = offsetToPosition(index, Forward);
         return paragraphs.get(pos.getMajor()).charAt(pos.getMinor());

@@ -95,7 +95,7 @@ class ParagraphText<S, PS> extends TextFlowExt {
 
         // populate with text nodes
         for(StyledText<S> segment: par.getSegments()) {
-            TextExt t = new TextExt(segment.toString());
+            TextExt t = new TextExt(segment.getText());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
             applyStyle.accept(t, segment.getStyle());

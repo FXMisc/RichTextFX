@@ -3,7 +3,7 @@ package org.fxmisc.richtext;
 import java.util.Objects;
 import java.util.Optional;
 
-public abstract class TextChange<S extends CharSequence, Self extends TextChange<S, Self>> {
+public abstract class TextChange<S, Self extends TextChange<S, Self>> {
 
     protected final int position;
     protected final S removed;
@@ -20,6 +20,8 @@ public abstract class TextChange<S extends CharSequence, Self extends TextChange
     public S getInserted() { return inserted; }
     public Self invert() { return create(position, inserted, removed); }
 
+    protected abstract int removedLength();
+    protected abstract int insertedLength();
     protected abstract S concat(S a, S b);
     protected abstract S sub(S s, int from, int to);
     protected abstract Self create(int position, S removed, S inserted);
@@ -38,12 +40,12 @@ public abstract class TextChange<S extends CharSequence, Self extends TextChange
      * {@code null} otherwise.
      */
     public Optional<Self> mergeWith(Self latter) {
-        if(latter.position == this.position + this.inserted.length()) {
+        if(latter.position == this.position + this.insertedLength()) {
             S removedText = concat(this.removed, latter.removed);
             S addedText = concat(this.inserted, latter.inserted);
             return Optional.of(create(this.position, removedText, addedText));
         }
-        else if(latter.position + latter.removed.length() == this.position + this.inserted.length()) {
+        else if(latter.position + latter.removedLength() == this.position + this.insertedLength()) {
             if(this.position <= latter.position) {
                 S addedText = concat(sub(this.inserted, 0, latter.position - this.position), latter.inserted);
                 return Optional.of(create(this.position, this.removed, addedText));

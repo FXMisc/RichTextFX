@@ -8,6 +8,16 @@ public class PlainTextChange extends TextChange<String, PlainTextChange> {
     }
 
     @Override
+    protected int removedLength() {
+        return removed.length();
+    }
+
+    @Override
+    protected int insertedLength() {
+        return inserted.length();
+    }
+
+    @Override
     protected final String concat(String a, String b) {
         return a + b;
     }

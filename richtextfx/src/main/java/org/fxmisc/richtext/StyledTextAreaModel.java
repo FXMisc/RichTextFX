@@ -374,7 +374,7 @@ public class StyledTextAreaModel<S, PS>
 
     @Override
     public String getText(int paragraph) {
-        return paragraphs.get(paragraph).toString();
+        return paragraphs.get(paragraph).getText();
     }
 
     public Paragraph<S, PS> getParagraph(int index) {

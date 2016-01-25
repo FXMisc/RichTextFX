@@ -98,7 +98,7 @@ public class ReadOnlyStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Lis
 
             @Override
             public void encode(DataOutputStream os, StyledText<S> t) throws IOException {
-                STRING_CODEC.encode(os, t.toString());
+                STRING_CODEC.encode(os, t.getText());
                 styleCodec.encode(os, t.getStyle());
             }
 

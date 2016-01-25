@@ -2,8 +2,7 @@ package org.fxmisc.richtext;
 
 import java.util.Objects;
 
-
-public class StyledText<S> implements CharSequence {
+public class StyledText<S> {
     private final String text;
     private S style;
 
@@ -12,22 +11,18 @@ public class StyledText<S> implements CharSequence {
         this.style = style;
     }
 
-    @Override
     public int length() {
         return text.length();
     }
 
-    @Override
     public char charAt(int index) {
         return text.charAt(index);
     }
 
-    @Override
-    public String toString() {
+    public String getText() {
         return text;
     }
 
-    @Override
     public StyledText<S> subSequence(int start, int end) {
         return new StyledText<S>(text.substring(start, end), style);
     }
@@ -36,7 +31,7 @@ public class StyledText<S> implements CharSequence {
         return new StyledText<S>(text.substring(start), style);
     }
 
-    public StyledText<S> concat(CharSequence str) {
+    public StyledText<S> append(String str) {
         return new StyledText<S>(text + str, style);
     }
 
@@ -52,6 +47,11 @@ public class StyledText<S> implements CharSequence {
 
     public void setStyle(S style) {
         this.style = style;
+    }
+
+    @Override
+    public String toString() {
+        return '"' + text + '"' + ":" + style;
     }
 
     @Override

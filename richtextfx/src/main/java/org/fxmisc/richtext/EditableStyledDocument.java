@@ -217,7 +217,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         });
 
         // complete the change events
-        insertedText.push(replacement.toString());
+        insertedText.push(replacement.getText());
         StyledDocument<S, PS> doc =
                 replacement instanceof ReadOnlyStyledDocument
                 ? replacement
