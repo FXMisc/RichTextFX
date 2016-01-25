@@ -1,12 +1,11 @@
 package org.fxmisc.richtext;
 
 import static org.junit.Assert.*;
-import javafx.embed.swing.JFXPanel;
-
-import org.junit.Test;
 
 import java.util.Collection;
 import java.util.Collections;
+
+import org.junit.Test;
 
 public class StyledTextAreaModelTest {
 
@@ -26,6 +25,27 @@ public class StyledTextAreaModelTest {
 
         model.undo();
         assertEquals("abc\ndef", model.getText());
+    }
+
+    @Test
+    public void testForBug216() {
+        // set up area with some styled text content
+        boolean initialStyle = false;
+        StyledTextAreaModel<Boolean, String> model = new StyledTextAreaModel<>(
+                initialStyle, "", new EditableStyledDocument<>(initialStyle, ""), true);
+        model.replaceText("testtest");
+        model.setStyle(0, 8, true);
+
+        // add a space styled by initialStyle
+        model.setUseInitialStyleForInsertion(true);
+        model.insertText(4, " ");
+
+        // add another space
+        model.insertText(5, " ");
+
+        // testing that undo/redo don't throw an exception
+        model.undo();
+        model.redo();
     }
 
 }
