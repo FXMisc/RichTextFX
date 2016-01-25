@@ -12,9 +12,9 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
 
     public StyleClassedTextArea(EditableStyledDocument<Collection<String>, Collection<String>> document, boolean preserveStyle) {
         super(Collections.<String>emptyList(),
-                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
-                Collections.<String>emptyList(),
                 (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
+                Collections.<String>emptyList(),
+                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
                 document, preserveStyle
         );
 

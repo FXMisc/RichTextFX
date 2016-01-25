@@ -30,7 +30,7 @@ import org.reactfx.value.Var;
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, ObservableList<Paragraph<S, PS>>> {
+final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -63,14 +63,14 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      * Unmodifiable observable list of styled paragraphs of this document.
      */
     @Override
-    public ObservableList<Paragraph<S, PS>> getParagraphs() {
+    public ObservableList<Paragraph<PS, S>> getParagraphs() {
         return FXCollections.unmodifiableObservableList(paragraphs);
     }
 
     /**
      * Read-only snapshot of the current state of this document.
      */
-    public ReadOnlyStyledDocument<S, PS> snapshot() {
+    public ReadOnlyStyledDocument<PS, S> snapshot() {
         return new ReadOnlyStyledDocument<>(paragraphs, ParagraphsPolicy.COPY);
     }
 
@@ -104,22 +104,22 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     private final EventSource<String> insertedText = new EventSource<>();
 
-    private final EventSource<StyledDocument<S, PS>> insertedDocument = new EventSource<>();
+    private final EventSource<StyledDocument<PS, S>> insertedDocument = new EventSource<>();
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
     private final EventStream<PlainTextChange> plainTextChanges;
     public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
 
-    private final EventStream<RichTextChange<S, PS>> richChanges;
-    public EventStream<RichTextChange<S, PS>> richChanges() { return richChanges; }
+    private final EventStream<RichTextChange<PS, S>> richChanges;
+    public EventStream<RichTextChange<PS, S>> richChanges() { return richChanges; }
 
     {
         EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).map(t2 -> t2.map((a, b) -> getText(a, b)));
         EventStream<Integer> changePosition = EventStreams.merge(textChangePosition, styleChangePosition);
         EventStream<Integer> removalEnd = EventStreams.merge(textRemovalEnd, styleChangeEnd);
-        EventStream<StyledDocument<S, PS>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b)));
+        EventStream<StyledDocument<PS, S>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b)));
         EventStream<Integer> insertionEnd = styleChangeEnd.emitOn(styleChangeDone);
-        EventStream<StyledDocument<S, PS>> insertedDocument = EventStreams.merge(
+        EventStream<StyledDocument<PS, S>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b))));
 
@@ -140,12 +140,12 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
-    EditableStyledDocument(Paragraph<S, PS> initialParagraph) {
+    EditableStyledDocument(Paragraph<PS, S> initialParagraph) {
         super(FXCollections.observableArrayList(initialParagraph));
 
     }
 
-    EditableStyledDocument(S initialStyle, PS initialParagraphStyle) {
+    EditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
         this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 
@@ -164,12 +164,12 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
      * {@code start} in the current document.
      */
     public void replaceText(int start, int end, String text) {
-        StyledDocument<S, PS> doc = ReadOnlyStyledDocument.fromString(
-                text, getStyleAtPosition(start), getParagraphStyleAtPosition(start));
+        StyledDocument<PS, S> doc = ReadOnlyStyledDocument.fromString(
+                text, getParagraphStyleAtPosition(start), getStyleAtPosition(start));
         replace(start, end, doc);
     }
 
-    public void replace(int start, int end, StyledDocument<S, PS> replacement) {
+    public void replace(int start, int end, StyledDocument<PS, S> replacement) {
         ensureValidRange(start, end);
 
         textChangePosition.push(start);
@@ -183,12 +183,12 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         int lastParTo = end2D.getMinor();
 
         // Get the leftovers after cutting out the deletion
-        Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
-        Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
+        Paragraph<PS, S> firstPar = paragraphs.get(firstParIdx).trim(firstParFrom);
+        Paragraph<PS, S> lastPar = paragraphs.get(lastParIdx).subSequence(lastParTo);
 
-        List<Paragraph<S, PS>> replacementPars = replacement.getParagraphs();
+        List<Paragraph<PS, S>> replacementPars = replacement.getParagraphs();
 
-        List<Paragraph<S, PS>> newPars = join(firstPar, replacementPars, lastPar);
+        List<Paragraph<PS, S>> newPars = join(firstPar, replacementPars, lastPar);
         setAll(firstParIdx, lastParIdx + 1, newPars);
 
         // update length, invalidate text
@@ -203,7 +203,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
         // complete the change events
         insertedText.push(replacement.getText());
-        StyledDocument<S, PS> doc =
+        StyledDocument<PS, S> doc =
                 replacement instanceof ReadOnlyStyledDocument
                 ? replacement
                 : new ReadOnlyStyledDocument<>(replacement.getParagraphs(), COPY);
@@ -224,22 +224,22 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             int lastParTo = end.getMinor();
 
             if(firstParIdx == lastParIdx) {
-                Paragraph<S, PS> p = paragraphs.get(firstParIdx);
+                Paragraph<PS, S> p = paragraphs.get(firstParIdx);
                 p = p.restyle(firstParFrom, lastParTo, style);
                 paragraphs.set(firstParIdx, p);
             } else {
                 int affectedPars = lastParIdx - firstParIdx + 1;
-                List<Paragraph<S, PS>> restyledPars = new ArrayList<>(affectedPars);
+                List<Paragraph<PS, S>> restyledPars = new ArrayList<>(affectedPars);
 
-                Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx);
+                Paragraph<PS, S> firstPar = paragraphs.get(firstParIdx);
                 restyledPars.add(firstPar.restyle(firstParFrom, firstPar.length(), style));
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
-                    Paragraph<S, PS> p = paragraphs.get(i);
+                    Paragraph<PS, S> p = paragraphs.get(i);
                     restyledPars.add(p.restyle(style));
                 }
 
-                Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx);
+                Paragraph<PS, S> lastPar = paragraphs.get(lastParIdx);
                 restyledPars.add(lastPar.restyle(0, lastParTo, style));
 
                 setAll(firstParIdx, lastParIdx + 1, restyledPars);
@@ -248,7 +248,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     }
 
     public void setStyle(int paragraph, S style) {
-        Paragraph<S, PS> p = paragraphs.get(paragraph);
+        Paragraph<PS, S> p = paragraphs.get(paragraph);
         int start = position(paragraph, 0).toOffset();
         int end = start + p.length();
 
@@ -265,7 +265,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         int end = parOffset + toCol;
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
-            Paragraph<S, PS> p = paragraphs.get(paragraph);
+            Paragraph<PS, S> p = paragraphs.get(paragraph);
             p = p.restyle(fromCol, toCol, style);
             paragraphs.set(paragraph, p);
         }
@@ -296,23 +296,23 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
             int lastParTo = end.getMinor();
 
             if(firstParIdx == lastParIdx) {
-                Paragraph<S, PS> p = paragraphs.get(firstParIdx);
-                Paragraph<S, PS> q = p.restyle(firstParFrom, styleSpans);
+                Paragraph<PS, S> p = paragraphs.get(firstParIdx);
+                Paragraph<PS, S> q = p.restyle(firstParFrom, styleSpans);
                 if(q != p) {
                     paragraphs.set(firstParIdx, q);
                 }
             } else {
-                Paragraph<S, PS> firstPar = paragraphs.get(firstParIdx);
+                Paragraph<PS, S> firstPar = paragraphs.get(firstParIdx);
                 Position spansFrom = styleSpans.position(0, 0);
                 Position spansTo = spansFrom.offsetBy(firstPar.length() - firstParFrom, Backward);
-                Paragraph<S, PS> q = firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo));
+                Paragraph<PS, S> q = firstPar.restyle(firstParFrom, styleSpans.subView(spansFrom, spansTo));
                 if(q != firstPar) {
                     paragraphs.set(firstParIdx, q);
                 }
                 spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
 
                 for(int i = firstParIdx + 1; i < lastParIdx; ++i) {
-                    Paragraph<S, PS> par = paragraphs.get(i);
+                    Paragraph<PS, S> par = paragraphs.get(i);
                     spansTo = spansFrom.offsetBy(par.length(), Backward);
                     q = par.restyle(0, styleSpans.subView(spansFrom, spansTo));
                     if(q != par) {
@@ -321,7 +321,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
                     spansFrom = spansTo.offsetBy(1, Forward); // skip the newline
                 }
 
-                Paragraph<S, PS> lastPar = paragraphs.get(lastParIdx);
+                Paragraph<PS, S> lastPar = paragraphs.get(lastParIdx);
                 spansTo = spansFrom.offsetBy(lastParTo, Backward);
                 q = lastPar.restyle(0, styleSpans.subView(spansFrom, spansTo));
                 if(q != lastPar) {
@@ -339,8 +339,8 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         int end = start + len;
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
-            Paragraph<S, PS> p = paragraphs.get(paragraph);
-            Paragraph<S, PS> q = p.restyle(from, styleSpans);
+            Paragraph<PS, S> p = paragraphs.get(paragraph);
+            Paragraph<PS, S> q = p.restyle(from, styleSpans);
             if(q != p) {
                 paragraphs.set(paragraph, q);
             }
@@ -349,13 +349,13 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     public void setParagraphStyle(int parIdx, PS style) {
         ensureValidParagraphIndex(parIdx);
-        Paragraph<S, PS> par = paragraphs.get(parIdx);
+        Paragraph<PS, S> par = paragraphs.get(parIdx);
         int len = par.length();
         int start = position(parIdx, 0).toOffset();
         int end = start + len;
 
         try(Guard commitOnClose = beginStyleChange(start, end)) {
-            Paragraph<S, PS> q = par.setParagraphStyle(style);
+            Paragraph<PS, S> q = par.setParagraphStyle(style);
             paragraphs.set(parIdx, q);
         }
     }
@@ -390,7 +390,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
     }
 
     private int terminatorLengthToSkip(Position pos) {
-        Paragraph<S, PS> par = paragraphs.get(pos.getMajor());
+        Paragraph<PS, S> par = paragraphs.get(pos.getMajor());
         int skipSum = 0;
         while(pos.getMinor() == par.length() && pos.getMajor() < paragraphs.size() - 1) {
             skipSum += 1;
@@ -418,14 +418,14 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
         return () -> styleChangeDone.push(null);
     }
 
-    private List<Paragraph<S, PS>> join(Paragraph<S, PS> first, List<Paragraph<S, PS>> middle, Paragraph<S, PS> last) {
+    private List<Paragraph<PS, S>> join(Paragraph<PS, S> first, List<Paragraph<PS, S>> middle, Paragraph<PS, S> last) {
         int m = middle.size();
         if(m == 0) {
             return Arrays.asList(first.concat(last));
         } else if(m == 1) {
             return Arrays.asList(first.concat(middle.get(0)).concat(last));
         } else {
-            List<Paragraph<S, PS>> res = new ArrayList<>(middle.size());
+            List<Paragraph<PS, S>> res = new ArrayList<>(middle.size());
             res.add(first.concat(middle.get(0)));
             res.addAll(middle.subList(1, m - 1));
             res.add(middle.get(m-1).concat(last));
@@ -435,7 +435,7 @@ final class EditableStyledDocument<S, PS> extends StyledDocumentBase<S, PS, Obse
 
     // TODO: Replace with ObservableList.setAll(from, to, col) when implemented.
     // See https://javafx-jira.kenai.com/browse/RT-32655.
-    private void setAll(int startIdx, int endIdx, Collection<Paragraph<S, PS>> pars) {
+    private void setAll(int startIdx, int endIdx, Collection<Paragraph<PS, S>> pars) {
         if(startIdx > 0 || endIdx < paragraphs.size()) {
             paragraphs.subList(startIdx, endIdx).clear(); // note that paragraphs remains non-empty at all times
             paragraphs.addAll(startIdx, pars);

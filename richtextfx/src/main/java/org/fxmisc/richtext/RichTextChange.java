@@ -1,8 +1,8 @@
 package org.fxmisc.richtext;
 
-public class RichTextChange<S, PS> extends TextChange<StyledDocument<S, PS>, RichTextChange<S, PS>> {
+public class RichTextChange<PS, S> extends TextChange<StyledDocument<PS, S>, RichTextChange<PS, S>> {
 
-    public RichTextChange(int position, StyledDocument<S, PS> removed, StyledDocument<S, PS> inserted) {
+    public RichTextChange(int position, StyledDocument<PS, S> removed, StyledDocument<PS, S> inserted) {
         super(position, removed, inserted);
     }
 
@@ -17,17 +17,17 @@ public class RichTextChange<S, PS> extends TextChange<StyledDocument<S, PS>, Ric
     }
 
     @Override
-    protected final StyledDocument<S, PS> concat(StyledDocument<S, PS> a, StyledDocument<S, PS> b) {
+    protected final StyledDocument<PS, S> concat(StyledDocument<PS, S> a, StyledDocument<PS, S> b) {
         return a.concat(b);
     }
 
     @Override
-    protected final StyledDocument<S, PS> sub(StyledDocument<S, PS> doc, int from, int to) {
+    protected final StyledDocument<PS, S> sub(StyledDocument<PS, S> doc, int from, int to) {
         return doc.subSequence(from, to);
     }
 
     @Override
-    protected final RichTextChange<S, PS> create(int position, StyledDocument<S, PS> removed, StyledDocument<S, PS> inserted) {
+    protected final RichTextChange<PS, S> create(int position, StyledDocument<PS, S> removed, StyledDocument<PS, S> inserted) {
         return new RichTextChange<>(position, removed, inserted);
     }
 

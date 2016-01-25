@@ -10,7 +10,7 @@ import java.util.function.Function;
  * @deprecated
  */
 @Deprecated
-public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
+public class InlineStyleTextArea<PS, S> extends StyledTextArea<PS, S> {
 
     /**
      *
@@ -19,11 +19,10 @@ public class InlineStyleTextArea<S, PS> extends StyledTextArea<S, PS> {
      * @param styleToCss function that converts an instance of {@code S}
      *     to a CSS string.
      */
-    public  InlineStyleTextArea(S initialStyle, Function<S, String> styleToCss, PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss) {
-        super(initialStyle,
-                (text, style) -> text.setStyle(styleToCss.apply(style)),
-                initialParagraphStyle,
-                (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)));
+    public InlineStyleTextArea(PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss, S initialStyle, Function<S, String> styleToCss) {
+        super(initialParagraphStyle, (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)),
+                initialStyle, (text, style) -> text.setStyle(styleToCss.apply(style))
+        );
     }
 
 }
