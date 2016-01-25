@@ -7,10 +7,8 @@ import org.fxmisc.undo.UndoManagerFactory;
 
 /**
  * Undo/redo actions for {@link TextEditingArea}.
- *
- * @param <S> type of style that can be applied to text.
  */
-public interface UndoActions<S> {
+public interface UndoActions {
 
     /**
      * Undo manager of this text area.

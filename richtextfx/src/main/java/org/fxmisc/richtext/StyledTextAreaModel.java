@@ -38,7 +38,7 @@ public class StyledTextAreaModel<S, PS>
         TextEditingArea<S, PS>,
         EditActions<S, PS>,
         NavigationActions<S, PS>,
-        UndoActions<S>,
+        UndoActions,
         TwoDimensional {
 
     /**

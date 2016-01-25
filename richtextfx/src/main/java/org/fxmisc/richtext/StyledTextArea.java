@@ -110,7 +110,7 @@ public class StyledTextArea<S, PS> extends Region
         EditActions<S, PS>,
         ClipboardActions<S, PS>,
         NavigationActions<S, PS>,
-        UndoActions<S>,
+        UndoActions,
         TwoDimensional,
         Virtualized {
 
