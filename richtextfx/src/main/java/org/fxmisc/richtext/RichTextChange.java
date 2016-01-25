@@ -30,4 +30,14 @@ public class RichTextChange<S, PS> extends TextChange<StyledDocument<S, PS>, Ric
     protected final RichTextChange<S, PS> create(int position, StyledDocument<S, PS> removed, StyledDocument<S, PS> inserted) {
         return new RichTextChange<>(position, removed, inserted);
     }
+
+    @Override
+    public final String toString() {
+        return
+                "RichTextChange{\n" +
+                "\tposition: " + position + "\n" +
+                "\tremoved: " + removed + "\n" +
+                "\tinserted: " + inserted + "\n" +
+                "}";
+    }
 }
