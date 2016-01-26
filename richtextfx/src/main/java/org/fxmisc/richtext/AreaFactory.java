@@ -61,8 +61,7 @@ public class AreaFactory {
     // Clones StyledTextArea
     public static <PS, S> StyledTextArea<PS, S> cloneStyleTextArea(StyledTextArea<PS, S> area) {
         return new StyledTextArea<>(area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
-                area.getInitialTextStyle(), area.getApplyStyle(),
-                area.getModel().getContent(), area.isPreserveStyle());
+                area.getInitialTextStyle(), area.getApplyStyle(), area.getModel().getContent());
     }
 
     // Embeds cloned StyledTextArea
@@ -105,7 +104,7 @@ public class AreaFactory {
 
     // Clones StyleClassedTextArea
     public static StyleClassedTextArea cloneStyleClassedTextArea(StyleClassedTextArea area) {
-        return new StyleClassedTextArea(area.getModel().getContent(), area.isPreserveStyle());
+        return new StyleClassedTextArea(area.getModel().getContent());
     }
 
     // Embeds cloned StyleClassedTextArea

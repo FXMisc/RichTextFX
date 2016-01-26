@@ -21,7 +21,7 @@ public class CodeArea extends StyleClassedTextArea {
     }
 
     public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document) {
-        super(document, false);
+        super(document);
     }
 
     public CodeArea() {
