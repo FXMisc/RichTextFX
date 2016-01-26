@@ -70,7 +70,7 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     // undo manager
-    private final UndoManagerWrapper undoManagerWrapper;
+    private UndoManagerWrapper undoManagerWrapper;
     protected final UndoManagerWrapper getUndoManagerWrapper() { return undoManagerWrapper; }
     @Override public UndoManager getUndoManager() { return undoManagerWrapper.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
@@ -686,6 +686,7 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     public void dispose() {
+        undoManagerWrapper = null;
         subscriptions.unsubscribe();
     }
 
