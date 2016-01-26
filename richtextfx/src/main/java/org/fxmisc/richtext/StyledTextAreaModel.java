@@ -255,10 +255,10 @@ public class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
-        this(initialParagraphStyle, initialStyle, document, null, preserveStyle);
+        this(initialParagraphStyle, initialTextStyle, document, null, preserveStyle);
     }
 
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document,
                                UndoManagerWrapper undoManagerWrapper, boolean preserveStyle
     ) {
