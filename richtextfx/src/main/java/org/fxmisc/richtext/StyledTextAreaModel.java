@@ -2,8 +2,6 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
-import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import javafx.beans.property.BooleanProperty;
@@ -70,13 +68,9 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     // undo manager
-    private UndoManager undoManager;
-    @Override public UndoManager getUndoManager() { return undoManager; }
+    @Override public UndoManager getUndoManager() { return content.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        undoManager.close();
-        undoManager = preserveStyle
-                ? createRichUndoManager(undoManagerFactory)
-                : createPlainUndoManager(undoManagerFactory);
+        content.setUndoManager(undoManagerFactory);
     }
 
     /**
@@ -204,14 +198,7 @@ public class StyledTextAreaModel<PS, S>
     private final PS initialParagraphStyle;
     protected final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
-    /**
-     * Indicates whether style should be preserved on undo/redo,
-     * copy/paste and text move.
-     * TODO: Currently, only undo/redo respect this flag.
-     */
-    private final boolean preserveStyle;
-    protected final boolean isPreserveStyle() { return preserveStyle; }
-
+    public final boolean isPreserveStyle() { return content.isPreserveStyle(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -234,26 +221,18 @@ public class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle, preserveStyle));
     }
 
     /**
-     * The same as {@link #StyledTextAreaModel(Object, Object)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
+     * This constructor can be used to create another {@code StyledTextArea} object that
      * shares the same {@link EditableStyledDocument}.
      */
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document
     ) {
-        this(initialParagraphStyle, initialTextStyle, document, true);
-    }
-
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocument<PS, S> document, boolean preserveStyle
-    ) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
-        this.preserveStyle = preserveStyle;
 
         content = document;
         paragraphs = LiveList.suspendable(content.getParagraphs());
@@ -312,10 +291,6 @@ public class StyledTextAreaModel<PS, S>
                 }
             }
         });
-
-        undoManager = preserveStyle
-                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
         Val<Position> caretPosition2D = Val.create(
                 () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
@@ -703,18 +678,6 @@ public class StyledTextAreaModel<PS, S>
 
     private void manageSubscription(Subscription subscription) {
         subscriptions = subscriptions.and(subscription);
-    }
-
-    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
-        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
-        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
-    }
-
-    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = RichTextChange<PS, S>::mergeWith;
-        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 
     private Guard suspend(Suspendable... suspendables) {

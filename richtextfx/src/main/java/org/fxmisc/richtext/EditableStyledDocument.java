@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
@@ -15,6 +18,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
+import org.fxmisc.undo.UndoManager;
+import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -135,18 +140,50 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
 
     /* ********************************************************************** *
      *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Indicates whether style should be preserved on undo/redo,
+     * copy/paste and text move.
+     * TODO: Currently, only undo/redo respect this flag.
+     */
+    private final boolean preserveStyle;
+    protected final boolean isPreserveStyle() { return preserveStyle; }
+
+    // undo manager
+    private UndoManager undoManager;
+    public UndoManager getUndoManager() { return undoManager; }
+    public void setUndoManager(UndoManagerFactory undoManagerFactory) {
+        undoManager.close();
+        undoManager = preserveStyle
+                ? createRichUndoManager(undoManagerFactory)
+                : createPlainUndoManager(undoManagerFactory);
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
      * Constructors                                                           *
      *                                                                        *
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
-    EditableStyledDocument(Paragraph<PS, S> initialParagraph) {
+    EditableStyledDocument(Paragraph<PS, S> initialParagraph, boolean preserveStyle) {
         super(FXCollections.observableArrayList(initialParagraph));
+        this.preserveStyle = preserveStyle;
+        undoManager = preserveStyle
+                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+    }
 
+    EditableStyledDocument(PS initialParagraphStyle, S initialStyle, boolean preserveStyle) {
+        this(new Paragraph<>(initialParagraphStyle, "", initialStyle), preserveStyle);
     }
 
     EditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
-        this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
+        this(new Paragraph<>(initialParagraphStyle, "", initialStyle), true);
     }
 
 
@@ -370,6 +407,28 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     private final SuspendableNo beingUpdated = new SuspendableNo();
     SuspendableNo beingUpdatedProperty() { return beingUpdated; }
     final boolean isBeingUpdated() { return beingUpdated.get(); }
+
+    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
+        Consumer<PlainTextChange> apply = change ->
+            // suspend clones' Suspendables
+            beingUpdated.suspendWhile(() ->
+                replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted())
+                // clones' caret position and selection values will be updated via the emitted PlainTextChange
+            );
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
+        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
+    }
+
+    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
+        Consumer<RichTextChange<PS, S>> apply = change ->
+            // suspend clones' Suspendables
+            beingUpdated.suspendWhile(() ->
+                replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted())
+                // clones' caret position and selection values will be updated via the emitted PlainTextChange
+            );
+        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = RichTextChange<PS, S>::mergeWith;
+        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
+    }
 
     private void ensureValidParagraphIndex(int parIdx) {
         Lists.checkIndex(parIdx, paragraphs.size());
