@@ -512,7 +512,7 @@ public class StyledTextArea<PS, S> extends Region
                           EditableStyledDocument<PS, S> document,
                           UndoManagerWrapper wrapper, boolean preserveStyle
     ) {
-        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialStyle, document, wrapper, preserveStyle);
+        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialTextStyle, document, wrapper, preserveStyle);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 

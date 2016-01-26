@@ -31,13 +31,13 @@ public class StyledTextAreaModelTest {
     @Test
     public void testForBug216() {
         // set up area with some styled text content
-        boolean initialStyle = false;
+        boolean initialTextStyle = false;
         StyledTextAreaModel<String, Boolean> model = new StyledTextAreaModel<>(
-                "", initialStyle, new EditableStyledDocument<>("", initialStyle), true);
+                "", initialTextStyle, new EditableStyledDocument<>("", initialTextStyle), true);
         model.replaceText("testtest");
         model.setStyle(0, 8, true);
 
-        // add a space styled by initialStyle
+        // add a space styled by initialTextStyle
         model.setUseInitialStyleForInsertion(true);
         model.insertText(4, " ");
 
@@ -61,7 +61,7 @@ public class StyledTextAreaModelTest {
 
         // create clones of initial model
         StyledTextAreaModel<String, String> clone = new StyledTextAreaModel<>(
-                area.getInitialParagraphStyle(), area.getInitialStyle(),
+                area.getInitialParagraphStyle(), area.getInitialTextStyle(),
                 area.getContent(), area.getUndoManagerWrapper(),
                 area.isPreserveStyle()
         );
@@ -118,7 +118,7 @@ public class StyledTextAreaModelTest {
 
         // create clones of initial model
         StyledTextAreaModel<String, String> clone1 = new StyledTextAreaModel<>(
-                initialModel.getInitialParagraphStyle(), initialModel.getInitialStyle(),
+                initialModel.getInitialParagraphStyle(), initialModel.getInitialTextStyle(),
                 initialModel.getContent(), initialModel.getUndoManagerWrapper(),
                 initialModel.isPreserveStyle()
         );
