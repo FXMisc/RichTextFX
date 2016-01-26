@@ -197,8 +197,8 @@ public class StyledTextAreaModel<PS, S>
     /**
      * Style used by default when no other style is provided.
      */
-    private final S initialStyle;
-    protected final S getInitialStyle() { return initialStyle; }
+    private final S initialTextStyle;
+    protected final S getInitialTextStyle() { return initialTextStyle; }
 
     /**
      * Style used by default when no other style is provided.
@@ -226,19 +226,19 @@ public class StyledTextAreaModel<PS, S>
     /**
      * Creates a text area with empty text content.
      *
-     * @param initialStyle style to use in places where no other style is
+     * @param initialTextStyle style to use in places where no other style is
      * specified (yet).
      * @param initialParagraphStyle style to use in places where no other style is
      * specified (yet).
      */
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle) {
-        this(initialParagraphStyle, initialStyle, true);
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle) {
+        this(initialParagraphStyle, initialTextStyle, true);
     }
 
-    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialStyle, boolean preserveStyle
+    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
-        this(initialParagraphStyle, initialStyle,
-                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
+        this(initialParagraphStyle, initialTextStyle,
+                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
@@ -246,13 +246,13 @@ public class StyledTextAreaModel<PS, S>
      * this constructor can be used to create another {@code StyledTextArea} object that
      * shares the same {@link EditableStyledDocument}.
      */
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document
     ) {
-        this(initialParagraphStyle, initialStyle, document, true);
+        this(initialParagraphStyle, initialTextStyle, document, true);
     }
 
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialStyle, document, null, preserveStyle);
@@ -262,7 +262,7 @@ public class StyledTextAreaModel<PS, S>
                                EditableStyledDocument<PS, S> document,
                                UndoManagerWrapper undoManagerWrapper, boolean preserveStyle
     ) {
-        this.initialStyle = initialStyle;
+        this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
 
@@ -615,14 +615,14 @@ public class StyledTextAreaModel<PS, S>
      * Resets the style of the given range to the initial style.
      */
     public void clearStyle(int from, int to) {
-        setStyle(from, to, initialStyle);
+        setStyle(from, to, initialTextStyle);
     }
 
     /**
      * Resets the style of the given paragraph to the initial style.
      */
     public void clearStyle(int paragraph) {
-        setStyle(paragraph, initialStyle);
+        setStyle(paragraph, initialTextStyle);
     }
 
     /**
@@ -630,7 +630,7 @@ public class StyledTextAreaModel<PS, S>
      * to the initial style.
      */
     public void clearStyle(int paragraph, int from, int to) {
-        setStyle(paragraph, from, to, initialStyle);
+        setStyle(paragraph, from, to, initialTextStyle);
     }
 
     /**
@@ -698,7 +698,7 @@ public class StyledTextAreaModel<PS, S>
 
     private S getStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
-            return initialStyle;
+            return initialTextStyle;
         } else {
             return content.getStyleAtPosition(pos);
         }

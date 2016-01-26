@@ -423,7 +423,7 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * Style used by default when no other style is provided.
      */
-    protected final S getInitialStyle() { return model.getInitialStyle(); }
+    protected final S getInitialTextStyle() { return model.getInitialTextStyle(); }
 
     /**
      * Style used by default when no other style is provided.
@@ -458,7 +458,7 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * Creates a text area with empty text content.
      *
-     * @param initialStyle style to use in places where no other style is
+     * @param initialTextStyle style to use in places where no other style is
      * specified (yet).
      * @param applyStyle function that, given a {@link Text} node and
      * a style, applies the style to the text node. This function is
@@ -470,17 +470,17 @@ public class StyledTextArea<PS, S> extends Region
      * used by the default skin to apply style to paragraph nodes.
      */
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle
+                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle, true);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, true);
     }
 
     public <C> StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                               boolean preserveStyle
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle,
-                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
+                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     public <C> StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
@@ -498,17 +498,17 @@ public class StyledTextArea<PS, S> extends Region
      * shares the same {@link EditableStyledDocument}.
      */
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                           EditableStyledDocument<PS, S> document,
                           UndoManagerWrapper undoManagerWrapper
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle,
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
                 document, undoManagerWrapper, true);
 
     }
 
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                           EditableStyledDocument<PS, S> document,
                           UndoManagerWrapper wrapper, boolean preserveStyle
     ) {

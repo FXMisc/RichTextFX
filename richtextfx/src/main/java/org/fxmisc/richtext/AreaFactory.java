@@ -22,46 +22,46 @@ public class AreaFactory {
     // StyledTextArea 1
     public static <PS, S> StyledTextArea<PS, S> styledTextArea(
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialStyle, BiConsumer<? super TextExt, S> applyStyle
+            S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
         return new StyledTextArea<PS, S>(
                 initialParagraphStyle, applyParagraphStyle,
-                initialStyle, applyStyle,
+                initialTextStyle, applyStyle,
                 true);
     }
 
     // Embeds StyledTextArea 1
     public static <PS, S>VirtualizedScrollPane<StyledTextArea<PS, S>> embeddedStyledTextArea(
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialStyle, BiConsumer<? super TextExt, S> applyStyle
+            S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
-        return new VirtualizedScrollPane<>(styledTextArea(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle));
+        return new VirtualizedScrollPane<>(styledTextArea(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle));
     }
 
     // StyledTextArea 2
     public static <PS, S> StyledTextArea<PS, S> styledTextArea(
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+            S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
             boolean preserveStyle
     ) {
         return new StyledTextArea<PS, S>(
                 initialParagraphStyle, applyParagraphStyle,
-                initialStyle, applyStyle,
+                initialTextStyle, applyStyle,
                 preserveStyle);
     }
 
     // Embeds StyledTextArea 2
     public static <PS, S>VirtualizedScrollPane<StyledTextArea<PS, S>> embeddedStyledTextArea(
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialStyle, BiConsumer<? super TextExt, S> applyStyle, boolean preserveStyle
+            S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle, boolean preserveStyle
     ) {
-        return new VirtualizedScrollPane<>(styledTextArea(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle, preserveStyle));
+        return new VirtualizedScrollPane<>(styledTextArea(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, preserveStyle));
     }
 
     // Clones StyledTextArea
     public static <PS, S> StyledTextArea<PS, S> cloneStyleTextArea(StyledTextArea<PS, S> area) {
         return new StyledTextArea<PS, S>(area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
-                area.getInitialStyle(), area.getApplyStyle(),
+                area.getInitialTextStyle(), area.getApplyStyle(),
                 area.getModel().getContent(),
                 area.getModel().getUndoManagerWrapper(), area.isPreserveStyle());
     }
