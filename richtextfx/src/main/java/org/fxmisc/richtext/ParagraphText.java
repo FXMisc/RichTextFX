@@ -9,6 +9,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
@@ -25,7 +26,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
-    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<Paint>(Color.WHITE);
+    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<>(Color.WHITE);
     public ObjectProperty<Paint> highlightTextFillProperty() {
         return highlightTextFill;
     }
@@ -64,8 +65,8 @@ class ParagraphText<PS, S> extends TextFlowExt {
 
         selection.addListener((obs, old, sel) -> requestLayout());
 
-        Val<Double> leftInset = Val.map(insetsProperty(), ins -> ins.getLeft());
-        Val<Double> topInset = Val.map(insetsProperty(), ins -> ins.getTop());
+        Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
+        Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
         // selection highlight
         selectionShape.setManaged(false);

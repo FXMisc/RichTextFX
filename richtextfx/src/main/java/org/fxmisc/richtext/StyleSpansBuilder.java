@@ -25,7 +25,7 @@ public class StyleSpansBuilder<S> {
         @Override
         public int length() {
             if(length == -1) {
-                length = spans.stream().mapToInt(span -> span.getLength()).sum();
+                length = spans.stream().mapToInt(StyleSpan::getLength).sum();
             }
 
             return length;
@@ -174,7 +174,7 @@ public class StyleSpansBuilder<S> {
 
 abstract class StyleSpansBase<S> implements StyleSpans<S> {
     protected final TwoLevelNavigator navigator = new TwoLevelNavigator(
-            () -> getSpanCount(),
+            this::getSpanCount,
             i -> getStyleSpan(i).getLength());
 
     @Override

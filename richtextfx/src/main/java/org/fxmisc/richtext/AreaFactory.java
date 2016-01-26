@@ -24,7 +24,7 @@ public class AreaFactory {
             PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
             S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
-        return new StyledTextArea<PS, S>(
+        return new StyledTextArea<>(
                 initialParagraphStyle, applyParagraphStyle,
                 initialTextStyle, applyStyle,
                 true);
@@ -44,7 +44,7 @@ public class AreaFactory {
             S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
             boolean preserveStyle
     ) {
-        return new StyledTextArea<PS, S>(
+        return new StyledTextArea<>(
                 initialParagraphStyle, applyParagraphStyle,
                 initialTextStyle, applyStyle,
                 preserveStyle);
@@ -60,7 +60,7 @@ public class AreaFactory {
 
     // Clones StyledTextArea
     public static <PS, S> StyledTextArea<PS, S> cloneStyleTextArea(StyledTextArea<PS, S> area) {
-        return new StyledTextArea<PS, S>(area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
+        return new StyledTextArea<>(area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
                 area.getInitialTextStyle(), area.getApplyStyle(),
                 area.getModel().getContent(), area.isPreserveStyle());
     }

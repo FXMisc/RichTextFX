@@ -158,7 +158,7 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     }
 
     default Stream<S> styleStream() {
-        return stream().map(span -> span.getStyle());
+        return stream().map(StyleSpan::getStyle);
     }
 
     default Stream<StyleSpan<S>> stream() {
