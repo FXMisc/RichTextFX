@@ -483,6 +483,15 @@ public class StyledTextArea<PS, S> extends Region
                 new EditableStyledDocument<PS, S>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
+    public <C> StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              S initialStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              EditableStyledDocument<PS, S> document,
+                              boolean preserveStyle
+    ) {
+        this(initialParagraphStyle, applyParagraphStyle, initialStyle, applyStyle,
+                document, null, preserveStyle);
+    }
+
     /**
      * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
      * this constructor can be used to create another {@code StyledTextArea} object that
@@ -490,17 +499,20 @@ public class StyledTextArea<PS, S> extends Region
      */
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document
+                          EditableStyledDocument<PS, S> document,
+                          UndoManagerWrapper undoManagerWrapper
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
+                document, undoManagerWrapper, true);
 
     }
 
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document, boolean preserveStyle
+                          EditableStyledDocument<PS, S> document,
+                          UndoManagerWrapper wrapper, boolean preserveStyle
     ) {
-        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialTextStyle, document, wrapper, preserveStyle);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 

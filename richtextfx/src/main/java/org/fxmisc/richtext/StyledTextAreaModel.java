@@ -70,13 +70,15 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     // undo manager
-    private UndoManager undoManager;
-    @Override public UndoManager getUndoManager() { return undoManager; }
+    private UndoManagerWrapper undoManagerWrapper;
+    protected final UndoManagerWrapper getUndoManagerWrapper() { return undoManagerWrapper; }
+    @Override public UndoManager getUndoManager() { return undoManagerWrapper.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        undoManager.close();
-        undoManager = preserveStyle
+        undoManagerWrapper.setUndoManager(
+            preserveStyle
                 ? createRichUndoManager(undoManagerFactory)
-                : createPlainUndoManager(undoManagerFactory);
+                : createPlainUndoManager(undoManagerFactory)
+        );
     }
 
     /**
@@ -253,6 +255,13 @@ public class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
+        this(initialParagraphStyle, initialTextStyle, document, null, preserveStyle);
+    }
+
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
+                               EditableStyledDocument<PS, S> document,
+                               UndoManagerWrapper undoManagerWrapper, boolean preserveStyle
+    ) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
@@ -315,9 +324,12 @@ public class StyledTextAreaModel<PS, S>
             }
         });
 
-        undoManager = preserveStyle
-                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+        this.undoManagerWrapper = undoManagerWrapper == null
+                ? new UndoManagerWrapper(
+                    preserveStyle
+                        ? createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                        : createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory()))
+                : undoManagerWrapper;
 
         Val<Position> caretPosition2D = Val.create(
                 () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
@@ -674,6 +686,7 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     public void dispose() {
+        undoManagerWrapper = null;
         subscriptions.unsubscribe();
     }
 
@@ -708,13 +721,25 @@ public class StyledTextAreaModel<PS, S>
     }
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
-        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<PlainTextChange> apply = change -> {
+            // suspend content's beingUpdated to suspend all clones SuspendableVals
+            content.beingUpdatedProperty().suspendWhile(() -> {
+                content.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+                // caret and selection will be updated via content's emitted plainTextChange.
+            });
+        };
         BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<RichTextChange<PS, S>> apply = change -> {
+            // suspend content's beingUpdated to suspend all clones SuspendableVals
+            content.beingUpdatedProperty().suspendWhile(() -> {
+                content.replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+                // caret and selection will be updated via content's emitted plainTextChange.
+            });
+        };
         BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }

@@ -7,14 +7,16 @@ package org.fxmisc.richtext;
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
     public InlineCssTextArea() {
-        this(new EditableStyledDocument<String, String>("", ""));
+        this(new EditableStyledDocument<String, String>("", ""), null);
     }
 
-    public InlineCssTextArea(EditableStyledDocument<String, String> document) {
+    public InlineCssTextArea(EditableStyledDocument<String, String> document,
+                             UndoManagerWrapper undoManagerWrapper
+    ) {
         super(
                 "", (paragraph, style) -> paragraph.setStyle(style),
                 "", (text, style) -> text.setStyle(style),
-                document,
+                document, undoManagerWrapper,
                 true
         );
     }

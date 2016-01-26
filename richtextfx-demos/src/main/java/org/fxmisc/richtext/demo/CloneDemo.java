@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.AreaFactory;
@@ -22,8 +23,9 @@ public class CloneDemo extends Application {
         String selectedText = "selection";
         String text = "Edit the top area (original)\nand watch the (clone) bottom area's displayed text change and its " +
                 "selected text [" + selectedText + "] update itself accordingly.";
-        InlineCssTextArea area = AreaFactory.inlineCssTextArea(text);
+        InlineCssTextArea area = AreaFactory.inlineCssTextArea();
         InlineCssTextArea clone = AreaFactory.cloneInlineCssTextArea(area);
+        area.insertText(0, text);
 
         VBox vbox = new VBox(area, clone);
         vbox.setSpacing(10);
@@ -51,14 +53,6 @@ public class CloneDemo extends Application {
         Label areaLabel = new Label("Original Area: ");
         Label cloneLabel = new Label("Cloned Area: ");
 
-        // set up Buttons that programmatically change area but not clone
-        Button deleteLastThreeChars = new Button("Click to Delete the previous 3 chars.");
-        deleteLastThreeChars.setOnAction((ae) -> {
-            for (int i = 0; i <= 2; i++) {
-                area.deletePreviousChar();
-            }
-        });
-
         // finish GUI
         GridPane grid = new GridPane();
         // add area content to first row
@@ -74,10 +68,27 @@ public class CloneDemo extends Application {
         grid.setHgap(10);
         grid.setVgap(4);
 
+
+        // set up Buttons that programmatically alter content area but not clone
+        Button areaDelPrevChar = new Button("Area::deletePreviousChar");
+        areaDelPrevChar.setOnAction((ae) -> area.deletePreviousChar() );
+
+        Button areaUndo = new Button("Area::undo");
+        areaUndo.setOnAction((ae) -> area.undo());
+        Button areaRedo = new Button("Area::redo");
+        areaRedo.setOnAction((ae) -> area.redo());
+
+        Button cloneUndo = new Button("Clone::undo");
+        cloneUndo.setOnAction((ae) -> clone.undo());
+        Button cloneRedo = new Button("Clone::redo");
+        cloneRedo.setOnAction((ae) -> clone.redo());
+
+        HBox buttonBox = new HBox(areaDelPrevChar, areaUndo, areaRedo, cloneUndo, cloneRedo);
+
         BorderPane pane = new BorderPane();
         pane.setCenter(vbox);
         pane.setTop(grid);
-        pane.setBottom(deleteLastThreeChars);
+        pane.setBottom(buttonBox);
 
         Scene scene = new Scene(pane, 800, 500);
         primaryStage.setScene(scene);
