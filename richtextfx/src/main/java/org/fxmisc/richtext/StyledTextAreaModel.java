@@ -70,13 +70,15 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     // undo manager
-    private UndoManager undoManager;
-    @Override public UndoManager getUndoManager() { return undoManager; }
+    private final UndoManagerWrapper undoManagerWrapper;
+    protected final UndoManagerWrapper getUndoManagerWrapper() { return undoManagerWrapper; }
+    @Override public UndoManager getUndoManager() { return undoManagerWrapper.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        undoManager.close();
-        undoManager = preserveStyle
+        undoManagerWrapper.setUndoManager(
+            preserveStyle
                 ? createRichUndoManager(undoManagerFactory)
-                : createPlainUndoManager(undoManagerFactory);
+                : createPlainUndoManager(undoManagerFactory)
+        );
     }
 
     /**
@@ -221,37 +223,15 @@ public class StyledTextAreaModel<PS, S>
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Creates a text area with empty text content.
-     *
-     * @param initialStyle style to use in places where no other style is
-     * specified (yet).
-     * @param initialParagraphStyle style to use in places where no other style is
-     * specified (yet).
-     */
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle) {
-        this(initialParagraphStyle, initialStyle, true);
-    }
-
-    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialStyle, boolean preserveStyle
-    ) {
-        this(initialParagraphStyle, initialStyle,
-                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
-    }
-
-    /**
-     * The same as {@link #StyledTextAreaModel(Object, Object)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocument}.
-     */
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
-                               EditableStyledDocument<PS, S> document
-    ) {
-        this(initialParagraphStyle, initialStyle, document, true);
-    }
-
     public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
+    ) {
+        this(initialParagraphStyle, initialStyle, document, null, preserveStyle);
+    }
+
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+                               EditableStyledDocument<PS, S> document,
+                               UndoManagerWrapper undoManagerWrapper, boolean preserveStyle
     ) {
         this.initialStyle = initialStyle;
         this.initialParagraphStyle = initialParagraphStyle;
@@ -315,9 +295,12 @@ public class StyledTextAreaModel<PS, S>
             }
         });
 
-        undoManager = preserveStyle
-                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+        this.undoManagerWrapper = undoManagerWrapper == null
+                ? new UndoManagerWrapper(
+                    preserveStyle
+                        ? createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                        : createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory()))
+                : undoManagerWrapper;
 
         Val<Position> caretPosition2D = Val.create(
                 () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),

@@ -62,7 +62,8 @@ public class AreaFactory {
     public static <PS, S> StyledTextArea<PS, S> cloneStyleTextArea(StyledTextArea<PS, S> area) {
         return new StyledTextArea<PS, S>(area.getInitialParagraphStyle(), area.getApplyParagraphStyle(),
                 area.getInitialStyle(), area.getApplyStyle(),
-                area.getModel().getContent(), area.isPreserveStyle());
+                area.getModel().getContent(),
+                area.getModel().getUndoManagerWrapper(), area.isPreserveStyle());
     }
 
     // Embeds cloned StyledTextArea
@@ -105,7 +106,10 @@ public class AreaFactory {
 
     // Clones StyleClassedTextArea
     public static StyleClassedTextArea cloneStyleClassedTextArea(StyleClassedTextArea area) {
-        return new StyleClassedTextArea(area.getModel().getContent(), area.isPreserveStyle());
+        return new StyleClassedTextArea(
+                area.getModel().getContent(), area.getModel().getUndoManagerWrapper(),
+                area.isPreserveStyle()
+        );
     }
 
     // Embeds cloned StyleClassedTextArea
@@ -148,7 +152,10 @@ public class AreaFactory {
 
     // Clones CodeArea
     public static CodeArea cloneCodeArea(CodeArea area) {
-        return new CodeArea(area.getModel().getContent());
+        return new CodeArea(
+                area.getModel().getContent(),
+                area.getModel().getUndoManagerWrapper()
+        );
     }
 
     // Embeds a cloned CodeArea
@@ -189,7 +196,7 @@ public class AreaFactory {
 
     // Clones InlineCssTextArea
     public static InlineCssTextArea cloneInlineCssTextArea(InlineCssTextArea area) {
-        return new InlineCssTextArea(area.getModel().getContent());
+        return new InlineCssTextArea(area.getModel().getContent(), area.getModel().getUndoManagerWrapper());
     }
 
     // Embeds a cloned InlineCssTextArea
