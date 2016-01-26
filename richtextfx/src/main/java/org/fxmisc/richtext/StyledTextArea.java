@@ -317,7 +317,7 @@ public class StyledTextArea<PS, S> extends Region
     @Override public final ObservableValue<String> textProperty() { return model.textProperty(); }
 
     // rich text
-    @Override public final StyledDocument<PS, S> getDocument() { return model.getDocument(); };
+    @Override public final StyledDocument<PS, S> getDocument() { return model.getDocument(); }
 
     // length
     @Override public final int getLength() { return model.getLength(); }
@@ -475,12 +475,12 @@ public class StyledTextArea<PS, S> extends Region
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, true);
     }
 
-    public <C> StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                               S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
@@ -500,7 +500,7 @@ public class StyledTextArea<PS, S> extends Region
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                           EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
-        this.model = new StyledTextAreaModel<PS, S>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
@@ -521,7 +521,6 @@ public class StyledTextArea<PS, S> extends Region
                     Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> cell = createCell(
                             par,
                             applyStyle,
-                            initialParagraphStyle,
                             applyParagraphStyle);
                     nonEmptyCells.add(cell.getNode());
                     return cell.beforeReset(() -> nonEmptyCells.remove(cell.getNode()))
@@ -1023,7 +1022,6 @@ public class StyledTextArea<PS, S> extends Region
     private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
             Paragraph<PS, S> paragraph,
             BiConsumer<? super TextExt, S> applyStyle,
-            PS initialParagraphStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
         ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, applyStyle);

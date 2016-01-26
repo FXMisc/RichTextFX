@@ -114,22 +114,22 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     public EventStream<RichTextChange<PS, S>> richChanges() { return richChanges; }
 
     {
-        EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).map(t2 -> t2.map((a, b) -> getText(a, b)));
+        EventStream<String> removedText = EventStreams.zip(textChangePosition, textRemovalEnd).map(t2 -> t2.map(this::getText));
         EventStream<Integer> changePosition = EventStreams.merge(textChangePosition, styleChangePosition);
         EventStream<Integer> removalEnd = EventStreams.merge(textRemovalEnd, styleChangeEnd);
-        EventStream<StyledDocument<PS, S>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b)));
+        EventStream<StyledDocument<PS, S>> removedDocument = EventStreams.zip(changePosition, removalEnd).map(t2 -> t2.map(this::subSequence));
         EventStream<Integer> insertionEnd = styleChangeEnd.emitOn(styleChangeDone);
         EventStream<StyledDocument<PS, S>> insertedDocument = EventStreams.merge(
                 this.insertedDocument,
-                changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map((a, b) -> subSequence(a, b))));
+                changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map(this::subSequence)));
 
         plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
-                .map(t3 -> t3.map((pos, removed, inserted) -> new PlainTextChange(pos, removed, inserted)));
+                .map(t3 -> t3.map(PlainTextChange::new));
 
         richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
-                .map(t3 -> t3.map((pos, removed, inserted) -> new RichTextChange<>(pos, removed, inserted)));
+                .map(t3 -> t3.map(RichTextChange::new));
     }
 
 

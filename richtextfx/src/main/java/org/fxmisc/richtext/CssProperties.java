@@ -60,7 +60,7 @@ class CssProperties {
         public HighlightFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
             this.bean = bean;
-            cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
+            cssMetaData = new PropertyCssMetaData<>(
                     this, "-fx-highlight-fill",
                     StyleConverter.getPaintConverter(), initialValue);
         }
@@ -79,7 +79,7 @@ class CssProperties {
         public CssMetaData<? extends Styleable, Paint> getCssMetaData() {
             return cssMetaData;
         }
-    };
+    }
 
     static class HighlightTextFillProperty extends StyleableObjectProperty<Paint> {
         private final Object bean;
@@ -89,7 +89,7 @@ class CssProperties {
         public HighlightTextFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
             this.bean = bean;
-            cssMetaData = new PropertyCssMetaData<Styleable, Paint>(
+            cssMetaData = new PropertyCssMetaData<>(
                     this, "-fx-highlight-text-fill",
                     StyleConverter.getPaintConverter(), initialValue);
         }

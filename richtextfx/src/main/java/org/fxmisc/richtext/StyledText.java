@@ -24,21 +24,21 @@ public class StyledText<S> {
     }
 
     public StyledText<S> subSequence(int start, int end) {
-        return new StyledText<S>(text.substring(start, end), style);
+        return new StyledText<>(text.substring(start, end), style);
     }
 
     public StyledText<S> subSequence(int start) {
-        return new StyledText<S>(text.substring(start), style);
+        return new StyledText<>(text.substring(start), style);
     }
 
     public StyledText<S> append(String str) {
-        return new StyledText<S>(text + str, style);
+        return new StyledText<>(text + str, style);
     }
 
     public StyledText<S> spliced(int from, int to, CharSequence replacement) {
         String left = text.substring(0, from);
         String right = text.substring(to);
-        return new StyledText<S>(left + replacement + right, style);
+        return new StyledText<>(left + replacement + right, style);
     }
 
     public S getStyle() {

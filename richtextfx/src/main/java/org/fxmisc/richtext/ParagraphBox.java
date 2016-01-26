@@ -197,9 +197,7 @@ class ParagraphBox<PS, S> extends Region {
 
         text.resizeRelocate(graphicWidth, 0, w - graphicWidth, h);
 
-        graphic.ifPresent(g -> {
-            g.resizeRelocate(graphicOffset.get(), 0, graphicWidth, h);
-        });
+        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get(), 0, graphicWidth, h));
     }
 
     double getGraphicPrefWidth() {

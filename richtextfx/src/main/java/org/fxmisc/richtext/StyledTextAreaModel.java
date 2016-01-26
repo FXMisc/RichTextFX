@@ -105,7 +105,7 @@ public class StyledTextAreaModel<PS, S>
     @Override public final ObservableValue<String> textProperty() { return text; }
 
     // rich text
-    @Override public final StyledDocument<PS, S> getDocument() { return content.snapshot(); };
+    @Override public final StyledDocument<PS, S> getDocument() { return content.snapshot(); }
 
     // length
     private final SuspendableVal<Integer> length;
@@ -212,8 +212,6 @@ public class StyledTextAreaModel<PS, S>
     private final boolean preserveStyle;
     protected final boolean isPreserveStyle() { return preserveStyle; }
 
-    private final Suspendable omniSuspendable;
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -233,10 +231,10 @@ public class StyledTextAreaModel<PS, S>
         this(initialParagraphStyle, initialTextStyle, true);
     }
 
-    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
@@ -340,7 +338,7 @@ public class StyledTextAreaModel<PS, S>
                 () -> content.getText(internalSelection.getValue()),
                 internalSelection, content.getParagraphs()).suspendable();
 
-        omniSuspendable = Suspendable.combine(
+        final Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
                 text,
                 length,
@@ -709,13 +707,13 @@ public class StyledTextAreaModel<PS, S>
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
         return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
         Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = (change1, change2) -> change1.mergeWith(change2);
+        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = RichTextChange<PS, S>::mergeWith;
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 

@@ -20,7 +20,7 @@ implements StyledDocument<PS, S> {
     protected StyledDocumentBase(L paragraphs) {
         this.paragraphs = paragraphs;
         navigator = new TwoLevelNavigator(
-                () -> paragraphs.size(),
+                paragraphs::size,
                 i -> paragraphs.get(i).length() + (i == paragraphs.size() - 1 ? 0 : 1));
     }
 
@@ -79,7 +79,7 @@ implements StyledDocument<PS, S> {
         return sub(
                 start, end,
                 p -> p,
-                (p, a, b) -> p.subSequence(a, b),
+                Paragraph::subSequence,
                 (List<Paragraph<PS, S>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
     }
 
@@ -172,7 +172,7 @@ implements StyledDocument<PS, S> {
             subSpans.add(endPar.getStyleSpans(0, end.getMinor()));
         }
 
-        int n = subSpans.stream().mapToInt(sr -> sr.getSpanCount()).sum();
+        int n = subSpans.stream().mapToInt(StyleSpans::getSpanCount).sum();
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(n);
         for(StyleSpans<S> spans: subSpans) {
             for(StyleSpan<S> span: spans) {
