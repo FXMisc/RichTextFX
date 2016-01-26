@@ -223,6 +223,35 @@ public class StyledTextAreaModel<PS, S>
      *                                                                        *
      * ********************************************************************** */
 
+    /**
+     * Creates a text area with empty text content.
+     *
+     * @param initialStyle style to use in places where no other style is
+     * specified (yet).
+     * @param initialParagraphStyle style to use in places where no other style is
+     * specified (yet).
+     */
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle) {
+        this(initialParagraphStyle, initialStyle, true);
+    }
+
+    public <C> StyledTextAreaModel(PS initialParagraphStyle, S initialStyle, boolean preserveStyle
+    ) {
+        this(initialParagraphStyle, initialStyle,
+                new EditableStyledDocument<PS, S>(initialParagraphStyle, initialStyle), preserveStyle);
+    }
+
+    /**
+     * The same as {@link #StyledTextAreaModel(Object, Object)} except that
+     * this constructor can be used to create another {@code StyledTextArea} object that
+     * shares the same {@link EditableStyledDocument}.
+     */
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
+                               EditableStyledDocument<PS, S> document
+    ) {
+        this(initialParagraphStyle, initialStyle, document, true);
+    }
+
     public StyledTextAreaModel(PS initialParagraphStyle, S initialStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
