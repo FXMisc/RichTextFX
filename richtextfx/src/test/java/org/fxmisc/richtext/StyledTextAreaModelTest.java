@@ -50,7 +50,61 @@ public class StyledTextAreaModelTest {
     }
 
     @Test
-    public void testClonesForUndoAndRedo() {
+    public void insureCloneUndoRedoWorks() {
+        // set up an are with some styled content
+        StyledTextAreaModel<String, String> area = new StyledTextAreaModel<>(
+                "", "", new EditableStyledDocument<>("", ""), true);
+        String textStyle = "-fx-font-size: 30px;";
+
+        String styledText = "A really short text example.";
+        area.replace(0, 0, ReadOnlyStyledDocument.fromString(styledText, "", textStyle));
+
+        // create clones of initial model
+        StyledTextAreaModel<String, String> clone = new StyledTextAreaModel<>(
+                area.getInitialParagraphStyle(), area.getInitialStyle(),
+                area.getContent(), area.getUndoManagerWrapper(),
+                area.isPreserveStyle()
+        );
+
+        // area undo/redo works
+        area.undo();
+        assertEquals("Area's text should be empty", "", area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        area.redo();
+        assertEquals("Area's text should match styledText", styledText, area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        // area undo / clone redo works
+        area.undo();
+        assertEquals("Area's text should be empty", "", area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        clone.redo();
+        assertEquals("Area's text should match styledText", styledText, area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        // clone undo / area redo works
+        clone.undo();
+        assertEquals("Area's text should be empty", "", area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        area.redo();
+        assertEquals("Area's text should match styledText", styledText, area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        // clone undo/redo works
+        clone.undo();
+        assertEquals("Area's text should be empty", "", area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+
+        clone.redo();
+        assertEquals("Area's text should match styledText", styledText, area.getText());
+        assertEquals(area.getDocument(), clone.getDocument());
+    }
+
+    @Test
+    public void insureClonesUndoRedoWorksWhenInitialHasBeenDisposed() {
         // set up an are with some styled content
         StyledTextAreaModel<String, String> initialModel = new StyledTextAreaModel<>(
                 "", "", new EditableStyledDocument<>("", ""), true);
@@ -68,11 +122,6 @@ public class StyledTextAreaModelTest {
                 initialModel.getContent(), initialModel.getUndoManagerWrapper(),
                 initialModel.isPreserveStyle()
         );
-        StyledTextAreaModel<String, String> clone2 = new StyledTextAreaModel<>(
-                initialModel.getInitialParagraphStyle(), initialModel.getInitialStyle(),
-                initialModel.getContent(), initialModel.getUndoManagerWrapper(),
-                initialModel.isPreserveStyle()
-        );
 
         // call undo on initialModel and dispose of it
         initialModel.undo();
@@ -80,9 +129,6 @@ public class StyledTextAreaModelTest {
 
         // insure that redo on clones still works
         clone1.redo();
-        clone2.undo();
-        clone1.dispose();
-        clone2.redo();
     }
 
 }
