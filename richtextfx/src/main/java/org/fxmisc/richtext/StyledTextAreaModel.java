@@ -720,13 +720,25 @@ public class StyledTextAreaModel<PS, S>
     }
 
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
-        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<PlainTextChange> apply = change -> {
+            // suspend content's beingUpdated to suspend all clones SuspendableVals
+            content.beingUpdatedProperty().suspendWhile(() -> {
+                content.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+                // caret and selection will be updated via content's emitted plainTextChange.
+            });
+        };
         BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        Consumer<RichTextChange<PS, S>> apply = change -> {
+            // suspend content's beingUpdated to suspend all clones SuspendableVals
+            content.beingUpdatedProperty().suspendWhile(() -> {
+                content.replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+                // caret and selection will be updated via content's emitted plainTextChange.
+            });
+        };
         BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = (change1, change2) -> change1.mergeWith(change2);
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
