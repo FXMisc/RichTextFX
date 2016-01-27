@@ -14,6 +14,8 @@ import org.reactfx.EventStreams;
 import org.reactfx.Guard;
 import org.reactfx.SuspendableNo;
 import org.reactfx.util.Lists;
+import org.reactfx.util.Tuple3;
+import org.reactfx.util.Tuples;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -112,7 +114,7 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     private final EventSource<StyledDocument<PS, S>> insertedDocument = new EventSource<>();
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
-    private final EventSource<PlainTextChange> plainUndoRedos = new EventSource<>();
+    private final EventSource<Tuple3<Integer, String, String>> plainUndoRedos = new EventSource<>();
 
     private final EventStream<PlainTextChange> plainTextChanges;
     public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
@@ -133,10 +135,10 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map(this::subSequence)));
 
 
-        EventStream<PlainTextChange> plainReplacements = EventStreams.zip(textChangePosition, removedText, insertedText)
+        EventStream<Tuple3<Integer, String, String>> plainReplacements = EventStreams.zip(textChangePosition, removedText, insertedText);
+        plainTextChanges = EventStreams.merge(plainReplacements, plainUndoRedos)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map(PlainTextChange::new));
-        plainTextChanges = EventStreams.merge(plainReplacements, plainUndoRedos);
 
         EventStream<RichTextChange<PS, S>> richReplacements = EventStreams.zip(changePosition, removedDocument, insertedDocument)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
@@ -237,7 +239,11 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
         replaceContent(start, end, richTextChange.getInserted());
 
         // complete the change events
-        plainUndoRedos.push(richTextChange.toPlainTextChange());
+        plainUndoRedos.push(Tuples.t(
+                richTextChange.getPosition(),
+                richTextChange.getRemoved().getText(),
+                richTextChange.getInserted().getText()
+        ));
         richUndoRedos.push(richTextChange);
     }
 

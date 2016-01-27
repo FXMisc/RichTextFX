@@ -41,7 +41,4 @@ public class RichTextChange<PS, S> extends TextChange<StyledDocument<PS, S>, Ric
                 "}";
     }
 
-    public final PlainTextChange toPlainTextChange() {
-        return new PlainTextChange(position, removed.getText(), inserted.getText());
-    }
 }
