@@ -104,7 +104,7 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<PS, S> extends Region
+public class StyledTextAreaBase<PS, S> extends Region
         implements
         TextEditingArea<PS, S>,
         EditActions<PS, S>,
@@ -469,13 +469,13 @@ public class StyledTextArea<PS, S> extends Region
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
      */
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
+    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, true);
     }
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                               S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                               boolean preserveStyle
     ) {
@@ -484,21 +484,21 @@ public class StyledTextArea<PS, S> extends Region
     }
 
     /**
-     * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
+     * The same as {@link #StyledTextAreaBase(Object, BiConsumer, Object, BiConsumer)} except that
      * this constructor can be used to create another {@code StyledTextArea} object that
      * shares the same {@link EditableStyledDocument}.
      */
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document
+    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              EditableStyledDocument<PS, S> document
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
 
     }
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document, boolean preserveStyle
+    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
         this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
         this.applyStyle = applyStyle;
@@ -1052,7 +1052,7 @@ public class StyledTextArea<PS, S> extends Region
             int idx = box.getIndex();
             return idx != -1
                     ? getParagraphSelection(idx)
-                    : StyledTextArea.EMPTY_RANGE;
+                    : StyledTextAreaBase.EMPTY_RANGE;
         }, selectionProperty(), box.indexProperty());
         box.selectionProperty().bind(cellSelection);
 
