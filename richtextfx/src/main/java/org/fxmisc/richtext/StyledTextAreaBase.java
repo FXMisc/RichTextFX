@@ -104,7 +104,7 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextAreaBase<PS, S> extends Region
+public class StyledTextAreaBase<PS, S, Model extends StyledTextAreaModel<PS, S>> extends Region
         implements
         TextEditingArea<PS, S>,
         EditActions<PS, S>,
@@ -411,12 +411,12 @@ public class StyledTextAreaBase<PS, S> extends Region
     /**
      * model
      */
-    private final StyledTextAreaModel<PS, S> model;
+    private final Model model;
 
     /**
      * @return this area's {@link StyledTextAreaModel}
      */
-    protected final StyledTextAreaModel<PS, S> getModel() {
+    protected final Model getModel() {
         return model;
     }
 
@@ -455,52 +455,10 @@ public class StyledTextAreaBase<PS, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Creates a text area with empty text content.
-     *
-     * @param initialTextStyle style to use in places where no other style is
-     * specified (yet).
-     * @param applyStyle function that, given a {@link Text} node and
-     * a style, applies the style to the text node. This function is
-     * used by the default skin to apply style to text nodes.
-     * @param initialParagraphStyle style to use in places where no other style is
-     * specified (yet).
-     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
-     * a style, applies the style to the paragraph node. This function is
-     * used by the default skin to apply style to paragraph nodes.
-     */
-    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
+    public StyledTextAreaBase(BiConsumer<TextFlow, PS> applyParagraphStyle, BiConsumer<? super TextExt, S> applyStyle,
+                              Model model
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, true);
-    }
-
-    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                              boolean preserveStyle
-    ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
-    }
-
-    /**
-     * The same as {@link #StyledTextAreaBase(Object, BiConsumer, Object, BiConsumer)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocument}.
-     */
-    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                              EditableStyledDocument<PS, S> document
-    ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
-
-    }
-
-    public StyledTextAreaBase(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                              EditableStyledDocument<PS, S> document, boolean preserveStyle
-    ) {
-        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this.model = model;
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 

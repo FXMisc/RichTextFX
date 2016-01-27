@@ -29,7 +29,7 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Model for {@link StyledTextArea}
+ * Model for {@link StyledTextAreaBase}
  *
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph

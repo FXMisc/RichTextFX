@@ -207,7 +207,7 @@ class StyledTextAreaBehavior implements Behavior {
      * Fields                                                                 *
      * ********************************************************************** */
 
-    private final StyledTextArea<?, ?> view;
+    private final StyledTextAreaBase<?, ?, ?> view;
 
     private final StyledTextAreaModel<?, ?> model;
 
@@ -238,7 +238,7 @@ class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    StyledTextAreaBehavior(StyledTextArea<?, ?> area) {
+    StyledTextAreaBehavior(StyledTextAreaBase<?, ?, ?> area) {
         this.view = area;
         this.model = area.getModel();
 
