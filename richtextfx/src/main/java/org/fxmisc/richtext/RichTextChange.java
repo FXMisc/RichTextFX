@@ -40,4 +40,8 @@ public class RichTextChange<PS, S> extends TextChange<StyledDocument<PS, S>, Ric
                 "\tinserted: " + inserted + "\n" +
                 "}";
     }
+
+    public final PlainTextChange toPlainTextChange() {
+        return new PlainTextChange(position, removed.getText(), inserted.getText());
+    }
 }

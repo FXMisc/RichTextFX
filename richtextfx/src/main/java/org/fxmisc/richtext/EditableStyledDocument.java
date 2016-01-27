@@ -237,11 +237,7 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
         replaceContent(start, end, richTextChange.getInserted());
 
         // complete the change events
-        plainUndoRedos.push(new PlainTextChange(
-                richTextChange.getPosition(),
-                richTextChange.getRemoved().getText(),
-                richTextChange.getInserted().getText())
-        );
+        plainUndoRedos.push(richTextChange.toPlainTextChange());
         richUndoRedos.push(richTextChange);
     }
 
