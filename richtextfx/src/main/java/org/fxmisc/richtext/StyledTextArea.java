@@ -509,6 +509,7 @@ public class StyledTextArea<PS, S> extends Region
 
         this.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         getStyleClass().add("styled-text-area");
+        getStylesheets().add(StyledTextArea.class.getResource("styled-text-area.css").toExternalForm());
 
         // keeps track of currently used non-empty cells
         @SuppressWarnings("unchecked")
