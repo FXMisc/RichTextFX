@@ -1,29 +1,36 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy.*;
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
+import org.fxmisc.undo.UndoManager;
+import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
 import org.reactfx.SuspendableNo;
 import org.reactfx.util.Lists;
+import org.reactfx.util.Tuple3;
+import org.reactfx.util.Tuples;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+import static org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy.COPY;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Forward;
 
 /**
  * Content model for {@link StyledTextArea}. Implements edit operations
@@ -107,8 +114,12 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     private final EventSource<StyledDocument<PS, S>> insertedDocument = new EventSource<>();
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
+    private final EventSource<Tuple3<Integer, String, String>> plainUndoRedos = new EventSource<>();
+
     private final EventStream<PlainTextChange> plainTextChanges;
     public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
+
+    private final EventSource<RichTextChange<PS, S>> richUndoRedos = new EventSource<>();
 
     private final EventStream<RichTextChange<PS, S>> richChanges;
     public EventStream<RichTextChange<PS, S>> richChanges() { return richChanges; }
@@ -123,13 +134,41 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
                 this.insertedDocument,
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map(this::subSequence)));
 
-        plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
+
+        EventStream<Tuple3<Integer, String, String>> plainReplacements = EventStreams.zip(textChangePosition, removedText, insertedText);
+        plainTextChanges = EventStreams.merge(plainReplacements, plainUndoRedos)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map(PlainTextChange::new));
 
-        richChanges = EventStreams.zip(changePosition, removedDocument, insertedDocument)
+        EventStream<RichTextChange<PS, S>> richReplacements = EventStreams.zip(changePosition, removedDocument, insertedDocument)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map(RichTextChange::new));
+        richChanges = EventStreams.merge(richReplacements, richUndoRedos);
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Indicates whether style should be preserved on undo/redo,
+     * copy/paste and text move.
+     * TODO: Currently, only undo/redo respect this flag.
+     */
+    private final boolean preserveStyle;
+    protected final boolean isPreserveStyle() { return preserveStyle; }
+
+    // undo manager
+    private UndoManager undoManager;
+    public UndoManager getUndoManager() { return undoManager; }
+    public void setUndoManager(UndoManagerFactory undoManagerFactory) {
+        undoManager.close();
+        undoManager = preserveStyle
+                ? createRichUndoManager(undoManagerFactory)
+                : createPlainUndoManager(undoManagerFactory);
     }
 
 
@@ -140,13 +179,20 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
-    EditableStyledDocument(Paragraph<PS, S> initialParagraph) {
+    EditableStyledDocument(Paragraph<PS, S> initialParagraph, boolean preserveStyle) {
         super(FXCollections.observableArrayList(initialParagraph));
+        this.preserveStyle = preserveStyle;
+        undoManager = preserveStyle
+                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+    }
 
+    EditableStyledDocument(PS initialParagraphStyle, S initialStyle, boolean preserveStyle) {
+        this(new Paragraph<>(initialParagraphStyle, "", initialStyle), preserveStyle);
     }
 
     EditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
-        this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
+        this(new Paragraph<>(initialParagraphStyle, "", initialStyle), true);
     }
 
 
@@ -170,10 +216,49 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     }
 
     public void replace(int start, int end, StyledDocument<PS, S> replacement) {
-        ensureValidRange(start, end);
-
+        // push out initial position for rich/plain text change
         textChangePosition.push(start);
         textRemovalEnd.push(end);
+
+        // replace content
+        replaceContent(start, end, replacement);
+
+        // complete the change events
+        insertedText.push(replacement.getText());
+        StyledDocument<PS, S> doc =
+                replacement instanceof ReadOnlyStyledDocument
+                ? replacement
+                : new ReadOnlyStyledDocument<>(replacement.getParagraphs(), COPY);
+        insertedDocument.push(doc);
+    }
+
+    private void replaceRichUndoRedo(RichTextChange<PS, S> richTextChange) {
+        int start = richTextChange.getPosition();
+        int end = start + richTextChange.getRemoved().length();
+
+        replaceContent(start, end, richTextChange.getInserted());
+
+        // complete the change events
+        plainUndoRedos.push(Tuples.t(
+                richTextChange.getPosition(),
+                richTextChange.getRemoved().getText(),
+                richTextChange.getInserted().getText()
+        ));
+        richUndoRedos.push(richTextChange);
+    }
+
+    /**
+     * Replaces the content between start and end with replacement. This method
+     * does not instruct plainTextChanges or richTextChanges what to emit. Use
+     * {@link #replace(int, int, StyledDocument)} or
+     * {@link #replaceRichUndoRedo(RichTextChange)} to do that.
+     *
+     * @param start position where replacement starts
+     * @param end position where replacement ends
+     * @param replacement the replacement
+     */
+    private void replaceContent(int start, int end, StyledDocument<PS, S> replacement) {
+        ensureValidRange(start, end);
 
         Position start2D = navigator.offsetToPosition(start, Forward);
         Position end2D = start2D.offsetBy(end - start, Forward);
@@ -200,14 +285,6 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
             length.setValue(newLength);
             text.invalidate();
         });
-
-        // complete the change events
-        insertedText.push(replacement.getText());
-        StyledDocument<PS, S> doc =
-                replacement instanceof ReadOnlyStyledDocument
-                ? replacement
-                : new ReadOnlyStyledDocument<>(replacement.getParagraphs(), COPY);
-        insertedDocument.push(doc);
     }
 
     public void setStyle(int from, int to, S style) {
@@ -370,6 +447,25 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
     private final SuspendableNo beingUpdated = new SuspendableNo();
     SuspendableNo beingUpdatedProperty() { return beingUpdated; }
     final boolean isBeingUpdated() { return beingUpdated.get(); }
+
+    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
+        Consumer<PlainTextChange> apply = change ->
+            // suspend clones' Suspendables
+            beingUpdated.suspendWhile(() ->
+                replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted())
+                // clones' caret position and selection values will be updated via the emitted PlainTextChange
+            );
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
+        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
+    }
+
+    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
+        // Apply: Suspend clones' Suspendables before changing content. Clones' caret position and
+        // selection values will be updated via the emitted PlainTextChange
+        Consumer<RichTextChange<PS, S>> apply = change -> beingUpdated.suspendWhile(() -> replaceRichUndoRedo(change));
+        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = RichTextChange<PS, S>::mergeWith;
+        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
+    }
 
     private void ensureValidParagraphIndex(int parIdx) {
         Lists.checkIndex(parIdx, paragraphs.size());

@@ -485,7 +485,7 @@ public class StyledTextArea<PS, S> extends Region
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle, preserveStyle));
     }
 
     /**
@@ -497,15 +497,7 @@ public class StyledTextArea<PS, S> extends Region
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                           EditableStyledDocument<PS, S> document
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
-
-    }
-
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document, boolean preserveStyle
-    ) {
-        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 

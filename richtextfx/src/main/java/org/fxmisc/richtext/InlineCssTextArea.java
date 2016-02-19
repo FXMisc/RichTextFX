@@ -9,15 +9,14 @@ import javafx.scene.text.TextFlow;
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
     public InlineCssTextArea() {
-        this(new EditableStyledDocument<>("", ""));
+        this(new EditableStyledDocument<>("", "", true));
     }
 
     public InlineCssTextArea(EditableStyledDocument<String, String> document) {
         super(
                 "", TextFlow::setStyle,
                 "", TextExt::setStyle,
-                document,
-                true
+                document
         );
     }
 

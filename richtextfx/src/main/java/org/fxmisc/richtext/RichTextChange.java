@@ -40,4 +40,5 @@ public class RichTextChange<PS, S> extends TextChange<StyledDocument<PS, S>, Ric
                 "\tinserted: " + inserted + "\n" +
                 "}";
     }
+
 }
