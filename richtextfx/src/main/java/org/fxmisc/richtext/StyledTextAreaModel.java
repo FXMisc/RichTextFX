@@ -10,7 +10,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
 
 import org.fxmisc.undo.UndoManager;
@@ -146,7 +145,7 @@ public class StyledTextAreaModel<PS, S>
 
     // paragraphs
     private final SuspendableList<Paragraph<PS, S>> paragraphs;
-    @Override public ObservableList<Paragraph<PS, S>> getParagraphs() { return paragraphs; }
+    @Override public LiveList<Paragraph<PS, S>> getParagraphs() { return paragraphs; }
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();

@@ -27,8 +27,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import javafx.css.PseudoClass;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
@@ -59,6 +59,7 @@ import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.StateMachine;
 import org.reactfx.Subscription;
+import org.reactfx.collection.LiveList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -118,6 +119,10 @@ public class StyledTextArea<PS, S> extends Region
      * Index range [0, 0).
      */
     public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
+
+    private static final PseudoClass HAS_CARET = PseudoClass.getPseudoClass("has-caret");
+    private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
+    private static final PseudoClass LAST_PAR  = PseudoClass.getPseudoClass("last-paragraph");
 
 
     /* ********************************************************************** *
@@ -348,7 +353,7 @@ public class StyledTextArea<PS, S> extends Region
     @Override public final ObservableValue<Integer> caretColumnProperty() { return model.caretColumnProperty(); }
 
     // paragraphs
-    @Override public ObservableList<Paragraph<PS, S>> getParagraphs() { return model.getParagraphs(); }
+    @Override public LiveList<Paragraph<PS, S>> getParagraphs() { return model.getParagraphs(); }
 
     // beingUpdated
     public ObservableBooleanValue beingUpdatedProperty() { return model.beingUpdatedProperty(); }
@@ -1038,6 +1043,13 @@ public class StyledTextArea<PS, S> extends Region
                 currentParagraphProperty(),
                 (bi, cp) -> bi.intValue() == cp.intValue());
 
+        Subscription hasCaretPseudoClass = hasCaret.values().subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
+        Subscription firstParPseudoClass = box.indexProperty().values().subscribe(idx -> box.pseudoClassStateChanged(FIRST_PAR, idx == 0));
+        Subscription lastParPseudoClass = EventStreams.combine(
+                box.indexProperty().values(),
+                getParagraphs().sizeProperty().values()
+        ).subscribe(in -> in.exec((i, n) -> box.pseudoClassStateChanged(LAST_PAR, i == n-1)));
+
         // caret is visible only in the paragraph with the caret
         Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? caretVisible : Val.constant(false));
         box.caretVisibleProperty().bind(cellCaretVisible);
@@ -1075,6 +1087,10 @@ public class StyledTextArea<PS, S> extends Region
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
                 box.graphicOffset.unbind();
+
+                hasCaretPseudoClass.unsubscribe();
+                firstParPseudoClass.unsubscribe();
+                lastParPseudoClass.unsubscribe();
 
                 box.caretVisibleProperty().unbind();
                 box.caretPositionProperty().unbind();
