@@ -1,17 +1,10 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
-
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -26,6 +19,13 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+import static org.fxmisc.richtext.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Forward;
 
 /**
  * Model for {@link StyledTextArea}
@@ -219,34 +219,37 @@ public class StyledTextAreaModel<PS, S>
      * ********************************************************************** */
 
     /**
-     * Creates a text area with empty text content.
-     *
-     * @param initialTextStyle style to use in places where no other style is
-     * specified (yet).
-     * @param initialParagraphStyle style to use in places where no other style is
-     * specified (yet).
+     * Creates a clone (a new model that shares the {@link EditableStyledDocument} of the given model)
+     * @param model the model whose content to share
+     */
+    public StyledTextAreaModel(StyledTextAreaModel<PS, S> model) {
+        this(model.initialParagraphStyle, model.initialTextStyle, model.content, model.preserveStyle);
+    }
+
+    /**
+     * Creates a model with empty text content that preserves the style
      */
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle) {
         this(initialParagraphStyle, initialTextStyle, true);
     }
 
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
-    ) {
+    /**
+     * Creates a model with empty text content.
+     */
+    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle) {
         this(initialParagraphStyle, initialTextStyle,
                 new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
-     * The same as {@link #StyledTextAreaModel(Object, Object)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocument}.
+     * The base constructor
+     *
+     * @param initialParagraphStyle style to use in places where no other style is specified (yet).
+     * @param initialTextStyle style to use in places where no other style is specified (yet).
+     * @param document the underlying content to display in the area. The same document can be used
+     *                 to create multiple views of the same document.
+     * @param preserveStyle whether to preserve the style when undoing/redoing a change
      */
-    public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocument<PS, S> document
-    ) {
-        this(initialParagraphStyle, initialTextStyle, document, true);
-    }
-
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
                                EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
