@@ -7,9 +7,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.StyleClassedTextAreaModel;
 
 public class FontSizeSwitcher extends Application {
 
@@ -19,7 +20,7 @@ public class FontSizeSwitcher extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        StyleClassedTextArea area = new StyleClassedTextArea();
+        StyleClassedTextArea<StyleClassedTextAreaModel> area = AreaFactory.styleClassedTextArea();
         area.setWrapText(true);
         for(int i = 0; i < 10; ++i) {
             area.appendText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n");

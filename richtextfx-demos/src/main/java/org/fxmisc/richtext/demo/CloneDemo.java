@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.InlineCssTextArea;
+import org.fxmisc.richtext.InlineCssTextAreaModel;
 
 public class CloneDemo extends Application {
 
@@ -22,8 +23,8 @@ public class CloneDemo extends Application {
         String selectedText = "selection";
         String text = "Edit the top area (original)\nand watch the (clone) bottom area's displayed text change and its " +
                 "selected text [" + selectedText + "] update itself accordingly.";
-        InlineCssTextArea area = AreaFactory.inlineCssTextArea(text);
-        InlineCssTextArea clone = AreaFactory.cloneInlineCssTextArea(area);
+        InlineCssTextArea<InlineCssTextAreaModel> area = AreaFactory.inlineCssTextArea(text);
+        InlineCssTextArea<InlineCssTextAreaModel> clone = AreaFactory.cloneInlineCssTextArea(area);
 
         VBox vbox = new VBox(area, clone);
         vbox.setSpacing(10);
