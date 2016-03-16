@@ -33,7 +33,7 @@ import org.reactfx.value.Var;
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph
  */
-public class StyledTextAreaModel<PS, S>
+class StyledTextAreaModel<PS, S>
         implements
         TextEditingArea<PS, S>,
         EditActions<PS, S>,
