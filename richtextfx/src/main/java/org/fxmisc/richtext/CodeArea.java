@@ -1,14 +1,16 @@
 package org.fxmisc.richtext;
 
 
-import java.util.Collection;
-
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
  * with fixed-width font and an undo manager that observes
  * only plain text changes (not styled changes).
+ *
+ * <p>Note: either {@link CodeAreaModel} or {@link StyleClassedTextAreaModel} can be used with this view.
+ * {@code CodeAreaModel} only provides some extra constructors to use in {@link AreaFactory}, such as
+ * {@link AreaFactory#codeArea(String)}</p>.
  */
-public class CodeArea extends StyleClassedTextArea {
+public class CodeArea<Model extends StyleClassedTextAreaModel> extends StyleClassedTextArea<Model> {
 
     {
         getStyleClass().add("code-area");
@@ -20,28 +22,8 @@ public class CodeArea extends StyleClassedTextArea {
         setUseInitialStyleForInsertion(true);
     }
 
-    public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document) {
-        super(document, false);
+    public CodeArea(Model model) {
+        super(model);
     }
 
-    public CodeArea() {
-        super(false);
-    }
-
-    /**
-     * Creates a text area with initial text content.
-     * Initial caret position is set at the beginning of text content.
-     *
-     * @param text Initial text content.
-     */
-    public CodeArea(String text) {
-        this();
-
-        appendText(text);
-        getUndoManager().forgetHistory();
-        getUndoManager().mark();
-
-        // position the caret at the beginning
-        selectRange(0, 0);
-    }
 }

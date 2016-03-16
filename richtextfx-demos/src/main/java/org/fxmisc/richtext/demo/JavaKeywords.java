@@ -1,20 +1,21 @@
 package org.fxmisc.richtext.demo;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.CodeAreaModel;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JavaKeywords extends Application {
 
@@ -79,7 +80,7 @@ public class JavaKeywords extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        CodeArea codeArea = new CodeArea();
+        CodeArea<CodeAreaModel> codeArea = AreaFactory.codeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
         codeArea.richChanges().subscribe(change -> {

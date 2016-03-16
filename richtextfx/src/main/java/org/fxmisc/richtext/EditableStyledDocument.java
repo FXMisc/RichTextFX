@@ -30,7 +30,7 @@ import org.reactfx.value.Var;
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
+public final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
 
     /* ********************************************************************** *
      *                                                                        *

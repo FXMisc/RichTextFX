@@ -1,15 +1,5 @@
 package org.fxmisc.richtext;
 
-import static javafx.scene.input.KeyCode.*;
-import static javafx.scene.input.KeyCombination.*;
-import static javafx.scene.input.KeyEvent.*;
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-import static org.fxmisc.wellbehaved.event.EventPattern.*;
-import static org.reactfx.EventStreams.*;
-
-import java.util.Optional;
-import java.util.function.Predicate;
-
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -17,10 +7,9 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
-import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
+import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.event.EventHandlerHelper;
 import org.fxmisc.wellbehaved.event.EventHandlerTemplate;
 import org.fxmisc.wellbehaved.skin.Behavior;
@@ -28,6 +17,45 @@ import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
+
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import static javafx.scene.input.KeyCode.A;
+import static javafx.scene.input.KeyCode.BACK_SPACE;
+import static javafx.scene.input.KeyCode.C;
+import static javafx.scene.input.KeyCode.COPY;
+import static javafx.scene.input.KeyCode.CUT;
+import static javafx.scene.input.KeyCode.DELETE;
+import static javafx.scene.input.KeyCode.DOWN;
+import static javafx.scene.input.KeyCode.END;
+import static javafx.scene.input.KeyCode.ENTER;
+import static javafx.scene.input.KeyCode.HOME;
+import static javafx.scene.input.KeyCode.INSERT;
+import static javafx.scene.input.KeyCode.KP_DOWN;
+import static javafx.scene.input.KeyCode.KP_LEFT;
+import static javafx.scene.input.KeyCode.KP_RIGHT;
+import static javafx.scene.input.KeyCode.KP_UP;
+import static javafx.scene.input.KeyCode.LEFT;
+import static javafx.scene.input.KeyCode.PAGE_DOWN;
+import static javafx.scene.input.KeyCode.PAGE_UP;
+import static javafx.scene.input.KeyCode.PASTE;
+import static javafx.scene.input.KeyCode.RIGHT;
+import static javafx.scene.input.KeyCode.TAB;
+import static javafx.scene.input.KeyCode.UP;
+import static javafx.scene.input.KeyCode.V;
+import static javafx.scene.input.KeyCode.X;
+import static javafx.scene.input.KeyCode.Y;
+import static javafx.scene.input.KeyCode.Z;
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
+import static javafx.scene.input.KeyEvent.KEY_TYPED;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Forward;
+import static org.fxmisc.wellbehaved.event.EventPattern.keyPressed;
+import static org.reactfx.EventStreams.animationFrames;
+import static org.reactfx.EventStreams.never;
+import static org.reactfx.EventStreams.nonNullValuesOf;
+import static org.reactfx.EventStreams.valuesOf;
 
 /**
  * Controller for StyledTextArea.
@@ -207,7 +235,7 @@ class StyledTextAreaBehavior implements Behavior {
      * Fields                                                                 *
      * ********************************************************************** */
 
-    private final StyledTextArea<?, ?> view;
+    private final StyledTextArea<?, ?, ?> view;
 
     private final StyledTextAreaModel<?, ?> model;
 
@@ -238,7 +266,7 @@ class StyledTextAreaBehavior implements Behavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    StyledTextAreaBehavior(StyledTextArea<?, ?> area) {
+    StyledTextAreaBehavior(StyledTextArea<?, ?, ?> area) {
         this.view = area;
         this.model = area.getModel();
 

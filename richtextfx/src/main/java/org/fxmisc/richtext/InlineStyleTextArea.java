@@ -10,18 +10,11 @@ import java.util.function.Function;
  * @deprecated
  */
 @Deprecated
-public class InlineStyleTextArea<PS, S> extends StyledTextArea<PS, S> {
+public class InlineStyleTextArea<PS, S, Model extends StyledTextAreaModel<PS, S>> extends StyledTextArea<PS, S, Model> {
 
-    /**
-     *
-     * @param initialStyle style to use for text ranges where no other
-     *     style is set via {@code setStyle(...)} methods.
-     * @param styleToCss function that converts an instance of {@code S}
-     *     to a CSS string.
-     */
-    public InlineStyleTextArea(PS initialParagraphStyle, Function<PS, String> paragraphStyleToCss, S initialStyle, Function<S, String> styleToCss) {
-        super(initialParagraphStyle, (paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)),
-                initialStyle, (text, style) -> text.setStyle(styleToCss.apply(style))
+    public InlineStyleTextArea(Function<PS, String> paragraphStyleToCss, Function<S, String> styleToCss, Model model) {
+        super((paragraph, style) -> paragraph.setStyle(paragraphStyleToCss.apply(style)),
+                (text, style) -> text.setStyle(styleToCss.apply(style)), model
         );
     }
 

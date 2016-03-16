@@ -12,9 +12,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.StyleClassedTextAreaModel;
 
 public class ManualHighlighting extends Application {
 
@@ -22,7 +23,7 @@ public class ManualHighlighting extends Application {
         launch(args);
     }
 
-    private final StyleClassedTextArea area = new StyleClassedTextArea();
+    private final StyleClassedTextArea<StyleClassedTextAreaModel> area = AreaFactory.styleClassedTextArea();
 
     @Override
     public void start(Stage primaryStage) {

@@ -1,20 +1,5 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.PopupAlignment.*;
-import static org.reactfx.EventStreams.*;
-import static org.reactfx.util.Tuples.*;
-
-import java.time.Duration;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
-import java.util.function.IntSupplier;
-import java.util.function.IntUnaryOperator;
-import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
-
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -46,7 +31,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow;
-
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -63,6 +47,22 @@ import org.reactfx.collection.LiveList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
+
+import java.time.Duration;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
+import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+
+import static org.fxmisc.richtext.PopupAlignment.CARET_TOP;
+import static org.reactfx.EventStreams.invalidationsOf;
+import static org.reactfx.EventStreams.merge;
+import static org.reactfx.util.Tuples.t;
 
 /**
  * Text editing control. Accepts user input (keyboard, mouse) and
@@ -105,7 +105,7 @@ import org.reactfx.value.Var;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<PS, S> extends Region
+public class StyledTextArea<PS, S, Model extends StyledTextAreaModel<PS, S>> extends Region
         implements
         TextEditingArea<PS, S>,
         EditActions<PS, S>,
@@ -416,12 +416,12 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * model
      */
-    private final StyledTextAreaModel<PS, S> model;
+    private final Model model;
 
     /**
      * @return this area's {@link StyledTextAreaModel}
      */
-    protected final StyledTextAreaModel<PS, S> getModel() {
+    protected final Model getModel() {
         return model;
     }
 
@@ -461,51 +461,21 @@ public class StyledTextArea<PS, S> extends Region
      * ********************************************************************** */
 
     /**
-     * Creates a text area with empty text content.
+     * Creates a StyledTextArea
      *
-     * @param initialTextStyle style to use in places where no other style is
-     * specified (yet).
-     * @param applyStyle function that, given a {@link Text} node and
-     * a style, applies the style to the text node. This function is
-     * used by the default skin to apply style to text nodes.
-     * @param initialParagraphStyle style to use in places where no other style is
-     * specified (yet).
      * @param applyParagraphStyle function that, given a {@link TextFlow} node and
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
+     * @param applyStyle function that, given a {@link Text} node and
+     * a style, applies the style to the text node. This function is
+     * used by the default skin to apply style to text nodes.
+     * @param model the model that holds caret and selection-related data as well as the {@link EditableStyledDocument}
+     *              that this view displays
      */
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
+    public StyledTextArea(BiConsumer<TextFlow, PS> applyParagraphStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          Model model
     ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, true);
-    }
-
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                              S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                              boolean preserveStyle
-    ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
-    }
-
-    /**
-     * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
-     * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocument}.
-     */
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document
-    ) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
-
-    }
-
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document, boolean preserveStyle
-    ) {
-        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this.model = model;
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 

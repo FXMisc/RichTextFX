@@ -1,16 +1,17 @@
 package org.fxmisc.richtext.demo;
 
-import java.time.Duration;
-
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-
+import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.StyleClassedTextAreaModel;
+
+import java.time.Duration;
 
 public class TooltipDemo extends Application {
 
@@ -20,7 +21,7 @@ public class TooltipDemo extends Application {
 
     @Override
     public void start(Stage stage) {
-        StyleClassedTextArea area = new StyleClassedTextArea();
+        StyleClassedTextArea<StyleClassedTextAreaModel> area = AreaFactory.styleClassedTextArea();
         area.setWrapText(true);
         area.appendText("Pause the mouse over the text for 1 second.");
 

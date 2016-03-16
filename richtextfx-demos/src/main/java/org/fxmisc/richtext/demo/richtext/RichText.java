@@ -6,12 +6,6 @@
 
 package org.fxmisc.richtext.demo.richtext;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -32,13 +26,20 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.StyledTextAreaModel;
 import org.reactfx.SuspendableNo;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
+import static org.fxmisc.richtext.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Forward;
 
 public class RichText extends Application {
 
@@ -46,7 +47,7 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final StyledTextArea<ParStyle, TextStyle> area =
+    private final StyledTextArea<ParStyle, TextStyle, StyledTextAreaModel<ParStyle, TextStyle>> area =
             AreaFactory.<ParStyle, TextStyle>styledTextArea(
                     ParStyle.EMPTY,
                     ( paragraph, style) -> paragraph.setStyle(style.toCss()),
@@ -237,7 +238,7 @@ public class RichText extends Application {
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
-        VirtualizedScrollPane<StyledTextArea<ParStyle, TextStyle>> vsPane = new VirtualizedScrollPane<>(area);
+        VirtualizedScrollPane<StyledTextArea<ParStyle, TextStyle, StyledTextAreaModel<ParStyle, TextStyle>>> vsPane = new VirtualizedScrollPane<>(area);
         VBox vbox = new VBox();
         VBox.setVgrow(vsPane, Priority.ALWAYS);
         vbox.getChildren().addAll(panel1, panel2, vsPane);

@@ -1,7 +1,5 @@
 package org.fxmisc.richtext;
 
-import java.util.function.IntFunction;
-
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -11,9 +9,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
-
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
+
+import java.util.function.IntFunction;
 
 /**
  * Graphic factory that produces labels containing line numbers.
@@ -28,12 +27,12 @@ public class LineNumberFactory implements IntFunction<Node> {
     private static final Background DEFAULT_BACKGROUND =
             new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
-    public static IntFunction<Node> get(StyledTextArea<?, ?> area) {
+    public static IntFunction<Node> get(StyledTextArea<?, ?, ?> area) {
         return get(area, digits -> "%0" + digits + "d");
     }
 
     public static IntFunction<Node> get(
-            StyledTextArea<?, ?> area,
+            StyledTextArea<?, ?, ?> area,
             IntFunction<String> format) {
         return new LineNumberFactory(area, format);
     }
@@ -42,7 +41,7 @@ public class LineNumberFactory implements IntFunction<Node> {
     private final IntFunction<String> format;
 
     private LineNumberFactory(
-            StyledTextArea<?, ?> area,
+            StyledTextArea<?, ?, ?> area,
             IntFunction<String> format) {
         nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = format;
