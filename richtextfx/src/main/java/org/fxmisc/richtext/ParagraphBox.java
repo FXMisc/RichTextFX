@@ -99,9 +99,9 @@ class ParagraphBox<PS, S> extends Region {
 
     public Property<Boolean> caretVisibleProperty() { return text.caretVisibleProperty(); }
 
-    public Property<Paint> highlightFillProperty() { return text.highlightFillProperty(); }
+    public Property<Paint> highlightFillProperty() { return text.selectionBackgroundFillProperty(); }
 
-    public Property<Paint> highlightTextFillProperty() { return text.highlightTextFillProperty(); }
+    public Property<Paint> highlightTextFillProperty() { return text.selectionForegroundFillProperty(); }
 
     public Var<Integer> caretPositionProperty() { return text.caretPositionProperty(); }
 

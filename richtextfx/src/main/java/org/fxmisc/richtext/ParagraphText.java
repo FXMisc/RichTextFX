@@ -26,9 +26,9 @@ class ParagraphText<PS, S> extends TextFlowExt {
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
-    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<>(Color.WHITE);
-    public ObjectProperty<Paint> highlightTextFillProperty() {
-        return highlightTextFill;
+    private final ObjectProperty<Paint> selectionForegroundFill = new SimpleObjectProperty<>(Color.WHITE);
+    public ObjectProperty<Paint> selectionForegroundFillProperty() {
+        return selectionForegroundFill;
     }
 
     private final Var<Integer> caretPosition = Var.newSimpleVar(0);
@@ -84,8 +84,8 @@ class ParagraphText<PS, S> extends TextFlowExt {
         caretShape.layoutYProperty().bind(topInset);
         getChildren().add(caretShape);
 
-        // XXX: see the note at highlightTextFill
-//        highlightTextFill.addListener(new ChangeListener<Paint>() {
+        // XXX: see the note at selectionForegroundFill
+//        selectionForegroundFill.addListener(new ChangeListener<Paint>() {
 //            @Override
 //            public void changed(ObservableValue<? extends Paint> observable,
 //                    Paint oldFill, Paint newFill) {
@@ -102,7 +102,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
             applyStyle.accept(t, segment.getStyle());
 
             // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
+            // see the note at selectionForegroundFill
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
             getChildren().add(t);
@@ -127,7 +127,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         return caretVisible;
     }
 
-    public ObjectProperty<Paint> highlightFillProperty() {
+    public ObjectProperty<Paint> selectionBackgroundFillProperty() {
         return selectionShape.fillProperty();
     }
 

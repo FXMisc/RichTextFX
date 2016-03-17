@@ -138,16 +138,16 @@ public class StyledTextArea<PS, S> extends Region
      * ********************************************************************** */
 
     /**
-     * Background fill for highlighted text.
+     * Background fill for selected text.
      */
-    private final StyleableObjectProperty<Paint> highlightFill
-            = new CssProperties.HighlightFillProperty(this, Color.DODGERBLUE);
+    private final StyleableObjectProperty<Paint> selectionBackgroundFill
+            = new CssProperties.SelectionBackgroundFillProperty(this, Color.DODGERBLUE);
 
     /**
-     * Text color for highlighted text.
+     * Foreground fill (text letter's color) for selected text.
      */
-    private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
+    private final StyleableObjectProperty<Paint> selectionForegroundFill
+            = new CssProperties.SelectionForegroundFillProperty(this, Color.WHITE);
 
     // editable property
     /**
@@ -1032,8 +1032,8 @@ public class StyledTextArea<PS, S> extends Region
 
         ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, applyStyle);
 
-        box.highlightFillProperty().bind(highlightFill);
-        box.highlightTextFillProperty().bind(highlightTextFill);
+        box.highlightFillProperty().bind(selectionBackgroundFill);
+        box.highlightTextFillProperty().bind(selectionForegroundFill);
         box.wrapTextProperty().bind(wrapTextProperty());
         box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
         box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
