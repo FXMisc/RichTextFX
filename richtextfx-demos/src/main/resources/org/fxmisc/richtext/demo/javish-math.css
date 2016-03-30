@@ -1,0 +1,14 @@
+.var {
+    -fx-fill: teal;
+    -fx-font-weight: bold;
+}
+.variable-use {
+    -fx-fill: purple;
+    -fx-style: italic;
+}
+.variable-decl {
+    -fx-underline: true
+}
+.comment {
+    -fx-fill: green;
+}

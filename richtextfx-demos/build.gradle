@@ -1,5 +1,24 @@
+apply plugin: 'antlr'
+
 dependencies {
     compile project(":richtextfx")
+    antlr "org.antlr:antlr4:4.5"
+}
+
+
+sourceSets{
+    gen{
+        java.srcDir "${projectDir}/src/gen/java"
+    }
+}
+
+compileJava{
+    dependsOn(generateGrammarSource)
+    source += sourceSets.gen.java
+}
+
+generateGrammarSource {
+    outputDirectory = new File("${project.rootDir}/richtextfx-demos/src/gen/java/org/fxmisc/richtext/parser".toString())
 }
 
 task fatJar(type: Jar, dependsOn: classes) {
