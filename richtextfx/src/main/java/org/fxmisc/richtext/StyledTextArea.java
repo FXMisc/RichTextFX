@@ -421,7 +421,7 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * @return this area's {@link StyledTextAreaModel}
      */
-    protected final StyledTextAreaModel<PS, S> getModel() {
+    final StyledTextAreaModel<PS, S> getModel() {
         return model;
     }
 
