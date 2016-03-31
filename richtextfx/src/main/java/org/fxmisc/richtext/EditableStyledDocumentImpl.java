@@ -26,9 +26,7 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Content model for {@link StyledTextArea}. Implements edit operations
- * on styled text, but not worrying about additional aspects such as
- * caret or selection.
+ * Provides an implementation of {@link EditableStyledDocument}
  */
 final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>>
     implements EditableStyledDocument<PS, S> {

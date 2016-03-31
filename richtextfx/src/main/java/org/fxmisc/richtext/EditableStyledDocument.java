@@ -7,7 +7,22 @@ import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.value.Val;
 
+/**
+ * Content model for {@link StyledTextArea}. Implements edit operations
+ * on styled text, but not worrying about additional aspects such as
+ * caret or selection, which are handled by {@link StyledTextAreaModel}.
+ */
 public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of an object.*
+     * They are not directly settable by the client code, but change in       *
+     * response to user input and/or API actions.                             *
+     *                                                                        *
+     * ********************************************************************** */
 
     String getText();
     ObservableValue<String> textProperty();
@@ -18,6 +33,12 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
     ObservableList<Paragraph<PS, S>> getParagraphs();
 
     ReadOnlyStyledDocument<PS, S> snapshot();
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Event streams                                                          *
+     *                                                                        *
+     * ********************************************************************** */
 
     default EventStream<PlainTextChange> plainChanges() {
         return richChanges()
@@ -35,6 +56,15 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
     StyledDocument<PS, S> subSequence(int start, int end);
 
     StyledDocument<PS, S> subDocument(int paragraphIndex);
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of the object. They typically cause a change  *
+     * of one or more observables and/or produce an event.                    *
+     *                                                                        *
+     * ********************************************************************** */
 
     void replace(int start, int end, StyledDocument<PS, S> replacement);
 
