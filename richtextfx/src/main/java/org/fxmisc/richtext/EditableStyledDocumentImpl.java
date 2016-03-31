@@ -30,7 +30,8 @@ import org.reactfx.value.Var;
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
+final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>>
+    implements EditableStyledDocument<PS, S> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -74,6 +75,9 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         return new ReadOnlyStyledDocument<>(paragraphs, ParagraphsPolicy.COPY);
     }
 
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -107,8 +111,8 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
     private final EventSource<StyledDocument<PS, S>> insertedDocument = new EventSource<>();
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
-    private final EventStream<PlainTextChange> plainTextChanges;
-    public EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
+    private final EventStream<PlainTextChange> plainChanges;
+    public EventStream<PlainTextChange> plainChanges() { return plainChanges; }
 
     private final EventStream<RichTextChange<PS, S>> richChanges;
     public EventStream<RichTextChange<PS, S>> richChanges() { return richChanges; }
@@ -123,7 +127,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
                 this.insertedDocument,
                 changePosition.emitBothOnEach(insertionEnd).map(t2 -> t2.map(this::subSequence)));
 
-        plainTextChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
+        plainChanges = EventStreams.zip(textChangePosition, removedText, insertedText)
                 .filter(t3 -> t3.map((pos, removed, inserted) -> !removed.equals(inserted)))
                 .map(t3 -> t3.map(PlainTextChange::new));
 
@@ -366,10 +370,6 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
      * Private and package private methods                                    *
      *                                                                        *
      * ********************************************************************** */
-
-    private final SuspendableNo beingUpdated = new SuspendableNo();
-    SuspendableNo beingUpdatedProperty() { return beingUpdated; }
-    final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     private void ensureValidParagraphIndex(int parIdx) {
         Lists.checkIndex(parIdx, paragraphs.size());
