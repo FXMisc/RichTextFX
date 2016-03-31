@@ -19,7 +19,13 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
 
     ReadOnlyStyledDocument<PS, S> snapshot();
 
-    EventStream<PlainTextChange> plainChanges();
+    default EventStream<PlainTextChange> plainChanges() {
+        return richChanges()
+                // map is used to prevent code repetition: StyledDocument#getText()
+                .map(c -> new PlainTextChange(c.position, c.removed.getText(), c.inserted.getText()))
+                // filter out rich changes where the style was changed but text wasn't added/removed
+                .filter(pc -> !pc.removed.equals(pc.inserted));
+    }
 
     EventStream<RichTextChange<PS, S>> richChanges();
 
