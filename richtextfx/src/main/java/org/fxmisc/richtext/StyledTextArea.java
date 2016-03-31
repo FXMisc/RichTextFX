@@ -432,6 +432,11 @@ public class StyledTextArea<PS, S> extends Region
      * ********************************************************************** */
 
     /**
+     * The underlying document that can be displayed by multiple {@code StyledTextArea}s.
+     */
+    public final EditableStyledDocument<PS, S> getContent() { return model.getContent(); }
+
+    /**
      * Style used by default when no other style is provided.
      */
     public final S getInitialTextStyle() { return model.getInitialTextStyle(); }
