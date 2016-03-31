@@ -12,7 +12,7 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         this(new EditableStyledDocumentImpl<>("", ""));
     }
 
-    public InlineCssTextArea(EditableStyledDocumentImpl<String, String> document) {
+    public InlineCssTextArea(EditableStyledDocument<String, String> document) {
         super(
                 "", TextFlow::setStyle,
                 "", TextExt::setStyle,

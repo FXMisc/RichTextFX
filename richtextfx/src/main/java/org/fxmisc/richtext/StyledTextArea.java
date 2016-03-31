@@ -491,11 +491,11 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * The same as {@link #StyledTextArea(Object, BiConsumer, Object, BiConsumer)} except that
      * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocumentImpl}.
+     * shares the same {@link EditableStyledDocument}.
      */
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocumentImpl<PS, S> document
+                          EditableStyledDocument<PS, S> document
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, true);
 
@@ -503,7 +503,7 @@ public class StyledTextArea<PS, S> extends Region
 
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocumentImpl<PS, S> document, boolean preserveStyle
+                          EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
         this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
         this.applyStyle = applyStyle;

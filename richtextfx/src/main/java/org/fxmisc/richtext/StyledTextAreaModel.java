@@ -182,14 +182,14 @@ class StyledTextAreaModel<PS, S>
     /**
      * content model
      */
-    private final EditableStyledDocumentImpl<PS, S> content;
+    private final EditableStyledDocument<PS, S> content;
 
     /**
      * Usually used to create another area (View) that shares
      * the same document (Model).
-     * @return this area's {@link EditableStyledDocumentImpl}
+     * @return this area's {@link EditableStyledDocument}
      */
-    protected final EditableStyledDocumentImpl<PS, S> getContent() { return content; }
+    protected final EditableStyledDocument<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
@@ -239,16 +239,16 @@ class StyledTextAreaModel<PS, S>
     /**
      * The same as {@link #StyledTextAreaModel(Object, Object)} except that
      * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocumentImpl}.
+     * shares the same {@link EditableStyledDocument}.
      */
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocumentImpl<PS, S> document
+                               EditableStyledDocument<PS, S> document
     ) {
         this(initialParagraphStyle, initialTextStyle, document, true);
     }
 
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocumentImpl<PS, S> document, boolean preserveStyle
+                               EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
@@ -259,13 +259,13 @@ class StyledTextAreaModel<PS, S>
 
         text = Val.suspendable(content.textProperty());
         length = Val.suspendable(content.lengthProperty());
-        plainTextChanges = content.plainTextChanges().pausable();
+        plainTextChanges = content.plainChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
         // when content is updated by an area, update the caret
         // and selection ranges of all the other
         // clones that also share this document
-        subscribeTo(content.plainTextChanges(), plainTextChange -> {
+        subscribeTo(content.plainChanges(), plainTextChange -> {
             int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
             if (changeLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
