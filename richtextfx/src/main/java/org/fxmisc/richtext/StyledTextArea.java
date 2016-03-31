@@ -425,34 +425,40 @@ public class StyledTextArea<PS, S> extends Region
         return model;
     }
 
-    /**
-     * Style used by default when no other style is provided.
-     */
-    protected final S getInitialTextStyle() { return model.getInitialTextStyle(); }
+    /* ********************************************************************** *
+     *                                                                        *
+     * Fields necessary for Cloning                                           *
+     *                                                                        *
+     * ********************************************************************** */
 
     /**
      * Style used by default when no other style is provided.
      */
-    protected final PS getInitialParagraphStyle() { return model.getInitialParagraphStyle(); }
+    public final S getInitialTextStyle() { return model.getInitialTextStyle(); }
+
+    /**
+     * Style used by default when no other style is provided.
+     */
+    public final PS getInitialParagraphStyle() { return model.getInitialParagraphStyle(); }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
-    protected final BiConsumer<? super TextExt, S> getApplyStyle() { return applyStyle; }
+    public final BiConsumer<? super TextExt, S> getApplyStyle() { return applyStyle; }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
-    protected final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
+    public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
      * copy/paste and text move.
      * TODO: Currently, only undo/redo respect this flag.
      */
-    protected final boolean isPreserveStyle() { return model.isPreserveStyle(); }
+    public final boolean isPreserveStyle() { return model.isPreserveStyle(); }
 
     /* ********************************************************************** *
      *                                                                        *
