@@ -182,14 +182,14 @@ class StyledTextAreaModel<PS, S>
     /**
      * content model
      */
-    private final EditableStyledDocument<PS, S> content;
+    private final EditableStyledDocumentImpl<PS, S> content;
 
     /**
      * Usually used to create another area (View) that shares
      * the same document (Model).
-     * @return this area's {@link EditableStyledDocument}
+     * @return this area's {@link EditableStyledDocumentImpl}
      */
-    protected final EditableStyledDocument<PS, S> getContent() { return content; }
+    protected final EditableStyledDocumentImpl<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
@@ -233,22 +233,22 @@ class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
      * The same as {@link #StyledTextAreaModel(Object, Object)} except that
      * this constructor can be used to create another {@code StyledTextArea} object that
-     * shares the same {@link EditableStyledDocument}.
+     * shares the same {@link EditableStyledDocumentImpl}.
      */
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocument<PS, S> document
+                               EditableStyledDocumentImpl<PS, S> document
     ) {
         this(initialParagraphStyle, initialTextStyle, document, true);
     }
 
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle,
-                               EditableStyledDocument<PS, S> document, boolean preserveStyle
+                               EditableStyledDocumentImpl<PS, S> document, boolean preserveStyle
     ) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;

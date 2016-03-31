@@ -30,7 +30,7 @@ import org.reactfx.value.Var;
  * on styled text, but not worrying about additional aspects such as
  * caret or selection.
  */
-final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
+final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, ObservableList<Paragraph<PS, S>>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -140,12 +140,12 @@ final class EditableStyledDocument<PS, S> extends StyledDocumentBase<PS, S, Obse
      * ********************************************************************** */
 
     @SuppressWarnings("unchecked")
-    EditableStyledDocument(Paragraph<PS, S> initialParagraph) {
+    EditableStyledDocumentImpl(Paragraph<PS, S> initialParagraph) {
         super(FXCollections.observableArrayList(initialParagraph));
 
     }
 
-    EditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
+    EditableStyledDocumentImpl(PS initialParagraphStyle, S initialStyle) {
         this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 

@@ -32,7 +32,7 @@ public class StyledTextAreaModelTest {
         // set up area with some styled text content
         boolean initialStyle = false;
         StyledTextAreaModel<String, Boolean> model = new StyledTextAreaModel<>(
-                "", initialStyle, new EditableStyledDocument<>("", initialStyle), true);
+                "", initialStyle, new EditableStyledDocumentImpl<>("", initialStyle), true);
         model.replaceText("testtest");
         model.setStyle(0, 8, true);
 
