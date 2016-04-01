@@ -25,7 +25,7 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
     }
     public StyleClassedTextArea(boolean preserveStyle) {
         this(
-                new EditableStyledDocument<>(
+                new EditableStyledDocumentImpl<>(
                     Collections.<String>emptyList(), Collections.<String>emptyList()
                 ), preserveStyle);
     }

@@ -9,7 +9,7 @@ import javafx.scene.text.TextFlow;
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
     public InlineCssTextArea() {
-        this(new EditableStyledDocument<>("", ""));
+        this(new EditableStyledDocumentImpl<>("", ""));
     }
 
     public InlineCssTextArea(EditableStyledDocument<String, String> document) {

@@ -421,38 +421,49 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * @return this area's {@link StyledTextAreaModel}
      */
-    protected final StyledTextAreaModel<PS, S> getModel() {
+    final StyledTextAreaModel<PS, S> getModel() {
         return model;
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Fields necessary for Cloning                                           *
+     *                                                                        *
+     * ********************************************************************** */
+
     /**
-     * Style used by default when no other style is provided.
+     * The underlying document that can be displayed by multiple {@code StyledTextArea}s.
      */
-    protected final S getInitialTextStyle() { return model.getInitialTextStyle(); }
+    public final EditableStyledDocument<PS, S> getContent() { return model.getContent(); }
 
     /**
      * Style used by default when no other style is provided.
      */
-    protected final PS getInitialParagraphStyle() { return model.getInitialParagraphStyle(); }
+    public final S getInitialTextStyle() { return model.getInitialTextStyle(); }
+
+    /**
+     * Style used by default when no other style is provided.
+     */
+    public final PS getInitialParagraphStyle() { return model.getInitialParagraphStyle(); }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<? super TextExt, S> applyStyle;
-    protected final BiConsumer<? super TextExt, S> getApplyStyle() { return applyStyle; }
+    public final BiConsumer<? super TextExt, S> getApplyStyle() { return applyStyle; }
 
     /**
      * Style applicator used by the default skin.
      */
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
-    protected final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
+    public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
      * copy/paste and text move.
      * TODO: Currently, only undo/redo respect this flag.
      */
-    protected final boolean isPreserveStyle() { return model.isPreserveStyle(); }
+    public final boolean isPreserveStyle() { return model.isPreserveStyle(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -485,7 +496,7 @@ public class StyledTextArea<PS, S> extends Region
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**

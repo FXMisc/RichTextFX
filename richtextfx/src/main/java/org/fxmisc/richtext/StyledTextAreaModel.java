@@ -170,7 +170,7 @@ class StyledTextAreaModel<PS, S>
 
     /* ********************************************************************** *
      *                                                                        *
-     * Private fields                                                         *
+     * Private & Package-Private fields                                       *
      *                                                                        *
      * ********************************************************************** */
 
@@ -189,19 +189,19 @@ class StyledTextAreaModel<PS, S>
      * the same document (Model).
      * @return this area's {@link EditableStyledDocument}
      */
-    protected final EditableStyledDocument<PS, S> getContent() { return content; }
+    final EditableStyledDocument<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final S initialTextStyle;
-    protected final S getInitialTextStyle() { return initialTextStyle; }
+    final S getInitialTextStyle() { return initialTextStyle; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final PS initialParagraphStyle;
-    protected final PS getInitialParagraphStyle() { return initialParagraphStyle; }
+    final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -209,7 +209,7 @@ class StyledTextAreaModel<PS, S>
      * TODO: Currently, only undo/redo respect this flag.
      */
     private final boolean preserveStyle;
-    protected final boolean isPreserveStyle() { return preserveStyle; }
+    final boolean isPreserveStyle() { return preserveStyle; }
 
 
     /* ********************************************************************** *
@@ -233,7 +233,7 @@ class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new EditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
@@ -259,13 +259,13 @@ class StyledTextAreaModel<PS, S>
 
         text = Val.suspendable(content.textProperty());
         length = Val.suspendable(content.lengthProperty());
-        plainTextChanges = content.plainTextChanges().pausable();
+        plainTextChanges = content.plainChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
         // when content is updated by an area, update the caret
         // and selection ranges of all the other
         // clones that also share this document
-        subscribeTo(content.plainTextChanges(), plainTextChange -> {
+        subscribeTo(content.plainChanges(), plainTextChange -> {
             int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
             if (changeLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
