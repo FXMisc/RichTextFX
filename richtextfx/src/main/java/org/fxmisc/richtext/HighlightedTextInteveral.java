@@ -9,6 +9,7 @@ public class HighlightedTextInteveral {
     private final int upperBound;
     private final String styleClass;
 
+    //both lowerBound and upperBound are inclusive (closed)
     public HighlightedTextInteveral(int lowerBound, int upperBound, String styleClass) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
