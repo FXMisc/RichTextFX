@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.fxmisc.richtext.ContextualHighlight;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StructuredTextArea;
 
@@ -31,12 +32,12 @@ public class AntlrGrammar extends Application {
                 "block"
         );
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        ObservableList<StructuredTextArea.ContextualHighlight> highlights = codeArea.getHighlights();
+        ObservableList<ContextualHighlight> highlights = codeArea.getHighlights();
 
-        highlights.add(new StructuredTextArea.ContextualHighlight("Statement", "", "var", "var"));
-        highlights.add(new StructuredTextArea.ContextualHighlight("Variable", "Expr", "", "variable-use"));
-        highlights.add(new StructuredTextArea.ContextualHighlight("Variable", "Statement", "", "variable-decl"));
-        highlights.add(new StructuredTextArea.ContextualHighlight("Comment", "", "", "comment"));
+        highlights.add(new ContextualHighlight("Statement", "", "var", "var"));
+        highlights.add(new ContextualHighlight("Variable", "Expr", "", "variable-use"));
+        highlights.add(new ContextualHighlight("Variable", "Statement", "", "variable-decl"));
+        highlights.add(new ContextualHighlight("Comment", "", "", "comment"));
 
         codeArea.replaceText(0, 0, initialText);
         codeArea.setPrefHeight(200);
