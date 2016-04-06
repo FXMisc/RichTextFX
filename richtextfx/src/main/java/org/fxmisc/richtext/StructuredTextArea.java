@@ -152,13 +152,12 @@ public class StructuredTextArea extends CodeArea {
         Token currentToken = null;
         int tokenIdx = 0;
 
-        for(int characterIndex = 0; characterIndex < currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
+        for(int characterIndex = 0; characterIndex <= currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
             currentToken = tokens.get(tokenIdx);
             assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
             characterIndex = currentToken.getStopIndex() + 1;
             tokenIdx += 1;
         }
-        //tokenIdx went 1 too far
         tokenIdx -= 1;
 
         if(currentToken == null || currentToken.getType() == Token.EOF){
@@ -166,7 +165,18 @@ public class StructuredTextArea extends CodeArea {
         }
 
         String currentText = currentToken.getText();
-        if(currentText == null || (! currentText.equals("(") && ! currentText.equals(")"))){
+        if(currentText == null){
+            return Collections.emptyList();
+        }
+        if( ! currentText.equals("(") && ! currentText.equals(")") && tokenIdx > 0){
+            Token candidateToken = tokens.get(tokenIdx - 1);
+            if("(".equals(candidateToken.getText()) || ")".equals(candidateToken.getText())){
+                tokenIdx -= 1;
+                currentToken = candidateToken;
+                currentText = currentToken.getText();
+            }
+        }
+        if( ! currentText.equals("(") && ! currentText.equals(")")){
             return Collections.emptyList();
         }
 
