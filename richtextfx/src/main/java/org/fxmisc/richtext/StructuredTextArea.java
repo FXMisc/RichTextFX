@@ -143,79 +143,107 @@ public class StructuredTextArea extends CodeArea {
 
     private Collection<HighlightedTextInteveral> highlightBrackets(TokenStream tokens) {
 
-        int currentIndex = getCaretPosition();
+        int currentCharIndex = getCaretPosition();
 
-        //TODO surely theres a better way to do this.
-        //build a map of indexes -> tokens and ask that?
-        //cache invalidation logic isnt very functional :\
-        //well i suppose it is if i use an immutable map.
-        Token currentToken = null;
-        int tokenIdx = 0;
-        int characterIndex;
+        Optional<Integer> tokenIndexCandidate = getTokenIndexFor(tokens, currentCharIndex);
 
-        for(characterIndex = 0; characterIndex < currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
-            currentToken = tokens.get(tokenIdx);
-            assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
-            characterIndex = currentToken.getStopIndex() + 1;
-            tokenIdx += 1;
+        if ( ! tokenIndexCandidate.isPresent()){ return Collections.emptyList(); }
+
+        int tokenIndex = tokenIndexCandidate.get();
+
+        if( ! isBracket(tokens, tokenIndex) && tokens.get(tokenIndex).getStartIndex() == currentCharIndex){
+            tokenIndex -= 1;
         }
-        tokenIdx -= 1;
 
-        if(currentToken == null || currentToken.getType() == Token.EOF){
+        if ( ! isBracket(tokens, tokenIndex)){
             return Collections.emptyList();
         }
 
-        String currentText = currentToken.getText();
-        if(currentText == null){
-            return Collections.emptyList();
-        }
-        if( ! currentText.equals("(") && ! currentText.equals(")")
-                && tokenIdx > 0 && currentIndex == currentToken.getStartIndex()){
-            Token candidateToken = tokens.get(tokenIdx - 1);
-            if("(".equals(candidateToken.getText()) || ")".equals(candidateToken.getText())){
-                tokenIdx -= 1;
-                currentToken = candidateToken;
-                currentText = currentToken.getText();
-            }
-        }
-        if( ! currentText.equals("(") && ! currentText.equals(")")){
-            return Collections.emptyList();
-        }
-
-        Token openingBracketToken = currentToken;
-
+        Token openingBracketToken = tokens.get(tokenIndex);
         HighlightedTextInteveral openingBracketHighlight = new HighlightedTextInteveral(
                 openingBracketToken.getStartIndex(),
                 openingBracketToken.getStopIndex(),
                 "bracket"
         );
 
-        int openCount = 0;
-        UnaryOperator<Integer> moveNext = current -> openingBracketToken.getText().equals("(") ? current + 1 : current - 1;
-        do{
-            currentToken = tokens.get(tokenIdx);
-            if(currentToken.getText().equals("(")) { openCount += 1; }
-            if(currentToken.getText().equals(")")) { openCount -= 1; }
-            tokenIdx = moveNext.apply(tokenIdx);
-        }
-        while(openCount != 0 && currentToken.getType() != Token.EOF);
+        int counterpartsIndex = findIndexOfCounterpart(tokens, tokenIndex);
 
-        if(currentToken.getType() == Token.EOF){
-            return Collections.singletonList(openingBracketHighlight);
+        if(counterpartsIndex == getLength()){
+            return Collections.singleton(openingBracketHighlight);
         }
 
-        Token closingBracketToken = currentToken;
-
-        HighlightedTextInteveral closingBracketHighlight = new HighlightedTextInteveral(
+        Token closingBracketToken = tokens.get(counterpartsIndex);
+        HighlightedTextInteveral closingBracketsHighlight = new HighlightedTextInteveral(
                 closingBracketToken.getStartIndex(),
                 closingBracketToken.getStopIndex(),
                 "bracket"
         );
-        List<HighlightedTextInteveral> resultPair = Arrays.asList(
+
+        return Arrays.asList(
                 openingBracketHighlight,
-                closingBracketHighlight
+                closingBracketsHighlight
         );
-        return resultPair;
+    }
+
+    private int findIndexOfCounterpart(TokenStream tokens, int tokenIndex) {
+
+        Token currentToken = tokens.get(tokenIndex);
+        String openingBracketText = currentToken.getText();
+
+        UnaryOperator<Integer> moveNext = current -> openingBracketText.equals("(") ? current + 1 : current - 1;
+
+        int openCount = 0;
+        do{
+            currentToken = tokens.get(tokenIndex);
+            if(currentToken.getText().equals("(")) { openCount += 1; }
+            if(currentToken.getText().equals(")")) { openCount -= 1; }
+
+            if(openCount == 0) { break; }
+
+            tokenIndex = moveNext.apply(tokenIndex);
+        }
+        while(currentToken.getType() != Token.EOF);
+
+        if(currentToken.getType() == Token.EOF){ tokenIndex = getLength(); }
+
+        return tokenIndex;
+    }
+
+    private boolean isBracket(TokenStream tokens, int tokenIndex) {
+        String text = tokens.get(tokenIndex).getText();
+        return text.equals("(") || text.equals(")");
+    }
+
+    private Optional<Integer> getTokenIndexFor(TokenStream tokens, int targetCharIndex) {
+
+        //TODO surely theres a better way to do this.
+        //build a map of indexes -> tokens and ask that?
+        //cache invalidation logic isnt very functional :\
+        //well i suppose it is if i use an immutable map.
+
+        int tokenIdx = 0;
+
+        for (int characterIndex = 0; characterIndex < targetCharIndex && tokens.get(tokenIdx).getType() != Token.EOF;) {
+            Token currentToken = tokens.get(tokenIdx);
+            assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
+            characterIndex = currentToken.getStartIndex();
+            tokenIdx += 1;
+        }
+
+        tokenIdx -= 1;
+
+        if( ! isOnToken(tokens, tokenIdx, targetCharIndex)){
+            return Optional.empty();
+        }
+
+        return Optional.of(tokenIdx);
+    }
+
+    private boolean isOnToken(TokenStream tokens, int tokenIdx, int characterIndex) {
+        Token token = tokens.get(tokenIdx);
+        return token.getStartIndex() <= characterIndex
+                //remember, stopIndex is inclusive.
+                && token.getStopIndex() >= characterIndex;
     }
 
     public final ObservableList<ContextualHighlight> getHighlights(){
