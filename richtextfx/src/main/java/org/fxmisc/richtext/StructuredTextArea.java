@@ -94,6 +94,7 @@ public class StructuredTextArea extends CodeArea {
 
                 int startIndex = -1, endIndex = -1;
 
+                //TODO this doesnt highlight anything for the expression '(10 + )' (a postfix unary '+'?)
                 if(symbol.getStartIndex() != -1){
                     startIndex = symbol.getStartIndex();
                     endIndex = symbol.getStopIndex();
