@@ -17,3 +17,7 @@
     -fx-fill: blue;
     -fx-underline: true;
 }
+.error {
+    -fx-fill: red;
+    -fx-underline: true;
+}

@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
@@ -98,39 +99,68 @@ public class StructuredTextArea extends CodeArea {
 
         ParseTree expr = rootProduction.apply(parser);
 
-        List<HighlightedTextInteveral> foundHighlights = new ArrayList<>();
+        RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
+
+        styleByIndex.putAll(highlightBrackets(tokens));
 
         ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {}
             @Override public void visitErrorNode(ErrorNode errorNode) {
-                //TODO red-underline
-            }
-            @Override public void enterEveryRule(ParserRuleContext parserRuleContext) {}
-            @Override public void exitEveryRule(ParserRuleContext ctx) {
+                //note order is important here
+                Token symbol = errorNode.getSymbol();
+                ParserRuleContext parent = (ParserRuleContext) errorNode.getParent();
+                int thisIndex = parent.children.indexOf(errorNode);
+                ParseTree olderSib = parent.getChild(thisIndex - 1);
+                ParseTree youngerSib = parent.getChild(thisIndex + 1);
 
+                Token preceedingToken = olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
+                                        olderSib instanceof TerminalNode ? ((TerminalNode) olderSib).getSymbol() :
+                                        null;
+                Token succeedingToken = youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
+                                        youngerSib instanceof TerminalNode ? ((TerminalNode) youngerSib).getSymbol() :
+                                        null;
+
+                int startIndex = -1, endIndex = -1;
+                if(preceedingToken != null) { startIndex = preceedingToken.getStopIndex(); }
+                if(succeedingToken != null) { endIndex = succeedingToken.getStartIndex(); }
+
+                startIndex = startIndex == -1 ? endIndex : startIndex;
+                endIndex = endIndex == -1 ? startIndex : endIndex;
+
+                Range<Integer> range = Range.closed(startIndex, endIndex);
+                styleByIndex.put(range, "error");
+            }
+            @Override public void enterEveryRule(ParserRuleContext ctx) {
                 Optional<HighlightedTextInteveral> targetHighlight = getHighlights().stream()
                         .map(highlight -> highlight.getMatchingText(ctx))
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .findFirst();
 
-                targetHighlight.ifPresent(foundHighlights::add);
+                targetHighlight.ifPresent(highlight -> {
+                    Range<Integer> range = Range.closed(highlight.getLowerBound(), highlight.getUpperBound());
+                    styleByIndex.put(range, highlight.getStyleClass());
+                });
             }
+            @Override public void exitEveryRule(ParserRuleContext ctx) {}
         };
         walker.walk(walkListener, expr);
-
-        foundHighlights.addAll(highlightBrackets(tokens));
-        foundHighlights.sort((l, r) -> l.getLowerBound() - r.getLowerBound());
 
         StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         int nextHighlightStart = 0;
         //TODO overlapping highlights?
 
-        for(HighlightedTextInteveral interval : foundHighlights){
-            spansBuilder.add(Collections.emptyList(), interval.getLowerBound() - nextHighlightStart);
-            spansBuilder.add(Collections.singleton(interval.getStyleClass()), (interval.getUpperBound() + 1) - interval.getLowerBound());
-            nextHighlightStart = interval.getUpperBound() + 1;
+        snapRanges(styleByIndex);
+
+        for(Map.Entry<Range<Integer>, String> styledInterval : styleByIndex.asMapOfRanges().entrySet()){
+            int lowerBound = styledInterval.getKey().lowerEndpoint();
+            int upperBound = styledInterval.getKey().upperEndpoint();
+            String style = styledInterval.getValue();
+
+            spansBuilder.add(Collections.emptyList(), lowerBound - nextHighlightStart);
+            spansBuilder.add(Collections.singleton(style), upperBound + 1 - lowerBound);
+            nextHighlightStart = upperBound + 1;
         }
 
         //also, make the HighlightedTextInterval toString nicely.
@@ -141,13 +171,35 @@ public class StructuredTextArea extends CodeArea {
         setStyleSpans(0, spansBuilder.create());
     }
 
-    private Collection<HighlightedTextInteveral> highlightBrackets(TokenStream tokens) {
+    private void snapRanges(RangeMap<Integer, String> styleByIndex) {
+
+        Map<Range<Integer>, String> rangeMap = styleByIndex.asMapOfRanges();
+
+        for(Range<Integer> range : new HashSet<>(rangeMap.keySet())){
+            if(range.lowerBoundType() == BoundType.OPEN){
+                String value = rangeMap.remove(range);
+                range = Range.closed(range.lowerEndpoint() + 1, range.upperEndpoint());
+                if(range.isEmpty()){ continue; }
+                styleByIndex.put(range, value);
+            }
+            if(range.upperBoundType() == BoundType.OPEN){
+                String value = rangeMap.remove(range);
+                range = Range.closed(range.lowerEndpoint(), range.upperEndpoint() - 1);
+                if(range.isEmpty()){ continue; }
+                styleByIndex.put(range, value);
+            }
+        }
+    }
+
+    private RangeMap<Integer, String> highlightBrackets(TokenStream tokens) {
 
         int currentCharIndex = getCaretPosition();
 
         Optional<Integer> tokenIndexCandidate = getTokenIndexFor(tokens, currentCharIndex);
 
-        if ( ! tokenIndexCandidate.isPresent()){ return Collections.emptyList(); }
+        TreeRangeMap<Integer, String> result = TreeRangeMap.create();
+
+        if ( ! tokenIndexCandidate.isPresent()){ return result; }
 
         int tokenIndex = tokenIndexCandidate.get();
 
@@ -155,34 +207,21 @@ public class StructuredTextArea extends CodeArea {
             tokenIndex -= 1;
         }
 
-        if ( ! isBracket(tokens, tokenIndex)){
-            return Collections.emptyList();
-        }
+        if ( ! isBracket(tokens, tokenIndex)){ return result; }
 
         Token openingBracketToken = tokens.get(tokenIndex);
-        HighlightedTextInteveral openingBracketHighlight = new HighlightedTextInteveral(
-                openingBracketToken.getStartIndex(),
-                openingBracketToken.getStopIndex(),
-                "bracket"
-        );
+
+        result.put(Range.closed(openingBracketToken.getStartIndex(), openingBracketToken.getStopIndex()), "bracket");
 
         int counterpartsIndex = findIndexOfCounterpart(tokens, tokenIndex);
 
-        if(counterpartsIndex == getLength()){
-            return Collections.singleton(openingBracketHighlight);
-        }
+        if(counterpartsIndex == getLength()){ return result; }
 
         Token closingBracketToken = tokens.get(counterpartsIndex);
-        HighlightedTextInteveral closingBracketsHighlight = new HighlightedTextInteveral(
-                closingBracketToken.getStartIndex(),
-                closingBracketToken.getStopIndex(),
-                "bracket"
-        );
 
-        return Arrays.asList(
-                openingBracketHighlight,
-                closingBracketsHighlight
-        );
+        result.put(Range.closed(closingBracketToken.getStartIndex(), closingBracketToken.getStopIndex()), "bracket");
+
+        return result;
     }
 
     private int findIndexOfCounterpart(TokenStream tokens, int tokenIndex) {
