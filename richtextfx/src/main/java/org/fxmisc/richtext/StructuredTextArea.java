@@ -44,14 +44,7 @@ public class StructuredTextArea extends CodeArea {
 
         try {
             Method rootProductionMethod = this.parserClass.getMethod(rootProduction);
-            this.rootProduction = parser -> {
-                try {
-                    return ParseTree.class.cast(rootProductionMethod.invoke(parser));
-                }
-                catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-            };
+            this.rootProduction = parser -> runOrThrowUnchecked(() -> ParseTree.class.cast(rootProductionMethod.invoke(parser)));
         }
         catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -60,7 +53,7 @@ public class StructuredTextArea extends CodeArea {
         richChanges().subscribe(change -> reApplyStyles());
         caretPositionProperty().addListener((source, oldIdx, newIdx) -> {
             //TODO filter this to a toggle...
-            //or something more immutable? If i can embed the cursor position in their document,
+            // or something more immutable? If i can embed the cursor position in their document,
             // then I dont need to keep a stateful toggle.
             reApplyStyles();
         });
@@ -72,35 +65,21 @@ public class StructuredTextArea extends CodeArea {
         });
     }
 
+    //TODO make this a task? some kind of queue to ensure we dont flood?
     private void reApplyStyles() {
 
         ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
-
-        Lexer lexer = null;
-        try {
-            lexer = lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream);
-        }
-        catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-
+        Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
         lexer.removeErrorListeners();
         TokenStream tokens = new CommonTokenStream(lexer);
-
-        Parser parser = null;
-        try {
-            parser = parserClass.getConstructor(TokenStream.class).newInstance(tokens);
-        }
-        catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-
+        Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
         parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
 
         ParseTree expr = rootProduction.apply(parser);
 
         RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
 
+        //listeners.ofType(LexerListener.class).forEac(l -> l.handleTokens(tokenMap));
         styleByIndex.putAll(highlightBrackets(tokens));
 
         ParseTreeWalker walker = new ParseTreeWalker();
@@ -109,24 +88,35 @@ public class StructuredTextArea extends CodeArea {
             @Override public void visitErrorNode(ErrorNode errorNode) {
                 //note order is important here
                 Token symbol = errorNode.getSymbol();
-                ParserRuleContext parent = (ParserRuleContext) errorNode.getParent();
-                int thisIndex = parent.children.indexOf(errorNode);
-                ParseTree olderSib = parent.getChild(thisIndex - 1);
-                ParseTree youngerSib = parent.getChild(thisIndex + 1);
 
-                Token preceedingToken = olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
-                                        olderSib instanceof TerminalNode ? ((TerminalNode) olderSib).getSymbol() :
-                                        null;
-                Token succeedingToken = youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
-                                        youngerSib instanceof TerminalNode ? ((TerminalNode) youngerSib).getSymbol() :
-                                        null;
+                //here, something like
+                // listeners.ofType(ErrorListener.class).forEach(l -> l.handleError(errorNode));
 
                 int startIndex = -1, endIndex = -1;
-                if(preceedingToken != null) { startIndex = preceedingToken.getStopIndex(); }
-                if(succeedingToken != null) { endIndex = succeedingToken.getStartIndex(); }
 
-                startIndex = startIndex == -1 ? endIndex : startIndex;
-                endIndex = endIndex == -1 ? startIndex : endIndex;
+                if(symbol.getStartIndex() != -1){
+                    startIndex = symbol.getStartIndex();
+                    endIndex = symbol.getStopIndex();
+                }
+                else{
+                    ParserRuleContext parent = (ParserRuleContext) errorNode.getParent();
+                    int thisIndex = parent.children.indexOf(errorNode);
+                    ParseTree olderSib = parent.getChild(thisIndex - 1);
+                    ParseTree youngerSib = parent.getChild(thisIndex + 1);
+
+                    Token preceedingToken = olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
+                                            olderSib instanceof TerminalNode ? ((TerminalNode) olderSib).getSymbol() :
+                                            null;
+                    Token succeedingToken = youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
+                                            youngerSib instanceof TerminalNode ? ((TerminalNode) youngerSib).getSymbol() :
+                                            null;
+
+                    if(preceedingToken != null) { startIndex = preceedingToken.getStopIndex(); }
+                    if(succeedingToken != null) { endIndex = succeedingToken.getStartIndex(); }
+
+                    startIndex = startIndex == -1 ? endIndex : startIndex;
+                    endIndex = endIndex == -1 ? startIndex : endIndex;
+                }
 
                 Range<Integer> range = Range.closed(startIndex, endIndex);
                 styleByIndex.put(range, "error");
@@ -183,6 +173,7 @@ public class StructuredTextArea extends CodeArea {
                 styleByIndex.put(range, value);
             }
             if(range.upperBoundType() == BoundType.OPEN){
+                //TODO copy-pasta much?
                 String value = rangeMap.remove(range);
                 range = Range.closed(range.lowerEndpoint(), range.upperEndpoint() - 1);
                 if(range.isEmpty()){ continue; }
@@ -197,34 +188,40 @@ public class StructuredTextArea extends CodeArea {
 
         Optional<Integer> tokenIndexCandidate = getTokenIndexFor(tokens, currentCharIndex);
 
-        TreeRangeMap<Integer, String> result = TreeRangeMap.create();
-
-        if ( ! tokenIndexCandidate.isPresent()){ return result; }
-
+        TreeRangeMap<Integer, String> bracketsSoFar = TreeRangeMap.create();
+        if ( ! tokenIndexCandidate.isPresent()){ return bracketsSoFar; }
         int tokenIndex = tokenIndexCandidate.get();
 
         if( ! isBracket(tokens, tokenIndex) && tokens.get(tokenIndex).getStartIndex() == currentCharIndex){
             tokenIndex -= 1;
         }
 
-        if ( ! isBracket(tokens, tokenIndex)){ return result; }
+        if ( ! isBracket(tokens, tokenIndex)){ return bracketsSoFar; }
 
         Token openingBracketToken = tokens.get(tokenIndex);
 
-        result.put(Range.closed(openingBracketToken.getStartIndex(), openingBracketToken.getStopIndex()), "bracket");
+        Range<Integer> openingRange = Range.closed(
+                openingBracketToken.getStartIndex(),
+                openingBracketToken.getStopIndex()
+        );
+        bracketsSoFar.put(openingRange, "bracket");
 
-        int counterpartsIndex = findIndexOfCounterpart(tokens, tokenIndex);
-
-        if(counterpartsIndex == getLength()){ return result; }
+        Optional<Integer> counterpartsCandidateIndex = findIndexOfCounterpart(tokens, tokenIndex);
+        if ( ! counterpartsCandidateIndex.isPresent()) { return bracketsSoFar; }
+        int counterpartsIndex = counterpartsCandidateIndex.get();
 
         Token closingBracketToken = tokens.get(counterpartsIndex);
 
-        result.put(Range.closed(closingBracketToken.getStartIndex(), closingBracketToken.getStopIndex()), "bracket");
+        Range<Integer> closingRange = Range.closed(
+                closingBracketToken.getStartIndex(),
+                closingBracketToken.getStopIndex()
+        );
+        bracketsSoFar.put(closingRange, "bracket");
 
-        return result;
+        return bracketsSoFar;
     }
 
-    private int findIndexOfCounterpart(TokenStream tokens, int tokenIndex) {
+    private Optional<Integer> findIndexOfCounterpart(TokenStream tokens, int tokenIndex) {
 
         Token currentToken = tokens.get(tokenIndex);
         String openingBracketText = currentToken.getText();
@@ -243,9 +240,9 @@ public class StructuredTextArea extends CodeArea {
         }
         while(currentToken.getType() != Token.EOF);
 
-        if(currentToken.getType() == Token.EOF){ tokenIndex = getLength(); }
+        if(currentToken.getType() == Token.EOF){ return Optional.empty(); }
 
-        return tokenIndex;
+        return Optional.of(tokenIndex);
     }
 
     private boolean isBracket(TokenStream tokens, int tokenIndex) {
@@ -279,6 +276,7 @@ public class StructuredTextArea extends CodeArea {
     }
 
     private boolean isOnToken(TokenStream tokens, int tokenIdx, int characterIndex) {
+        if(tokenIdx < 0 || tokenIdx >= tokens.size()){ return false; }
         Token token = tokens.get(tokenIdx);
         return token.getStartIndex() <= characterIndex
                 //remember, stopIndex is inclusive.
@@ -300,5 +298,11 @@ public class StructuredTextArea extends CodeArea {
         catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(className + " not found for " + varName, e);
         }
+    }
+
+    @FunctionalInterface interface FailingSupplier<T> { T get() throws Exception; }
+    private static <TResult> TResult runOrThrowUnchecked(FailingSupplier<TResult> supplier){
+        try{ return supplier.get(); }
+        catch (Exception e) { throw new RuntimeException(e); }
     }
 }
