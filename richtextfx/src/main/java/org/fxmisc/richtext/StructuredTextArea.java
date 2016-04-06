@@ -151,8 +151,9 @@ public class StructuredTextArea extends CodeArea {
         //well i suppose it is if i use an immutable map.
         Token currentToken = null;
         int tokenIdx = 0;
+        int characterIndex;
 
-        for(int characterIndex = 0; characterIndex <= currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
+        for(characterIndex = 0; characterIndex < currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
             currentToken = tokens.get(tokenIdx);
             assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
             characterIndex = currentToken.getStopIndex() + 1;
@@ -168,7 +169,8 @@ public class StructuredTextArea extends CodeArea {
         if(currentText == null){
             return Collections.emptyList();
         }
-        if( ! currentText.equals("(") && ! currentText.equals(")") && tokenIdx > 0){
+        if( ! currentText.equals("(") && ! currentText.equals(")")
+                && tokenIdx > 0 && currentIndex == currentToken.getStartIndex()){
             Token candidateToken = tokens.get(tokenIdx - 1);
             if("(".equals(candidateToken.getText()) || ")".equals(candidateToken.getText())){
                 tokenIdx -= 1;
@@ -182,6 +184,12 @@ public class StructuredTextArea extends CodeArea {
 
         Token openingBracketToken = currentToken;
 
+        HighlightedTextInteveral openingBracketHighlight = new HighlightedTextInteveral(
+                openingBracketToken.getStartIndex(),
+                openingBracketToken.getStopIndex(),
+                "bracket"
+        );
+
         int openCount = 0;
         UnaryOperator<Integer> moveNext = current -> openingBracketToken.getText().equals("(") ? current + 1 : current - 1;
         do{
@@ -191,12 +199,6 @@ public class StructuredTextArea extends CodeArea {
             tokenIdx = moveNext.apply(tokenIdx);
         }
         while(openCount != 0 && currentToken.getType() != Token.EOF);
-
-        HighlightedTextInteveral openingBracketHighlight = new HighlightedTextInteveral(
-                openingBracketToken.getStartIndex(),
-                openingBracketToken.getStopIndex(),
-                "bracket"
-        );
 
         if(currentToken.getType() == Token.EOF){
             return Collections.singletonList(openingBracketHighlight);
