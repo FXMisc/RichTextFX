@@ -16,7 +16,7 @@ public class AntlrGrammar extends Application {
     private static final String initialText =
             "// notice that with ANTLR we can differentiate on a variables context\n" +
             "// declaration gets one style (underline), usage gets another (red)\n" +
-            "var x = 2 + x ^ 3\n" +
+            "var x = 2 + x ^ 3 + (10 + 12);\n" +
             "var another = v -> 2 + 3 * v + x;\n" +
             "// and of course, with arbitrary text like comments, we can set the style.";
 

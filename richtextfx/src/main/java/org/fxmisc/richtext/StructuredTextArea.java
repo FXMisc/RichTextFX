@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -26,8 +27,6 @@ public class StructuredTextArea extends CodeArea {
     private final Class<? extends Parser>     parserClass;
     private final Class<? extends Lexer>      lexerClass;
     private final Function<Parser, ParseTree> rootProduction;
-
-    private boolean wasHighlightingBrackets = false;
 
     // TODO if i make this type generic on the parser I get a little extra type safety on root production
     // similarly a kotlin data class would do it.
@@ -104,7 +103,9 @@ public class StructuredTextArea extends CodeArea {
         ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {}
-            @Override public void visitErrorNode(ErrorNode errorNode) {}
+            @Override public void visitErrorNode(ErrorNode errorNode) {
+                //TODO red-underline
+            }
             @Override public void enterEveryRule(ParserRuleContext parserRuleContext) {}
             @Override public void exitEveryRule(ParserRuleContext ctx) {
 
@@ -132,7 +133,6 @@ public class StructuredTextArea extends CodeArea {
             nextHighlightStart = interval.getUpperBound() + 1;
         }
 
-        assert false : "math isn't quite right here, but then my styles aren't being applied anyways...";
         //also, make the HighlightedTextInterval toString nicely.
         if(nextHighlightStart < getLength()) {
             spansBuilder.add(Collections.emptyList(), getLength() - nextHighlightStart);
@@ -146,14 +146,20 @@ public class StructuredTextArea extends CodeArea {
         int currentIndex = getCaretPosition();
 
         //TODO surely theres a better way to do this.
+        //build a map of indexes -> tokens and ask that?
+        //cache invalidation logic isnt very functional :\
+        //well i suppose it is if i use an immutable map.
         Token currentToken = null;
         int tokenIdx = 0;
 
         for(int characterIndex = 0; characterIndex < currentIndex && tokens.get(tokenIdx).getType() != Token.EOF;){
             currentToken = tokens.get(tokenIdx);
-            characterIndex += (currentToken.getStopIndex() - currentToken.getStartIndex() + 1);
+            assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
+            characterIndex = currentToken.getStopIndex() + 1;
             tokenIdx += 1;
         }
+        //tokenIdx went 1 too far
+        tokenIdx -= 1;
 
         if(currentToken == null || currentToken.getType() == Token.EOF){
             return Collections.emptyList();
@@ -166,26 +172,38 @@ public class StructuredTextArea extends CodeArea {
 
         Token openingBracketToken = currentToken;
 
-        int openCount = 1;
+        int openCount = 0;
+        UnaryOperator<Integer> moveNext = current -> openingBracketToken.getText().equals("(") ? current + 1 : current - 1;
         do{
             currentToken = tokens.get(tokenIdx);
-            if(currentToken.getText().equals(")")) { openCount += 1; }
+            if(currentToken.getText().equals("(")) { openCount += 1; }
             if(currentToken.getText().equals(")")) { openCount -= 1; }
-            tokenIdx += 1;
+            tokenIdx = moveNext.apply(tokenIdx);
         }
         while(openCount != 0 && currentToken.getType() != Token.EOF);
 
+        HighlightedTextInteveral openingBracketHighlight = new HighlightedTextInteveral(
+                openingBracketToken.getStartIndex(),
+                openingBracketToken.getStopIndex(),
+                "bracket"
+        );
+
         if(currentToken.getType() == Token.EOF){
-            return Collections.singletonList(
-                    new HighlightedTextInteveral(openingBracketToken.getStartIndex(), Math.max(openingBracketToken.getStopIndex(), getLength() - 1), "bracket")
-            );
+            return Collections.singletonList(openingBracketHighlight);
         }
 
         Token closingBracketToken = currentToken;
 
-        return Arrays.asList(openingBracketToken, closingBracketToken).stream()
-                .map(token -> new HighlightedTextInteveral(token.getStartIndex(), Math.max(token.getStopIndex(), getLength() - 1), "bracket"))
-                .collect(Collectors.toList());
+        HighlightedTextInteveral closingBracketHighlight = new HighlightedTextInteveral(
+                closingBracketToken.getStartIndex(),
+                closingBracketToken.getStopIndex(),
+                "bracket"
+        );
+        List<HighlightedTextInteveral> resultPair = Arrays.asList(
+                openingBracketHighlight,
+                closingBracketHighlight
+        );
+        return resultPair;
     }
 
     public final ObservableList<ContextualHighlight> getHighlights(){

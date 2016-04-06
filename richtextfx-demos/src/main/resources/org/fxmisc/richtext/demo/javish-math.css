@@ -13,6 +13,7 @@
     -fx-fill: green;
 }
 .bracket {
-    -fx-style: bold;
+    -fx-font-weight: bold;
     -fx-fill: blue;
+    -fx-underline: true;
 }

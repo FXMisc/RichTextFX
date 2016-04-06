@@ -27,4 +27,9 @@ public class HighlightedTextInteveral {
     public String getStyleClass() {
         return styleClass;
     }
+
+    @Override
+    public String toString() {
+        return "[" + lowerBound + ".." + upperBound + "] -> ." + styleClass;
+    }
 }
