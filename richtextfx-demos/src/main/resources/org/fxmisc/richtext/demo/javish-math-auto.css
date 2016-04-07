@@ -1,0 +1,28 @@
+.var {
+    -fx-fill: teal;
+    -fx-font-weight: bold;
+}
+.integer {
+    -fx-fill: blue;
+    -fx-font-weight: bold;
+}
+.variable {
+    -fx-fill: purple;
+    -fx-style: italic;
+}
+.variable-decl {
+    -fx-underline: true
+}
+.comment {
+    -fx-fill: green;
+}
+
+.bracket {
+    -fx-font-weight: bold;
+    -fx-fill: blue;
+    -fx-underline: true;
+}
+.error {
+    -fx-fill: red;
+    -fx-underline: true;
+}

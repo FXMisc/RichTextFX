@@ -4,11 +4,14 @@ import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import javafx.beans.DefaultProperty;
+import com.sun.javafx.scene.DirtyBits;
 import javafx.beans.NamedArg;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.BooleanPropertyBase;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.css.CssMetaData;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import org.fxmisc.richtext.CodeArea;
@@ -27,13 +30,6 @@ public class StructuredTextArea extends CodeArea {
     private final Class<? extends Lexer>      lexerClass;
     private final Function<Parser, ParseTree> rootProduction;
 
-    // TODO if i make this type generic on the parser I get a little extra type safety on root production
-    // similarly a kotlin data class would do it.
-
-    private final ObservableList<ContextualHighlight> highlights = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
@@ -67,6 +63,63 @@ public class StructuredTextArea extends CodeArea {
         return parserClass;
     }
 
+
+    //region (FXML accessible) properties
+
+    // note prescedence,
+    // lexical is first to run,
+    // then semantics,
+    // then errors
+    // and styles are LIFO (most recently added wins)
+
+
+    private final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
+
+
+    /**
+     * describes whether or not
+     */
+    private final BooleanProperty implicitTerminalStyle = new SimpleBooleanProperty(this, "implicitTerminalStyle", false);
+    {
+        ImplicitTerminalStyleListener listener = new ImplicitTerminalStyleListener();
+
+        implicitTerminalStyle.addListener((source, was, isNowImplicitlyHighlightingTerminalNodes) -> {
+            if(isNowImplicitlyHighlightingTerminalNodes == was){ return; }
+
+            //wonder if scala or kotlin has something for this
+            if(isNowImplicitlyHighlightingTerminalNodes){
+                getSemanticListeners().add(listener);
+            }
+            else{
+                getSemanticListeners().remove(listener);
+            }
+        });
+    }
+    public final BooleanProperty implicitTerminalStyleProperty(){ return implicitTerminalStyle; }
+    public final boolean getImplicitTerminalStyle(){ return implicitTerminalStyleProperty().get(); }
+    public final void setImplicitTerminalStyle(boolean implicitlyStyleTerminalNodes){
+        implicitTerminalStyleProperty().set(implicitlyStyleTerminalNodes);
+    }
+
+
+    public final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> getSemanticListeners(){
+        return semanticListeners;
+    }
+
+    public final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> getErrorListeners(){
+        return errorListeners;
+    }
+
+    public final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> getLexerListeners(){
+        return lexerListeners;
+    }
+
+    //endregion
+
+    //region implementation of apply Styles, maps, invocation of listeners
+
     //TODO make this a task? some kind of queue to ensure we dont flood?
     private void reApplyStyles() {
 
@@ -89,9 +142,14 @@ public class StructuredTextArea extends CodeArea {
 
         ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
-            @Override public void visitTerminal(TerminalNode terminalNode) {}
+            @Override public void visitTerminal(TerminalNode terminalNode) {
+                if(terminalNode.getSymbol().getType() == Token.EOF){ return; }
+
+                semanticListeners.stream()
+                        .map(l -> l.generateNewStyles(StructuredTextArea.this, terminalNode))
+                        .forEach(styleByIndex::putAll);
+            }
             @Override public void visitErrorNode(ErrorNode errorNode) {
-                //note order is important here
                 errorListeners.stream()
                         .map(l -> l.generateNewStyles(StructuredTextArea.this, errorNode))
                         .forEach(styleByIndex::putAll);
@@ -157,24 +215,9 @@ public class StructuredTextArea extends CodeArea {
             }
         }
     }
+    //endregion
 
-    // note prescedence,
-    // lexical is first to run,
-    // then semantics,
-    // then errors
-    // and styles are LIFO (most recently added wins)
-
-    public final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> getSemanticListeners(){
-        return semanticListeners;
-    }
-
-    public final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> getErrorListeners(){
-        return errorListeners;
-    }
-
-    public final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> getLexerListeners(){
-        return lexerListeners;
-    }
+    //region static helpers for loading and exception handling
 
     public static <TClass> Class<? extends TClass> loadClass(String varName, String className, Class<TClass> neededSuperClass){
         try{
@@ -194,4 +237,6 @@ public class StructuredTextArea extends CodeArea {
         try{ return supplier.get(); }
         catch (Exception e) { throw new RuntimeException(e); }
     }
+
+    //endregion
 }

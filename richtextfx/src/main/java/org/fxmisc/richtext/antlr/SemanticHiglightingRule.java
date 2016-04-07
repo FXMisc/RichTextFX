@@ -7,6 +7,7 @@ import javafx.beans.NamedArg;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by Geoff on 4/4/2016.
  */
-public class ContextualHighlight implements StructuredTextAreaListener.SemanticAnalysisListener {
+public class SemanticHiglightingRule implements StructuredTextAreaListener.SemanticAnalysisListener {
 
     private final Optional<String> antlrContextPrefix;
     private final Optional<String> antlrParentContextPrefix;
@@ -26,20 +27,20 @@ public class ContextualHighlight implements StructuredTextAreaListener.SemanticA
     private Optional<Class> antlrContextClass = Optional.empty();
     private Optional<Class> antlrParentContextClass = Optional.empty();
 
-    public ContextualHighlight(
+    public SemanticHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("styleClass") String styleClass) {
         this(antlrLocalContextClassnamePrefix, "", "", styleClass);
     }
 
-    public ContextualHighlight(
+    public SemanticHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("targetText") String targetText,
             @NamedArg("styleClass") String styleClass) {
         this(antlrLocalContextClassnamePrefix, "", targetText, styleClass);
     }
 
-    public ContextualHighlight(
+    public SemanticHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("parent") String antlrParentContextClassnamePrefix,
             @NamedArg("targetText") String targetText,
@@ -63,6 +64,10 @@ public class ContextualHighlight implements StructuredTextAreaListener.SemanticA
                 .map(className -> StructuredTextArea.loadClass("node aka antlrLocalContextPrefix", className, ParserRuleContext.class));
     }
 
+    @Override
+    public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParseTree newParseTree) {
+        return ImmutableRangeMap.of();
+    }
 
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParserRuleContext context) {
