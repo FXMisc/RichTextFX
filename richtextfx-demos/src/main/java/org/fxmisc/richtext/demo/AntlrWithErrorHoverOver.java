@@ -6,12 +6,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter2;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
 
 import java.time.Duration;
@@ -47,8 +43,6 @@ public class AntlrWithErrorHoverOver extends Application {
                         "-fx-text-fill: white;" +
                         "-fx-padding: 5;");
         popup.getContent().add(popupMsg);
-
-        codeArea.getErrorListeners().add(new ErrorUnderlineHighlighter2());
 
         codeArea.setMouseOverTextDelay(Duration.ofMillis(200));
         codeArea.addEventHandler(MouseOverTextEvent.MOUSE_OVER_TEXT_BEGIN, e -> {

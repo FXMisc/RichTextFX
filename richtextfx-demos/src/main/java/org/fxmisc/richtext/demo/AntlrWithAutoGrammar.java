@@ -4,7 +4,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter;
+import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter_old;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
 
@@ -35,7 +35,6 @@ public class AntlrWithAutoGrammar extends Application {
         codeArea.setImplicitTerminalStyle(true);
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
-        codeArea.getSemanticListeners().add(new ErrorUnderlineHighlighter());
 
         codeArea.replaceText(0, 0, initialText);
         codeArea.setPrefHeight(200);

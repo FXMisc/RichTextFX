@@ -122,10 +122,11 @@ public class StructuredTextArea extends CodeArea {
 
     //TODO: observable list of tokens and obsrvable tree (?) of nodes?
 
+    //TODO docs
+    //name is css-convention-ified version of terminal name from Parser.VOCABULARY
+    // eg VARIABLE -> variable
+    // eg SOME_INTS -> some-ints
 
-    /**
-     * describes whether or not
-     */
     private final BooleanProperty implicitTerminalStyle = new SimpleBooleanProperty(this, "implicitTerminalStyle", true);
     {
         //I'm not really sure what the best practices/idioms are here,
@@ -151,6 +152,34 @@ public class StructuredTextArea extends CodeArea {
     public final boolean getImplicitTerminalStyle(){ return implicitTerminalStyleProperty().get(); }
     public final void setImplicitTerminalStyle(boolean implicitlyStyleTerminalNodes){
         implicitTerminalStyleProperty().set(implicitlyStyleTerminalNodes);
+    }
+
+    //TODO docs
+    //css style is ".error"
+
+    private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
+    {
+        StructuredTextAreaHighlighter.ErrorAnalysisListener listener = new ErrorUnderlineHighlighter();
+
+        implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
+            if(isNowImplicit == wasImplicit){ return; }
+
+            if(isNowImplicit){
+                getErrorListeners().add(listener);
+            }
+            else{
+                getErrorListeners().remove(listener);
+            }
+        });
+
+        if(getImplicitErrorStyle()){
+            getErrorListeners().add(listener);
+        }
+    }
+    public final BooleanProperty implicitErrorStyleProperty(){ return implicitErrorStyle; }
+    public final boolean getImplicitErrorStyle(){ return implicitErrorStyleProperty().get(); }
+    public final void setEmplicitErrorStyle(boolean implicitlyStyleErrorRanges){
+        implicitErrorStyleProperty().set(implicitlyStyleErrorRanges);
     }
 
 

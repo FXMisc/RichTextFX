@@ -5,7 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter;
+import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter_old;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
 import org.fxmisc.richtext.antlr.StructuredTextAreaHighlighter;
@@ -39,7 +39,6 @@ public class AntlrWithCustomGrammar extends Application {
         codeArea.setImplicitTerminalStyle(false);
 
         codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
-        codeArea.getSemanticListeners().add(new ErrorUnderlineHighlighter());
 
         ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> highlights = codeArea.getSemanticListeners();
 
