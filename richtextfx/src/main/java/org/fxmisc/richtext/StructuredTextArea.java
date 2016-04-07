@@ -1,6 +1,8 @@
 package org.fxmisc.richtext;
 
 import com.google.common.collect.BoundType;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
@@ -12,13 +14,10 @@ import javafx.collections.ObservableList;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-
 /**
  * Created by Geoff on 3/29/2016.
  */
@@ -33,6 +32,7 @@ public class StructuredTextArea extends CodeArea {
     // similarly a kotlin data class would do it.
 
     private final ObservableList<ContextualHighlight> highlights = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
@@ -77,10 +77,12 @@ public class StructuredTextArea extends CodeArea {
 
         ParseTree expr = rootProduction.apply(parser);
 
+        RangeMap<Integer, Token> tokensByCharIndex = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
+
         RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
 
         //listeners.ofType(LexerListener.class).forEac(l -> l.handleTokens(tokenMap));
-        styleByIndex.putAll(highlightBrackets(tokens));
+        styleByIndex.putAll(highlightBrackets(tokensByCharIndex));
 
         ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
@@ -183,11 +185,13 @@ public class StructuredTextArea extends CodeArea {
         }
     }
 
-    private RangeMap<Integer, String> highlightBrackets(TokenStream tokens) {
+    private RangeMap<Integer, String> highlightBrackets(RangeMap<Integer, Token> tokensByCharIndex) {
 
         int currentCharIndex = getCaretPosition();
 
-        Optional<Integer> tokenIndexCandidate = getTokenIndexFor(tokens, currentCharIndex);
+        List<Token> tokens = ImmutableList.copyOf(tokensByCharIndex.asMapOfRanges().values());
+
+        Optional<Integer> tokenIndexCandidate = Optional.ofNullable(tokensByCharIndex.get(currentCharIndex)).map(Token::getTokenIndex);
 
         TreeRangeMap<Integer, String> bracketsSoFar = TreeRangeMap.create();
         if ( ! tokenIndexCandidate.isPresent()){ return bracketsSoFar; }
@@ -222,7 +226,7 @@ public class StructuredTextArea extends CodeArea {
         return bracketsSoFar;
     }
 
-    private Optional<Integer> findIndexOfCounterpart(TokenStream tokens, int tokenIndex) {
+    private Optional<Integer> findIndexOfCounterpart(List<Token> tokens, int tokenIndex) {
 
         Token currentToken = tokens.get(tokenIndex);
         String openingBracketText = currentToken.getText();
@@ -246,42 +250,21 @@ public class StructuredTextArea extends CodeArea {
         return Optional.of(tokenIndex);
     }
 
-    private boolean isBracket(TokenStream tokens, int tokenIndex) {
+    private boolean isBracket(List<Token> tokens, int tokenIndex) {
         String text = tokens.get(tokenIndex).getText();
         return text.equals("(") || text.equals(")");
     }
 
-    private Optional<Integer> getTokenIndexFor(TokenStream tokens, int targetCharIndex) {
-
-        //TODO surely theres a better way to do this.
-        //build a map of indexes -> tokens and ask that?
-        //cache invalidation logic isnt very functional :\
-        //well i suppose it is if i use an immutable map.
-
-        int tokenIdx = 0;
-
-        for (int characterIndex = 0; characterIndex < targetCharIndex && tokens.get(tokenIdx).getType() != Token.EOF;) {
-            Token currentToken = tokens.get(tokenIdx);
-            assert currentToken.getStopIndex() - currentToken.getStartIndex() >= 0 : "zero-width token: " + currentToken;
-            characterIndex = currentToken.getStartIndex();
-            tokenIdx += 1;
-        }
-
-        tokenIdx -= 1;
-
-        if( ! isOnToken(tokens, tokenIdx, targetCharIndex)){
-            return Optional.empty();
-        }
-
-        return Optional.of(tokenIdx);
-    }
-
-    private boolean isOnToken(TokenStream tokens, int tokenIdx, int characterIndex) {
+    private boolean isOnToken(List<Token> tokens, int tokenIdx, int characterIndex) {
         if(tokenIdx < 0 || tokenIdx >= tokens.size()){ return false; }
         Token token = tokens.get(tokenIdx);
         return token.getStartIndex() <= characterIndex
                 //remember, stopIndex is inclusive.
                 && token.getStopIndex() >= characterIndex;
+    }
+
+    public final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> getLexerListeners(){
+        return lexerListeners;
     }
 
     public final ObservableList<ContextualHighlight> getHighlights(){
