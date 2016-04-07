@@ -12,9 +12,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.RichTextChange;
 import org.fxmisc.richtext.StyleSpansBuilder;
 
 import java.lang.reflect.Method;
@@ -27,12 +32,14 @@ import java.util.function.Function;
  */
 public class StructuredTextArea extends CodeArea {
 
-    private final Class<? extends Parser>     parserClass;
-    private final Class<? extends Lexer>      lexerClass;
-    private final Function<Parser, ParseTree> rootProduction;
+    private final Class<? extends Parser>             parserClass;
+    private final Class<? extends Lexer>              lexerClass;
+    private final Function<Parser, ParserRuleContext> rootProduction;
 
     private ImmutableRangeMap<Integer, Token> mostRecentTokens;
-    private ParseTree mostRecentParseTree;
+    private ImmutableRangeMap<Integer, ParseTree> mostRecentParseTree;
+    private ImmutableRangeMap<Integer, ParseError> mostRecentErrors;
+    private ParserRuleContext mostRecentRoot;
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
@@ -42,21 +49,18 @@ public class StructuredTextArea extends CodeArea {
         this.parserClass = loadClass("parserClass", parserClass, Parser.class);
         this.lexerClass = loadClass("lexerClass", lexerClass, Lexer.class);
 
-        try {
-            Method rootProductionMethod = this.parserClass.getMethod(rootProduction);
-            this.rootProduction = parser -> runOrThrowUnchecked(() -> ParseTree.class.cast(rootProductionMethod.invoke(parser)));
-        }
-        catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        Method rootProductionMethod = runOrThrowUnchecked(() -> this.parserClass.getMethod(rootProduction));
+        this.rootProduction = parser -> runOrThrowUnchecked(() -> ParserRuleContext.class.cast(rootProductionMethod.invoke(parser)));
 
-        RecompileAndRestyleListener recompileAndRestyle = new RecompileAndRestyleListener();
+        //not using lambdas to make it a little easier on the debugger.
+        RecompileAndRestyleListener recompileAndRestyleOnAnyChange = new RecompileAndRestyleListener();
 
         for(ObservableList<?> listenerList : new ObservableList[]{lexerListeners, errorListeners, semanticListeners}){
-            listenerList.addListener(recompileAndRestyle);
+            listenerList.addListener(recompileAndRestyleOnAnyChange);
         }
 
-        richChanges().subscribe(recompileAndRestyle);
+        richChanges().subscribe(recompileAndRestyleOnAnyChange);
+
         caretPositionProperty().addListener((source, oldIdx, newIdx) -> {
             reApplyStyles();
         });
@@ -75,8 +79,16 @@ public class StructuredTextArea extends CodeArea {
         return mostRecentTokens;
     }
 
-    public ParseTree getParseTree(){
+    public ImmutableRangeMap<Integer, ParseTree> getNodeByCharIndex(){
         return mostRecentParseTree;
+    }
+
+    public ImmutableRangeMap<Integer, ParseError> getErrorsByCharIndex(){
+        return mostRecentErrors;
+    }
+
+    public ParserRuleContext getParseTreeRoot(){
+        return mostRecentRoot;
     }
 
     //endregion
@@ -92,6 +104,9 @@ public class StructuredTextArea extends CodeArea {
     private final ObservableList<StructuredTextAreaHighlighter.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
     private final ObservableList<StructuredTextAreaHighlighter.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
     private final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
+
+    //TODO fancy reactfx event pipes?
+    //how do i put a "hey checkout my new token stream" event into one of these fancy stream-pipe-things?
 
     public final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> getSemanticListeners(){
         return semanticListeners;
@@ -152,7 +167,6 @@ public class StructuredTextArea extends CodeArea {
                 .map(l -> l.generateNewStyles(this, mostRecentTokens))
                 .forEach(styleByIndex::putAll);
 
-        ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {
                 if(terminalNode.getSymbol().getType() == Token.EOF){ return; }
@@ -162,9 +176,11 @@ public class StructuredTextArea extends CodeArea {
                         .forEach(styleByIndex::putAll);
             }
             @Override public void visitErrorNode(ErrorNode errorNode) {
-                errorListeners.stream()
+
+                semanticListeners.stream()
                         .map(l -> l.generateNewStyles(StructuredTextArea.this, errorNode))
                         .forEach(styleByIndex::putAll);
+
             }
             @Override public void enterEveryRule(ParserRuleContext ctx) {
 
@@ -173,11 +189,22 @@ public class StructuredTextArea extends CodeArea {
                         .forEach(styleByIndex::putAll);
 
             }
-            @Override public void exitEveryRule(ParserRuleContext ctx) {}
+            @Override public void exitEveryRule(ParserRuleContext ctx) {
+                //exit call, already added in visitEnter();
+            }
         };
-        walker.walk(walkListener, mostRecentParseTree);
+        new ParseTreeWalker().walk(walkListener, mostRecentRoot);
 
-        //TODO overlapping highlights?
+        for(StructuredTextAreaHighlighter.ErrorAnalysisListener listener : errorListeners){
+            mostRecentErrors.asMapOfRanges().values().stream()
+                    .map(error -> listener.generateNewStyles(
+                            this,
+                            error.getProblemToken(),
+                            error.getMessage(),
+                            error.getException()
+                    ))
+                    .forEach(styleByIndex::putAll);
+        }
 
         snapRanges(styleByIndex);
 
@@ -190,13 +217,83 @@ public class StructuredTextArea extends CodeArea {
 
     private void recompile() {
         ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
+        //TODO speed this up, by caching... something.
         Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
         lexer.removeErrorListeners();
+
         TokenStream tokens = new CommonTokenStream(lexer);
+
         Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
         parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
 
-        mostRecentParseTree = rootProduction.apply(parser);
+        TreeRangeMap<Integer, ParseError> errorsByIndex = TreeRangeMap.create();
+        parser.addErrorListener(new ANTLRErrorListener() {
+
+            @Override
+            public void syntaxError(Recognizer<?, ?> recognizer,
+                                    Object offendingSymbol,
+                                    int line,
+                                    int charPositionInLine,
+                                    String antlrMessage,
+                                    RecognitionException exception) {
+
+                if(offendingSymbol == null) { return; }
+
+                Token offendingToken = (Token) offendingSymbol;
+                Range<Integer> charRange = Range.closed(offendingToken.getStartIndex(), offendingToken.getStopIndex());
+
+                errorsByIndex.put(charRange, new ParseError(offendingToken, exception, antlrMessage));
+            }
+
+            @Override public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {}
+            @Override public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {}
+            @Override public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) { }
+        });
+
+        ParserRuleContext root = rootProduction.apply(parser);
+
+        TreeRangeMap<Integer, ParseTree> treeNodeByCharIndex = TreeRangeMap.create();
+        ParseTreeListener walkListener = new ParseTreeListener(){
+
+            @Override
+            public void visitTerminal(TerminalNode node) {
+                //do nothing, this map already exists in the lexer stuff.
+                //leave lexical stuff to the lexican indexer.
+            }
+
+            @Override
+            public void visitErrorNode(ErrorNode node) {
+                Token symbol = node.getSymbol();
+
+                if (symbol.getStartIndex() > symbol.getStopIndex()) { return; }
+
+                Range<Integer> errorNodeRange = Range.closed(symbol.getStartIndex(), symbol.getStopIndex());
+                treeNodeByCharIndex.put(errorNodeRange, node);
+            }
+
+            //user enter instead of exit -> widest ranges added first -> most narrow ranges override wider ones.
+
+            @Override
+            public void enterEveryRule(ParserRuleContext ctx) {
+
+                if(ctx.getStart().getType() == Token.EOF){ return; }
+
+                int startIndex = ctx.getStart().getStartIndex();
+                int stopIndex = ctx.getStop().getStopIndex();
+
+                Range<Integer> nodeRange = Range.closed(startIndex, stopIndex);
+                treeNodeByCharIndex.put(nodeRange, ctx);
+            }
+
+            @Override
+            public void exitEveryRule(ParserRuleContext ctx) {}
+        };
+
+        new ParseTreeWalker().walk(walkListener, root);
+
+        mostRecentRoot = root;
+        mostRecentErrors = ImmutableRangeMap.copyOf(errorsByIndex);
+        mostRecentParseTree = ImmutableRangeMap.copyOf(treeNodeByCharIndex);
         mostRecentTokens = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
     }
 
@@ -243,7 +340,7 @@ public class StructuredTextArea extends CodeArea {
     }
     //endregion
 
-    //region static helpers for loading and exception handling
+    //region helpers for loading and exception handling
 
     public static <TClass> Class<? extends TClass> loadClass(String varName, String className, Class<TClass> neededSuperClass){
         try{
@@ -258,10 +355,11 @@ public class StructuredTextArea extends CodeArea {
         }
     }
 
-    @FunctionalInterface interface FailingSupplier<T> { T get() throws Exception; }
+    @FunctionalInterface interface FailingSupplier<T> { T get() throws Throwable; }
     private static <TResult> TResult runOrThrowUnchecked(FailingSupplier<TResult> supplier){
         try{ return supplier.get(); }
-        catch (Exception e) { throw new RuntimeException(e); }
+        catch (RuntimeException | Error e){ throw e; }
+        catch (Throwable e) { throw new RuntimeException(e); }
     }
 
     private class RecompileAndRestyleListener implements ListChangeListener<Object>, Consumer<Object> {
@@ -282,6 +380,25 @@ public class StructuredTextArea extends CodeArea {
             recompile();
             reApplyStyles();
         }
+    }
+
+    public static class ParseError{
+
+        private final Token problemToken;
+        private final RecognitionException ex;
+        private final String message;
+
+        public ParseError(Token problemToken, RecognitionException ex, String message) {
+            this.problemToken = problemToken;
+            this.ex = ex;
+            this.message = message;
+        }
+
+        //all nonnull. TODO when you fork, add JSR 305.
+
+        public String getMessage() { return message; }
+        public RecognitionException getException() { return ex; }
+        public Token getProblemToken() { return problemToken; }
     }
 
     //endregion

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -12,7 +13,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ErrorUnderlineHighlighter implements StructuredTextAreaHighlighter.ErrorAnalysisListener {
+public class ErrorUnderlineHighlighter implements StructuredTextAreaHighlighter.SemanticAnalysisListener {
 
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parseTreeListener, ErrorNode errorNode) {
@@ -60,3 +61,4 @@ public class ErrorUnderlineHighlighter implements StructuredTextAreaHighlighter.
         return styleByIndex.build();
     }
 }
+
