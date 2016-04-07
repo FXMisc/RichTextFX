@@ -12,7 +12,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ErrorUnderlineHighlight implements StructuredTextAreaListener.ErrorAnalysisListener {
+public class ErrorUnderlineHighlighter implements StructuredTextAreaHighlighter.ErrorAnalysisListener {
 
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parseTreeListener, ErrorNode errorNode) {
@@ -27,16 +27,19 @@ public class ErrorUnderlineHighlight implements StructuredTextAreaListener.Error
         if (symbol.getStartIndex() != -1) {
             startIndex = symbol.getStartIndex();
             endIndex = symbol.getStopIndex();
-        } else {
+        }
+        else {
             ParserRuleContext parent = (ParserRuleContext) errorNode.getParent();
             int thisIndex = parent.children.indexOf(errorNode);
             ParseTree olderSib = parent.getChild(thisIndex - 1);
             ParseTree youngerSib = parent.getChild(thisIndex + 1);
 
-            Token preceedingToken = olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
+            Token preceedingToken =
+                    olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
                     olderSib instanceof TerminalNode ? ((TerminalNode) olderSib).getSymbol() :
                             null;
-            Token succeedingToken = youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
+            Token succeedingToken =
+                    youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
                     youngerSib instanceof TerminalNode ? ((TerminalNode) youngerSib).getSymbol() :
                             null;
 

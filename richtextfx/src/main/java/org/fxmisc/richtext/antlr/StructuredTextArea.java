@@ -1,24 +1,25 @@
 package org.fxmisc.richtext.antlr;
 
 import com.google.common.collect.BoundType;
+import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import com.sun.javafx.scene.DirtyBits;
 import javafx.beans.NamedArg;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.BooleanPropertyBase;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.css.CssMetaData;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.RichTextChange;
 import org.fxmisc.richtext.StyleSpansBuilder;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -30,6 +31,8 @@ public class StructuredTextArea extends CodeArea {
     private final Class<? extends Lexer>      lexerClass;
     private final Function<Parser, ParseTree> rootProduction;
 
+    private ImmutableRangeMap<Integer, Token> mostRecentTokens;
+    private ParseTree mostRecentParseTree;
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
@@ -47,22 +50,36 @@ public class StructuredTextArea extends CodeArea {
             throw new RuntimeException(e);
         }
 
-        lexerListeners.add(new LexicalBracketHighlight());
-        errorListeners.add(new ErrorUnderlineHighlight());
+        RecompileAndRestyleListener recompileAndRestyle = new RecompileAndRestyleListener();
 
-        richChanges().subscribe(change -> reApplyStyles());
+        for(ObservableList<?> listenerList : new ObservableList[]{lexerListeners, errorListeners, semanticListeners}){
+            listenerList.addListener(recompileAndRestyle);
+        }
+
+        richChanges().subscribe(recompileAndRestyle);
         caretPositionProperty().addListener((source, oldIdx, newIdx) -> {
-            //TODO filter this to a toggle...
-            // or something more immutable? If i can embed the cursor position in their document,
-            // then I dont need to keep a stateful toggle.
             reApplyStyles();
         });
+
+        recompile();
+        reApplyStyles();
     }
+
+    //region POJO accessors
 
     public Class<? extends Parser> getParserClass(){
         return parserClass;
     }
 
+    public ImmutableRangeMap<Integer, Token> getTokensByCharIndex(){
+        return mostRecentTokens;
+    }
+
+    public ParseTree getParseTree(){
+        return mostRecentParseTree;
+    }
+
+    //endregion
 
     //region (FXML accessible) properties
 
@@ -72,30 +89,48 @@ public class StructuredTextArea extends CodeArea {
     // then errors
     // and styles are LIFO (most recently added wins)
 
+    private final ObservableList<StructuredTextAreaHighlighter.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaHighlighter.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
 
-    private final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
+    public final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> getSemanticListeners(){
+        return semanticListeners;
+    }
+
+    public final ObservableList<StructuredTextAreaHighlighter.ErrorAnalysisListener> getErrorListeners(){
+        return errorListeners;
+    }
+
+    public final ObservableList<StructuredTextAreaHighlighter.LexicalAnalysisListener> getLexerListeners(){
+        return lexerListeners;
+    }
+
+    //TODO: observable list of tokens and obsrvable tree (?) of nodes?
 
 
     /**
      * describes whether or not
      */
-    private final BooleanProperty implicitTerminalStyle = new SimpleBooleanProperty(this, "implicitTerminalStyle", false);
+    private final BooleanProperty implicitTerminalStyle = new SimpleBooleanProperty(this, "implicitTerminalStyle", true);
     {
-        ImplicitTerminalStyleListener listener = new ImplicitTerminalStyleListener();
+        //I'm not really sure what the best practices/idioms are here,
+        // but I really don't like anonymous classes, especially under the debugger
+        StructuredTextAreaHighlighter.SemanticAnalysisListener listener = new ImplicitTerminalStyleHighlighter();
 
-        implicitTerminalStyle.addListener((source, was, isNowImplicitlyHighlightingTerminalNodes) -> {
-            if(isNowImplicitlyHighlightingTerminalNodes == was){ return; }
+        implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
+            if(isNowImplicit == wasImplicit){ return; }
 
-            //wonder if scala or kotlin has something for this
-            if(isNowImplicitlyHighlightingTerminalNodes){
+            if(isNowImplicit){
                 getSemanticListeners().add(listener);
             }
             else{
                 getSemanticListeners().remove(listener);
             }
         });
+
+        if(getImplicitTerminalStyle()){
+            getSemanticListeners().add(listener);
+        }
     }
     public final BooleanProperty implicitTerminalStyleProperty(){ return implicitTerminalStyle; }
     public final boolean getImplicitTerminalStyle(){ return implicitTerminalStyleProperty().get(); }
@@ -104,18 +139,6 @@ public class StructuredTextArea extends CodeArea {
     }
 
 
-    public final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> getSemanticListeners(){
-        return semanticListeners;
-    }
-
-    public final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> getErrorListeners(){
-        return errorListeners;
-    }
-
-    public final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> getLexerListeners(){
-        return lexerListeners;
-    }
-
     //endregion
 
     //region implementation of apply Styles, maps, invocation of listeners
@@ -123,21 +146,10 @@ public class StructuredTextArea extends CodeArea {
     //TODO make this a task? some kind of queue to ensure we dont flood?
     private void reApplyStyles() {
 
-        ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
-        Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
-        lexer.removeErrorListeners();
-        TokenStream tokens = new CommonTokenStream(lexer);
-        Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
-        parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
-
-        ParseTree expr = rootProduction.apply(parser);
-
-        RangeMap<Integer, Token> tokensByCharIndex = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
-
         RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
 
         lexerListeners.stream()
-                .map(l -> l.generateNewStyles(this, tokensByCharIndex))
+                .map(l -> l.generateNewStyles(this, mostRecentTokens))
                 .forEach(styleByIndex::putAll);
 
         ParseTreeWalker walker = new ParseTreeWalker();
@@ -163,7 +175,7 @@ public class StructuredTextArea extends CodeArea {
             }
             @Override public void exitEveryRule(ParserRuleContext ctx) {}
         };
-        walker.walk(walkListener, expr);
+        walker.walk(walkListener, mostRecentParseTree);
 
         //TODO overlapping highlights?
 
@@ -171,7 +183,21 @@ public class StructuredTextArea extends CodeArea {
 
         StyleSpansBuilder<Collection<String>> spansBuilder = convertToSpanList(styleByIndex);
 
-        setStyleSpans(0, spansBuilder.create());
+        if(getLength() > 0) { //uhh, no spansBuilder.size() or spansBuilder.isEmpty() method?
+            setStyleSpans(0, spansBuilder.create());
+        }
+    }
+
+    private void recompile() {
+        ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
+        Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
+        lexer.removeErrorListeners();
+        TokenStream tokens = new CommonTokenStream(lexer);
+        Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
+        parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
+
+        mostRecentParseTree = rootProduction.apply(parser);
+        mostRecentTokens = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
     }
 
     private StyleSpansBuilder<Collection<String>> convertToSpanList(RangeMap<Integer, String> styleByIndex) {
@@ -236,6 +262,26 @@ public class StructuredTextArea extends CodeArea {
     private static <TResult> TResult runOrThrowUnchecked(FailingSupplier<TResult> supplier){
         try{ return supplier.get(); }
         catch (Exception e) { throw new RuntimeException(e); }
+    }
+
+    private class RecompileAndRestyleListener implements ListChangeListener<Object>, Consumer<Object> {
+
+        @Override
+        public void onChanged(Change c) {
+            if(c.next()){
+                recompileAndReapply();
+            }
+        }
+
+        @Override
+        public void accept(Object o) {
+            recompile();
+        }
+
+        private void recompileAndReapply() {
+            recompile();
+            reApplyStyles();
+        }
     }
 
     //endregion

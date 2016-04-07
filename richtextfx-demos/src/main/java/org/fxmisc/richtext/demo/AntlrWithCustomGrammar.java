@@ -4,10 +4,12 @@ import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.fxmisc.richtext.antlr.SemanticHiglightingRule;
+import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter;
+import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
+import org.fxmisc.richtext.antlr.TargetedTreeHiglightingRule;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
-import org.fxmisc.richtext.antlr.StructuredTextAreaListener;
+import org.fxmisc.richtext.antlr.StructuredTextAreaHighlighter;
 
 /**
  * Created by Geoff on 3/30/2016.
@@ -34,13 +36,17 @@ public class AntlrWithCustomGrammar extends Application {
                 "block"
         );
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
+        codeArea.setImplicitTerminalStyle(false);
 
-        ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> highlights = codeArea.getSemanticListeners();
+        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
+        codeArea.getErrorListeners().add(new ErrorUnderlineHighlighter());
 
-        highlights.add(new SemanticHiglightingRule("Statement", "", "var", "var"));
-        highlights.add(new SemanticHiglightingRule("Variable", "Expr", "", "variable-use"));
-        highlights.add(new SemanticHiglightingRule("Variable", "Statement", "", "variable-decl"));
-        highlights.add(new SemanticHiglightingRule("Comment", "", "", "comment"));
+        ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> highlights = codeArea.getSemanticListeners();
+
+        highlights.add(new TargetedTreeHiglightingRule("Statement", "", "var", "var"));
+        highlights.add(new TargetedTreeHiglightingRule("Variable", "Expr", "", "variable-use"));
+        highlights.add(new TargetedTreeHiglightingRule("Variable", "Statement", "", "variable-decl"));
+        highlights.add(new TargetedTreeHiglightingRule("Comment", "", "", "comment"));
 
         codeArea.replaceText(0, 0, initialText);
         codeArea.setPrefHeight(200);

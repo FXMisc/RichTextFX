@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by Geoff on 4/4/2016.
  */
-public class SemanticHiglightingRule implements StructuredTextAreaListener.SemanticAnalysisListener {
+public class TargetedTreeHiglightingRule implements StructuredTextAreaHighlighter.SemanticAnalysisListener {
 
     private final Optional<String> antlrContextPrefix;
     private final Optional<String> antlrParentContextPrefix;
@@ -27,20 +27,20 @@ public class SemanticHiglightingRule implements StructuredTextAreaListener.Seman
     private Optional<Class> antlrContextClass = Optional.empty();
     private Optional<Class> antlrParentContextClass = Optional.empty();
 
-    public SemanticHiglightingRule(
+    public TargetedTreeHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("styleClass") String styleClass) {
         this(antlrLocalContextClassnamePrefix, "", "", styleClass);
     }
 
-    public SemanticHiglightingRule(
+    public TargetedTreeHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("targetText") String targetText,
             @NamedArg("styleClass") String styleClass) {
         this(antlrLocalContextClassnamePrefix, "", targetText, styleClass);
     }
 
-    public SemanticHiglightingRule(
+    public TargetedTreeHiglightingRule(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
             @NamedArg("parent") String antlrParentContextClassnamePrefix,
             @NamedArg("targetText") String targetText,

@@ -12,7 +12,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 /**
  * Created by Geoff on 4/6/2016.
  */
-public interface StructuredTextAreaListener{
+public interface StructuredTextAreaHighlighter {
 
     interface LexicalAnalysisListener {
 

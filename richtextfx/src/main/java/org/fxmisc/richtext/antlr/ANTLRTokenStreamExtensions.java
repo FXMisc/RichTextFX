@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.TokenStream;
  */
 public class ANTLRTokenStreamExtensions{
 
-    public static RangeMap<Integer, Token> indexByCharacterRange(TokenStream tokenStream){
+    public static ImmutableRangeMap<Integer, Token> indexByCharacterRange(TokenStream tokenStream){
 
         ImmutableRangeMap.Builder<Integer, Token> tokensByCharacterIndex = ImmutableRangeMap.builder();
 
