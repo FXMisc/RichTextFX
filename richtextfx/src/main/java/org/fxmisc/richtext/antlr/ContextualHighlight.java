@@ -1,5 +1,8 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.antlr;
 
+import com.google.common.collect.ImmutableRangeMap;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeMap;
 import javafx.beans.NamedArg;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -13,21 +16,15 @@ import java.util.stream.Stream;
 /**
  * Created by Geoff on 4/4/2016.
  */
-public class ContextualHighlight {
+public class ContextualHighlight implements StructuredTextAreaListener.SemanticAnalysisListener {
 
     private final Optional<String> antlrContextPrefix;
     private final Optional<String> antlrParentContextPrefix;
     private final Optional<String> targetText;
     private final String styleClass;
 
-    //TODO I dont like these long running constructor things
-    // any chance I can get the FXML loader to tell me what my parent element is?
-    // might be getting too dynamic. Whats an elegant static solution? fx:reference?
-    private boolean wasFullyInitialized = false;
-
     private Optional<Class> antlrContextClass = Optional.empty();
     private Optional<Class> antlrParentContextClass = Optional.empty();
-
 
     public ContextualHighlight(
             @NamedArg("node") String antlrLocalContextClassnamePrefix,
@@ -59,36 +56,28 @@ public class ContextualHighlight {
         this.targetText = Optional.of(targetText).filter(str -> !str.isEmpty());
     }
 
-    public void setAndValidateParentContext(Class<? extends Parser> parentParser) {
-
-        if (wasFullyInitialized) {
-            throw new UnsupportedOperationException("cannot re-use highlights");
-        }
-
-        antlrContextClass = loadParserNesterClass(parentParser, antlrContextPrefix);
-        antlrParentContextClass = loadParserNesterClass(parentParser, antlrParentContextPrefix);
-
-        wasFullyInitialized = true;
-    }
-
-    private Optional<Class> loadParserNesterClass(Class<? extends Parser> parentParser, Optional<String> contextPrefix) {
+    private static Optional<Class> loadParserNesterClass(Class<? extends Parser> parentParser,
+                                                         Optional<String> contextPrefix) {
         return contextPrefix
                 .map(prefix -> parentParser.getName() + "$" + prefix + "Context")
                 .map(className -> StructuredTextArea.loadClass("node aka antlrLocalContextPrefix", className, ParserRuleContext.class));
     }
 
-    public Optional<HighlightedTextInteveral> getMatchingText(ParserRuleContext context) {
 
-        if (!wasFullyInitialized) {
-            throw new IllegalStateException("cannot determine matching text since no parent parser has yet been given!");
-        }
+    @Override
+    public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParserRuleContext context) {
+
+        ImmutableRangeMap.Builder<Integer, String> result = ImmutableRangeMap.builder();
+
+        antlrContextClass = loadParserNesterClass(parent.getParserClass(), antlrContextPrefix);
+        antlrParentContextClass = loadParserNesterClass(parent.getParserClass(), antlrParentContextPrefix);
 
         if (!antlrContextClass.map(t -> t.isInstance(context)).orElse(true)) {
-            return Optional.empty();
+            return result.build();
         }
 
         if (!antlrParentContextClass.map(neededParent -> neededParent.isInstance(context.getParent())).orElse(true)) {
-            return Optional.empty();
+            return result.build();
         }
 
         Optional<Token> matchingToken;
@@ -107,10 +96,15 @@ public class ContextualHighlight {
 //            else if (childTokens.count() == 1){
         else if (context.getChildCount() == 1) {
             matchingToken = childTokens.findFirst();
-        } else {
+        }
+        else {
             matchingToken = Optional.empty();
         }
 
-        return matchingToken.map(token -> new HighlightedTextInteveral(token.getStartIndex(), token.getStopIndex(), styleClass));
+        matchingToken
+                .map(token -> Range.closed(token.getStartIndex(), token.getStopIndex()))
+                .ifPresent(range -> result.put(range, styleClass));
+
+        return result.build();
     }
 }

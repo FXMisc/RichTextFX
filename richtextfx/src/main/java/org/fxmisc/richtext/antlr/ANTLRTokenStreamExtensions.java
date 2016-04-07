@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.antlr;
 
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;

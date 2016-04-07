@@ -1,8 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.antlr;
 
 import com.google.common.collect.BoundType;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
@@ -13,15 +11,16 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.StyleSpansBuilder;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
+
 /**
  * Created by Geoff on 3/29/2016.
  */
-@DefaultProperty("highlights")
 public class StructuredTextArea extends CodeArea {
 
     private final Class<? extends Parser>     parserClass;
@@ -33,6 +32,8 @@ public class StructuredTextArea extends CodeArea {
 
     private final ObservableList<ContextualHighlight> highlights = FXCollections.observableArrayList();
     private final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
@@ -50,6 +51,9 @@ public class StructuredTextArea extends CodeArea {
             throw new RuntimeException(e);
         }
 
+        lexerListeners.add(new LexicalBracketHighlight());
+        errorListeners.add(new ErrorUnderlineHighlight());
+
         richChanges().subscribe(change -> reApplyStyles());
         caretPositionProperty().addListener((source, oldIdx, newIdx) -> {
             //TODO filter this to a toggle...
@@ -57,12 +61,10 @@ public class StructuredTextArea extends CodeArea {
             // then I dont need to keep a stateful toggle.
             reApplyStyles();
         });
+    }
 
-        highlights.addListener((ListChangeListener<ContextualHighlight>) c -> {
-            while(c.next()){
-                c.getAddedSubList().forEach(highlight -> highlight.setAndValidateParentContext(this.parserClass));
-            }
-        });
+    public Class<? extends Parser> getParserClass(){
+        return parserClass;
     }
 
     //TODO make this a task? some kind of queue to ensure we dont flood?
@@ -81,70 +83,42 @@ public class StructuredTextArea extends CodeArea {
 
         RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
 
-        //listeners.ofType(LexerListener.class).forEac(l -> l.handleTokens(tokenMap));
-        styleByIndex.putAll(highlightBrackets(tokensByCharIndex));
+        lexerListeners.stream()
+                .map(l -> l.generateNewStyles(this, tokensByCharIndex))
+                .forEach(styleByIndex::putAll);
 
         ParseTreeWalker walker = new ParseTreeWalker();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {}
             @Override public void visitErrorNode(ErrorNode errorNode) {
                 //note order is important here
-                Token symbol = errorNode.getSymbol();
-
-                //here, something like
-                // listeners.ofType(ErrorListener.class).forEach(l -> l.handleError(errorNode));
-
-                int startIndex = -1, endIndex = -1;
-
-                //TODO this doesnt highlight anything for the expression '(10 + )' (a postfix unary '+'?)
-                if(symbol.getStartIndex() != -1){
-                    startIndex = symbol.getStartIndex();
-                    endIndex = symbol.getStopIndex();
-                }
-                else{
-                    ParserRuleContext parent = (ParserRuleContext) errorNode.getParent();
-                    int thisIndex = parent.children.indexOf(errorNode);
-                    ParseTree olderSib = parent.getChild(thisIndex - 1);
-                    ParseTree youngerSib = parent.getChild(thisIndex + 1);
-
-                    Token preceedingToken = olderSib instanceof ParserRuleContext ? ((ParserRuleContext) olderSib).getStop() :
-                                            olderSib instanceof TerminalNode ? ((TerminalNode) olderSib).getSymbol() :
-                                            null;
-                    Token succeedingToken = youngerSib instanceof ParserRuleContext ? ((ParserRuleContext) youngerSib).getStart() :
-                                            youngerSib instanceof TerminalNode ? ((TerminalNode) youngerSib).getSymbol() :
-                                            null;
-
-                    if(preceedingToken != null) { startIndex = preceedingToken.getStopIndex(); }
-                    if(succeedingToken != null) { endIndex = succeedingToken.getStartIndex(); }
-
-                    startIndex = startIndex == -1 ? endIndex : startIndex;
-                    endIndex = endIndex == -1 ? startIndex : endIndex;
-                }
-
-                Range<Integer> range = Range.closed(startIndex, endIndex);
-                styleByIndex.put(range, "error");
+                errorListeners.stream()
+                        .map(l -> l.generateNewStyles(StructuredTextArea.this, errorNode))
+                        .forEach(styleByIndex::putAll);
             }
             @Override public void enterEveryRule(ParserRuleContext ctx) {
-                Optional<HighlightedTextInteveral> targetHighlight = getHighlights().stream()
-                        .map(highlight -> highlight.getMatchingText(ctx))
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .findFirst();
 
-                targetHighlight.ifPresent(highlight -> {
-                    Range<Integer> range = Range.closed(highlight.getLowerBound(), highlight.getUpperBound());
-                    styleByIndex.put(range, highlight.getStyleClass());
-                });
+                semanticListeners.stream()
+                        .map(l -> l.generateNewStyles(StructuredTextArea.this, ctx))
+                        .forEach(styleByIndex::putAll);
+
             }
             @Override public void exitEveryRule(ParserRuleContext ctx) {}
         };
         walker.walk(walkListener, expr);
 
-        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
-        int nextHighlightStart = 0;
         //TODO overlapping highlights?
 
         snapRanges(styleByIndex);
+
+        StyleSpansBuilder<Collection<String>> spansBuilder = convertToSpanList(styleByIndex);
+
+        setStyleSpans(0, spansBuilder.create());
+    }
+
+    private StyleSpansBuilder<Collection<String>> convertToSpanList(RangeMap<Integer, String> styleByIndex) {
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
+        int nextHighlightStart = 0;
 
         for(Map.Entry<Range<Integer>, String> styledInterval : styleByIndex.asMapOfRanges().entrySet()){
             int lowerBound = styledInterval.getKey().lowerEndpoint();
@@ -160,8 +134,7 @@ public class StructuredTextArea extends CodeArea {
         if(nextHighlightStart < getLength()) {
             spansBuilder.add(Collections.emptyList(), getLength() - nextHighlightStart);
         }
-
-        setStyleSpans(0, spansBuilder.create());
+        return spansBuilder;
     }
 
     private void snapRanges(RangeMap<Integer, String> styleByIndex) {
@@ -185,90 +158,22 @@ public class StructuredTextArea extends CodeArea {
         }
     }
 
-    private RangeMap<Integer, String> highlightBrackets(RangeMap<Integer, Token> tokensByCharIndex) {
+    // note prescedence,
+    // lexical is first to run,
+    // then semantics,
+    // then errors
+    // and styles are LIFO (most recently added wins)
 
-        int currentCharIndex = getCaretPosition();
-
-        List<Token> tokens = ImmutableList.copyOf(tokensByCharIndex.asMapOfRanges().values());
-
-        Optional<Integer> tokenIndexCandidate = Optional.ofNullable(tokensByCharIndex.get(currentCharIndex)).map(Token::getTokenIndex);
-
-        TreeRangeMap<Integer, String> bracketsSoFar = TreeRangeMap.create();
-        if ( ! tokenIndexCandidate.isPresent()){ return bracketsSoFar; }
-        int tokenIndex = tokenIndexCandidate.get();
-
-        if( ! isBracket(tokens, tokenIndex) && tokens.get(tokenIndex).getStartIndex() == currentCharIndex){
-            tokenIndex -= 1;
-        }
-
-        if ( ! isBracket(tokens, tokenIndex)){ return bracketsSoFar; }
-
-        Token openingBracketToken = tokens.get(tokenIndex);
-
-        Range<Integer> openingRange = Range.closed(
-                openingBracketToken.getStartIndex(),
-                openingBracketToken.getStopIndex()
-        );
-        bracketsSoFar.put(openingRange, "bracket");
-
-        Optional<Integer> counterpartsCandidateIndex = findIndexOfCounterpart(tokens, tokenIndex);
-        if ( ! counterpartsCandidateIndex.isPresent()) { return bracketsSoFar; }
-        int counterpartsIndex = counterpartsCandidateIndex.get();
-
-        Token closingBracketToken = tokens.get(counterpartsIndex);
-
-        Range<Integer> closingRange = Range.closed(
-                closingBracketToken.getStartIndex(),
-                closingBracketToken.getStopIndex()
-        );
-        bracketsSoFar.put(closingRange, "bracket");
-
-        return bracketsSoFar;
+    public final ObservableList<StructuredTextAreaListener.SemanticAnalysisListener> getSemanticListeners(){
+        return semanticListeners;
     }
 
-    private Optional<Integer> findIndexOfCounterpart(List<Token> tokens, int tokenIndex) {
-
-        Token currentToken = tokens.get(tokenIndex);
-        String openingBracketText = currentToken.getText();
-
-        UnaryOperator<Integer> moveNext = current -> openingBracketText.equals("(") ? current + 1 : current - 1;
-
-        int openCount = 0;
-        do{
-            currentToken = tokens.get(tokenIndex);
-            if(currentToken.getText().equals("(")) { openCount += 1; }
-            if(currentToken.getText().equals(")")) { openCount -= 1; }
-
-            if(openCount == 0) { break; }
-
-            tokenIndex = moveNext.apply(tokenIndex);
-        }
-        while(currentToken.getType() != Token.EOF);
-
-        if(currentToken.getType() == Token.EOF){ return Optional.empty(); }
-
-        return Optional.of(tokenIndex);
-    }
-
-    private boolean isBracket(List<Token> tokens, int tokenIndex) {
-        String text = tokens.get(tokenIndex).getText();
-        return text.equals("(") || text.equals(")");
-    }
-
-    private boolean isOnToken(List<Token> tokens, int tokenIdx, int characterIndex) {
-        if(tokenIdx < 0 || tokenIdx >= tokens.size()){ return false; }
-        Token token = tokens.get(tokenIdx);
-        return token.getStartIndex() <= characterIndex
-                //remember, stopIndex is inclusive.
-                && token.getStopIndex() >= characterIndex;
+    public final ObservableList<StructuredTextAreaListener.ErrorAnalysisListener> getErrorListeners(){
+        return errorListeners;
     }
 
     public final ObservableList<StructuredTextAreaListener.LexicalAnalysisListener> getLexerListeners(){
         return lexerListeners;
-    }
-
-    public final ObservableList<ContextualHighlight> getHighlights(){
-        return highlights;
     }
 
     public static <TClass> Class<? extends TClass> loadClass(String varName, String className, Class<TClass> neededSuperClass){
