@@ -6,7 +6,7 @@ import com.google.common.collect.RangeMap;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 
-public class ErrorUnderlineHighlighter implements StructuredTextAreaHighlighter.ErrorAnalysisListener{
+public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorAnalysisHighlighter {
 
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, 

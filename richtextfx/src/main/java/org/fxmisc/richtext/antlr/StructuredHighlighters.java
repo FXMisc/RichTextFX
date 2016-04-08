@@ -14,14 +14,14 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 /**
  * Created by Geoff on 4/6/2016.
  */
-public interface StructuredTextAreaHighlighter {
+public interface StructuredHighlighters {
 
-    interface LexicalAnalysisListener {
+    interface LexicalAnalysisHighlighter {
 
         RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> newTokenStream);
     }
 
-    interface SemanticAnalysisListener {
+    interface SemanticAnalysisHighlighter {
 
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParseTree newParseTree){
             return ImmutableRangeMap.of(); //empty
@@ -43,7 +43,7 @@ public interface StructuredTextAreaHighlighter {
         }
     }
 
-    interface ErrorAnalysisListener {
+    interface ErrorAnalysisHighlighter {
 
         RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent,
                                                     Token problemToken,

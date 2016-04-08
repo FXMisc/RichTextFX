@@ -13,7 +13,7 @@ import java.util.function.UnaryOperator;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class LexicalBracketCountingHighlighter implements StructuredTextAreaHighlighter.LexicalAnalysisListener {
+public class LexicalBracketCountingHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
 
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> tokensByCharIndex) {

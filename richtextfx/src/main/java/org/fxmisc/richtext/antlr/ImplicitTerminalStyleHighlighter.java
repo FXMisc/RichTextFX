@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ImplicitTerminalStyleHighlighter implements StructuredTextAreaHighlighter.SemanticAnalysisListener {
+public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.SemanticAnalysisHighlighter {
 
     Cache<StructuredTextArea, Vocabulary> vocabByParent = CacheBuilder.newBuilder().maximumSize(1).build();
 
@@ -33,6 +33,9 @@ public class ImplicitTerminalStyleHighlighter implements StructuredTextAreaHighl
 
         String terminalName = vocab.getDisplayName(typeIndex);
         String style = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, terminalName);
+        //TODO scrub illegal css characters,
+        // http://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
+        // and assert the result a legal css identifier?
 
         Range<Integer> targetRange = Range.closed(symbol.getStartIndex(), symbol.getStopIndex());
 

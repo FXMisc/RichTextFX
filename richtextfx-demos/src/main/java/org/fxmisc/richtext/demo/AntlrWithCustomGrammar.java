@@ -5,10 +5,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter_old;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
-import org.fxmisc.richtext.antlr.StructuredTextAreaHighlighter;
+import org.fxmisc.richtext.antlr.StructuredHighlighters;
 import org.fxmisc.richtext.antlr.TargetedTreeHiglightingRule;
 
 /**
@@ -40,7 +39,7 @@ public class AntlrWithCustomGrammar extends Application {
 
         codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
 
-        ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> highlights = codeArea.getSemanticListeners();
+        ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> highlights = codeArea.getSemanticListeners();
 
         highlights.add(new TargetedTreeHiglightingRule("Statement", "", "var", "var"));
         highlights.add(new TargetedTreeHiglightingRule("Variable", "Expr", "", "variable-use"));

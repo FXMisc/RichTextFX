@@ -101,22 +101,22 @@ public class StructuredTextArea extends CodeArea {
     // then errors
     // and styles are LIFO (most recently added wins)
 
-    private final ObservableList<StructuredTextAreaHighlighter.LexicalAnalysisListener> lexerListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaHighlighter.ErrorAnalysisListener> errorListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> semanticListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.LexicalAnalysisHighlighter> lexerListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.ErrorAnalysisHighlighter> errorListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> semanticListeners = FXCollections.observableArrayList();
 
     //TODO fancy reactfx event pipes?
     //how do i put a "hey checkout my new token stream" event into one of these fancy stream-pipe-things?
 
-    public final ObservableList<StructuredTextAreaHighlighter.SemanticAnalysisListener> getSemanticListeners(){
+    public final ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> getSemanticListeners(){
         return semanticListeners;
     }
 
-    public final ObservableList<StructuredTextAreaHighlighter.ErrorAnalysisListener> getErrorListeners(){
+    public final ObservableList<StructuredHighlighters.ErrorAnalysisHighlighter> getErrorListeners(){
         return errorListeners;
     }
 
-    public final ObservableList<StructuredTextAreaHighlighter.LexicalAnalysisListener> getLexerListeners(){
+    public final ObservableList<StructuredHighlighters.LexicalAnalysisHighlighter> getLexerListeners(){
         return lexerListeners;
     }
 
@@ -126,12 +126,13 @@ public class StructuredTextArea extends CodeArea {
     //name is css-convention-ified version of terminal name from Parser.VOCABULARY
     // eg VARIABLE -> variable
     // eg SOME_INTS -> some-ints
+    // see tests for other behaviours?
 
     private final BooleanProperty implicitTerminalStyle = new SimpleBooleanProperty(this, "implicitTerminalStyle", true);
     {
         //I'm not really sure what the best practices/idioms are here,
         // but I really don't like anonymous classes, especially under the debugger
-        StructuredTextAreaHighlighter.SemanticAnalysisListener listener = new ImplicitTerminalStyleHighlighter();
+        StructuredHighlighters.SemanticAnalysisHighlighter listener = new ImplicitTerminalStyleHighlighter();
 
         implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
@@ -159,7 +160,7 @@ public class StructuredTextArea extends CodeArea {
 
     private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
     {
-        StructuredTextAreaHighlighter.ErrorAnalysisListener listener = new ErrorUnderlineHighlighter();
+        StructuredHighlighters.ErrorAnalysisHighlighter listener = new ErrorUnderlineHighlighter();
 
         implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
@@ -224,7 +225,7 @@ public class StructuredTextArea extends CodeArea {
         };
         new ParseTreeWalker().walk(walkListener, mostRecentRoot);
 
-        for(StructuredTextAreaHighlighter.ErrorAnalysisListener listener : errorListeners){
+        for(StructuredHighlighters.ErrorAnalysisHighlighter listener : errorListeners){
             mostRecentErrors.asMapOfRanges().values().stream()
                     .map(error -> listener.generateNewStyles(
                             this,
@@ -386,6 +387,10 @@ public class StructuredTextArea extends CodeArea {
 
     @FunctionalInterface interface FailingSupplier<T> { T get() throws Throwable; }
     private static <TResult> TResult runOrThrowUnchecked(FailingSupplier<TResult> supplier){
+        //TODO use Clojure's sneakyThrow? Whats the advantage to the wrapper?
+        // I'm excluding people from catching the exception since you cant declare a
+        // try { A() } catch (SomeCheckedException e){}
+        // if A doesnt throw SCE.
         try{ return supplier.get(); }
         catch (RuntimeException | Error e){ throw e; }
         catch (Throwable e) { throw new RuntimeException(e); }

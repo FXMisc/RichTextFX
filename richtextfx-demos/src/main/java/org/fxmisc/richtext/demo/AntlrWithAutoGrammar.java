@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.antlr.ErrorUnderlineHighlighter_old;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
 
