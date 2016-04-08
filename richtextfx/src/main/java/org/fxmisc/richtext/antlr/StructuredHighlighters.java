@@ -16,19 +16,23 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 public interface StructuredHighlighters {
 
+    ImmutableRangeMap<Integer, String> NO_NEW_HIGHLIGHTS = ImmutableRangeMap.of(); //empty
+
     interface LexicalAnalysisHighlighter {
 
+        //TODO docs
+        //EOF is at range [-1, -1]
         RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> newTokenStream);
     }
 
     interface SemanticAnalysisHighlighter {
 
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParseTree newParseTree){
-            return ImmutableRangeMap.of(); //empty
+            return NO_NEW_HIGHLIGHTS;
         }
 
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ErrorNode errorNode){
-            return ImmutableRangeMap.of(); //by default ignore error nodes.
+            return NO_NEW_HIGHLIGHTS; //by default ignore error nodes.
 
             // this method is ~an artifact of ANTLRs own error handling system,
             // but its included here for completeness.
@@ -49,5 +53,14 @@ public interface StructuredHighlighters {
                                                     Token problemToken,
                                                     String antlrGeneratedMessage,
                                                     RecognitionException exception);
+
+        //TODO docs
+        // this is the case where the document is length zero, or the token is an EOF problem.
+        default RangeMap<Integer, String> generateNewStylesForTokenFailure(StructuredTextArea parent,
+                                                                           Token problemToken,
+                                                                           String antlrGeneratedMessage,
+                                                                           RecognitionException exception){
+            return NO_NEW_HIGHLIGHTS;
+        }
     }
 }

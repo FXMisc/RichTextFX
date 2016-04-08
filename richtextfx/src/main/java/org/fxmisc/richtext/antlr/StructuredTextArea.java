@@ -21,7 +21,10 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyleSpansBuilder;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
@@ -227,12 +230,20 @@ public class StructuredTextArea extends CodeArea {
 
         for(StructuredHighlighters.ErrorAnalysisHighlighter listener : errorListeners){
             mostRecentErrors.asMapOfRanges().values().stream()
-                    .map(error -> listener.generateNewStyles(
-                            this,
-                            error.getProblemToken(),
-                            error.getMessage(),
-                            error.getException()
-                    ))
+                    .map(error -> error.isConcrete()
+                            ? listener.generateNewStyles(
+                                    this,
+                                    error.getProblemToken(),
+                                    error.getMessage(),
+                                    error.getException()
+                            )
+                            : listener.generateNewStylesForTokenFailure(
+                                    this,
+                                    error.getProblemToken(),
+                                    error.getMessage(),
+                                    error.getException()
+                            )
+                    )
                     .forEach(styleByIndex::putAll);
         }
 
@@ -268,9 +279,11 @@ public class StructuredTextArea extends CodeArea {
                                     RecognitionException exception) {
 
                 if(offendingSymbol == null) { return; }
-
                 Token offendingToken = (Token) offendingSymbol;
-                Range<Integer> charRange = Range.closed(offendingToken.getStartIndex(), offendingToken.getStopIndex());
+
+                Range<Integer> charRange = ParseError.isConcrete(offendingToken)
+                        ? makeRange(offendingToken, offendingToken)
+                        : Range.singleton(-1) ;
 
                 errorsByIndex.put(charRange, new ParseError(offendingToken, exception, antlrMessage));
             }
@@ -295,9 +308,7 @@ public class StructuredTextArea extends CodeArea {
             public void visitErrorNode(ErrorNode node) {
                 Token symbol = node.getSymbol();
 
-                if (symbol.getStartIndex() > symbol.getStopIndex()) { return; }
-
-                Range<Integer> errorNodeRange = Range.closed(symbol.getStartIndex(), symbol.getStopIndex());
+                Range<Integer> errorNodeRange = makeRange(symbol, symbol);
                 treeNodeByCharIndex.put(errorNodeRange, node);
             }
 
@@ -308,10 +319,7 @@ public class StructuredTextArea extends CodeArea {
 
                 if(ctx.getStart().getType() == Token.EOF){ return; }
 
-                int startIndex = ctx.getStart().getStartIndex();
-                int stopIndex = ctx.getStop().getStopIndex();
-
-                Range<Integer> nodeRange = Range.closed(startIndex, stopIndex);
+                Range<Integer> nodeRange = makeRange(ctx.getStart(), ctx.getStop());
                 treeNodeByCharIndex.put(nodeRange, ctx);
             }
 
@@ -372,6 +380,21 @@ public class StructuredTextArea extends CodeArea {
 
     //region helpers for loading and exception handling
 
+    private static Range<Integer> makeRange(Token startToken, Token stopToken) {
+
+        // antlr claims that it will give us potentially inverted start and stop tokens
+        // if the production consumes no input. For non-left facorted gramars, this can be quite common.
+        // so we're simply going to straighten them out here.
+
+        int proposedStartIdx = startToken.getStartIndex();
+        int proposedEndIndex = stopToken.getStopIndex();
+
+        int startIndex = proposedStartIdx <= proposedEndIndex ? proposedStartIdx : proposedEndIndex;
+        int endIndex = proposedEndIndex >= proposedStartIdx ? proposedEndIndex : proposedStartIdx;
+
+        return Range.closed(startIndex, endIndex);
+    }
+
     public static <TClass> Class<? extends TClass> loadClass(String varName, String className, Class<TClass> neededSuperClass){
         try{
             Class candidate = Class.forName(className);
@@ -428,11 +451,17 @@ public class StructuredTextArea extends CodeArea {
             this.message = message;
         }
 
-        //all nonnull. TODO when you fork, add JSR 305.
+        public @Nonnull  String getMessage() { return message; }
+        public @Nullable RecognitionException getException() { return ex; }
+        public @Nonnull  Token getProblemToken() { return problemToken; }
 
-        public String getMessage() { return message; }
-        public RecognitionException getException() { return ex; }
-        public Token getProblemToken() { return problemToken; }
+        public boolean isConcrete() {
+            return isConcrete(getProblemToken());
+        }
+
+        public static boolean isConcrete(Token problemToken){
+            return problemToken.getType() != Token.EOF;
+        }
     }
 
     //endregion

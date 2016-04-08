@@ -1,10 +1,13 @@
-package org.fxmisc.richtext.antlr;
+package org.fxmisc.richtext.antlr
+
+import org.fxmisc.richtext.parser.JavishMathLexer
+import org.fxmisc.richtext.parser.JavishMathParser
+import org.testng.annotations.Test
 
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class StructuredTextAreaTest {
-
+class StructuredTextAreaFixture{
     // So, how can I structure these tests (for the structured text area)?
     // I think i can supply a couple of grammars at in the tests and assert that they're loaded properly
     // maybe split those into use cases?
@@ -15,6 +18,17 @@ public class StructuredTextAreaTest {
     //      first lexical
     //      then semantic, in order of outer-most production to inner-most production
     //      then error
+
+    @Test fun when_constructing_text_area_with_valid_params_should_build_successfully() {
+        StructuredTextArea(
+                JavishMathParser::class.qualifiedName,
+                JavishMathLexer::class.qualifiedName,
+                "block"
+        )
+    }
+
+    // maybe parameterize the tests on an ANTLR grammar thats combined and another thats separated.
+    // case in point: our grammer is separate and doesnt have a VOCABULARY field on the lexer or parser
 
     // assert that auto-label correctly finds names, include oddly-named parser rules.
 

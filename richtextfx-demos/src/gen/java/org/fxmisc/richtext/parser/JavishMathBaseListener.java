@@ -1,4 +1,4 @@
-// Generated from C:\Users\Geoff\Code\RichTextFX\richtextfx-demos\src\main\antlr\JavishMath.g4 by ANTLR 4.5
+// Generated from D:\Users\Geoff\Code\RichTextFX\richtextfx-demos\src\main\antlr\JavishMath.g4 by ANTLR 4.5
 
     package org.fxmisc.richtext.parser;
 
