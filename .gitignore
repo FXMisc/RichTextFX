@@ -6,4 +6,7 @@
 .project
 .classpath
 .settings/
-richtextfx-demos/src/gen/
+
+# this is the (attempted) target for antlr generated source
+# but its not working, so im committing it to the repo
+#richtextfx-demos/src/gen/
