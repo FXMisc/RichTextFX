@@ -37,7 +37,7 @@ public class AntlrWithCustomGrammar extends Application {
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.setImplicitTerminalStyle(false);
 
-        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
+        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
 
         ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> highlights = codeArea.getSemanticListeners();
 

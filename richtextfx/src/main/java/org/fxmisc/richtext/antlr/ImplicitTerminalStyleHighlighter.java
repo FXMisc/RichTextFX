@@ -12,34 +12,45 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.SemanticAnalysisHighlighter {
+public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
 
     Cache<StructuredTextArea, Vocabulary> vocabByParent = CacheBuilder.newBuilder().maximumSize(1).build();
 
     @Override
-    public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, TerminalNode terminalOnNewTree) {
+    public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> newTokenStream) {
 
-        Vocabulary vocab = null;
+        Vocabulary vocab;
         try { vocab = vocabByParent.get(parent, () -> reflectivelyFindVocabulary(parent));}
         catch (ExecutionException e) { throw new RuntimeException(e); }
 
-        Token symbol = terminalOnNewTree.getSymbol();
-        int typeIndex = symbol.getType();
+        ImmutableRangeMap.Builder<Integer, String> tokenStyles = ImmutableRangeMap.builder();
 
-        String terminalName = vocab.getDisplayName(typeIndex);
-        String style = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, terminalName);
-        //TODO scrub illegal css characters,
-        // http://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
-        // and assert the result a legal css identifier?
+        for(Map.Entry<Range<Integer>, Token> kvp : newTokenStream.asMapOfRanges().entrySet()){
 
-        Range<Integer> targetRange = Range.closed(symbol.getStartIndex(), symbol.getStopIndex());
+            Range<Integer> targetRange = kvp.getKey();
+            Token symbol = kvp.getValue();
 
-        return ImmutableRangeMap.of(targetRange, style);
+            int typeIndex = symbol.getType();
+
+            String terminalName = vocab.getSymbolicName(typeIndex);
+
+            if(terminalName == null){ continue; }
+
+            String style = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, terminalName);
+            //TODO scrub 'illegal' (unconventional?) css characters,
+            // http://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
+            // and assert the result a legal css identifier?
+
+            tokenStyles.put(targetRange, style);
+        }
+
+        return tokenStyles.build();
     }
 
     //TODO pull this up onto the StructuredTextArea?
@@ -59,7 +70,6 @@ public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.
 
         return symNames;
     }
-
 }
 
 

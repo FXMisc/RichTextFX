@@ -1,82 +1,102 @@
 package org.fxmisc.richtext.antlr;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
+import javafx.beans.NamedArg;
+import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+//TODO docs
+// note that this does not use parser rules,
+// meaning if you have special contexts you want brackets excluded from,
+// you'll have to do it with semantics or bundle the bracket in a lexcal rule.
+// but that seems exceedingly rare.
 /**
  * Created by Geoff on 4/7/2016.
  */
 public class LexicalBracketCountingHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
 
+    private final String openingBracket;
+    private final String closingBracket;
+    private final String styleClass;
+
+    public LexicalBracketCountingHighlighter(@NamedArg(value="openingBracket", defaultValue="(") String openingBracket,
+                                             @NamedArg(value="closingBracket", defaultValue=")") String closingBracket,
+                                             @NamedArg(value="styleClass", defaultValue="bracket") String styleClass){
+
+        this.openingBracket = openingBracket;
+        this.closingBracket = closingBracket;
+        this.styleClass = styleClass;
+    }
+
     @Override
     public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> tokensByCharIndex) {
 
-        int currentCharIndex = parent.getCaretPosition();
+        // I dont usually use final locals but I've been burned twice by reassigning stack vars,
+        // so I'm strictly SSA for this method
 
-        List<Token> tokens = ImmutableList.copyOf(tokensByCharIndex.asMapOfRanges().values());
+        final int currentCharIndex = parent.getCaretPosition();
 
-        Optional<Integer> tokenIndexCandidate = Optional.ofNullable(tokensByCharIndex.get(currentCharIndex)).map(Token::getTokenIndex);
+        final Optional<Token> openingBracketTokenCandidate = Arrays.asList(
+                tokensByCharIndex.get(currentCharIndex),
+                tokensByCharIndex.get(currentCharIndex - 1)
+        )
+                .stream()
+                .filter(t -> t != null)
+                .filter(this::isBracket)
+                .findFirst();
 
-        TreeRangeMap<Integer, String> bracketsSoFar = TreeRangeMap.create();
-        if (!tokenIndexCandidate.isPresent()) {
-            return bracketsSoFar;
-        }
-        int tokenIndex = tokenIndexCandidate.get();
+        if ( ! openingBracketTokenCandidate.isPresent()){ return StructuredHighlighters.NO_NEW_HIGHLIGHTS; }
+        final Token openingBracketToken = openingBracketTokenCandidate.get();
 
-        if (!isBracket(tokens, tokenIndex) && tokens.get(tokenIndex).getStartIndex() == currentCharIndex) {
-            tokenIndex -= 1;
-        }
+        final List<Token> tokens = ImmutableList.copyOf(tokensByCharIndex.asMapOfRanges().values());
+        final ImmutableRangeMap.Builder<Integer, String> bracketsSoFar = ImmutableRangeMap.builder();
 
-        if (!isBracket(tokens, tokenIndex)) {
-            return bracketsSoFar;
-        }
-
-        Token openingBracketToken = tokens.get(tokenIndex);
-
-        Range<Integer> openingRange = Range.closed(
+        final Range<Integer> openingRange = Range.closed(
                 openingBracketToken.getStartIndex(),
                 openingBracketToken.getStopIndex()
         );
-        bracketsSoFar.put(openingRange, "bracket");
+        bracketsSoFar.put(openingRange, styleClass);
 
-        Optional<Integer> counterpartsCandidateIndex = findIndexOfCounterpart(tokens, tokenIndex);
-        if (!counterpartsCandidateIndex.isPresent()) {
-            return bracketsSoFar;
-        }
+        final Optional<Integer> counterpartsCandidateIndex = findIndexOfCounterpart(tokens, openingBracketToken);
+        if ( ! counterpartsCandidateIndex.isPresent()) { return bracketsSoFar.build(); }
         int counterpartsIndex = counterpartsCandidateIndex.get();
 
-        Token closingBracketToken = tokens.get(counterpartsIndex);
+        final Token closingBracketToken = tokens.get(counterpartsIndex);
 
-        Range<Integer> closingRange = Range.closed(
+        final Range<Integer> closingRange = Range.closed(
                 closingBracketToken.getStartIndex(),
                 closingBracketToken.getStopIndex()
         );
-        bracketsSoFar.put(closingRange, "bracket");
+        bracketsSoFar.put(closingRange, styleClass);
 
-        return bracketsSoFar;
+        return bracketsSoFar.build();
     }
 
-    private Optional<Integer> findIndexOfCounterpart(List<Token> tokens, int tokenIndex) {
+    private Optional<Integer> findIndexOfCounterpart(List<Token> tokens, Token currentToken) {
 
-        Token currentToken = tokens.get(tokenIndex);
+        int tokenIndex = currentToken.getTokenIndex();
         String openingBracketText = currentToken.getText();
 
-        UnaryOperator<Integer> moveNext = current -> openingBracketText.equals("(") ? current + 1 : current - 1;
+        UnaryOperator<Integer> moveNext =
+                current -> openingBracketText.equals(openingBracket) ? current + 1 : current - 1;
 
         int openCount = 0;
         do {
             currentToken = tokens.get(tokenIndex);
-            if (currentToken.getText().equals("(")) {
+            if (currentToken.getText().equals(openingBracket)) {
                 openCount += 1;
             }
-            if (currentToken.getText().equals(")")) {
+            if (currentToken.getText().equals(closingBracket)) {
                 openCount -= 1;
             }
 
@@ -95,8 +115,8 @@ public class LexicalBracketCountingHighlighter implements StructuredHighlighters
         return Optional.of(tokenIndex);
     }
 
-    private boolean isBracket(List<Token> tokens, int tokenIndex) {
-        String text = tokens.get(tokenIndex).getText();
-        return text.equals("(") || text.equals(")");
+    private boolean isBracket(Token token) {
+        String text = token.getText();
+        return text.equals(openingBracket) || text.equals(closingBracket);
     }
 }

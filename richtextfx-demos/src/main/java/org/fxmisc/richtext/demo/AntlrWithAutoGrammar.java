@@ -33,7 +33,7 @@ public class AntlrWithAutoGrammar extends Application {
         );
         codeArea.setImplicitTerminalStyle(true);
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter());
+        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
 
         codeArea.replaceText(0, 0, initialText);
         codeArea.setPrefHeight(200);

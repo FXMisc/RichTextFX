@@ -135,21 +135,21 @@ public class StructuredTextArea extends CodeArea {
     {
         //I'm not really sure what the best practices/idioms are here,
         // but I really don't like anonymous classes, especially under the debugger
-        StructuredHighlighters.SemanticAnalysisHighlighter listener = new ImplicitTerminalStyleHighlighter();
+        ImplicitTerminalStyleHighlighter listener = new ImplicitTerminalStyleHighlighter();
 
         implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
 
             if(isNowImplicit){
-                getSemanticListeners().add(listener);
+                getLexerListeners().add(listener);
             }
             else{
-                getSemanticListeners().remove(listener);
+                getLexerListeners().remove(listener);
             }
         });
 
         if(getImplicitTerminalStyle()){
-            getSemanticListeners().add(listener);
+            getLexerListeners().add(listener);
         }
     }
     public final BooleanProperty implicitTerminalStyleProperty(){ return implicitTerminalStyle; }
@@ -163,7 +163,7 @@ public class StructuredTextArea extends CodeArea {
 
     private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
     {
-        StructuredHighlighters.ErrorAnalysisHighlighter listener = new ErrorUnderlineHighlighter();
+        ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter();
 
         implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
@@ -182,7 +182,7 @@ public class StructuredTextArea extends CodeArea {
     }
     public final BooleanProperty implicitErrorStyleProperty(){ return implicitErrorStyle; }
     public final boolean getImplicitErrorStyle(){ return implicitErrorStyleProperty().get(); }
-    public final void setEmplicitErrorStyle(boolean implicitlyStyleErrorRanges){
+    public final void setImplicitErrorStyle(boolean implicitlyStyleErrorRanges){
         implicitErrorStyleProperty().set(implicitlyStyleErrorRanges);
     }
 
