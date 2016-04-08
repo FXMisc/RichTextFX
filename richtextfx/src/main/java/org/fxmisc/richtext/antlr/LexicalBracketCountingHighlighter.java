@@ -91,8 +91,10 @@ public class LexicalBracketCountingHighlighter implements StructuredHighlighters
                 current -> openingBracketText.equals(openingBracket) ? current + 1 : current - 1;
 
         int openCount = 0;
-        do {
+        while(tokenIndex < tokens.size() && tokenIndex >= 0){
+
             currentToken = tokens.get(tokenIndex);
+
             if (currentToken.getText().equals(openingBracket)) {
                 openCount += 1;
             }
@@ -106,9 +108,8 @@ public class LexicalBracketCountingHighlighter implements StructuredHighlighters
 
             tokenIndex = moveNext.apply(tokenIndex);
         }
-        while (currentToken.getType() != Token.EOF);
 
-        if (currentToken.getType() == Token.EOF) {
+        if (tokenIndex < 0 || tokenIndex >= tokens.size()) {
             return Optional.empty();
         }
 

@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
@@ -35,6 +36,8 @@ public class AntlrWithErrorHoverOver extends Application {
         );
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.setImplicitTerminalStyle(true);
+        codeArea.getStylesheets().add(getClass().getResource("antlrd-area.css").toExternalForm());
+        codeArea.getStyleClass().add("code-area");
 
         Popup popup = new Popup();
         Label popupMsg = new Label();

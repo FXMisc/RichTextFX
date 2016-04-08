@@ -2,7 +2,6 @@ package org.fxmisc.richtext.antlr
 
 import org.fxmisc.richtext.parser.JavishMathLexer
 import org.fxmisc.richtext.parser.JavishMathParser
-import org.testng.annotations.Test
 
 /**
  * Created by Geoff on 4/7/2016.
@@ -19,13 +18,13 @@ class StructuredTextAreaFixture{
     //      then semantic, in order of outer-most production to inner-most production
     //      then error
 
-    @Test fun when_constructing_text_area_with_valid_params_should_build_successfully() {
-        StructuredTextArea(
-                JavishMathParser::class.qualifiedName,
-                JavishMathLexer::class.qualifiedName,
-                "block"
-        )
-    }
+//    @Test fun when_constructing_text_area_with_valid_params_should_build_successfully() {
+//        StructuredTextArea(
+//                JavishMathParser::class.qualifiedName,
+//                JavishMathLexer::class.qualifiedName,
+//                "block"
+//        )
+//    }
 
     // maybe parameterize the tests on an ANTLR grammar thats combined and another thats separated.
     // case in point: our grammer is separate and doesnt have a VOCABULARY field on the lexer or parser

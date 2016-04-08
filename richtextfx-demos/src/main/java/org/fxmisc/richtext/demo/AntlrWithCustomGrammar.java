@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
@@ -36,6 +37,8 @@ public class AntlrWithCustomGrammar extends Application {
         );
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.setImplicitTerminalStyle(false);
+        codeArea.getStylesheets().add(getClass().getResource("antlrd-area.css").toExternalForm());
+        codeArea.getStyleClass().add("code-area");
 
         codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
 

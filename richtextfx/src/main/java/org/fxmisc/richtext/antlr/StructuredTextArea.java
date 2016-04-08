@@ -8,6 +8,8 @@ import com.google.common.collect.TreeRangeMap;
 import javafx.beans.NamedArg;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,6 +22,7 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.StyleSpansBuilder;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,11 +32,18 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.lang.String.format;
 
 /**
  * Created by Geoff on 3/29/2016.
  */
-public class StructuredTextArea extends CodeArea {
+public class StructuredTextArea extends StyleClassedTextArea {
+
+    //TODO SLF4J? what is the best behaviour here?
+    static final Logger log = Logger.getLogger(StructuredTextArea.class.getCanonicalName());
 
     private final Class<? extends Parser>             parserClass;
     private final Class<? extends Lexer>              lexerClass;
@@ -44,16 +54,53 @@ public class StructuredTextArea extends CodeArea {
     private ImmutableRangeMap<Integer, ParseError> mostRecentErrors;
     private ParserRuleContext mostRecentRoot;
 
+    @SuppressWarnings("unchecked") //casting Func<TPar, ?Ctx> to Func<Parser, Ctx>,
+    //contravariance on `Function`'s first type-param and covariance on its second definitely has something to do with it.
+    public <TParser extends Parser> StructuredTextArea(Class<TParser> parserClass,
+                                                       Class<? extends Lexer> lexerClass,
+                                                       Function<? super TParser, ? extends ParserRuleContext> rootProduction){
+        super();
+
+        this.parserClass = parserClass;
+        this.lexerClass = lexerClass;
+        this.rootProduction = (Function<Parser, ParserRuleContext>) rootProduction;
+
+        init();
+    }
+
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
                               @NamedArg("rootProduction") String rootProduction) {
         super();
 
-        this.parserClass = loadClass("parserClass", parserClass, Parser.class);
-        this.lexerClass = loadClass("lexerClass", lexerClass, Lexer.class);
+        try {
+            this.parserClass = loadClass("parserClass", parserClass, Parser.class);
+            this.lexerClass = loadClass("lexerClass", lexerClass, Lexer.class);
 
-        Method rootProductionMethod = runOrThrowUnchecked(() -> this.parserClass.getMethod(rootProduction));
-        this.rootProduction = parser -> runOrThrowUnchecked(() -> ParserRuleContext.class.cast(rootProductionMethod.invoke(parser)));
+            Method rootProductionMethod = runOrThrowUnchecked(() -> this.parserClass.getMethod(rootProduction));
+            this.rootProduction = parser -> runOrThrowUnchecked(() -> ParserRuleContext.class.cast(rootProductionMethod.invoke(parser)));
+
+            init();
+        }
+        catch(Throwable exception){
+            // so, I dont like this, but I dont like the FXML loader more, and this is designed to be used from FXML.
+            // see line 461 in ProxyBuilder.java, which will silently suppress these errors.
+
+            log.warning(format(
+                    "attempted to construct a %1s with " +
+                    "parserClass=%2s, lexerClass=%3s, rootProduction=%4s, " +
+                    "but that threw an execption: %5s",
+                    getClass(), parserClass, lexerClass, rootProduction, exception
+            ));
+
+            throw exception;
+        }
+    }
+
+    //too much reflection going on in the constructor body.
+    private void init() {
+        // as per @{link org.fxmisc.richtext.CodeArea}, don't apply preceding style to typed text
+        setUseInitialStyleForInsertion(true);
 
         //not using lambdas to make it a little easier on the debugger.
         RecompileAndRestyleListener recompileAndRestyleOnAnyChange = new RecompileAndRestyleListener();
@@ -63,13 +110,9 @@ public class StructuredTextArea extends CodeArea {
         }
 
         richChanges().subscribe(recompileAndRestyleOnAnyChange);
+        caretPositionProperty().addListener(recompileAndRestyleOnAnyChange);
 
-        caretPositionProperty().addListener((source, oldIdx, newIdx) -> {
-            reApplyStyles();
-        });
-
-        recompile();
-        reApplyStyles();
+        recompileAndRestyleOnAnyChange.recompileAndReapply();
     }
 
     //region POJO accessors
@@ -419,13 +462,18 @@ public class StructuredTextArea extends CodeArea {
         catch (Throwable e) { throw new RuntimeException(e); }
     }
 
-    private class RecompileAndRestyleListener implements ListChangeListener<Object>, Consumer<Object> {
+    private class RecompileAndRestyleListener implements ListChangeListener<Object>, Consumer<Object>, ChangeListener<Object> {
 
         @Override
         public void onChanged(Change c) {
             if(c.next()){
                 recompileAndReapply();
             }
+        }
+
+        @Override
+        public void changed(ObservableValue<?> observable, Object oldValue, Object newValue) {
+            recompileAndReapply();
         }
 
         @Override
