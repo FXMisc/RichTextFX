@@ -2,6 +2,13 @@
     -fx-fill: teal;
     -fx-font-weight: bold;
 }
+/* available with simple lexer rule*/
+.variable {
+    -fx-fill: purple;
+    -fx-style: italic;
+}
+
+/* these two require more complex parser highlighter */
 .variable-use {
     -fx-fill: purple;
     -fx-style: italic;

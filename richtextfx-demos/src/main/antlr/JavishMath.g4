@@ -33,6 +33,7 @@ DIGIT   : '0'..'9';
 
 VARIABLE      : VARIABLE_START VARIABLE_PART*;
 
+VAR           : 'var' ;
 LAMBDA        : '->' ;
 
 LT            : '<' ;

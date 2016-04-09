@@ -9,19 +9,29 @@ import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
 
 import java.time.Duration;
 
-public class AntlrWithErrorHoverOver extends Application {
+public class CheapFeaturesExample extends Application {
 
     private static final String initialText =
-            "// notice that with ANTLR we can differentiate on a variables context\n" +
-                    "// declaration gets one style (underline), usage gets another (red)\n" +
-                    "var x = 2 + x ^ (3 + (10 + 12));\n" +
-                    "var another = v -> 2 + 3 * v + x;\n" +
-                    "var err + x;\n" +
-                    "// and of course, with arbitrary text like comments, we can set the style.";
+            "// This demo shows some of the ~free features of this library\n" +
+            "\n" +
+            "var x = 2 + x ^ (3 + (10 + 12)); //click on the brackets\n" +
+            "// note the corresponding closing bracket is highlighted\n" +
+            "var another = v -> 2 + 3 * v + x;\n " +
+            "// note here variables are highlighted in purple\n" +
+            "var err + x; // error highlights!\n" +
+            "// try mousing-over the red text\n" +
+            "\n" +
+            "// and of course, with arbitrary text like comments, we can set the style.\n" +
+            "// these features all operate with fairly basic ANTLR facilities, (lexer & error handlers)\n" +
+            "// substantially more elaborate features can be added with parser highlighters!\n" +
+            "\n" +
+            "// many thanks to Tomas Mikula for his excellent library\n" +
+            "// and ofc Terrance Parr and Sam Harwell wrote the superb ANTLR!\n";
 
     public static void main(String[] args) {
         launch(args);
@@ -34,11 +44,20 @@ public class AntlrWithErrorHoverOver extends Application {
                 "org.fxmisc.richtext.parser.JavishMathLexer",
                 "block"
         );
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.setImplicitTerminalStyle(true);
         codeArea.getStylesheets().add(getClass().getResource("antlrd-area.css").toExternalForm());
-        codeArea.getStyleClass().add("code-area");
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
+        //implicitly map from token names to css styles
+        codeArea.setImplicitTerminalStyle(true);
+
+        //implicitly highlight parser errors with a red-underline.
+        codeArea.setImplicitErrorStyle(true);
+
+        //add bracket highlighter
+        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
+
+        //hover over with ANTLR generated error message
+        codeArea.getStyleClass().add("code-area");
         Popup popup = new Popup();
         Label popupMsg = new Label();
         popupMsg.setStyle(
@@ -63,7 +82,7 @@ public class AntlrWithErrorHoverOver extends Application {
 
 
         codeArea.replaceText(0, 0, initialText);
-        codeArea.setPrefHeight(200);
+        codeArea.setPrefHeight(230);
         codeArea.setPrefWidth(600);
 
         Scene scene = new Scene(codeArea);
