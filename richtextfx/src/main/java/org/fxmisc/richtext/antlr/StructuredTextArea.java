@@ -7,12 +7,17 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import javafx.beans.NamedArg;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.input.DragEvent;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -21,18 +26,17 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.StyleSpansBuilder;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
@@ -45,9 +49,12 @@ public class StructuredTextArea extends StyleClassedTextArea {
     //TODO SLF4J? what is the best behaviour here?
     static final Logger log = Logger.getLogger(StructuredTextArea.class.getCanonicalName());
 
-    private final Class<? extends Parser>             parserClass;
     private final Class<? extends Lexer>              lexerClass;
-    private final Function<Parser, ParserRuleContext> rootProduction;
+    private final Class<? extends Parser>             parserClass;
+
+    private final Function<Parser, ParserRuleContext>     rootProduction;
+    private final Function<CharStream, ? extends Lexer>   lexerCtor;
+    private final Function<TokenStream, ? extends Parser> parserCtor;
 
     private ImmutableRangeMap<Integer, Token> mostRecentTokens;
     private ImmutableRangeMap<Integer, ParseTree> mostRecentParseTree;
@@ -65,7 +72,16 @@ public class StructuredTextArea extends StyleClassedTextArea {
         this.lexerClass = lexerClass;
         this.rootProduction = (Function<Parser, ParserRuleContext>) rootProduction;
 
-        init();
+        try {
+            this.lexerCtor = buildConstructorClosure(this.lexerClass, CharStream.class);
+            this.parserCtor = buildConstructorClosure(this.parserClass, TokenStream.class);
+
+            init();
+        }
+        catch(Throwable exception){
+            logConstructionFailure(parserClass.toString(), lexerClass.toString(), rootProduction.toString(), exception);
+            throw exception;
+        }
     }
 
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
@@ -80,21 +96,28 @@ public class StructuredTextArea extends StyleClassedTextArea {
             Method rootProductionMethod = runOrThrowUnchecked(() -> this.parserClass.getMethod(rootProduction));
             this.rootProduction = parser -> runOrThrowUnchecked(() -> ParserRuleContext.class.cast(rootProductionMethod.invoke(parser)));
 
+            this.lexerCtor = buildConstructorClosure(this.lexerClass, CharStream.class);
+            this.parserCtor = buildConstructorClosure(this.parserClass, TokenStream.class);
+
             init();
         }
         catch(Throwable exception){
-            // so, I dont like this, but I dont like the FXML loader more, and this is designed to be used from FXML.
-            // see line 461 in ProxyBuilder.java, which will silently suppress these errors.
-
-            log.warning(format(
-                    "attempted to construct a %1s with " +
-                    "parserClass=%2s, lexerClass=%3s, rootProduction=%4s, " +
-                    "but that threw an execption: %5s",
-                    getClass(), parserClass, lexerClass, rootProduction, exception
-            ));
-
+            logConstructionFailure(parserClass, lexerClass, rootProduction, exception);
             throw exception;
         }
+    }
+
+    private void logConstructionFailure(String parserClass, String lexerClass, String rootProduction, Throwable exception) {
+
+        // so, I don't like this, but I don't like the FXML loader more, and this is designed to be used from FXML.
+        // see line 461 in ProxyBuilder.java, which will silently suppress these errors.
+
+        log.warning(format(
+                "attempted to construct a %1s with " +
+                "parserClass=%2s, lexerClass=%3s, rootProduction=%4s, " +
+                "but that threw an execption: %5s",
+                getClass(), parserClass, lexerClass, rootProduction, exception
+        ));
     }
 
     //too much reflection going on in the constructor body.
@@ -183,12 +206,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
         implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
 
-            if(isNowImplicit){
-                getLexerListeners().add(listener);
-            }
-            else{
-                getLexerListeners().remove(listener);
-            }
+            if(isNowImplicit){ getLexerListeners().add(listener); }
+            else{ getLexerListeners().remove(listener); }
         });
 
         if(getImplicitTerminalStyle()){
@@ -202,21 +221,17 @@ public class StructuredTextArea extends StyleClassedTextArea {
     }
 
     //TODO docs
-    //css style is ".error"
+    //css style is "error"
 
     private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
     {
-        ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter();
+        ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter("error");
 
         implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
 
-            if(isNowImplicit){
-                getErrorListeners().add(listener);
-            }
-            else{
-                getErrorListeners().remove(listener);
-            }
+            if(isNowImplicit){ getErrorListeners().add(listener); }
+            else{ getErrorListeners().remove(listener); }
         });
 
         if(getImplicitErrorStyle()){
@@ -228,6 +243,25 @@ public class StructuredTextArea extends StyleClassedTextArea {
     public final void setImplicitErrorStyle(boolean implicitlyStyleErrorRanges){
         implicitErrorStyleProperty().set(implicitlyStyleErrorRanges);
     }
+
+
+    // as has probably been made clear, I'm a fan of FXML,
+    // so it annoyed me that I could only really do this from java
+    // so I'm adding it as an FXML-referencable handler here
+    // TODO split this into entered and exited?
+
+    private final ObjectProperty<EventHandler<? super MouseOverTextEvent>> onMouseOverTextProperty
+            = new SimpleObjectProperty<>(this, "onMouseOverText");
+    {
+        onMouseOverTextProperty.addListener((observable, oldHandler, newHandler) -> {
+            setEventHandler(MouseOverTextEvent.ANY, newHandler);
+        });
+    }
+    public final ObjectProperty<EventHandler<? super MouseOverTextEvent>> onMouseOverTextProperty() {
+        return onMouseOverTextProperty;
+    }
+    public final EventHandler<? super MouseOverTextEvent> getOnMouseOverText() { return onMouseOverTextProperty().get(); }
+    public final void setOnMouseOverText(EventHandler<? super MouseOverTextEvent> value) { onMouseOverTextProperty().set(value); }
 
 
     //endregion
@@ -300,82 +334,90 @@ public class StructuredTextArea extends StyleClassedTextArea {
     }
 
     private void recompile() {
-        ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
-        //TODO speed this up, by caching... something.
-        Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
-        lexer.removeErrorListeners();
+        try {
+            ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
+            //TODO speed this up, by caching... something.
+            Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
+            lexer.removeErrorListeners();
 
-        TokenStream tokens = new CommonTokenStream(lexer);
+            TokenStream tokens = new CommonTokenStream(lexer);
 
-        Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
-        parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
+            Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
+            parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
 
-        TreeRangeMap<Integer, ParseError> errorsByIndex = TreeRangeMap.create();
-        parser.addErrorListener(new ANTLRErrorListener() {
+            TreeRangeMap<Integer, ParseError> errorsByIndex = TreeRangeMap.create();
+            parser.addErrorListener(new ANTLRErrorListener() {
 
-            @Override
-            public void syntaxError(Recognizer<?, ?> recognizer,
-                                    Object offendingSymbol,
-                                    int line,
-                                    int charPositionInLine,
-                                    String antlrMessage,
-                                    RecognitionException exception) {
+                @Override
+                public void syntaxError(Recognizer<?, ?> recognizer,
+                                        Object offendingSymbol,
+                                        int line,
+                                        int charPositionInLine,
+                                        String antlrMessage,
+                                        RecognitionException exception) {
 
-                if(offendingSymbol == null) { return; }
-                Token offendingToken = (Token) offendingSymbol;
+                    if(offendingSymbol == null) { return; }
+                    Token offendingToken = (Token) offendingSymbol;
 
-                Range<Integer> charRange = ParseError.isConcrete(offendingToken)
-                        ? makeRange(offendingToken, offendingToken)
-                        : Range.singleton(-1) ;
+                    Range<Integer> charRange = ParseError.isConcrete(offendingToken)
+                            ? makeRange(offendingToken, offendingToken)
+                            : Range.singleton(-1) ;
 
-                errorsByIndex.put(charRange, new ParseError(offendingToken, exception, antlrMessage));
-            }
+                    errorsByIndex.put(charRange, new ParseError(offendingToken, exception, antlrMessage));
+                }
 
-            @Override public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {}
-            @Override public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {}
-            @Override public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) { }
-        });
+                @Override public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {}
+                @Override public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {}
+                @Override public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) { }
+            });
 
-        ParserRuleContext root = rootProduction.apply(parser);
+            ParserRuleContext root = rootProduction.apply(parser);
 
-        TreeRangeMap<Integer, ParseTree> treeNodeByCharIndex = TreeRangeMap.create();
-        ParseTreeListener walkListener = new ParseTreeListener(){
+            TreeRangeMap<Integer, ParseTree> treeNodeByCharIndex = TreeRangeMap.create();
+            ParseTreeListener walkListener = new ParseTreeListener(){
 
-            @Override
-            public void visitTerminal(TerminalNode node) {
-                //do nothing, this map already exists in the lexer stuff.
-                //leave lexical stuff to the lexican indexer.
-            }
+                @Override
+                public void visitTerminal(TerminalNode node) {
+                    //do nothing, this map already exists in the lexer stuff.
+                    //leave lexical stuff to the lexican indexer.
+                }
 
-            @Override
-            public void visitErrorNode(ErrorNode node) {
-                Token symbol = node.getSymbol();
+                @Override
+                public void visitErrorNode(ErrorNode node) {
+                    Token symbol = node.getSymbol();
 
-                Range<Integer> errorNodeRange = makeRange(symbol, symbol);
-                treeNodeByCharIndex.put(errorNodeRange, node);
-            }
+                    Range<Integer> errorNodeRange = makeRange(symbol, symbol);
+                    treeNodeByCharIndex.put(errorNodeRange, node);
+                }
 
-            //user enter instead of exit -> widest ranges added first -> most narrow ranges override wider ones.
+                //user enter instead of exit -> widest ranges added first -> most narrow ranges override wider ones.
 
-            @Override
-            public void enterEveryRule(ParserRuleContext ctx) {
+                @Override
+                public void enterEveryRule(ParserRuleContext ctx) {
 
-                if(ctx.getStart().getType() == Token.EOF){ return; }
+                    if(ctx.getStart().getType() == Token.EOF){ return; }
 
-                Range<Integer> nodeRange = makeRange(ctx.getStart(), ctx.getStop());
-                treeNodeByCharIndex.put(nodeRange, ctx);
-            }
+                    Range<Integer> nodeRange = makeRange(ctx.getStart(), ctx.getStop());
+                    treeNodeByCharIndex.put(nodeRange, ctx);
+                }
 
-            @Override
-            public void exitEveryRule(ParserRuleContext ctx) {}
-        };
+                @Override
+                public void exitEveryRule(ParserRuleContext ctx) {}
+            };
 
-        new ParseTreeWalker().walk(walkListener, root);
+            new ParseTreeWalker().walk(walkListener, root);
 
-        mostRecentRoot = root;
-        mostRecentErrors = ImmutableRangeMap.copyOf(errorsByIndex);
-        mostRecentParseTree = ImmutableRangeMap.copyOf(treeNodeByCharIndex);
-        mostRecentTokens = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
+            //is thread-confinement from javafx sufficient here or do i need some kind of lock?
+
+            mostRecentRoot = root;
+            mostRecentErrors = ImmutableRangeMap.copyOf(errorsByIndex);
+            mostRecentParseTree = ImmutableRangeMap.copyOf(treeNodeByCharIndex);
+            mostRecentTokens = ANTLRTokenStreamExtensions.indexByCharacterRange(tokens);
+        }
+        catch(Throwable exception){
+            log.warning("failure in compilation: " + exception);
+            Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), exception);
+        }
     }
 
     private StyleSpansBuilder<Collection<String>> convertToSpanList(RangeMap<Integer, String> styleByIndex) {
@@ -412,6 +454,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
             }
             if(range.upperBoundType() == BoundType.OPEN){
                 //TODO copy-pasta much?
+                //only refactor would be adjustRange(rangeMap, range, lb -> lb + 1, ub -> ub);
+                //or adjustRange(rangeMap, range, true); --if willing to tolerate a boolean literal.
                 String value = rangeMap.remove(range);
                 range = Range.closed(range.lowerEndpoint(), range.upperEndpoint() - 1);
                 if(range.isEmpty()){ continue; }
@@ -451,7 +495,13 @@ public class StructuredTextArea extends StyleClassedTextArea {
         }
     }
 
+    private static <TInput, TResult> Function<TInput, TResult> buildConstructorClosure(Class<TResult> lexerClass, Class<TInput> inputType) {
+        Constructor<TResult> lexerConstructor = runOrThrowUnchecked(() -> lexerClass.getConstructor(inputType));
+        return (TInput charStream) -> runOrThrowUnchecked(() -> lexerConstructor.newInstance(charStream));
+    }
+
     @FunctionalInterface interface FailingSupplier<T> { T get() throws Throwable; }
+
     private static <TResult> TResult runOrThrowUnchecked(FailingSupplier<TResult> supplier){
         //TODO use Clojure's sneakyThrow? Whats the advantage to the wrapper?
         // I'm excluding people from catching the exception since you cant declare a
