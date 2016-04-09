@@ -16,8 +16,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
-import javafx.scene.input.DragEvent;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -201,7 +199,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
     {
         //I'm not really sure what the best practices/idioms are here,
         // but I really don't like anonymous classes, especially under the debugger
-        ImplicitTerminalStyleHighlighter listener = new ImplicitTerminalStyleHighlighter();
+        ImplicitTokenHighlighter listener = new ImplicitTokenHighlighter();
 
         implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }

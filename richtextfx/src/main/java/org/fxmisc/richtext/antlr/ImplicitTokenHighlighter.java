@@ -18,7 +18,24 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
+public class ImplicitTokenHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
+
+
+    //TODO proper terminal highlighter
+    // consider sample.g4
+
+    // parser rule
+    // something : expr MULTI expr ';' ;
+    //
+    // lexer rules:
+    // MULTI :  '*' | '/';
+    // TIMES :  '*';
+    // DIVIDE:  '/';
+
+    // a token highlighter generates two style classes, "times" and "divide",
+    // whereas a terminal highlighter would generate just one: "multi"
+
+    // unfortunately that's a boatload more recursion, unless I'm missing something, :sigh:
 
     Cache<StructuredTextArea, Vocabulary> vocabByParent = CacheBuilder.newBuilder().maximumSize(1).build();
 
@@ -55,7 +72,6 @@ public class ImplicitTerminalStyleHighlighter implements StructuredHighlighters.
 
     //TODO pull this up onto the StructuredTextArea?
     // I feel like that class should hide these little nasty reflection-ee details,
-    // especially since the ANTLR genreated class is
     private Vocabulary reflectivelyFindVocabulary(StructuredTextArea parent) {
         Field symNamesField;
         try { symNamesField = parent.getParserClass().getField("VOCABULARY"); }
