@@ -1,5 +1,27 @@
+apply plugin: 'antlr'
+apply plugin: 'kotlin'
+
 dependencies {
     compile project(":richtextfx")
+    antlr "org.antlr:antlr4:4.5"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
+
+
+sourceSets{
+    gen{
+        java.srcDir "${projectDir}/src/gen/java"
+    }
+    main.java.srcDirs += 'src/main/kotlin'
+}
+
+compileJava{
+    dependsOn(generateGrammarSource)
+    source += sourceSets.gen.java
+}
+
+generateGrammarSource {
+    outputDirectory = new File("${project.rootDir}/richtextfx-demos/src/gen/java/org/fxmisc/richtext/parser".toString())
 }
 
 task fatJar(type: Jar, dependsOn: classes) {
@@ -43,4 +65,16 @@ task PopupDemo(type: JavaExec, dependsOn: classes) {
 task TooltipDemo(type: JavaExec, dependsOn: classes) {
     main = 'org.fxmisc.richtext.demo.TooltipDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
+}
+buildscript {
+    ext.kotlin_version = '1.0.1-2'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+repositories {
+    mavenCentral()
 }
