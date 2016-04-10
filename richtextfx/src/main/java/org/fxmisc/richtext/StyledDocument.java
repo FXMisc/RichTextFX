@@ -23,6 +23,9 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
     S getStyleAtPosition(int position);
     S getStyleAtPosition(int paragraph, int position);
 
+    PS getParagraphStyle(int paragraph);
+    PS getParagraphStyleAtPosition(int pos);
+
     IndexRange getStyleRangeAtPosition(int position);
     IndexRange getStyleRangeAtPosition(int paragraph, int position);
 

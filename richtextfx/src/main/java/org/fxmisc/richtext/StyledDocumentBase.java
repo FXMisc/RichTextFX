@@ -125,10 +125,16 @@ implements StyledDocument<PS, S> {
         return paragraphs.get(paragraph).getStyleAtPosition(position);
     }
 
+
+    @Override
+    public PS getParagraphStyle(int paragraph) {
+        return paragraphs.get(paragraph).getParagraphStyle();
+    }
+
+    @Override
     public PS getParagraphStyleAtPosition(int position) {
         Position pos = offsetToPosition(position, Forward);
-        Paragraph<PS, S> par = paragraphs.get(pos.getMajor());
-        return par.getParagraphStyle();
+        return getParagraphStyle(pos.getMajor());
     }
 
     @Override
