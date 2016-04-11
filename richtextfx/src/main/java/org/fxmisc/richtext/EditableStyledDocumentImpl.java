@@ -1,6 +1,5 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -47,13 +45,16 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
     private final StringBinding text = Bindings.createStringBinding(() -> getText(0, length()));
     @Override
     public String getText() { return text.getValue(); }
+    @Override
     public ObservableValue<String> textProperty() { return text; }
 
     /**
      * Length of this {@code StyledDocument}.
      */
     private final SuspendableVar<Integer> length = Var.newSimpleVar(0).suspendable();
+    @Override
     public int getLength() { return length.getValue(); }
+    @Override
     public Val<Integer> lengthProperty() { return length; }
     @Override
     public int length() { return length.getValue(); }
@@ -69,12 +70,15 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
     /**
      * Read-only snapshot of the current state of this document.
      */
+    @Override
     public ReadOnlyStyledDocument<PS, S> snapshot() {
-        return new ReadOnlyStyledDocument<>(paragraphs, ParagraphsPolicy.COPY);
+        return new ReadOnlyStyledDocument<>(paragraphs);
     }
 
     private final SuspendableNo beingUpdated = new SuspendableNo();
+    @Override
     public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    @Override
     public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     /* ********************************************************************** *
@@ -110,9 +114,11 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
     private final EventSource<Void> styleChangeDone = new EventSource<>();
 
     private final EventStream<PlainTextChange> plainChanges;
+    @Override
     public EventStream<PlainTextChange> plainChanges() { return plainChanges; }
 
     private final EventStream<RichTextChange<PS, S>> richChanges;
+    @Override
     public EventStream<RichTextChange<PS, S>> richChanges() { return richChanges; }
 
     {
@@ -171,6 +177,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         replace(start, end, doc);
     }
 
+    @Override
     public void replace(int start, int end, StyledDocument<PS, S> replacement) {
         ensureValidRange(start, end);
 
@@ -208,10 +215,11 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         StyledDocument<PS, S> doc =
                 replacement instanceof ReadOnlyStyledDocument
                 ? replacement
-                : new ReadOnlyStyledDocument<>(replacement.getParagraphs(), COPY);
+                : new ReadOnlyStyledDocument<>(replacement.getParagraphs());
         insertedDocument.push(doc);
     }
 
+    @Override
     public void setStyle(int from, int to, S style) {
         ensureValidRange(from, to);
 
@@ -249,6 +257,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         }
     }
 
+    @Override
     public void setStyle(int paragraph, S style) {
         Paragraph<PS, S> p = paragraphs.get(paragraph);
         int start = position(paragraph, 0).toOffset();
@@ -260,6 +269,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         }
     }
 
+    @Override
     public void setStyle(int paragraph, int fromCol, int toCol, S style) {
         ensureValidParagraphRange(paragraph, fromCol, toCol);
         int parOffset = position(paragraph, 0).toOffset();
@@ -273,6 +283,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         }
     }
 
+    @Override
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         ensureValidRange(from, from + len);
@@ -333,6 +344,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         }
     }
 
+    @Override
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         ensureValidParagraphRange(paragraph, from, len);
@@ -349,6 +361,7 @@ final class EditableStyledDocumentImpl<PS, S> extends StyledDocumentBase<PS, S, 
         }
     }
 
+    @Override
     public void setParagraphStyle(int parIdx, PS style) {
         ensureValidParagraphIndex(parIdx);
         Paragraph<PS, S> par = paragraphs.get(parIdx);

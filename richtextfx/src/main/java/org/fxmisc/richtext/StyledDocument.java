@@ -1,6 +1,5 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.ReadOnlyStyledDocument.ParagraphsPolicy.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
@@ -59,11 +58,11 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
             pars.add(getParagraphs().get(p2).subSequence(0, col2));
         }
 
-        return new ReadOnlyStyledDocument<>(pars, ADOPT);
+        return new ReadOnlyStyledDocument<>(pars);
     }
 
     default StyledDocument<PS, S> subDocument(int paragraphIndex) {
-        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)), ADOPT);
+        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)));
     }
 
     default char charAt(int index) {
@@ -80,7 +79,7 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
         pars.addAll(pars1.subList(0, n1 - 1));
         pars.add(pars1.get(n1 - 1).concat(pars2.get(0)));
         pars.addAll(pars2.subList(1, n2));
-        return new ReadOnlyStyledDocument<>(pars, ADOPT);
+        return new ReadOnlyStyledDocument<>(pars);
     }
 
     default S getStyleOfChar(int index) {
