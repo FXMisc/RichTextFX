@@ -192,17 +192,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
         //I'm not really sure what the best practices/idioms are here,
         // but I really don't like anonymous classes, especially under the debugger
         ImplicitTokenHighlighter listener = new ImplicitTokenHighlighter();
-
-        implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
-            if(isNowImplicit == wasImplicit){ return; }
-
-            if(isNowImplicit){ getHighlighters().add(listener); }
-            else{ getHighlighters().remove(listener); }
-        });
-
-        if(getImplicitTerminalStyle()){
-            getHighlighters().add(listener);
-        }
+        toggleListenerMembership(listener, getImplicitTerminalStyle(), implicitTerminalStyle);
     }
     public final BooleanProperty implicitTerminalStyleProperty(){ return implicitTerminalStyle; }
     public final boolean getImplicitTerminalStyle(){ return implicitTerminalStyleProperty().get(); }
@@ -216,17 +206,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
     private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
     {
         ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter("error");
-
-        implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
-            if(isNowImplicit == wasImplicit){ return; }
-
-            if(isNowImplicit){ getHighlighters().add(listener); }
-            else{ getHighlighters().remove(listener); }
-        });
-
-        if(getImplicitErrorStyle()){
-            getHighlighters().add(listener);
-        }
+        toggleListenerMembership(listener, getImplicitErrorStyle(), implicitErrorStyle);
     }
     public final BooleanProperty implicitErrorStyleProperty(){ return implicitErrorStyle; }
     public final boolean getImplicitErrorStyle(){ return implicitErrorStyleProperty().get(); }
@@ -455,7 +435,20 @@ public class StructuredTextArea extends StyleClassedTextArea {
     }
     //endregion
 
-    //region helpers for loading and exception handling
+    //region loading and exception handling and a couple other misc things
+
+    private void toggleListenerMembership(StructuredHighlighter listener, boolean implicitErrorStyleAtCtor, BooleanProperty implicitErrorStyleObs) {
+        implicitErrorStyleObs.addListener((source, wasImplicit, isNowImplicit) -> {
+            if(isNowImplicit == wasImplicit){ return; }
+
+            if(isNowImplicit){ getHighlighters().add(listener); }
+            else{ getHighlighters().remove(listener); }
+        });
+
+        if(implicitErrorStyleAtCtor){
+            getHighlighters().add(listener);
+        }
+    }
 
     private static Range<Integer> makeRange(Token startToken, Token stopToken) {
 
