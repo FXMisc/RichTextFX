@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ImplicitTokenHighlighter implements StructuredHighlighters.TokenHighlighter {
+public class ImplicitTokenHighlighter implements StructuredHighlighter.TokenHighlighter {
 
 
     //TODO proper terminal highlighter

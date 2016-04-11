@@ -54,7 +54,7 @@ public class CheapFeaturesExample extends Application {
         codeArea.setImplicitErrorStyle(true);
 
         //add bracket highlighter
-        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
+        codeArea.getHighlighters().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
 
         //hover over with ANTLR generated error message
         codeArea.getStyleClass().add("code-area");

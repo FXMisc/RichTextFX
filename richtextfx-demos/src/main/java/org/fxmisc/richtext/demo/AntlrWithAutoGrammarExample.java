@@ -34,7 +34,7 @@ public class AntlrWithAutoGrammarExample extends Application {
         );
         codeArea.setImplicitTerminalStyle(true);
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
+        codeArea.getHighlighters().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
         codeArea.getStylesheets().add(getClass().getResource("antlrd-area.css").toExternalForm());
         codeArea.getStyleClass().add("code-area");
 

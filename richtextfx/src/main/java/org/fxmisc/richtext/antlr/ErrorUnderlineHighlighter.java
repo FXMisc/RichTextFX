@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
-public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorHighlighter {
+public class ErrorUnderlineHighlighter implements StructuredHighlighter.ErrorHighlighter {
 
     private final String cssStyleClass;
 
@@ -24,8 +24,8 @@ public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorHi
 
         Range<Integer> errorRange = Range.closed(problemToken.getStartIndex(), problemToken.getStopIndex());
 
-        throw new UnsupportedOperationException("TODO: boolean flag, should underline things with the cursor beside them?");
-//        return ImmutableRangeMap.of(errorRange, cssStyleClass);
+//        TODO: boolean flag, should underline things with the cursor beside them?
+        return ImmutableRangeMap.of(errorRange, cssStyleClass);
     }
 
     @Override

@@ -20,7 +20,7 @@ import java.util.function.UnaryOperator;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class LexicalBracketCountingHighlighter implements StructuredHighlighters.TokenHighlighter {
+public class LexicalBracketCountingHighlighter implements StructuredHighlighter.TokenHighlighter {
 
     private final String openingBracket;
     private final String closingBracket;
@@ -52,7 +52,7 @@ public class LexicalBracketCountingHighlighter implements StructuredHighlighters
                 .filter(this::isBracket)
                 .findFirst();
 
-        if ( ! openingBracketTokenCandidate.isPresent()){ return StructuredHighlighters.NO_NEW_HIGHLIGHTS; }
+        if ( ! openingBracketTokenCandidate.isPresent()){ return StructuredHighlighter.NO_NEW_HIGHLIGHTS; }
         final Token openingBracketToken = openingBracketTokenCandidate.get();
 
         final List<Token> tokens = ImmutableList.copyOf(tokensByCharIndex.asMapOfRanges().values());

@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.antlr.LexicalBracketCountingHighlighter;
 import org.fxmisc.richtext.antlr.StructuredTextArea;
-import org.fxmisc.richtext.antlr.StructuredHighlighters;
+import org.fxmisc.richtext.antlr.StructuredHighlighter;
 import org.fxmisc.richtext.antlr.TargetedTreeHiglightingRule;
 
 /**
@@ -39,9 +39,9 @@ public class AntlrWithCustomGrammarExample extends Application {
         codeArea.getStylesheets().add(getClass().getResource("antlrd-area.css").toExternalForm());
         codeArea.getStyleClass().add("code-area");
 
-        codeArea.getLexerListeners().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
+        codeArea.getHighlighters().add(new LexicalBracketCountingHighlighter("(", ")", "bracket"));
 
-        ObservableList<StructuredHighlighters.ParseRuleHighlighter> highlights = codeArea.getSemanticListeners();
+        ObservableList<StructuredHighlighter> highlights = codeArea.getHighlighters();
 
         highlights.add(new TargetedTreeHiglightingRule("Statement", "", "var", "var"));
         highlights.add(new TargetedTreeHiglightingRule("Variable", "Expr", "", "variable-use"));

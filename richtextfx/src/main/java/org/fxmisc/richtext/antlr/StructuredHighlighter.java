@@ -1,9 +1,7 @@
 package org.fxmisc.richtext.antlr;
 
 import com.google.common.collect.ImmutableRangeMap;
-import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
@@ -14,11 +12,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 /**
  * Created by Geoff on 4/6/2016.
  */
-public interface StructuredHighlighters {
+public interface StructuredHighlighter {
 
     ImmutableRangeMap<Integer, String> NO_NEW_HIGHLIGHTS = ImmutableRangeMap.of(); //empty
 
-    interface TokenHighlighter extends StructuredHighlighters {
+    interface TokenHighlighter extends StructuredHighlighter {
 
         //TODO docs
         //EOF is at range [-1, -1]
@@ -32,7 +30,7 @@ public interface StructuredHighlighters {
         // with a default implementation to return false, but, ehhh,
     }
 
-    interface ParseRuleHighlighter extends StructuredHighlighters {
+    interface ParseRuleHighlighter extends StructuredHighlighter {
 
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParseTree newParseTree){
             return NO_NEW_HIGHLIGHTS;
@@ -46,7 +44,7 @@ public interface StructuredHighlighters {
         }
     }
 
-    interface ErrorHighlighter extends StructuredHighlighters {
+    interface ErrorHighlighter extends StructuredHighlighter {
 
         RangeMap<Integer, String> generateNewStylesForLexerError(StructuredTextArea parent,
                                                                  Token problemToken,

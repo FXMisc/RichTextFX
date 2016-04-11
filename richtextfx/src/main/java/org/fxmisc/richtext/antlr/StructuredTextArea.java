@@ -27,6 +27,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.fxmisc.richtext.MouseOverTextEvent;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.StyleSpansBuilder;
+import org.fxmisc.richtext.antlr.StructuredHighlighter.ErrorHighlighter;
+import org.fxmisc.richtext.antlr.StructuredHighlighter.ParseRuleHighlighter;
+import org.fxmisc.richtext.antlr.StructuredHighlighter.TokenHighlighter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +39,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -126,10 +130,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
         //not using lambdas to make it a little easier on the debugger.
         RecompileAndRestyleListener recompileAndRestyleOnAnyChange = new RecompileAndRestyleListener();
 
-        for(ObservableList<?> listenerList : new ObservableList[]{lexerListeners, errorListeners, semanticListeners}){
-            listenerList.addListener(recompileAndRestyleOnAnyChange);
-        }
-
+        getHighlighters().addListener(recompileAndRestyleOnAnyChange);
         richChanges().subscribe(recompileAndRestyleOnAnyChange);
         caretPositionProperty().addListener(recompileAndRestyleOnAnyChange);
 
@@ -168,24 +169,15 @@ public class StructuredTextArea extends StyleClassedTextArea {
     // then errors
     // and styles are LIFO (most recently added wins)
 
-    private final ObservableList<StructuredHighlighters.TokenHighlighter> lexerListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredHighlighters.ErrorHighlighter> errorListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredHighlighters.ParseRuleHighlighter> semanticListeners = FXCollections.observableArrayList();
+    private ObservableList<StructuredHighlighter> highlighters = FXCollections.observableArrayList();
 
     //TODO fancy reactfx event pipes?
     //how do i put a "hey checkout my new token stream" event into one of these fancy stream-pipe-things?
 
-    public final ObservableList<StructuredHighlighters.ParseRuleHighlighter> getSemanticListeners(){
-        return semanticListeners;
+    public final ObservableList<StructuredHighlighter> getHighlighters(){
+        return highlighters;
     }
 
-    public final ObservableList<StructuredHighlighters.ErrorHighlighter> getErrorListeners(){
-        return errorListeners;
-    }
-
-    public final ObservableList<StructuredHighlighters.TokenHighlighter> getLexerListeners(){
-        return lexerListeners;
-    }
 
     //TODO: observable list of tokens and obsrvable tree (?) of nodes?
 
@@ -204,12 +196,12 @@ public class StructuredTextArea extends StyleClassedTextArea {
         implicitTerminalStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
 
-            if(isNowImplicit){ getLexerListeners().add(listener); }
-            else{ getLexerListeners().remove(listener); }
+            if(isNowImplicit){ getHighlighters().add(listener); }
+            else{ getHighlighters().remove(listener); }
         });
 
         if(getImplicitTerminalStyle()){
-            getLexerListeners().add(listener);
+            getHighlighters().add(listener);
         }
     }
     public final BooleanProperty implicitTerminalStyleProperty(){ return implicitTerminalStyle; }
@@ -228,12 +220,12 @@ public class StructuredTextArea extends StyleClassedTextArea {
         implicitErrorStyle.addListener((source, wasImplicit, isNowImplicit) -> {
             if(isNowImplicit == wasImplicit){ return; }
 
-            if(isNowImplicit){ getErrorListeners().add(listener); }
-            else{ getErrorListeners().remove(listener); }
+            if(isNowImplicit){ getHighlighters().add(listener); }
+            else{ getHighlighters().remove(listener); }
         });
 
         if(getImplicitErrorStyle()){
-            getErrorListeners().add(listener);
+            getHighlighters().add(listener);
         }
     }
     public final BooleanProperty implicitErrorStyleProperty(){ return implicitErrorStyle; }
@@ -271,7 +263,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
 
         RangeMap<Integer, String> styleByIndex = TreeRangeMap.create();
 
-        lexerListeners.stream()
+        getHighlighters().stream()
+                .filter(TokenHighlighter.class::isInstance).map(TokenHighlighter.class::cast)
                 .map(l -> l.generateNewStyles(this, mostRecentTokens))
                 .forEach(styleByIndex::putAll);
 
@@ -280,7 +273,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
             @Override public void visitTerminal(TerminalNode terminalNode) {
                 if(terminalNode.getSymbol().getType() == Token.EOF){ return; }
 
-                semanticListeners.stream()
+                getHighlighters().stream()
+                        .filter(ParseRuleHighlighter.class::isInstance).map(ParseRuleHighlighter.class::cast)
                         .map(l -> l.generateNewStyles(StructuredTextArea.this, terminalNode))
                         .forEach(styleByIndex::putAll);
             }
@@ -289,7 +283,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
             }
             @Override public void enterEveryRule(ParserRuleContext ctx) {
 
-                semanticListeners.stream()
+                getHighlighters().stream()
+                        .filter(ParseRuleHighlighter.class::isInstance).map(ParseRuleHighlighter.class::cast)
                         .map(l -> l.generateNewStyles(StructuredTextArea.this, ctx))
                         .forEach(styleByIndex::putAll);
 
@@ -300,24 +295,26 @@ public class StructuredTextArea extends StyleClassedTextArea {
         };
         new ParseTreeWalker().walk(walkListener, mostRecentRoot);
 
-        for(StructuredHighlighters.ErrorHighlighter listener : errorListeners){
-            mostRecentErrors.asMapOfRanges().values().stream()
-                    .map(error -> error.isConcrete()
-                            ? listener.generateNewStylesForLexerError(
-                                    this,
-                                    error.getProblemToken(),
-                                    error.getMessage(),
-                                    error.getException()
-                            )
-                            : listener.generateNewStylesForTokenFailure(
-                                    this,
-                                    error.getProblemToken(),
-                                    error.getMessage(),
-                                    error.getException()
-                            )
-                    )
-                    .forEach(styleByIndex::putAll);
-        }
+        Stream<ErrorHighlighter> errorListeners = getHighlighters().stream()
+                .filter(ErrorHighlighter.class::isInstance).map(ErrorHighlighter.class::cast);
+        errorListeners.forEach(listener -> {
+                mostRecentErrors.asMapOfRanges().values().stream()
+                        .map(error -> error.isConcrete()
+                                ? listener.generateNewStylesForLexerError(
+                                        this,
+                                        error.getProblemToken(),
+                                        error.getMessage(),
+                                        error.getException()
+                                )
+                                : listener.generateNewStylesForTokenFailure(
+                                        this,
+                                        error.getProblemToken(),
+                                        error.getMessage(),
+                                        error.getException()
+                                )
+                        )
+                        .forEach(styleByIndex::putAll);
+        });
 
         snapRanges(styleByIndex);
 
@@ -331,13 +328,11 @@ public class StructuredTextArea extends StyleClassedTextArea {
     private void recompile() {
         try {
             ANTLRInputStream antlrStringStream = new ANTLRInputStream(getText());
-            //TODO speed this up, by caching... something.
-            Lexer lexer = runOrThrowUnchecked(() -> lexerClass.getConstructor(CharStream.class).newInstance(antlrStringStream));
+            Lexer lexer = lexerCtor.apply(antlrStringStream);
             lexer.removeErrorListeners();
 
             TokenStream tokens = new CommonTokenStream(lexer);
-
-            Parser parser = runOrThrowUnchecked(() -> parserClass.getConstructor(TokenStream.class).newInstance(tokens));
+            Parser parser = parserCtor.apply(tokens);
             parser.getErrorListeners().removeIf(ConsoleErrorListener.class::isInstance);
 
             TreeRangeMap<Integer, ParseError> errorsByIndex = TreeRangeMap.create();
@@ -465,7 +460,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
     private static Range<Integer> makeRange(Token startToken, Token stopToken) {
 
         // antlr claims that it will give us potentially inverted start and stop tokens
-        // if the production consumes no input. For non-left facorted gramars, this can be quite common.
+        // if the production consumes no input. For non-left factored grammars, this can be quite common.
         // so we're simply going to straighten them out here.
 
         int proposedStartIdx = startToken.getStartIndex();
