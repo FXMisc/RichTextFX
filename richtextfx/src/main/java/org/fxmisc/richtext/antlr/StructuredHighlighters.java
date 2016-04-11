@@ -18,27 +18,26 @@ public interface StructuredHighlighters {
 
     ImmutableRangeMap<Integer, String> NO_NEW_HIGHLIGHTS = ImmutableRangeMap.of(); //empty
 
-    interface LexicalAnalysisHighlighter {
+    interface TokenHighlighter extends StructuredHighlighters {
 
         //TODO docs
         //EOF is at range [-1, -1]
         RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, RangeMap<Integer, Token> newTokenStream);
+
+        //TODO currently the bracket implementation of this abuses the caretPosition listener
+        // to force a restyle every time the caret position changes.
+        // No recompile, but that still isn't necessarily cheap.
+        // If i made this interface stateful, I could optimize that, but state is icky.
+        // could do a `boolean needsRestyle(STA parent, int oldPosition, intNewPosition)`,
+        // with a default implementation to return false, but, ehhh,
     }
 
-    interface SemanticAnalysisHighlighter {
+    interface ParseRuleHighlighter extends StructuredHighlighters {
 
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParseTree newParseTree){
             return NO_NEW_HIGHLIGHTS;
         }
 
-        default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ErrorNode errorNode){
-            return NO_NEW_HIGHLIGHTS; //by default ignore error nodes.
-
-            // this method is ~an artifact of ANTLRs own error handling system,
-            // but its included here for completeness.
-            // its easier to work with the the other error handling strategy
-            // because error nodes often have no tokens or EOF/invalid tokens.
-        }
         default RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, ParserRuleContext productionOnNewTree){
             return generateNewStyles(parent, (ParseTree) productionOnNewTree);
         }
@@ -47,12 +46,14 @@ public interface StructuredHighlighters {
         }
     }
 
-    interface ErrorAnalysisHighlighter {
+    interface ErrorHighlighter extends StructuredHighlighters {
 
-        RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent,
-                                                    Token problemToken,
-                                                    String antlrGeneratedMessage,
-                                                    RecognitionException exception);
+        RangeMap<Integer, String> generateNewStylesForLexerError(StructuredTextArea parent,
+                                                                 Token problemToken,
+                                                                 String antlrGeneratedMessage,
+                                                                 RecognitionException exception);
+
+        RangeMap<Integer, String> generateNewStylesForParserError(StructuredTextArea parent, ErrorNode error);
 
         //TODO docs
         // this is the case where the document is length zero, or the token is an EOF problem.

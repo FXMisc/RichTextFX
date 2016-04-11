@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by Geoff on 4/4/2016.
  */
-public class TargetedTreeHiglightingRule implements StructuredHighlighters.SemanticAnalysisHighlighter {
+public class TargetedTreeHiglightingRule implements StructuredHighlighters.ParseRuleHighlighter {
 
     private final Optional<String> antlrContextPrefix;
     private final Optional<String> antlrParentContextPrefix;

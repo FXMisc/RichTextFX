@@ -6,8 +6,9 @@ import com.google.common.collect.RangeMap;
 import javafx.beans.NamedArg;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
 
-public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorAnalysisHighlighter {
+public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorHighlighter {
 
     private final String cssStyleClass;
 
@@ -16,12 +17,19 @@ public class ErrorUnderlineHighlighter implements StructuredHighlighters.ErrorAn
     }
 
     @Override
-    public RangeMap<Integer, String> generateNewStyles(StructuredTextArea parent, 
-                                                       Token problemToken, 
-                                                       String antlrGeneratedMessage, 
-                                                       RecognitionException exception) {
+    public RangeMap<Integer, String> generateNewStylesForLexerError(StructuredTextArea parent,
+                                                                    Token problemToken,
+                                                                    String antlrGeneratedMessage,
+                                                                    RecognitionException exception) {
 
         Range<Integer> errorRange = Range.closed(problemToken.getStartIndex(), problemToken.getStopIndex());
-        return ImmutableRangeMap.of(errorRange, cssStyleClass);
+
+        throw new UnsupportedOperationException("TODO: boolean flag, should underline things with the cursor beside them?");
+//        return ImmutableRangeMap.of(errorRange, cssStyleClass);
+    }
+
+    @Override
+    public RangeMap<Integer, String> generateNewStylesForParserError(StructuredTextArea parent, ErrorNode error) {
+        return NO_NEW_HIGHLIGHTS;
     }
 }

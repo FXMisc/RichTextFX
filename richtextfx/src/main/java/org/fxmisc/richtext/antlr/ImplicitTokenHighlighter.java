@@ -8,7 +8,6 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -18,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class ImplicitTokenHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
+public class ImplicitTokenHighlighter implements StructuredHighlighters.TokenHighlighter {
 
 
     //TODO proper terminal highlighter

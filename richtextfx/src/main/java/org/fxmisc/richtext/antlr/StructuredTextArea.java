@@ -168,22 +168,22 @@ public class StructuredTextArea extends StyleClassedTextArea {
     // then errors
     // and styles are LIFO (most recently added wins)
 
-    private final ObservableList<StructuredHighlighters.LexicalAnalysisHighlighter> lexerListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredHighlighters.ErrorAnalysisHighlighter> errorListeners = FXCollections.observableArrayList();
-    private final ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> semanticListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.TokenHighlighter> lexerListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.ErrorHighlighter> errorListeners = FXCollections.observableArrayList();
+    private final ObservableList<StructuredHighlighters.ParseRuleHighlighter> semanticListeners = FXCollections.observableArrayList();
 
     //TODO fancy reactfx event pipes?
     //how do i put a "hey checkout my new token stream" event into one of these fancy stream-pipe-things?
 
-    public final ObservableList<StructuredHighlighters.SemanticAnalysisHighlighter> getSemanticListeners(){
+    public final ObservableList<StructuredHighlighters.ParseRuleHighlighter> getSemanticListeners(){
         return semanticListeners;
     }
 
-    public final ObservableList<StructuredHighlighters.ErrorAnalysisHighlighter> getErrorListeners(){
+    public final ObservableList<StructuredHighlighters.ErrorHighlighter> getErrorListeners(){
         return errorListeners;
     }
 
-    public final ObservableList<StructuredHighlighters.LexicalAnalysisHighlighter> getLexerListeners(){
+    public final ObservableList<StructuredHighlighters.TokenHighlighter> getLexerListeners(){
         return lexerListeners;
     }
 
@@ -275,6 +275,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
                 .map(l -> l.generateNewStyles(this, mostRecentTokens))
                 .forEach(styleByIndex::putAll);
 
+        ArrayList<ErrorNode> errorNodes = new ArrayList<>();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {
                 if(terminalNode.getSymbol().getType() == Token.EOF){ return; }
@@ -284,11 +285,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
                         .forEach(styleByIndex::putAll);
             }
             @Override public void visitErrorNode(ErrorNode errorNode) {
-
-                semanticListeners.stream()
-                        .map(l -> l.generateNewStyles(StructuredTextArea.this, errorNode))
-                        .forEach(styleByIndex::putAll);
-
+                errorNodes.add(errorNode);
             }
             @Override public void enterEveryRule(ParserRuleContext ctx) {
 
@@ -303,10 +300,10 @@ public class StructuredTextArea extends StyleClassedTextArea {
         };
         new ParseTreeWalker().walk(walkListener, mostRecentRoot);
 
-        for(StructuredHighlighters.ErrorAnalysisHighlighter listener : errorListeners){
+        for(StructuredHighlighters.ErrorHighlighter listener : errorListeners){
             mostRecentErrors.asMapOfRanges().values().stream()
                     .map(error -> error.isConcrete()
-                            ? listener.generateNewStyles(
+                            ? listener.generateNewStylesForLexerError(
                                     this,
                                     error.getProblemToken(),
                                     error.getMessage(),

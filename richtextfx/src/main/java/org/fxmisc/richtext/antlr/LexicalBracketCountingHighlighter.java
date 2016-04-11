@@ -1,13 +1,10 @@
 package org.fxmisc.richtext.antlr;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
-import com.google.common.collect.TreeRangeMap;
 import javafx.beans.NamedArg;
-import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 
 import java.util.Arrays;
@@ -23,7 +20,7 @@ import java.util.function.UnaryOperator;
 /**
  * Created by Geoff on 4/7/2016.
  */
-public class LexicalBracketCountingHighlighter implements StructuredHighlighters.LexicalAnalysisHighlighter {
+public class LexicalBracketCountingHighlighter implements StructuredHighlighters.TokenHighlighter {
 
     private final String openingBracket;
     private final String closingBracket;
