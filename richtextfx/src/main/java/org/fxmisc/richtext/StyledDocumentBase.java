@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 import javafx.scene.control.IndexRange;
 
@@ -48,11 +47,11 @@ implements StyledDocument<PS, S> {
 
     @Override
     public String getText(int start, int end) {
-        return sub(
-                start, end,
-                Paragraph::getText,
-                Paragraph::substring,
-                pars -> String.join("\n", pars));
+        StyledDocument<PS, S> sub = subSequence(start, end);
+        String[] strings = sub.getParagraphs().stream()
+                .map(Paragraph::getText)
+                .toArray(n -> new String[n]);
+        return String.join("\n", strings);
     }
 
     @Override
@@ -76,11 +75,31 @@ implements StyledDocument<PS, S> {
 
     @Override
     public StyledDocument<PS, S> subSequence(int start, int end) {
-        return sub(
-                start, end,
-                p -> p,
-                Paragraph::subSequence,
-                (List<Paragraph<PS, S>> pars) -> new ReadOnlyStyledDocument<>(pars, ADOPT));
+        Position start2D = navigator.offsetToPosition(start, Forward);
+        Position end2D = end == start
+                ? start2D
+                : start2D.offsetBy(end - start, Forward);
+        int p1 = start2D.getMajor();
+        int col1 = start2D.getMinor();
+        int p2 = end2D.getMajor();
+        int col2 = end2D.getMinor();
+
+        List<Paragraph<PS, S>> pars = new ArrayList<>(p2 - p1 + 1);
+
+        if(p1 == p2) {
+            pars.add(paragraphs.get(p1).subSequence(col1, col2));
+        } else {
+            Paragraph<PS, S> par1 = paragraphs.get(p1);
+            pars.add(par1.subSequence(col1, par1.length()));
+
+            for(int i = p1 + 1; i < p2; ++i) {
+                pars.add(paragraphs.get(i));
+            }
+
+            pars.add(paragraphs.get(p2).subSequence(0, col2));
+        }
+
+        return new ReadOnlyStyledDocument<>(pars, ADOPT);
     }
 
     @Override
@@ -212,61 +231,5 @@ implements StyledDocument<PS, S> {
     @Override
     public final int hashCode() {
         return paragraphs.hashCode();
-    }
-
-
-    /**************************************************************************
-     *                                                                        *
-     * Private methods                                                        *
-     *                                                                        *
-     **************************************************************************/
-
-    private interface SubMap<A, B> {
-        B subrange(A par, int start, int end);
-    }
-
-    /**
-     * Returns a subrange of this document.
-     * @param start
-     * @param end
-     * @param map maps a paragraph to an object of type {@code P}.
-     * @param subMap maps a subrange of paragraph to an object of type {@code P}.
-     * @param combine combines mapped paragraphs to form the result.
-     * It is safe for the client code to take ownership of the list instance
-     * passed to combine.
-     * @param <P> type to which paragraphs are mapped.
-     * @param <R> type of the resulting sub-document.
-     */
-    private <P, R> R sub(
-            int start, int end,
-            Function<Paragraph<PS, S>, P> map,
-            SubMap<Paragraph<PS, S>, P> subMap,
-            Function<List<P>, R> combine) {
-
-        Position start2D = navigator.offsetToPosition(start, Forward);
-        Position end2D = end == start
-                ? start2D
-                : start2D.offsetBy(end - start, Forward);
-        int p1 = start2D.getMajor();
-        int col1 = start2D.getMinor();
-        int p2 = end2D.getMajor();
-        int col2 = end2D.getMinor();
-
-        List<P> pars = new ArrayList<>(p2 - p1 + 1);
-
-        if(p1 == p2) {
-            pars.add(subMap.subrange(paragraphs.get(p1), col1, col2));
-        } else {
-            Paragraph<PS, S> par1 = paragraphs.get(p1);
-            pars.add(subMap.subrange(par1, col1, par1.length()));
-
-            for(int i = p1 + 1; i < p2; ++i) {
-                pars.add(map.apply(paragraphs.get(i)));
-            }
-
-            pars.add(subMap.subrange(paragraphs.get(p2), 0, col2));
-        }
-
-        return combine.apply(pars);
     }
 }
