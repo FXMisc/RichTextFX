@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -138,13 +140,13 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
         int len = styleSpans.length();
         ensureValidRange(from, from + len);
         doc.replace(from, from + len, d -> {
-            int i = -1;
+            Position i = styleSpans.position(0, 0);
             List<Paragraph<PS, S>> pars = new ArrayList<>(d.getParagraphs().size());
             for(Paragraph<PS, S> p: d.getParagraphs()) {
-                i += 1;
-                StyleSpans<? extends S> spans = styleSpans.subView(i, i + p.length());
+                Position j = i.offsetBy(p.length(), Backward);
+                StyleSpans<? extends S> spans = styleSpans.subView(i, j);
                 pars.add(p.restyle(0, spans));
-                i += p.length();
+                i = j.offsetBy(1, Forward); // skip the newline
             }
             return new ReadOnlyStyledDocument<>(pars);
         }).exec(this::update);
