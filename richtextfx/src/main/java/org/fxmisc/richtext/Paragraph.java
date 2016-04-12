@@ -311,7 +311,7 @@ public final class Paragraph<PS, S> {
     @Override
     public String toString() {
         return
-                "Par[" +
+                "Par[" + paragraphStyle  + "; " +
                 segments.stream().map(StyledText::toString)
                         .reduce((s1, s2) -> s1 + "," + s2).orElse("") +
                 "]";
