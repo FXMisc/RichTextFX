@@ -82,9 +82,11 @@ public class JavaKeywords extends Application {
         CodeArea codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
-        codeArea.richChanges().subscribe(change -> {
-            codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
-        });
+        codeArea.richChanges()
+                .filter(ch -> !ch.getInserted().equals(ch.getRemoved())) // XXX
+                .subscribe(change -> {
+                    codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
+                });
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);

@@ -16,6 +16,10 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
 
     List<Paragraph<PS, S>> getParagraphs();
 
+    StyledDocument<PS, S> concat(StyledDocument<PS, S> that);
+
+    StyledDocument<PS, S> subSequence(int start, int end);
+
 
     default String getText(IndexRange range) {
         return getText(range.getStart(), range.getEnd());
@@ -33,34 +37,6 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
         return subSequence(range.getStart(), range.getEnd());
     }
 
-    default StyledDocument<PS, S> subSequence(int start, int end) {
-        Position start2D = offsetToPosition(start, Forward);
-        Position end2D = end == start
-                ? start2D
-                : start2D.offsetBy(end - start, Forward);
-        int p1 = start2D.getMajor();
-        int col1 = start2D.getMinor();
-        int p2 = end2D.getMajor();
-        int col2 = end2D.getMinor();
-
-        List<Paragraph<PS, S>> pars = new ArrayList<>(p2 - p1 + 1);
-
-        if(p1 == p2) {
-            pars.add(getParagraphs().get(p1).subSequence(col1, col2));
-        } else {
-            Paragraph<PS, S> par1 = getParagraphs().get(p1);
-            pars.add(par1.subSequence(col1, par1.length()));
-
-            for(int i = p1 + 1; i < p2; ++i) {
-                pars.add(getParagraphs().get(i));
-            }
-
-            pars.add(getParagraphs().get(p2).subSequence(0, col2));
-        }
-
-        return new ReadOnlyStyledDocument<>(pars);
-    }
-
     default StyledDocument<PS, S> subDocument(int paragraphIndex) {
         return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)));
     }
@@ -68,18 +44,6 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
     default char charAt(int index) {
         Position pos = offsetToPosition(index, Forward);
         return getParagraphs().get(pos.getMajor()).charAt(pos.getMinor());
-    }
-
-    default StyledDocument<PS, S> concat(StyledDocument<PS, S> that) {
-        List<Paragraph<PS, S>> pars1 = this.getParagraphs();
-        List<Paragraph<PS, S>> pars2 = that.getParagraphs();
-        int n1 = pars1.size();
-        int n2 = pars2.size();
-        List<Paragraph<PS, S>> pars = new ArrayList<>(n1 + n2 - 1);
-        pars.addAll(pars1.subList(0, n1 - 1));
-        pars.add(pars1.get(n1 - 1).concat(pars2.get(0)));
-        pars.addAll(pars2.subList(1, n2));
-        return new ReadOnlyStyledDocument<>(pars);
     }
 
     default S getStyleOfChar(int index) {

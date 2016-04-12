@@ -32,6 +32,9 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
     @Override
     ObservableList<Paragraph<PS, S>> getParagraphs();
 
+    /**
+     * Read-only snapshot of the current state of this document.
+     */
     ReadOnlyStyledDocument<PS, S> snapshot();
 
     /* ********************************************************************** *

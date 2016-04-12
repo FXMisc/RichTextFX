@@ -6,19 +6,22 @@ import static org.reactfx.util.Tuples.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.reactfx.collection.QuasiListModification;
+import org.reactfx.util.BiIndex;
 import org.reactfx.util.Either;
 import org.reactfx.util.FingerTree;
 import org.reactfx.util.FingerTree.NonEmptyFingerTree;
 import org.reactfx.util.ToSemigroup;
 import org.reactfx.util.Tuple2;
+import org.reactfx.util.Tuple3;
 
 public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S> {
 
@@ -80,6 +83,14 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         res.add(new Paragraph<>(paragraphStyle, last, style));
 
         return new ReadOnlyStyledDocument<>(res);
+    }
+
+    public static <PS, S> ReadOnlyStyledDocument<PS, S> from(StyledDocument<PS, S> doc) {
+        if(doc instanceof ReadOnlyStyledDocument) {
+            return (ReadOnlyStyledDocument<PS, S>) doc;
+        } else {
+            return new ReadOnlyStyledDocument<>(doc.getParagraphs());
+        }
     }
 
     static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
@@ -182,21 +193,18 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return text;
     }
 
+    public int getParagraphCount() {
+        return tree.getLeafCount();
+    }
+
+    public Paragraph<PS, S> getParagraph(int index) {
+        return tree.getLeaf(index);
+    }
+
     @Override
     public List<Paragraph<PS, S>> getParagraphs() {
         if(paragraphs == null) {
-            paragraphs = new AbstractList<Paragraph<PS, S>>() {
-
-                @Override
-                public Paragraph<PS, S> get(int index) {
-                    return tree.getLeaf(index);
-                }
-
-                @Override
-                public int size() {
-                    return tree.getLeafCount();
-                }
-            };
+            paragraphs = tree.asList();
         }
         return paragraphs;
     }
@@ -242,6 +250,54 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
     @Override
     public StyledDocument<PS, S> subSequence(int start, int end) {
         return split(end)._1.split(start)._2;
+    }
+
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+            int from, int to, ReadOnlyStyledDocument<PS, S> replacement) {
+        return replace(from, to, x -> replacement);
+    }
+
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+            int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
+        BiIndex start = tree.locate(NAVIGATE, from);
+        BiIndex end = tree.locate(NAVIGATE, to);
+        return replace(start, end, f);
+    }
+
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
+        int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
+
+        List<Paragraph<PS, S>> removedPars =
+                tree.split(end.major + 1)._1.split(start.major)._2.asList();
+
+        return end.map(this::split).map((l0, r) -> {
+            return start.map(l0::split).map((l, removed) -> {
+                ReadOnlyStyledDocument<PS, S> replacement = f.apply(removed);
+                ReadOnlyStyledDocument<PS, S> doc = l.concat(replacement).concat(r);
+                RichTextChange<PS, S> change = new RichTextChange<>(pos, removed, replacement);
+                QuasiListModification<Paragraph<PS, S>> parChange =
+                        QuasiListModification.create(start.major, removedPars, replacement.tree.getLeafCount());
+                return t(doc, change, parChange);
+            });
+        });
+    }
+
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replaceParagraph(
+            int parIdx, UnaryOperator<Paragraph<PS, S>> f) {
+        return replace(
+                new BiIndex(parIdx, 0),
+                new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
+                doc -> doc.mapParagraphs(f));
+    }
+
+    ReadOnlyStyledDocument<PS, S> mapParagraphs(UnaryOperator<Paragraph<PS, S>> f) {
+        int n = tree.getLeafCount();
+        List<Paragraph<PS, S>> pars = new ArrayList<>(n);
+        for(int i = 0; i < n; ++i) {
+            pars.add(f.apply(tree.getLeaf(i)));
+        }
+        return new ReadOnlyStyledDocument<>(pars);
     }
 
     @Override
