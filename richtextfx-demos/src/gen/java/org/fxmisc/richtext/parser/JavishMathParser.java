@@ -19,7 +19,7 @@ public class JavishMathParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, INTEGER=4, FLOAT=5, DIGIT=6, VARIABLE=7, LAMBDA=8, 
+		T__0=1, T__1=2, INTEGER=3, FLOAT=4, DIGIT=5, VARIABLE=6, VAR=7, LAMBDA=8, 
 		LT=9, LTEQ=10, GT=11, GTEQ=12, EQ=13, MULT=14, DIV=15, MOD=16, PLUS=17, 
 		MINUS=18, EXPONENT=19, OPEN_PAREN=20, CLOSE_PAREN=21, OPEN_BRACKET=22, 
 		CLOSE_BRACKET=23, COMMA=24, COMMENT=25, LINEBREAKS=26;
@@ -31,12 +31,12 @@ public class JavishMathParser extends Parser {
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, "'var'", "'='", "';'", null, null, null, null, "'->'", "'<'", "'<='", 
+		null, "'='", "';'", null, null, null, null, "'var'", "'->'", "'<'", "'<='", 
 		"'>'", "'>='", "'=='", "'*'", "'/'", "'%'", "'+'", "'-'", "'^'", "'('", 
 		"')'", "'['", "']'", "','"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, null, null, "INTEGER", "FLOAT", "DIGIT", "VARIABLE", "LAMBDA", 
+		null, null, null, "INTEGER", "FLOAT", "DIGIT", "VARIABLE", "VAR", "LAMBDA", 
 		"LT", "LTEQ", "GT", "GTEQ", "EQ", "MULT", "DIV", "MOD", "PLUS", "MINUS", 
 		"EXPONENT", "OPEN_PAREN", "CLOSE_PAREN", "OPEN_BRACKET", "CLOSE_BRACKET", 
 		"COMMA", "COMMENT", "LINEBREAKS"
@@ -122,7 +122,7 @@ public class JavishMathParser extends Parser {
 			setState(15);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==T__0 || _la==COMMENT) {
+			while (_la==VAR || _la==COMMENT) {
 				{
 				{
 				setState(12);
@@ -178,19 +178,19 @@ public class JavishMathParser extends Parser {
 		try {
 			setState(27);
 			switch (_input.LA(1)) {
-			case T__0:
+			case VAR:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(20);
-				match(T__0);
+				match(VAR);
 				setState(21);
 				variable();
 				setState(22);
-				match(T__1);
+				match(T__0);
 				setState(23);
 				expr(0);
 				setState(24);
-				match(T__2);
+				match(T__1);
 				}
 				break;
 			case COMMENT:
@@ -550,11 +550,11 @@ public class JavishMathParser extends Parser {
 		"\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3\36\n\3\3\4\3\4\3\4\3\4\3\4\3\4\3"+
 		"\4\3\4\3\4\5\4)\n\4\3\4\3\4\3\4\3\4\5\4/\n\4\3\4\3\4\3\4\3\4\3\4\3\4\3"+
 		"\4\3\4\3\4\3\4\3\4\3\4\7\4=\n\4\f\4\16\4@\13\4\3\5\3\5\3\6\3\6\3\7\3\7"+
-		"\3\7\2\3\6\b\2\4\6\b\n\f\2\6\3\2\20\22\3\2\23\24\3\2\13\17\3\2\6\7K\2"+
+		"\3\7\2\3\6\b\2\4\6\b\n\f\2\6\3\2\20\22\3\2\23\24\3\2\13\17\3\2\5\6K\2"+
 		"\21\3\2\2\2\4\35\3\2\2\2\6.\3\2\2\2\bA\3\2\2\2\nC\3\2\2\2\fE\3\2\2\2\16"+
 		"\20\5\4\3\2\17\16\3\2\2\2\20\23\3\2\2\2\21\17\3\2\2\2\21\22\3\2\2\2\22"+
-		"\24\3\2\2\2\23\21\3\2\2\2\24\25\7\2\2\3\25\3\3\2\2\2\26\27\7\3\2\2\27"+
-		"\30\5\n\6\2\30\31\7\4\2\2\31\32\5\6\4\2\32\33\7\5\2\2\33\36\3\2\2\2\34"+
+		"\24\3\2\2\2\23\21\3\2\2\2\24\25\7\2\2\3\25\3\3\2\2\2\26\27\7\t\2\2\27"+
+		"\30\5\n\6\2\30\31\7\3\2\2\31\32\5\6\4\2\32\33\7\4\2\2\33\36\3\2\2\2\34"+
 		"\36\5\b\5\2\35\26\3\2\2\2\35\34\3\2\2\2\36\5\3\2\2\2\37 \b\4\1\2 !\5\n"+
 		"\6\2!\"\7\n\2\2\"#\5\6\4\n#/\3\2\2\2$%\7\24\2\2%/\5\6\4\7&)\5\f\7\2\'"+
 		")\5\n\6\2(&\3\2\2\2(\'\3\2\2\2)/\3\2\2\2*+\7\26\2\2+,\5\6\4\2,-\7\27\2"+
@@ -562,7 +562,7 @@ public class JavishMathParser extends Parser {
 		"\f\6\2\2\61\62\7\25\2\2\62=\5\6\4\7\63\64\f\5\2\2\64\65\t\2\2\2\65=\5"+
 		"\6\4\6\66\67\f\4\2\2\678\t\3\2\28=\5\6\4\59:\f\3\2\2:;\t\4\2\2;=\5\6\4"+
 		"\4<\60\3\2\2\2<\63\3\2\2\2<\66\3\2\2\2<9\3\2\2\2=@\3\2\2\2><\3\2\2\2>"+
-		"?\3\2\2\2?\7\3\2\2\2@>\3\2\2\2AB\7\33\2\2B\t\3\2\2\2CD\7\t\2\2D\13\3\2"+
+		"?\3\2\2\2?\7\3\2\2\2@>\3\2\2\2AB\7\33\2\2B\t\3\2\2\2CD\7\b\2\2D\13\3\2"+
 		"\2\2EF\t\5\2\2F\r\3\2\2\2\b\21\35(.<>";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
