@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.MalformedInputException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -176,6 +178,22 @@ class TextStyle {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public String toString() {
+        List<String> styles = new ArrayList<>();
+
+        bold           .ifPresent(b -> styles.add(b.toString()));
+        italic         .ifPresent(i -> styles.add(i.toString()));
+        underline      .ifPresent(u -> styles.add(u.toString()));
+        strikethrough  .ifPresent(s -> styles.add(s.toString()));
+        fontSize       .ifPresent(s -> styles.add(s.toString()));
+        fontFamily     .ifPresent(f -> styles.add(f.toString()));
+        textColor      .ifPresent(c -> styles.add(c.toString()));
+        backgroundColor.ifPresent(b -> styles.add(b.toString()));
+
+        return String.join(",", styles);
     }
 
     public String toCss() {

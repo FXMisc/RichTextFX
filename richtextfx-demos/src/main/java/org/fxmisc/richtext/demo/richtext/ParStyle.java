@@ -81,6 +81,11 @@ class ParStyle {
         }
     }
 
+    @Override
+    public String toString() {
+        return toCss();
+    }
+
     public String toCss() {
         StringBuilder sb = new StringBuilder();
 
