@@ -26,11 +26,7 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
     }
 
     default String getText(int start, int end) {
-        StyledDocument<PS, S> sub = subSequence(start, end);
-        String[] strings = sub.getParagraphs().stream()
-                .map(Paragraph::getText)
-                .toArray(n -> new String[n]);
-        return String.join("\n", strings);
+        return subSequence(start, end).getText();
     }
 
     default StyledDocument<PS, S> subSequence(IndexRange range) {

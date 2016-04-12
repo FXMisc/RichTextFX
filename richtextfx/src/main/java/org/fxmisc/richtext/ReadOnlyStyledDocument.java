@@ -188,7 +188,10 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
     @Override
     public String getText() {
         if(text == null) {
-            text = getText(0, length());
+            String[] strings = getParagraphs().stream()
+                    .map(Paragraph::getText)
+                    .toArray(n -> new String[n]);
+            text = String.join("\n", strings);
         }
         return text;
     }
