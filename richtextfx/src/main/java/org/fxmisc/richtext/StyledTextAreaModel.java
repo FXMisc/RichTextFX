@@ -532,27 +532,21 @@ class StyledTextAreaModel<PS, S>
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setStyle(from, to, style);
-        }
+        content.setStyle(from, to, style);
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setStyle(int paragraph, S style) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setStyle(paragraph, style);
-        }
+        content.setStyle(paragraph, style);
     }
 
     /**
      * Sets style for the given range relative in the given paragraph.
      */
     public void setStyle(int paragraph, int from, int to, S style) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setStyle(paragraph, from, to, style);
-        }
+        content.setStyle(paragraph, from, to, style);
     }
 
     /**
@@ -566,9 +560,7 @@ class StyledTextAreaModel<PS, S>
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setStyleSpans(from, styleSpans);
-        }
+        content.setStyleSpans(from, styleSpans);
     }
 
     /**
@@ -582,18 +574,14 @@ class StyledTextAreaModel<PS, S>
      * but the actual implementation is more efficient.
      */
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setStyleSpans(paragraph, from, styleSpans);
-        }
+        content.setStyleSpans(paragraph, from, styleSpans);
     }
 
     /**
      * Sets style for the whole paragraph.
      */
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
-            content.setParagraphStyle(paragraph, paragraphStyle);
-        }
+        content.setParagraphStyle(paragraph, paragraphStyle);
     }
 
     /**
