@@ -29,7 +29,7 @@ public class ErrorUnderlineHighlighter implements StructuredHighlighter.ErrorHig
 
         Range<Integer> errorRange = Range.closed(problemToken.getStartIndex(), problemToken.getStopIndex());
 
-        return errorRange.contains(parent.getCaretPosition())
+        return errorRange.contains(parent.getCaretPosition() - 1)
                 ? NO_NEW_HIGHLIGHTS
                 : ImmutableRangeMap.of(errorRange, cssStyleClass);
     }
