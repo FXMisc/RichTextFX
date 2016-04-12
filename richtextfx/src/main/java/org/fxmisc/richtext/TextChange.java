@@ -76,4 +76,14 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     public int hashCode() {
         return Objects.hash(position, removed, inserted);
     }
+
+    @Override
+    public final String toString() {
+        return
+                this.getClass().getSimpleName() + "{\n" +
+                "\tposition: " + position + "\n" +
+                "\tremoved: " + removed + "\n" +
+                "\tinserted: " + inserted + "\n" +
+                "}";
+    }
 }
