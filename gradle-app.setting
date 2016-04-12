@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root>
+  <setting name="task-tab">
+    <setting name="show-description" value="true"/>
+  </setting>
+  <setting name="favorites-tab"/>
+  <setting name="command_line-tab"/>
+  <setting name="setup-tab">
+    <setting name="setup">
+      <setting name="custom-gradle-executor"/>
+      <setting name="current-directory" value="C:\Users\Geoff\Code\RichTextFX"/>
+      <setting name="log-level" value="LIFECYCLE"/>
+    </setting>
+  </setting>
+  <setting name="Application_window-id">
+    <setting name="window_x" value="187"/>
+    <setting name="window_y" value="52"/>
+    <setting name="window_width" value="800"/>
+    <setting name="window_height" value="800"/>
+    <setting name="extended-state" value="0"/>
+  </setting>
+</root>
