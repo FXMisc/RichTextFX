@@ -58,6 +58,8 @@ public class StructuredTextArea extends StyleClassedTextArea {
     private final Function<CharStream, ? extends Lexer>   lexerCtor;
     private final Function<TokenStream, ? extends Parser> parserCtor;
 
+    //TODO private String currentSelectorName; // add methods to override getTypeSelector()-> return javishmath-lexer, or javishmath-parser, etc?
+
     private ImmutableRangeMap<Integer, Token> mostRecentTokens;
     private ImmutableRangeMap<Integer, ParseTree> mostRecentParseTree;
     private ImmutableRangeMap<Integer, ParseError> mostRecentErrors;
@@ -205,7 +207,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
 
     private final BooleanProperty implicitErrorStyle = new SimpleBooleanProperty(this, "implicitErrorStyle", true);
     {
-        ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter("error");
+        ErrorUnderlineHighlighter listener = new ErrorUnderlineHighlighter("error", /*includeTextUnderCaret*/false);
         toggleListenerMembership(listener, getImplicitErrorStyle(), implicitErrorStyle);
     }
     public final BooleanProperty implicitErrorStyleProperty(){ return implicitErrorStyle; }
@@ -248,7 +250,6 @@ public class StructuredTextArea extends StyleClassedTextArea {
                 .map(l -> l.generateNewStyles(this, mostRecentTokens))
                 .forEach(styleByIndex::putAll);
 
-        ArrayList<ErrorNode> errorNodes = new ArrayList<>();
         ParseTreeListener walkListener = new ParseTreeListener() {
             @Override public void visitTerminal(TerminalNode terminalNode) {
                 if(terminalNode.getSymbol().getType() == Token.EOF){ return; }
@@ -259,7 +260,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
                         .forEach(styleByIndex::putAll);
             }
             @Override public void visitErrorNode(ErrorNode errorNode) {
-                errorNodes.add(errorNode);
+                //TODO not sure how to set this.
             }
             @Override public void enterEveryRule(ParserRuleContext ctx) {
 

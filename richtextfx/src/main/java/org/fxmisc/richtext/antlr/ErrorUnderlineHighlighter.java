@@ -11,9 +11,14 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 public class ErrorUnderlineHighlighter implements StructuredHighlighter.ErrorHighlighter {
 
     private final String cssStyleClass;
+    private final boolean includeTextUnderCaret;
 
-    public ErrorUnderlineHighlighter(@NamedArg(value="styleClass", defaultValue="error") String styleClass) {
+    //TODO docs
+    // include cursor = should we apply the error style if the cursor is on that element?
+    public ErrorUnderlineHighlighter(@NamedArg(value="styleClass", defaultValue="error") String styleClass,
+                                     @NamedArg(value="includeCaret", defaultValue="false") boolean includeTextUnderCaret) {
         this.cssStyleClass = styleClass;
+        this.includeTextUnderCaret = includeTextUnderCaret;
     }
 
     @Override
@@ -24,8 +29,9 @@ public class ErrorUnderlineHighlighter implements StructuredHighlighter.ErrorHig
 
         Range<Integer> errorRange = Range.closed(problemToken.getStartIndex(), problemToken.getStopIndex());
 
-//        TODO: boolean flag, should underline things with the cursor beside them?
-        return ImmutableRangeMap.of(errorRange, cssStyleClass);
+        return errorRange.contains(parent.getCaretPosition())
+                ? NO_NEW_HIGHLIGHTS
+                : ImmutableRangeMap.of(errorRange, cssStyleClass);
     }
 
     @Override
