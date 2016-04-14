@@ -51,8 +51,6 @@ public interface StructuredHighlighter {
                                                                  String antlrGeneratedMessage,
                                                                  RecognitionException exception);
 
-        RangeMap<Integer, String> generateNewStylesForParserError(StructuredTextArea parent, ErrorNode error);
-
         //TODO docs
         // this is the case where the document is length zero, or the token is an EOF problem.
         default RangeMap<Integer, String> generateNewStylesForTokenFailure(StructuredTextArea parent,

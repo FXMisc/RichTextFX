@@ -29,13 +29,8 @@ public class ErrorUnderlineHighlighter implements StructuredHighlighter.ErrorHig
 
         Range<Integer> errorRange = Range.closed(problemToken.getStartIndex(), problemToken.getStopIndex());
 
-        return errorRange.contains(parent.getCaretPosition() - 1)
+        return ! includeTextUnderCaret && errorRange.contains(parent.getCaretPosition() - 1)
                 ? NO_NEW_HIGHLIGHTS
                 : ImmutableRangeMap.of(errorRange, cssStyleClass);
-    }
-
-    @Override
-    public RangeMap<Integer, String> generateNewStylesForParserError(StructuredTextArea parent, ErrorNode error) {
-        return NO_NEW_HIGHLIGHTS;
     }
 }

@@ -88,6 +88,22 @@ public class StructuredTextArea extends StyleClassedTextArea {
         }
     }
 
+    /**
+     * @deprecated this constructor exists for SceneBuilder only.
+     * Use {@link StructuredTextArea(String, String, String)} from FXML or
+     * {@link StructuredTextArea(Class, Class, Function)} from Java.
+     */
+    public StructuredTextArea(){
+        this.parserClass = Parser.class;
+        this.lexerClass = Lexer.class;
+
+        this.rootProduction = x -> { throw new UnsupportedOperationException("Parser/Lexer not correctly loaded."); };
+        this.lexerCtor = x -> { throw new UnsupportedOperationException("Parser/Lexer not correctly loaded."); };
+        this.parserCtor = x -> { throw new UnsupportedOperationException("Parser/Lexer not correctly loaded."); };
+
+        log.warning("Defunct StructuredTextArea was loaded.");
+    }
+
     public StructuredTextArea(@NamedArg("parserClass") String parserClass,
                               @NamedArg("lexerClass") String lexerClass,
                               @NamedArg("rootProduction") String rootProduction) {
@@ -278,6 +294,7 @@ public class StructuredTextArea extends StyleClassedTextArea {
 
         Stream<ErrorHighlighter> errorListeners = getHighlighters().stream()
                 .filter(ErrorHighlighter.class::isInstance).map(ErrorHighlighter.class::cast);
+
         errorListeners.forEach(listener -> {
                 mostRecentErrors.asMapOfRanges().values().stream()
                         .map(error -> error.isConcrete()
