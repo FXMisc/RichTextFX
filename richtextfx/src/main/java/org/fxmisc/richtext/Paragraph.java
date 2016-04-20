@@ -75,6 +75,12 @@ public final class Paragraph<PS, S> {
         return getText().substring(from);
     }
 
+    /**
+     * Concatenates this paragraph with the given paragraph {@code p}.
+     * The paragraph style of the result will be that of this paragraph,
+     * unless this paragraph is empty and {@code p} is non-empty, in which
+     * case the paragraph style of the result will be that of {@code p}.
+     */
     public Paragraph<PS, S> concat(Paragraph<PS, S> p) {
         if(p.length() == 0) {
             return this;
@@ -99,6 +105,16 @@ public final class Paragraph<PS, S> {
             segs.addAll(p.segments);
             return new Paragraph<>(paragraphStyle, segs);
         }
+    }
+
+    /**
+     * Similar to {@link #concat(Paragraph)}, except in case both paragraphs
+     * are empty, the result's paragraph style will be that of the argument.
+     */
+    Paragraph<PS, S> concatR(Paragraph<PS, S> that) {
+        return this.length() == 0 && that.length() == 0
+            ? that
+            : concat(that);
     }
 
     public Paragraph<PS, S> append(String str) {

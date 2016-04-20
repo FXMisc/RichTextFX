@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -239,10 +240,18 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
     @Override
     public ReadOnlyStyledDocument<PS, S> concat(StyledDocument<PS, S> other) {
+        return concat0(other, Paragraph::concat);
+    }
+
+    private ReadOnlyStyledDocument<PS, S> concatR(StyledDocument<PS, S> other) {
+        return concat0(other, Paragraph::concatR);
+    }
+
+    private ReadOnlyStyledDocument<PS, S> concat0(StyledDocument<PS, S> other, BinaryOperator<Paragraph<PS, S>> parConcat) {
         int n = tree.getLeafCount() - 1;
         Paragraph<PS, S> p0 = tree.getLeaf(n);
         Paragraph<PS, S> p1 = other.getParagraphs().get(0);
-        Paragraph<PS, S> p = p0.concat(p1);
+        Paragraph<PS, S> p = parConcat.apply(p0, p1);
         NonEmptyFingerTree<Paragraph<PS, S>, Summary> tree1 = tree.updateLeaf(n, p);
         FingerTree<Paragraph<PS, S>, Summary> tree2 = (other instanceof ReadOnlyStyledDocument)
                 ? ((ReadOnlyStyledDocument<PS, S>) other).tree.split(1)._2
@@ -277,7 +286,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return end.map(this::split).map((l0, r) -> {
             return start.map(l0::split).map((l, removed) -> {
                 ReadOnlyStyledDocument<PS, S> replacement = f.apply(removed);
-                ReadOnlyStyledDocument<PS, S> doc = l.concat(replacement).concat(r);
+                ReadOnlyStyledDocument<PS, S> doc = l.concatR(replacement).concat(r);
                 RichTextChange<PS, S> change = new RichTextChange<>(pos, removed, replacement);
                 QuasiListModification<Paragraph<PS, S>> parChange =
                         QuasiListModification.create(start.major, removedPars, replacement.tree.getLeafCount());
