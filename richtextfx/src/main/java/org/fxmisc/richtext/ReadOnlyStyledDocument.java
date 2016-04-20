@@ -272,7 +272,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
 
         List<Paragraph<PS, S>> removedPars =
-                tree.split(end.major + 1)._1.split(start.major)._2.asList();
+                tree.asList().subList(start.major, end.major + 1);
 
         return end.map(this::split).map((l0, r) -> {
             return start.map(l0::split).map((l, removed) -> {
