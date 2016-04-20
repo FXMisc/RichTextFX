@@ -19,6 +19,8 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     public S getRemoved() { return removed; }
     public S getInserted() { return inserted; }
     public Self invert() { return create(position, inserted, removed); }
+    public int getRemovalEnd() { return position + removedLength(); }
+    public int getInsertionEnd() { return position + insertedLength(); }
 
     protected abstract int removedLength();
     protected abstract int insertedLength();
