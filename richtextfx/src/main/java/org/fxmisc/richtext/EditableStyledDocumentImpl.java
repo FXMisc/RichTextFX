@@ -12,6 +12,7 @@ import org.reactfx.Subscription;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.LiveListBase;
+import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.collection.QuasiListModification;
 import org.reactfx.collection.UnmodifiableByDefaultLiveList;
 import org.reactfx.util.BiIndex;
@@ -39,7 +40,12 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
 
         @Override
         protected Subscription observeInputs() {
-            return parChanges.subscribe(mod -> notifyObservers(mod.asListChange()));
+            return parChanges.subscribe(mod -> {
+                mod = mod.trim();
+                QuasiListModification<Paragraph<PS, S>> qmod =
+                        QuasiListModification.create(mod.getFrom(), mod.getRemoved(), mod.getAddedSize());
+                notifyObservers(qmod.asListChange());
+            });
         }
     }
 
@@ -58,7 +64,7 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
     @Override public Val<Integer> lengthProperty() { return length; }
     @Override public int length() { return length.getValue(); }
 
-    private final EventSource<QuasiListModification<Paragraph<PS, S>>> parChanges =
+    private final EventSource<MaterializedListModification<Paragraph<PS, S>>> parChanges =
             new EventSource<>();
 
     private final LiveList<Paragraph<PS, S>> paragraphs = new ParagraphList();
@@ -201,7 +207,7 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
     private void update(
             ReadOnlyStyledDocument<PS, S> newValue,
             RichTextChange<PS, S> change,
-            QuasiListModification<Paragraph<PS, S>> parChange) {
+            MaterializedListModification<Paragraph<PS, S>> parChange) {
         this.doc = newValue;
         beingUpdated.suspendWhile(() -> {
             richChanges.push(change);

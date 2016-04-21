@@ -15,7 +15,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.reactfx.collection.QuasiListModification;
+import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.util.BiIndex;
 import org.reactfx.util.Either;
 import org.reactfx.util.FingerTree;
@@ -264,19 +264,19 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return split(end)._1.split(start)._2;
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
             int from, int to, ReadOnlyStyledDocument<PS, S> replacement) {
         return replace(from, to, x -> replacement);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
             int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
         return replace(start, end, f);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replace(
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
             BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
         int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
 
@@ -288,14 +288,14 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
                 ReadOnlyStyledDocument<PS, S> replacement = f.apply(removed);
                 ReadOnlyStyledDocument<PS, S> doc = l.concatR(replacement).concat(r);
                 RichTextChange<PS, S> change = new RichTextChange<>(pos, removed, replacement);
-                QuasiListModification<Paragraph<PS, S>> parChange =
-                        QuasiListModification.create(start.major, removedPars, replacement.tree.getLeafCount());
+                MaterializedListModification<Paragraph<PS, S>> parChange =
+                        MaterializedListModification.create(start.major, removedPars, replacement.tree.asList());
                 return t(doc, change, parChange);
             });
         });
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, QuasiListModification<Paragraph<PS, S>>> replaceParagraph(
+    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replaceParagraph(
             int parIdx, UnaryOperator<Paragraph<PS, S>> f) {
         return replace(
                 new BiIndex(parIdx, 0),
