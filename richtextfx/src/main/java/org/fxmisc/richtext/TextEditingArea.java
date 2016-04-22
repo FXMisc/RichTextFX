@@ -191,6 +191,10 @@ public interface TextEditingArea<PS, S> {
      * the selection. Can be used to achieve the special case of positioning
      * the caret outside or inside the selection, as opposed to always being
      * at the boundary. Use with care.
+     *
+     * @deprecated You probably meant to use {@link NavigationActions#moveTo(int)}. This method will be made
+     *              package-private in the future
      */
+    @Deprecated
     public void positionCaret(int pos);
 }

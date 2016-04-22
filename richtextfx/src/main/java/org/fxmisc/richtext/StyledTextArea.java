@@ -989,6 +989,12 @@ public class StyledTextArea<PS, S> extends Region
         model.selectRange(anchor, caretPosition);
     }
 
+    /**
+     * {@inheritDoc}
+     * @deprecated You probably meant to use {@link #moveTo(int)}. This method will be made
+     * package-private in the future
+     */
+    @Deprecated
     @Override
     public void positionCaret(int pos) {
         model.positionCaret(pos);
