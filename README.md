@@ -19,7 +19,7 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
 * [Download](#download)
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
-* [API Documentation (Javadoc)](http://www.fxmisc.org/richtext/javadoc/org/fxmisc/richtext/package-summary.html)
+* [API Documentation (Javadoc)](http://fxmisc.github.io/richtext/javadoc/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [How can I contribute?](#how-can-i-contribute)
 
