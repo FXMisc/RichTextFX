@@ -663,8 +663,6 @@ public class StyledTextArea<PS, S> extends Region
      *         area.moveTo(characterPosition, SelectionPolicy.CLEAR);
      *     }}
      * </pre>
-     * @param x
-     * @param y
      */
     public CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<PS, S>, ParagraphBox<PS, S>>> hit = virtualFlow.hit(x, y);
