@@ -3,10 +3,10 @@ package org.fxmisc.richtext;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static org.fxmisc.richtext.TwoDimensional.Bias.*;
-import static org.fxmisc.wellbehaved.event.experimental.EventPattern.*;
-import static org.fxmisc.wellbehaved.event.experimental.template.InputMapTemplate.consume;
-import static org.fxmisc.wellbehaved.event.experimental.template.InputMapTemplate.sequence;
-import static org.fxmisc.wellbehaved.event.experimental.template.InputMapTemplate.when;
+import static org.fxmisc.wellbehaved.event.EventPattern.*;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.consume;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.sequence;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.when;
 import static org.reactfx.EventStreams.*;
 
 import java.util.Optional;
@@ -23,9 +23,9 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.TwoDimensional.Position;
 import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
-import org.fxmisc.wellbehaved.event.experimental.EventPattern;
-import org.fxmisc.wellbehaved.event.experimental.template.InputMapTemplate;
-import org.fxmisc.wellbehaved.skin.Behavior;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.template.InputMapTemplate;
+
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
@@ -34,7 +34,7 @@ import org.reactfx.value.Var;
 /**
  * Controller for StyledTextArea.
  */
-class StyledTextAreaBehavior implements Behavior {
+class StyledTextAreaBehavior {
 
     private static final boolean isMac;
     private static final boolean isWindows;
@@ -268,11 +268,9 @@ class StyledTextAreaBehavior implements Behavior {
      * Public API (from Behavior)                                             *
      * ********************************************************************** */
 
-    @Override
     public void dispose() {
         subscription.unsubscribe();
     }
-
 
     /* ********************************************************************** *
      * Key handling implementation                                            *
