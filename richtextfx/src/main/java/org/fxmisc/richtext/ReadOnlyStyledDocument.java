@@ -281,15 +281,16 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
 
         List<Paragraph<PS, S>> removedPars =
-                tree.asList().subList(start.major, end.major + 1);
+                getParagraphs().subList(start.major, end.major + 1);
 
         return end.map(this::split).map((l0, r) -> {
             return start.map(l0::split).map((l, removed) -> {
                 ReadOnlyStyledDocument<PS, S> replacement = f.apply(removed);
                 ReadOnlyStyledDocument<PS, S> doc = l.concatR(replacement).concat(r);
                 RichTextChange<PS, S> change = new RichTextChange<>(pos, removed, replacement);
+                List<Paragraph<PS, S>> addedPars = doc.getParagraphs().subList(start.major, start.major + replacement.getParagraphCount());
                 MaterializedListModification<Paragraph<PS, S>> parChange =
-                        MaterializedListModification.create(start.major, removedPars, replacement.tree.asList());
+                        MaterializedListModification.create(start.major, removedPars, addedPars);
                 return t(doc, change, parChange);
             });
         });

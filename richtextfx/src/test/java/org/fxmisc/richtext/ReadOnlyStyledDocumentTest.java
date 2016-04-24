@@ -3,6 +3,8 @@ package org.fxmisc.richtext;
 import static org.fxmisc.richtext.ReadOnlyStyledDocument.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.Test;
 
 public class ReadOnlyStyledDocumentTest {
@@ -20,6 +22,20 @@ public class ReadOnlyStyledDocumentTest {
                 // chng2 should be the inverse of chng1
                 assertEquals(chng1.invert(), chng2);
             });
+        });
+    }
+
+    @Test
+    public void deleteNewlineTest() {
+        ReadOnlyStyledDocument<Void, Void> doc0 = fromString("Foo\nBar", null, null);
+        doc0.replace(3, 4, fromString("", null, null)).exec((doc1, ch, pch) -> {
+            List<? extends Paragraph<Void, Void>> removed = pch.getRemoved();
+            List<? extends Paragraph<Void, Void>> added = pch.getAdded();
+            assertEquals(2, removed.size());
+            assertEquals(new Paragraph<Void, Void>(null, "Foo", null), removed.get(0));
+            assertEquals(new Paragraph<Void, Void>(null, "Bar", null), removed.get(1));
+            assertEquals(1, added.size());
+            assertEquals(new Paragraph<Void, Void>(null, "FooBar", null), added.get(0));
         });
     }
 
