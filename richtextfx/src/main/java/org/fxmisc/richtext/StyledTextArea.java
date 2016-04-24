@@ -1007,7 +1007,6 @@ public class StyledTextArea<PS, S> extends Region
     public void dispose() {
         subscriptions.unsubscribe();
         model.dispose();
-        behavior.dispose();
         virtualFlow.dispose();
     }
 
