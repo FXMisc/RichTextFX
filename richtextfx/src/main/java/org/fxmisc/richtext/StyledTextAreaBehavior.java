@@ -209,9 +209,6 @@ class StyledTextAreaBehavior {
 
     private final StyledTextAreaModel<?, ?> model;
 
-    private final Subscription subscription;
-
-
     /**
      * Indicates whether selection is being dragged by the user.
      */
@@ -241,7 +238,6 @@ class StyledTextAreaBehavior {
         this.model = area.getModel();
 
         InputMapTemplate.installFallback(EVENT_TEMPLATE, this, b -> b.view);
-        subscription = () -> InputMapTemplate.uninstall(EVENT_TEMPLATE, this, b -> b.view);
 
         // setup auto-scroll
         Val<Point2D> projection = Val.combine(
@@ -262,14 +258,6 @@ class StyledTextAreaBehavior {
                 area.scrollBy(ds);
                 projection.ifPresent(this::dragTo);
             });
-    }
-
-    /* ********************************************************************** *
-     * Public API (from Behavior)                                             *
-     * ********************************************************************** */
-
-    public void dispose() {
-        subscription.unsubscribe();
     }
 
     /* ********************************************************************** *
