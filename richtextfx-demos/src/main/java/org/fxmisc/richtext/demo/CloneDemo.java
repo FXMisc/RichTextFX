@@ -8,7 +8,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.InlineCssTextArea;
 
 public class CloneDemo extends Application {
@@ -22,8 +21,8 @@ public class CloneDemo extends Application {
         String selectedText = "selection";
         String text = "Edit the top area (original)\nand watch the (clone) bottom area's displayed text change and its " +
                 "selected text [" + selectedText + "] update itself accordingly.";
-        InlineCssTextArea area = AreaFactory.inlineCssTextArea(text);
-        InlineCssTextArea clone = AreaFactory.cloneInlineCssTextArea(area);
+        InlineCssTextArea area = new InlineCssTextArea(text);
+        InlineCssTextArea clone = new InlineCssTextArea(area.getContent());
 
         VBox vbox = new VBox(area, clone);
         vbox.setSpacing(10);

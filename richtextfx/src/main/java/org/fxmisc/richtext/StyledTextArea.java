@@ -73,9 +73,20 @@ import org.reactfx.value.Var;
  * style or style classes.</p>
  *
  * <p>Note: Scroll bars no longer appear when the content spans outside
- * of the viewport. To add scroll bars, the area needs to be embedded in
- * a {@link VirtualizedScrollPane}. {@link AreaFactory} is provided to make
- * this more convenient.</p>
+ * of the viewport. To add scroll bars, the area needs to be wrapped in
+ * a {@link VirtualizedScrollPane}. For example, </p>
+ * <pre>
+ * {@code
+ * // shows area without scroll bars
+ * InlineCssTextArea area = new InlineCssTextArea();
+ *
+ * // add scroll bars that will display as needed
+ * VirtualizedScrollPane<InlineCssTextArea> vsPane = new VirtualizedScrollPane(area);
+ *
+ * Parent parent = //;
+ * parent.getChildren().add(vsPane)
+ * }
+ * </pre>
  *
  * <h3>Overriding keyboard shortcuts</h3>
  *
