@@ -34,7 +34,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.AreaFactory;
 import org.fxmisc.richtext.Paragraph;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyledTextArea;
@@ -46,10 +45,8 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final StyledTextArea<ParStyle, TextStyle> area =
-            AreaFactory.<ParStyle, TextStyle>styledTextArea(
-                    ParStyle.EMPTY,
-                    ( paragraph, style) -> paragraph.setStyle(style.toCss()),
+    private final StyledTextArea<ParStyle, TextStyle> area = new StyledTextArea<>(
+                    ParStyle.EMPTY, ( paragraph, style) -> paragraph.setStyle(style.toCss()),
                     TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
                     ( text, style) -> text.setStyle(style.toCss()));
     {
