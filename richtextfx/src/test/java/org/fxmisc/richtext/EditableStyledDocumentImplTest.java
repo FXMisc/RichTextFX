@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import static org.junit.Assert.*;
 
+import org.fxmisc.richtext.model.EditableStyledDocumentImpl;
 import org.junit.Test;
 
 public class EditableStyledDocumentImplTest {

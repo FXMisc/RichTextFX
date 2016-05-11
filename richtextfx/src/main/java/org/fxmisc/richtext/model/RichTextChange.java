@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 public class RichTextChange<PS, S> extends TextChange<StyledDocument<PS, S>, RichTextChange<PS, S>> {
 

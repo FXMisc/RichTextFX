@@ -1,6 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -12,6 +12,11 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
 
+import org.fxmisc.richtext.EditActions;
+import org.fxmisc.richtext.NavigationActions;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TextEditingArea;
+import org.fxmisc.richtext.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -33,7 +38,7 @@ import org.reactfx.value.Var;
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph
  */
-class StyledTextAreaModel<PS, S>
+public class StyledTextAreaModel<PS, S>
         implements
         TextEditingArea<PS, S>,
         EditActions<PS, S>,
@@ -189,19 +194,19 @@ class StyledTextAreaModel<PS, S>
      * the same document (Model).
      * @return this area's {@link EditableStyledDocument}
      */
-    final EditableStyledDocument<PS, S> getContent() { return content; }
+    public final EditableStyledDocument<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final S initialTextStyle;
-    final S getInitialTextStyle() { return initialTextStyle; }
+    public final S getInitialTextStyle() { return initialTextStyle; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final PS initialParagraphStyle;
-    final PS getInitialParagraphStyle() { return initialParagraphStyle; }
+    public final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -209,7 +214,7 @@ class StyledTextAreaModel<PS, S>
      * TODO: Currently, only undo/redo respect this flag.
      */
     private final boolean preserveStyle;
-    final boolean isPreserveStyle() { return preserveStyle; }
+    public final boolean isPreserveStyle() { return preserveStyle; }
 
 
     /* ********************************************************************** *

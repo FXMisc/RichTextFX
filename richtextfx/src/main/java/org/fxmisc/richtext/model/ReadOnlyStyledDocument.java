@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import static org.reactfx.util.Either.*;
 import static org.reactfx.util.Tuples.*;
@@ -15,6 +15,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.fxmisc.richtext.Codec;
 import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.util.BiIndex;
 import org.reactfx.util.Either;
@@ -94,7 +95,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         }
     }
 
-    static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
+    public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<StyledDocument<PS, S>>() {
             private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
 
@@ -264,7 +265,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return split(end)._1.split(start)._2;
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
+    public Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
             int from, int to, ReadOnlyStyledDocument<PS, S> replacement) {
         return replace(from, to, x -> replacement);
     }

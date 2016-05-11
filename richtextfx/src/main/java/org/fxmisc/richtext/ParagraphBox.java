@@ -22,8 +22,9 @@ import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
-
 import javafx.scene.text.TextFlow;
+
+import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.util.MouseStationaryHelper;
 import org.reactfx.EventStream;
 import org.reactfx.util.Either;

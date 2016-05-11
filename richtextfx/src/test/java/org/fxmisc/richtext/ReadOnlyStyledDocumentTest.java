@@ -1,10 +1,12 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.ReadOnlyStyledDocument.*;
+import static org.fxmisc.richtext.model.ReadOnlyStyledDocument.*;
 import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.junit.Test;
 
 public class ReadOnlyStyledDocumentTest {

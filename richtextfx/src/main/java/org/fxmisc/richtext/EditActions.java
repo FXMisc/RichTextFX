@@ -1,5 +1,7 @@
 package org.fxmisc.richtext;
 
+import org.fxmisc.richtext.model.StyledDocument;
+
 import javafx.scene.control.IndexRange;
 
 /**

@@ -1,6 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +22,7 @@ import org.reactfx.value.Val;
 /**
  * Provides an implementation of {@link EditableStyledDocument}
  */
-final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<PS, S> {
+public final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<PS, S> {
 
     private class ParagraphList
     extends LiveListBase<Paragraph<PS, S>>
@@ -88,7 +88,7 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
         this.doc = new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph));
     }
 
-    EditableStyledDocumentImpl(PS initialParagraphStyle, S initialStyle) {
+    public EditableStyledDocumentImpl(PS initialParagraphStyle, S initialStyle) {
         this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 

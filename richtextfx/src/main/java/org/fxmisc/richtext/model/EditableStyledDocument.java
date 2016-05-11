@@ -1,8 +1,9 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 
+import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.value.Val;

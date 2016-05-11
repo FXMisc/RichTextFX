@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.fxmisc.richtext.model.EditableStyledDocumentImpl;
+import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.junit.Test;
 
 public class StyledTextAreaModelTest {

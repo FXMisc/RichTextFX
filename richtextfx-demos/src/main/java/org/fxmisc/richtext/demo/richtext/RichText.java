@@ -6,7 +6,7 @@
 
 package org.fxmisc.richtext.demo.richtext;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,9 +34,9 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.Paragraph;
-import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyleSpans;
 import org.reactfx.SuspendableNo;
 
 public class RichText extends Application {

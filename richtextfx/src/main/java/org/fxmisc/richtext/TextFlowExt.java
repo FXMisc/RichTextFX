@@ -1,9 +1,11 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import org.fxmisc.richtext.model.TwoLevelNavigator;
 
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
