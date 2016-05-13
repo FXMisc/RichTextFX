@@ -22,7 +22,7 @@ import org.reactfx.value.Val;
 /**
  * Provides an implementation of {@link EditableStyledDocument}
  */
-final class SimpleEditableStyledDocument<PS, S> implements EditableStyledDocument<PS, S> {
+public final class SimpleEditableStyledDocument<PS, S> implements EditableStyledDocument<PS, S> {
 
     private class ParagraphList
     extends LiveListBase<Paragraph<PS, S>>
@@ -88,7 +88,10 @@ final class SimpleEditableStyledDocument<PS, S> implements EditableStyledDocumen
         this.doc = new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph));
     }
 
-    SimpleEditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
+    /**
+     * Creates an empty {@link EditableStyledDocument}
+     */
+    public SimpleEditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
         this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 
