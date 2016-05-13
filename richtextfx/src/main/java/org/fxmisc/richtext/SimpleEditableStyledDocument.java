@@ -106,16 +106,6 @@ public final class SimpleEditableStyledDocument<PS, S> implements EditableStyled
         return doc.offsetToPosition(offset, bias);
     }
 
-    /**
-     * The style of the inserted text will be the style at position
-     * {@code start} in the current document.
-     */
-    public void replaceText(int start, int end, String text) {
-        StyledDocument<PS, S> doc = ReadOnlyStyledDocument.fromString(
-                text, getParagraphStyleAtPosition(start), getStyleAtPosition(start));
-        replace(start, end, doc);
-    }
-
     @Override
     public void replace(int start, int end, StyledDocument<PS, S> replacement) {
         ensureValidRange(start, end);
