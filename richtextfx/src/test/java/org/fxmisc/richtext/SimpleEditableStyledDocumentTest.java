@@ -4,11 +4,11 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class EditableStyledDocumentImplTest {
+public class SimpleEditableStyledDocumentTest {
 
     @Test
     public void testConsistencyOfTextWithLength() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 
@@ -23,7 +23,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testConsistencyOfLengthWithText() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         document.getText(); // enforce evaluation of text property
         document.getLength(); // enforce evaluation of length property
 
@@ -38,7 +38,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testUnixParagraphCount() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         String text = "X\nY";
         document.replaceText(0, 0, text);
         assertEquals(2, document.getParagraphs().size());
@@ -46,7 +46,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testMacParagraphCount() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         String text = "X\rY";
         document.replaceText(0, 0, text);
         assertEquals(2, document.getParagraphs().size());
@@ -54,7 +54,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testWinParagraphCount() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         String text = "X\r\nY";
         document.replaceText(0, 0, text);
         assertEquals(2, document.getParagraphs().size());
@@ -62,7 +62,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testGetTextWithEndAfterNewline() {
-        EditableStyledDocumentImpl<Boolean, String> doc = new EditableStyledDocumentImpl<>(true, "");
+        SimpleEditableStyledDocument<Boolean, String> doc = new SimpleEditableStyledDocument<>(true, "");
 
         doc.replaceText(0, 0, "123\n");
         String txt1 = doc.getText(0, 4);
@@ -79,7 +79,7 @@ public class EditableStyledDocumentImplTest {
 
     @Test
     public void testWinDocumentLength() {
-        EditableStyledDocumentImpl<String, String> document = new EditableStyledDocumentImpl<>("", "");
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
         document.replaceText(0, 0, "X\r\nY");
         assertEquals(document.getText().length(), document.getLength());
     }
