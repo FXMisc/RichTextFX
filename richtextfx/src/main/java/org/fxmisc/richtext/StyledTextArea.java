@@ -507,7 +507,7 @@ public class StyledTextArea<PS, S> extends Region
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**

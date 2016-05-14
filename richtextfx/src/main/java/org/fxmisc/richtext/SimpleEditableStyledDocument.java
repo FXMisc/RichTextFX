@@ -22,7 +22,7 @@ import org.reactfx.value.Val;
 /**
  * Provides an implementation of {@link EditableStyledDocument}
  */
-final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<PS, S> {
+public final class SimpleEditableStyledDocument<PS, S> implements EditableStyledDocument<PS, S> {
 
     private class ParagraphList
     extends LiveListBase<Paragraph<PS, S>>
@@ -84,11 +84,14 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
 
-    EditableStyledDocumentImpl(Paragraph<PS, S> initialParagraph) {
+    SimpleEditableStyledDocument(Paragraph<PS, S> initialParagraph) {
         this.doc = new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph));
     }
 
-    EditableStyledDocumentImpl(PS initialParagraphStyle, S initialStyle) {
+    /**
+     * Creates an empty {@link EditableStyledDocument}
+     */
+    public SimpleEditableStyledDocument(PS initialParagraphStyle, S initialStyle) {
         this(new Paragraph<>(initialParagraphStyle, "", initialStyle));
     }
 
@@ -101,16 +104,6 @@ final class EditableStyledDocumentImpl<PS, S> implements EditableStyledDocument<
     @Override
     public Position offsetToPosition(int offset, Bias bias) {
         return doc.offsetToPosition(offset, bias);
-    }
-
-    /**
-     * The style of the inserted text will be the style at position
-     * {@code start} in the current document.
-     */
-    public void replaceText(int start, int end, String text) {
-        StyledDocument<PS, S> doc = ReadOnlyStyledDocument.fromString(
-                text, getParagraphStyleAtPosition(start), getStyleAtPosition(start));
-        replace(start, end, doc);
     }
 
     @Override

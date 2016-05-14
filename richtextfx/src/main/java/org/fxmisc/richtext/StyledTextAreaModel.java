@@ -233,7 +233,7 @@ class StyledTextAreaModel<PS, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
