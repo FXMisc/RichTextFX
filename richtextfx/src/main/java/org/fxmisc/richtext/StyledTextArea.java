@@ -181,6 +181,37 @@ public class StyledTextArea<PS, S> extends Region
     public final void setWrapText(boolean value) { wrapText.set(value); }
     public final BooleanProperty wrapTextProperty() { return wrapText; }
 
+    // showCaret property
+    /**
+     * Indicates when this text area should display a caret.
+     */
+    private final ObjectProperty<CaretVisibility> showCaret
+            = new SimpleObjectProperty<>(this, "showCaret", CaretVisibility.WHEN_EDITABLE);
+    public final CaretVisibility getShowCaret() { return showCaret.get(); }
+    public final void setShowCaret(CaretVisibility value) { showCaret.set(value); }
+    public final ObjectProperty<CaretVisibility> showCaretProperty() { return showCaret; }
+
+    public static enum CaretVisibility {
+        /** Display a caret when focused. */
+        ALWAYS,
+        /** Display a caret when focused, enabled, and editable. */
+        WHEN_EDITABLE,
+        /** Display a caret when focused and enabled. */
+        WHEN_ENABLED,
+        /** Never display a caret. */
+        NEVER
+    }
+
+    // blinkRate property
+    /**
+     * Controls the blink rate of the caret, when one is displayed.  Setting
+     * the duration to zero disables blinking.
+     */
+    private final ObjectProperty<Duration> blinkRate = new SimpleObjectProperty(this, "blinkRate", Duration.ofMillis(500));
+    public final Duration getBlinkRate() { return blinkRate.get(); }
+    public final void setBlinkRate(Duration value) { blinkRate.set(value); }
+    public final ObjectProperty<Duration> blinkRateProperty() { return blinkRate; }
+    
     // undo manager
     @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
@@ -569,18 +600,42 @@ public class StyledTextArea<PS, S> extends Region
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         subscribeTo(caretDirty, x -> requestFollowCaret());
 
-        // whether or not to animate the caret
-        BooleanBinding blinkCaret = focusedProperty()
-                .and(editableProperty())
-                .and(disabledProperty().not());
-        manageBinding(blinkCaret);
+        // whether or not to display the caret
+        EventStream<Boolean> blinkCaret = EventStreams.valuesOf(showCaretProperty())
+                .flatMap(mode -> {
+                    switch (mode) {
+                    case ALWAYS:
+                        return EventStreams.valuesOf(focusedProperty());
+                    case NEVER:
+                        return EventStreams.valuesOf(Val.constant(false));
+                    case WHEN_ENABLED:
+                        return EventStreams.valuesOf(focusedProperty()
+                                                     .and(disabledProperty().not()));
+                    default:
+                    case WHEN_EDITABLE:
+                        return EventStreams.valuesOf(focusedProperty()
+                                                     .and(editableProperty())
+                                                     .and(disabledProperty().not()));
+                    }
+                });
 
+        // the rate at which to display the caret
+        EventStream<Duration> blinkRates = EventStreams.valuesOf(blinkRateProperty());
+ 
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
-        caretVisible = EventStreams.valuesOf(blinkCaret)
-                .flatMap(blink -> blink
-                        ? booleanPulse(Duration.ofMillis(500), caretDirty)
-                        : EventStreams.valuesOf(Val.constant(false)))
+        caretVisible = EventStreams.combine(blinkCaret, blinkRates)
+                .flatMap(tuple -> {
+                    Boolean blink = tuple.get1();
+                    Duration rate = tuple.get2();
+                    if(blink) {
+                        return rate.isZero()
+                            ? EventStreams.valuesOf(Val.constant(true))
+                            : booleanPulse(rate, caretDirty);
+                    } else {
+                        return EventStreams.valuesOf(Val.constant(false));
+                    }
+                })
                 .toBinding(false);
         manageBinding(caretVisible);
 
