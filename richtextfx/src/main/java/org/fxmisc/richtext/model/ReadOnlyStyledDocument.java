@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -93,6 +94,25 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         } else {
             return new ReadOnlyStyledDocument<>(doc.getParagraphs());
         }
+    }
+
+    /**
+     * Creates a new custom object.
+     *
+     * @param data
+     * @param paragraphStyle The paragraph style to use for the custom object.
+     * @param style The text style to use for the custom object.
+     *
+     * @return A StyledDocument with the custom object. The StyledDocument can be
+     *         inserted or appended to the StyledTextArea.
+     */
+    public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(ObjectData data, PS paragraphStyle, S style) {
+        List<Paragraph<PS, S>> res = new ArrayList<>(1);
+        CustomObject<S> segment = new CustomObject<S>(style);
+        segment.setObjectData(data);
+        Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(segment));
+        res.add(content);
+        return new ReadOnlyStyledDocument<>(res);
     }
 
     public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {

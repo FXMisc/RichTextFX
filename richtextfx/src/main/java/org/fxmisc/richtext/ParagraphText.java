@@ -13,11 +13,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 
+import org.fxmisc.richtext.model.CustomObject;
+import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyledText;
 import org.reactfx.value.Val;
@@ -96,8 +100,35 @@ class ParagraphText<PS, S> extends TextFlowExt {
 //            }
 //        });
 
-        // populate with text nodes
+        // populate with nodes
         for(StyledText<S> segment: par.getSegments()) {
+
+            // Create the object node
+            Node t = createNode(segment, applyStyle);
+            getChildren().add(t);
+
+            // add corresponding background node (empty)
+            Path backgroundShape = new Path();
+            backgroundShape.setManaged(false);
+            backgroundShape.setStrokeWidth(0);
+            backgroundShape.layoutXProperty().bind(leftInset);
+            backgroundShape.layoutYProperty().bind(topInset);
+            backgroundShapes.add(backgroundShape);
+            getChildren().add(0, backgroundShape);
+        }
+    }
+
+
+    private Node createNode(StyledText<S> segment, BiConsumer<? super TextExt, S> applyStyle) {
+        if (segment instanceof CustomObject) {
+            CustomObject<S> customObject = (CustomObject<S>) segment;
+            ObjectData objData = customObject.getObjectData();
+            String imagePath = objData.getData();
+            Image image = new Image(imagePath); // TODO: No need to create new Image objects each time -
+                                                // can be stored in the model layer (ObjectData)
+
+            return new ImageView(image);
+        } else {
             TextExt t = new TextExt(segment.getText());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
@@ -107,17 +138,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
             // see the note at highlightTextFill
             t.impl_selectionFillProperty().bind(t.fillProperty());
 
-            getChildren().add(t);
-
-            // add corresponding background node (empty)
-
-            Path backgroundShape = new Path();
-            backgroundShape.setManaged(false);
-            backgroundShape.setStrokeWidth(0);
-            backgroundShape.layoutXProperty().bind(leftInset);
-            backgroundShape.layoutYProperty().bind(topInset);
-            backgroundShapes.add(backgroundShape);
-            getChildren().add(0, backgroundShape);
+            return t;
         }
     }
 

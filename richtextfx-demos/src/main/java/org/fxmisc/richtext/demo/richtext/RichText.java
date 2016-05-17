@@ -8,6 +8,8 @@ package org.fxmisc.richtext.demo.richtext;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -31,11 +33,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.reactfx.SuspendableNo;
 
@@ -54,10 +59,14 @@ public class RichText extends Application {
         area.setStyleCodecs(ParStyle.CODEC, TextStyle.CODEC);
     }
 
+    private Stage mainStage;
+
     private final SuspendableNo updatingToolbar = new SuspendableNo();
 
     @Override
     public void start(Stage primaryStage) {
+        mainStage = primaryStage;
+
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
@@ -70,6 +79,7 @@ public class RichText extends Application {
         Button italicBtn = createButton("italic", this::toggleItalic);
         Button underlineBtn = createButton("underline", this::toggleUnderline);
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
+        Button insertImageBtn = createButton("insertimage", this::insertImage);
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
@@ -230,7 +240,7 @@ public class RichText extends Application {
         panel1.getChildren().addAll(
                 wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
                 boldBtn, italicBtn, underlineBtn, strikeBtn,
-                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn,
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn,
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
@@ -303,6 +313,31 @@ public class RichText extends Application {
     private void alignJustify() {
         updateParagraphStyleInSelection(ParStyle.alignJustify());
     }
+
+
+    /**
+     * Action listener which inserts a new image at the current caret position.
+     */
+    private void insertImage() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Insert image");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showOpenDialog(mainStage);
+        if (selectedFile != null) {
+
+            ReadOnlyStyledDocument<ParStyle, TextStyle> ros = null;
+            try {
+                String imageUrl = selectedFile.toURI().toURL().toExternalForm();
+                ros = ReadOnlyStyledDocument.createObject(new ObjectData(0, imageUrl), 
+                                                          ParStyle.EMPTY, TextStyle.EMPTY); 
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            area.replaceSelection(ros);
+        }
+    }
+
 
     private void updateStyleInSelection(Function<StyleSpans<TextStyle>, TextStyle> mixinGetter) {
         IndexRange selection = area.getSelection();
