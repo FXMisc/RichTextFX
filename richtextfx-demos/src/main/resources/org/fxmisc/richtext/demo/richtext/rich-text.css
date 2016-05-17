@@ -5,6 +5,8 @@
     -fx-background-repeat: no-repeat;
 }
 
+.button.loadfile { -fx-background-image: url(loadfile.png); }
+.button.savefile { -fx-background-image: url(savefile.png); }
 .button.undo { -fx-background-image: url(undo.png); }
 .button.redo { -fx-background-image: url(redo.png); }
 .button.cut { -fx-background-image: url(cut.png); }

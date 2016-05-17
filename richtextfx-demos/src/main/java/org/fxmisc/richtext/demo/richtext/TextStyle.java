@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.scene.paint.Color;
 
@@ -115,6 +117,22 @@ class TextStyle {
         return "rgb(" + red + ", " + green + ", " + blue + ")";
     }
 
+    /**
+     * Parses a String representation of a Color object.
+     *
+     * @param color A string representation of a color object, in the form "rgb(red, green, blue)"
+     * @return A Color object for the given string representation.
+     */
+    static Color cssColor(String color) {
+        Pattern pattern = Pattern.compile("rgb\\((\\d*),\\s*(\\d*),\\s*(\\d*)\\)");
+        Matcher matcher = pattern.matcher(color);
+        matcher.find();
+        int red = Integer.parseInt(matcher.group(1));
+        int green = Integer.parseInt(matcher.group(2));
+        int blue = Integer.parseInt(matcher.group(3));
+        return new Color(red / 255.0, green / 255.0, blue / 255.0, 1.0);
+    }
+
     final Optional<Boolean> bold;
     final Optional<Boolean> italic;
     final Optional<Boolean> underline;
@@ -178,6 +196,75 @@ class TextStyle {
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * Parses a CSS declaration into a TextStyle object.
+     * 
+     * @param style The CSS style declaration to parse.
+     * @return A TextStyle which represents the parsed CSS style declaration.
+     */
+    public static TextStyle fromCss(String style) {
+        Optional<Boolean> bold = Optional.empty();
+        Optional<Boolean> italic = Optional.empty();
+        Optional<Boolean> underline = Optional.empty();
+        Optional<Boolean> strikethrough = Optional.empty();
+        Optional<Integer> fontSize = Optional.empty();
+        Optional<String> fontFamily = Optional.empty();
+        Optional<Color> textColor = Optional.empty();
+        Optional<Color> backgroundColor = Optional.empty();
+
+        if (style.length() > 0) {
+            for (String property : style.split(";")) {
+                String[] pair = property.split(":");
+                String propName = pair[0].trim();
+                String propValue = pair[1].trim();
+    
+                switch(propName) {
+                    case "-fx-font-size"   : 
+                        Pattern pattern = Pattern.compile("(\\d*)pt");
+                        Matcher matcher = pattern.matcher(propValue);
+                        matcher.find();
+                        int sizePt = Integer.parseInt(matcher.group(1));
+                        fontSize = Optional.of(sizePt);
+                        break;
+    
+                    case "-fx-font-family" :
+                        fontFamily = Optional.of(propValue);
+                        break;
+    
+                    case "-fx-fill" :
+                        textColor = Optional.of(cssColor(propValue));
+                        break;
+
+                    case "-fx-font-weight" :
+                        bold = Optional.of("bold".equals(propValue)); 
+                        break;
+    
+                    case "-fx-font-style" :
+                        italic = Optional.of("italic".equals(propValue)); 
+                        break;
+    
+                    case "-fx-underline" :
+                        underline = Optional.of("true".equals(propValue));
+                        break;
+
+                    case "-fx-strikethrough" :
+                        strikethrough = Optional.of("true".equals(propValue));
+                        break;
+
+                    case "-fx-background-fill" :
+                        backgroundColor = Optional.of(cssColor(propValue));
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException("Unknown CSS property: " + property);
+                }
+            }
+        }
+
+        return new TextStyle(bold, italic, underline, strikethrough, fontSize, fontFamily, textColor, backgroundColor);
     }
 
     @Override

@@ -9,10 +9,21 @@ package org.fxmisc.richtext.demo.richtext;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -38,11 +49,18 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.model.CustomObject;
 import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.SuspendableNo;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class RichText extends Application {
 
@@ -67,6 +85,8 @@ public class RichText extends Application {
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
 
+        Button loadBtn = createButton("loadfile", this::loadDocument);
+        Button saveBtn = createButton("savefile", this::saveDocument);
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
@@ -238,6 +258,7 @@ public class RichText extends Application {
         HBox panel1 = new HBox(3.0);
         HBox panel2 = new HBox(3.0);
         panel1.getChildren().addAll(
+                loadBtn, saveBtn,
                 wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
                 boldBtn, italicBtn, underlineBtn, strikeBtn,
                 alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn,
@@ -314,6 +335,128 @@ public class RichText extends Application {
         updateParagraphStyleInSelection(ParStyle.alignJustify());
     }
 
+    private void loadDocument() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load document");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showOpenDialog(mainStage);
+        if (selectedFile != null) {
+            area.clear();
+            
+            try {
+                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                Document doc = dBuilder.parse(selectedFile);
+
+                doc.getDocumentElement().normalize();
+                System.out.print("Root element: ");
+                System.out.println(doc.getDocumentElement().getNodeName());
+
+                NodeList paragraphs = doc.getElementsByTagName("Paragraph");
+                for (int idx = 0;  idx < paragraphs.getLength();  idx++) {
+                    Element paragraph = (Element) paragraphs.item(idx);
+                    String parStyle = paragraph.getAttribute("style");
+                    ParStyle paraStyle = ParStyle.fromCss(parStyle);
+                    System.err.println("Paragraph: [" + paraStyle + "]");
+
+                    NodeList segments = paragraph.getChildNodes();
+                    for (int segIdx = 0;  segIdx < segments.getLength();  segIdx++) {
+                        Node node = segments.item(segIdx);
+                        switch(node.getNodeName()) {
+                            case "StyledText" : 
+                                Element styledText = (Element) node;
+                                String textStyle = styledText.getAttribute("style");
+                                String text = styledText.getTextContent();
+
+                                TextStyle style = TextStyle.fromCss(textStyle);
+                                // System.err.println("   StyledText: [" + style + "], \"" + text + "\"");
+                                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString(text, paraStyle, style);
+                                System.err.println("   StyledDocument: " + ros);
+                                area.append(ros);
+                                break;
+
+                            case "CustomObject" : 
+                                Element customObject = (Element) node;
+                                String type = customObject.getAttribute("type");
+                                String fileName = customObject.getAttribute("fileName");
+                                ObjectData data = new ObjectData(0, fileName);
+                                ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
+                                System.err.println("   CustomObject: " + cos);
+                                area.append(cos);
+                                break;
+
+                            default: 
+                                break;
+                        }
+                    }
+
+                    ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString("\n", paraStyle, new TextStyle());
+                    area.append(ros);
+                }
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            } catch (SAXException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private void saveDocument() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save document");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showSaveDialog(mainStage);
+        if (selectedFile != null) {
+            try {
+                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder dBuilder;
+                dBuilder = dbFactory.newDocumentBuilder();
+                Document doc = dBuilder.newDocument();
+                Element rootElement = doc.createElement("StyledDocument");
+                doc.appendChild(rootElement);
+
+                StyledDocument<ParStyle, TextStyle> richDocument = area.getDocument();
+                richDocument.getParagraphs().forEach(par -> {
+                    Element parElement = doc.createElement("Paragraph");
+                    parElement.setAttribute("style", par.getParagraphStyle().toCss());
+                    rootElement.appendChild(parElement);
+
+                    par.getSegments().forEach(seg -> {
+                        Element segElement;
+                        if (seg instanceof CustomObject) {  // XXX: polymorphic approach?
+                            segElement = doc.createElement("CustomObject");
+                            ObjectData data = ((CustomObject<TextStyle>) seg).getObjectData();
+                            String fileName = data.getData();
+                            String type = "image";
+                            segElement.setAttribute("type", type);
+                            segElement.setAttribute("fileName", fileName);
+                        } else {
+                            segElement = doc.createElement("StyledText");
+                            segElement.setAttribute("style", seg.getStyle().toCss());
+                            Node textNode = doc.createTextNode(seg.getText());
+                            segElement.appendChild(textNode);
+                        }
+                        parElement.appendChild(segElement);
+                    });
+                });
+
+                TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                Transformer transformer = transformerFactory.newTransformer();
+                DOMSource source = new DOMSource(doc);
+
+                StreamResult consoleResult = new StreamResult(selectedFile);
+                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+                transformer.transform(source, consoleResult);
+            } catch (ParserConfigurationException | TransformerException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     /**
      * Action listener which inserts a new image at the current caret position.
