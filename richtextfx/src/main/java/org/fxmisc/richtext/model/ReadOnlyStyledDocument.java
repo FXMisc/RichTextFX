@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -94,6 +95,22 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         }
     }
 
+    /**
+     * Creates a new ReadOnlyStyledDocument with one Segment.
+     * The resulting ReadOnlyStyledDocument can be inserted or appended to a StyledTextArea.
+     *
+     * @param seg   The segment which shall be contained in the document.
+     * @param paragraphStyle The paragraph style to use for the paragraph which contains the segment.
+     *
+     * @return A ReadOnlyStyledDocument with the given segment.
+     */
+    public static <PS, S> ReadOnlyStyledDocument<PS, S> from(Segment<S> seg, PS paragraphStyle) {
+        List<Paragraph<PS, S>> res = new ArrayList<>(1);
+        Paragraph<PS, S> content = new Paragraph<PS, S>(paragraphStyle, Arrays.asList(seg));
+        res.add(content);
+        return new ReadOnlyStyledDocument<>(res);
+    }
+
     public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<StyledDocument<PS, S>>() {
             private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
@@ -118,7 +135,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
     private static <PS, S> Codec<Paragraph<PS, S>> paragraphCodec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<Paragraph<PS, S>>() {
-            private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
+            private final Codec<List<Segment<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
             public String getName() {
@@ -134,14 +151,14 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             @Override
             public Paragraph<PS, S> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
-                List<StyledText<S>> segments = segmentsCodec.decode(is);
+                List<Segment<S>> segments = segmentsCodec.decode(is);
                 return new Paragraph<>(paragraphStyle, segments);
             }
         };
     }
 
-    private static <S> Codec<StyledText<S>> styledTextCodec(Codec<S> styleCodec) {
-        return new Codec<StyledText<S>>() {
+    private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
+        return new Codec<Segment<S>>() {
 
             @Override
             public String getName() {
@@ -149,16 +166,24 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             }
 
             @Override
-            public void encode(DataOutputStream os, StyledText<S> t) throws IOException {
-                STRING_CODEC.encode(os, t.getText());
-                styleCodec.encode(os, t.getStyle());
+            public void encode(DataOutputStream os, Segment<S> t) throws IOException {
+                // encode the segment type and content
+                STRING_CODEC.encode(os, t.getClass().getName());
+                t.encode(os, styleCodec);
             }
 
             @Override
-            public StyledText<S> decode(DataInputStream is) throws IOException {
-                String text = STRING_CODEC.decode(is);
-                S style = styleCodec.decode(is);
-                return new StyledText<>(text, style);
+            public Segment<S> decode(DataInputStream is) throws IOException {
+                String segmentType = is.readUTF();
+                try {
+                    @SuppressWarnings("unchecked")
+                    Class<Segment<S>> clazz = (Class<Segment<S>>) Class.forName(segmentType);
+                    Segment<S> result = (Segment<S>) clazz.newInstance();
+                    result.decode(is, styleCodec);
+                    return result;
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                    throw new IOException("Could not create Segment for " + segmentType, e);
+                }
             }
 
         };

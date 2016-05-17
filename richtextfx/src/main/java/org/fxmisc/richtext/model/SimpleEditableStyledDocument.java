@@ -135,7 +135,7 @@ public final class SimpleEditableStyledDocument<PS, S> implements EditableStyled
     }
 
     @Override
-    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
         int len = styleSpans.length();
         ensureValidRange(from, from + len);
         doc.replace(from, from + len, d -> {
@@ -143,7 +143,7 @@ public final class SimpleEditableStyledDocument<PS, S> implements EditableStyled
             List<Paragraph<PS, S>> pars = new ArrayList<>(d.getParagraphs().size());
             for(Paragraph<PS, S> p: d.getParagraphs()) {
                 Position j = i.offsetBy(p.length(), Backward);
-                StyleSpans<? extends S> spans = styleSpans.subView(i, j);
+                StyleSpans<S> spans = styleSpans.subView(i, j);
                 pars.add(p.restyle(0, spans));
                 i = j.offsetBy(1, Forward); // skip the newline
             }
@@ -152,7 +152,7 @@ public final class SimpleEditableStyledDocument<PS, S> implements EditableStyled
     }
 
     @Override
-    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
         setStyleSpans(doc.position(paragraph, from).toOffset(), styleSpans);
     }
 

@@ -10,7 +10,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
@@ -20,7 +19,7 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
 import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.richtext.model.Segment;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -98,17 +97,11 @@ class ParagraphText<PS, S> extends TextFlowExt {
 //            }
 //        });
 
-        // populate with text nodes
-        for(StyledText<S> segment: par.getSegments()) {
-            TextExt t = new TextExt(segment.getText());
-            t.setTextOrigin(VPos.TOP);
-            t.getStyleClass().add("text");
-            applyStyle.accept(t, segment.getStyle());
+        // populate with nodes
+        for(Segment<S> segment: par.getSegments()) {
 
-            // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
-            t.impl_selectionFillProperty().bind(t.fillProperty());
-
+            // Create the object node
+            Node t = segment.createNode();
             getChildren().add(t);
 
             // add corresponding background node (empty)

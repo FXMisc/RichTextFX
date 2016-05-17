@@ -35,8 +35,11 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -56,6 +59,7 @@ import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.LinkedImage;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
@@ -63,6 +67,7 @@ import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledText;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TwoDimensional;
@@ -578,11 +583,33 @@ public class StyledTextArea<PS, S> extends Region
 
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, S> document, boolean preserveStyle
-    ) {
+                          EditableStyledDocument<PS, S> document, boolean preserveStyle) {
         this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
+
+        // Inject node factories into model layer
+        StyledText.<S>setNodeFactory(segment -> {
+            TextExt t = new TextExt(segment.getText());
+            t.setTextOrigin(VPos.TOP);
+            t.getStyleClass().add("text");
+            this.applyStyle.accept(t, segment.getStyle());
+
+            // XXX: binding selectionFill to textFill,
+            // see the note at highlightTextFill
+            t.impl_selectionFillProperty().bind(t.fillProperty());
+
+            return t;
+        });
+
+        LinkedImage.<S>setNodeFactory(segment -> {
+            String imagePath = segment.getImagePath();
+            Image image = new Image("file:" + imagePath); // XXX: No need to create new Image objects each time -
+                                                          // could be cached in the model layer
+
+            ImageView result = new ImageView(image);
+            return result;
+        });
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -1043,7 +1070,7 @@ public class StyledTextArea<PS, S> extends Region
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<S> styleSpans) {
         model.setStyleSpans(from, styleSpans);
     }
 
@@ -1057,7 +1084,7 @@ public class StyledTextArea<PS, S> extends Region
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<S> styleSpans) {
         model.setStyleSpans(paragraph, from, styleSpans);
     }
 
