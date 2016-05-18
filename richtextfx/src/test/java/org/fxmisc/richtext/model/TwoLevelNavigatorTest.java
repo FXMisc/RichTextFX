@@ -1,9 +1,8 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 import static org.junit.Assert.*;
 
-import org.fxmisc.richtext.model.TwoLevelNavigator;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.junit.Test;
 

@@ -1,12 +1,7 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-
-import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.StyledDocument;
 
 public class SimpleEditableStyledDocumentTest {
 
