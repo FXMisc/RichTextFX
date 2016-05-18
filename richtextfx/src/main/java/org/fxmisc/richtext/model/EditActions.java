@@ -1,6 +1,4 @@
-package org.fxmisc.richtext;
-
-import org.fxmisc.richtext.model.StyledDocument;
+package org.fxmisc.richtext.model;
 
 import javafx.scene.control.IndexRange;
 

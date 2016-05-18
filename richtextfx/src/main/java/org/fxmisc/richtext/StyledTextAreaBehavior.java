@@ -20,8 +20,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.event.EventPattern;

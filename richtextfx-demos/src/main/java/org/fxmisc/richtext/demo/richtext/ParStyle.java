@@ -11,7 +11,7 @@ import java.util.Optional;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
-import org.fxmisc.richtext.Codec;
+import org.fxmisc.richtext.model.Codec;
 
 /**
  * Holds information about the style of a paragraph.

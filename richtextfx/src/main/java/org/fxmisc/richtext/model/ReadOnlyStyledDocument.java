@@ -15,7 +15,6 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fxmisc.richtext.Codec;
 import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.util.BiIndex;
 import org.reactfx.util.Either;

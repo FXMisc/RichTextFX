@@ -3,6 +3,8 @@ package org.fxmisc.richtext;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.SuperCodec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 

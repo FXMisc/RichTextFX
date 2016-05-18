@@ -12,11 +12,6 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
 
-import org.fxmisc.richtext.EditActions;
-import org.fxmisc.richtext.NavigationActions;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TextEditingArea;
-import org.fxmisc.richtext.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -33,14 +28,13 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Model for {@link StyledTextArea}
+ * Model for {@link org.fxmisc.richtext.StyledTextArea}
  *
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph
  */
 public class StyledTextAreaModel<PS, S>
         implements
-        TextEditingArea<PS, S>,
         EditActions<PS, S>,
         NavigationActions<PS, S>,
         UndoActions,
