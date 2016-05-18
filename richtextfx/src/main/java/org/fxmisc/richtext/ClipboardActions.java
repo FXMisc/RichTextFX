@@ -14,8 +14,11 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.TextEditingArea;
 import org.reactfx.util.Tuple2;
 
 /**

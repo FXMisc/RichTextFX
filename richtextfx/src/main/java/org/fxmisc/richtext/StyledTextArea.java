@@ -53,16 +53,21 @@ import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.EditableStyledDocumentImpl;
+import org.fxmisc.richtext.model.NavigationActions;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
+import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
+import org.fxmisc.richtext.model.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -517,7 +522,7 @@ public class StyledTextArea<PS, S> extends Region
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**

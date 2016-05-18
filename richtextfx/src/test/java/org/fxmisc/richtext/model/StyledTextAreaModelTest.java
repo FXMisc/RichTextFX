@@ -1,12 +1,10 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import org.fxmisc.richtext.model.EditableStyledDocumentImpl;
-import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.junit.Test;
 
 public class StyledTextAreaModelTest {
@@ -34,7 +32,7 @@ public class StyledTextAreaModelTest {
         // set up area with some styled text content
         boolean initialStyle = false;
         StyledTextAreaModel<String, Boolean> model = new StyledTextAreaModel<>(
-                "", initialStyle, new EditableStyledDocumentImpl<>("", initialStyle), true);
+                "", initialStyle, new SimpleEditableStyledDocument<>("", initialStyle), true);
         model.replaceText("testtest");
         model.setStyle(0, 8, true);
 

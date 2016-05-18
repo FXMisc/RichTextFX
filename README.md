@@ -18,8 +18,11 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
   * [Custom tooltips](#custom-tooltips)
 * [Download](#download)
   * [Stable](#stable-release)
+  * [Milestone](#milestone-release)
   * [Snapshot](#snapshot-releases)
-* [API Documentation (Javadoc)](http://fxmisc.github.io/richtext/javadoc/org/fxmisc/richtext/package-summary.html)
+* API Documentation (Javadoc)
+  - [0.6.10](http://fxmisc.github.io/richtext/javadoc/0.6.10/org/fxmisc/richtext/package-summary.html)
+  - [0.7-M1](http://fxmisc.github.io/richtext/javadoc/0.7-M1/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [How can I contribute?](#how-can-i-contribute)
 
@@ -256,6 +259,35 @@ libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.6.10"
 Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-0.6.10.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-fat-0.6.10.jar) and place it on your classpath.
 
 
+### Milestone release
+
+Milestone version of the upcoming release is 0.7-M1.
+
+#### Maven coordinates
+
+| Group ID            | Artifact ID | Version |
+| :-----------------: | :---------: | :-----: |
+| org.fxmisc.richtext | richtextfx  | 0.7-M1  |
+
+#### Gradle example
+
+```groovy
+dependencies {
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M1'
+}
+```
+
+#### Sbt example
+
+```scala
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M1"
+```
+
+#### Manual download
+
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M1/richtextfx-0.7-M1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M1/richtextfx-fat-0.7-M1.jar) and place it on your classpath.
+
+
 ### Snapshot releases
 
 Snapshot releases are deployed to Sonatype snapshot repository.
@@ -303,6 +335,6 @@ There are many ways how you can contribute:
 * Report bugs.
 * Fix bugs ;)
 * Spread the word: write blog posts, tutorials, ...
-* Implement features. There are plenty of [feature requests](https://github.com/TomasMikula/RichTextFX/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement), for example support for paragraph-level styles (#6), placing arbitrary nodes in the text (#87), copy/paste including style information (#17), just to name a few.
+* Implement features. There are plenty of [feature requests](https://github.com/TomasMikula/RichTextFX/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 * [Create a bounty](https://www.bountysource.com/trackers/503734-tomasmikula-richtextfx) for a feature.
 * [Support the author](https://gratipay.com/TomasMikula/).
