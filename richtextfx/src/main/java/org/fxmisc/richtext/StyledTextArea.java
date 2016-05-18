@@ -54,7 +54,7 @@ import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.EditableStyledDocumentImpl;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
@@ -517,7 +517,7 @@ public class StyledTextArea<PS, S> extends Region
                               boolean preserveStyle
     ) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle,
-                new EditableStyledDocumentImpl<>(initialParagraphStyle, initialTextStyle), preserveStyle);
+                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle), preserveStyle);
     }
 
     /**
