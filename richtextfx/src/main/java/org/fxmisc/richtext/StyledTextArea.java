@@ -5,6 +5,8 @@ import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -57,6 +59,7 @@ import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.NavigationActions;
+import org.fxmisc.richtext.model.Segment;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
@@ -546,6 +549,12 @@ public class StyledTextArea<PS, S> extends Region
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
+        // register the factory for the default segment types
+        // TODO: Probably a lambda (factory method instead of whole class) would be better!
+        registerFactory(0, new StyledTextFactory());
+        // registerFactory(1, new StyledTextFactory());
+        // registerFactory(2, new StyledTextFactory());
+
         // allow tab traversal into area
         setFocusTraversable(true);
 
@@ -628,6 +637,11 @@ public class StyledTextArea<PS, S> extends Region
      * Queries are parameterized observables.                                 *
      *                                                                        *
      * ********************************************************************** */
+
+    public void registerFactory(int typeId, SegmentFactory factory) {
+        nodeFactories.put(typeId, factory);
+    }
+
 
     /**
      * Returns caret bounds relative to the viewport, i.e. the visual bounds
@@ -1065,12 +1079,23 @@ public class StyledTextArea<PS, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
+    private Map<Integer, SegmentFactory> nodeFactories = new HashMap<>();
+
     private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
             Paragraph<PS, S> paragraph,
             BiConsumer<? super TextExt, S> applyStyle,
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
-        ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, applyStyle);
+        ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, 
+                                                     applyStyle, (seg, applyStyle1) -> {
+// TODO: applyStyle does not need to be looped through the whole stack!
+                                                         SegmentFactory factory = nodeFactories.get(seg.getTypeId());
+                                                         if (factory == null) {
+                                                             throw new RuntimeException("No factory for object type " + seg.getTypeId());
+                                                         }
+
+                                                         return factory.createNode(seg, applyStyle1);
+                                                         } );
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
@@ -1238,4 +1263,17 @@ public class StyledTextArea<PS, S> extends Region
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
     }
+    
+
+//    
+//    
+//
+//    private Node nodeFactory(Segment<S> seg, BiConsumer<? super TextExt, S> applyStyle) {
+//        SegmentFactory factory = null; // nodeFactories.get(seg.getTypeId());
+//        if (factory == null) {
+//            throw new RuntimeException("No factory for object type " + seg.getTypeId());
+//        }
+//
+//        return null;
+//    }
 }

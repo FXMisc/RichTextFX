@@ -2,7 +2,7 @@ package org.fxmisc.richtext.model;
 
 import java.util.Objects;
 
-public class StyledText<S> {
+public class StyledText<S> implements Segment<S> {
     private final String text;
     private S style;
 
@@ -11,40 +11,49 @@ public class StyledText<S> {
         this.style = style;
     }
 
+    @Override
     public int length() {
         return text.length();
     }
 
+    @Override
     public char charAt(int index) {
         return text.charAt(index);
     }
 
+    @Override
     public String getText() {
         return text;
     }
 
-    public StyledText<S> subSequence(int start, int end) {
+    @Override
+    public Segment<S> subSequence(int start, int end) {
         return new StyledText<>(text.substring(start, end), style);
     }
 
-    public StyledText<S> subSequence(int start) {
+    @Override
+    public Segment<S> subSequence(int start) {
         return new StyledText<>(text.substring(start), style);
     }
 
-    public StyledText<S> append(String str) {
+    @Override
+    public Segment<S> append(String str) {
         return new StyledText<>(text + str, style);
     }
 
-    public StyledText<S> spliced(int from, int to, CharSequence replacement) {
+    @Override
+    public Segment<S> spliced(int from, int to, CharSequence replacement) {
         String left = text.substring(0, from);
         String right = text.substring(to);
         return new StyledText<>(left + replacement + right, style);
     }
 
+    @Override
     public S getStyle() {
         return style;
     }
 
+    @Override
     public void setStyle(S style) {
         this.style = style;
     }
@@ -68,5 +77,10 @@ public class StyledText<S> {
     @Override
     public int hashCode() {
         return Objects.hash(text, style);
+    }
+
+    @Override
+    public int getTypeId() {
+        return 0;
     }
 }

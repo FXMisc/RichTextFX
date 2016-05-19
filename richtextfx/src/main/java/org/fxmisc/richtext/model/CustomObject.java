@@ -1,12 +1,15 @@
 package org.fxmisc.richtext.model;
 
 
-public class CustomObject<S> extends StyledText<S> {
+public class CustomObject<S> implements Segment<S> {
 
-    public CustomObject(S style) {
-        super("\ufffc", style);
+    private S style;
+    private int typeId;
+
+    public CustomObject(S style, int typeId) {
+        this.style = style;
+        this.typeId = typeId;
     }
-    
    
     private ObjectData objectData;
     public void setObjectData(ObjectData data) {
@@ -23,7 +26,7 @@ public class CustomObject<S> extends StyledText<S> {
     }
 
     @Override
-    public StyledText<S> subSequence(int start, int end) {
+    public Segment<S> subSequence(int start, int end) {
         if (start == 0 && end == 1) {
             return this;
         }
@@ -31,7 +34,7 @@ public class CustomObject<S> extends StyledText<S> {
     }
 
     @Override
-    public StyledText<S> subSequence(int start) {
+    public Segment<S> subSequence(int start) {
         if (start == 1) {
             return new StyledText<>("", getStyle());
         }
@@ -39,16 +42,46 @@ public class CustomObject<S> extends StyledText<S> {
     }
 
     @Override
-    public StyledText<S> append(String str) {
+    public Segment<S> append(String str) {
         throw new UnsupportedOperationException();
         // return new StyledText<>(text + str, style);
     }
 
     @Override
-    public StyledText<S> spliced(int from, int to, CharSequence replacement) {
+    public Segment<S> spliced(int from, int to, CharSequence replacement) {
         throw new UnsupportedOperationException();
 /*        String left = text.substring(0, from);
         String right = text.substring(to);
         return new StyledText<>(left + replacement + right, style);*/
+    }
+
+    @Override
+    public int length() {
+        return 1;
+    }
+
+    @Override
+    public char charAt(int index) {
+        return getText().charAt(0);
+    }
+
+    @Override
+    public String getText() {
+        return "\ufffc";
+    }
+
+    @Override
+    public S getStyle() {
+        return style;
+    }
+
+    @Override
+    public void setStyle(S style) {
+        this.style = style;
+    }
+
+    @Override
+    public int getTypeId() {
+        return typeId;
     }
 }

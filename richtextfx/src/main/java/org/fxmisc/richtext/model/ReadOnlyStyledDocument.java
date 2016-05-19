@@ -107,7 +107,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
      */
     public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(ObjectData data, PS paragraphStyle, S style) {
         List<Paragraph<PS, S>> res = new ArrayList<>(1);
-        CustomObject<S> segment = new CustomObject<S>(style);
+        CustomObject<S> segment = new CustomObject<S>(style, 1);    // XXX type Id
         segment.setObjectData(data);
         Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(segment));
         res.add(content);
@@ -138,7 +138,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
     private static <PS, S> Codec<Paragraph<PS, S>> paragraphCodec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<Paragraph<PS, S>>() {
-            private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
+            private final Codec<List<Segment<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
             public String getName() {
@@ -154,14 +154,14 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             @Override
             public Paragraph<PS, S> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
-                List<StyledText<S>> segments = segmentsCodec.decode(is);
+                List<Segment<S>> segments = segmentsCodec.decode(is);
                 return new Paragraph<>(paragraphStyle, segments);
             }
         };
     }
 
-    private static <S> Codec<StyledText<S>> styledTextCodec(Codec<S> styleCodec) {
-        return new Codec<StyledText<S>>() {
+    private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
+        return new Codec<Segment<S>>() {
 
             @Override
             public String getName() {
@@ -169,7 +169,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             }
 
             @Override
-            public void encode(DataOutputStream os, StyledText<S> t) throws IOException {
+            public void encode(DataOutputStream os, Segment<S> t) throws IOException {
                 STRING_CODEC.encode(os, t.getText());
                 styleCodec.encode(os, t.getStyle());
             }
