@@ -1,18 +1,22 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.TwoDimensional.Bias.Forward;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
-import javafx.scene.shape.PathElement;
-import javafx.scene.text.TextFlow;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.sun.javafx.geom.RectBounds;
 import com.sun.javafx.scene.text.HitInfo;
 import com.sun.javafx.scene.text.TextLayout;
 import com.sun.javafx.text.PrismTextLayout;
 import com.sun.javafx.text.TextLine;
+
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.PathElement;
+import javafx.scene.text.TextFlow;
 
 /**
  * Adds additional API to {@link TextFlow}.
@@ -75,7 +79,30 @@ class TextFlowExt extends TextFlow {
      *         underline from the first to the last character.
      */
     PathElement[] getUnderlineShape(int from, int to) {
-       return textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
+    	// get a Path for the text underline
+    	PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
+
+    	// the path is a closed Path (a thin rectangle).
+    	// if we use the Path as it is, this causes rendering issues.
+    	// hence we only use the MoveTo and the succeding LineTo elements for the result.
+        List<PathElement> result = new ArrayList<>();
+
+        boolean collect = false;
+        for (PathElement elem : shape) {
+        	if (elem instanceof MoveTo) {
+        		result.add(elem);
+        		collect = true;
+        	} else if (elem instanceof LineTo) {
+        		if (collect) {
+        			result.add(elem);
+        		}
+        		collect = false;
+        	} else {
+        		throw new RuntimeException("Error");
+        	}
+        }
+
+       return result.toArray(new PathElement[0]);
     }
 
     CharacterHit hitLine(double x, int lineIndex) {

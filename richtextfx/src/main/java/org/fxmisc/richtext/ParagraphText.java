@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -15,6 +16,8 @@ import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 
@@ -209,8 +212,8 @@ class ParagraphText<PS, S> extends TextFlowExt {
             if (underlinePaint != null) {
                 underlineShape.setStroke(underlinePaint);
 
-                Double strokeWidth = 0.5; // text.underlineStrokeWidthProperty().get();
-                Double[] strokeDashArray = {1., 2.}; // text.underlineStrokeDashArrayProperty().get();
+                Double strokeWidth = 1.0; 			 // text.underlineStrokeWidthProperty().get();
+                Double[] strokeDashArray = {3., 3.}; // text.underlineStrokeDashArrayProperty().get();
 
                 underlineShape.setStrokeWidth(strokeWidth);
                 underlineShape.getStrokeDashArray().addAll(strokeDashArray);
