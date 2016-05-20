@@ -5,8 +5,8 @@
 
 .underlined {
     -fx-underline-stroke: red;
-    -fx-underline-stroke-dash-array: 1 1;
-    -fx-underline-stroke-width: 0.5;
+    -fx-underline-stroke-dash-size: 3;
+    -fx-underline-stroke-width: 1.5;
 }
 
 .semicolon {
