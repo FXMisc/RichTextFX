@@ -68,6 +68,16 @@ class TextFlowExt extends TextFlow {
         return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
     }
 
+    /**
+     * @param from The index of the first character.
+     * @param to The index of the last character.
+     * @return An array with the PathElement objects which define an
+     *         underline from the first to the last character.
+     */
+    PathElement[] getUnderlineShape(int from, int to) {
+       return textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
+    }
+
     CharacterHit hitLine(double x, int lineIndex) {
         return hit(x, getLineCenter(lineIndex));
     }

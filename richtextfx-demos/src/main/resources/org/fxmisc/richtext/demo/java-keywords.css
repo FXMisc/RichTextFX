@@ -2,6 +2,13 @@
     -fx-fill: purple;
     -fx-font-weight: bold;
 }
+
+.underlined {
+    -fx-underline-stroke: red;
+    -fx-underline-stroke-dash-array: 1 1;
+    -fx-underline-stroke-width: 0.5;
+}
+
 .semicolon {
     -fx-font-weight: bold;
 }

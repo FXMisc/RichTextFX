@@ -45,6 +45,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new ArrayList<>();
+    private final List<Path> underlineShapes = new ArrayList<>();
 
     // proxy for caretShape.visibleProperty() that implements unbind() correctly.
     // This is necessary due to a bug in BooleanPropertyBase#unbind().
@@ -108,7 +109,6 @@ class ParagraphText<PS, S> extends TextFlowExt {
             getChildren().add(t);
 
             // add corresponding background node (empty)
-
             Path backgroundShape = new Path();
             backgroundShape.setManaged(false);
             backgroundShape.setStrokeWidth(0);
@@ -116,6 +116,15 @@ class ParagraphText<PS, S> extends TextFlowExt {
             backgroundShape.layoutYProperty().bind(topInset);
             backgroundShapes.add(backgroundShape);
             getChildren().add(0, backgroundShape);
+
+            // add corresponding underline node (empty)
+            Path underlineShape = new Path();
+            underlineShape.setManaged(false);
+            underlineShape.setStrokeWidth(0);
+            underlineShape.layoutXProperty().bind(leftInset);
+            underlineShape.layoutYProperty().bind(topInset);
+            underlineShapes.add(underlineShape);
+            getChildren().add(0, underlineShape);
         }
     }
 
@@ -181,7 +190,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
         for (Node node : nodeList) {
             TextExt text = (TextExt) node;
-            Path backgroundShape = backgroundShapes.get(index++);
+            Path backgroundShape = backgroundShapes.get(index);
             int end = start + text.getText().length();
 
             // Set fill
@@ -194,7 +203,25 @@ class ParagraphText<PS, S> extends TextFlowExt {
                 backgroundShape.getElements().setAll(shape);
             }
 
+            // set underline
+            Path underlineShape = underlineShapes.get(index);
+            Paint underlinePaint = text.underlineStrokeProperty().get();
+            if (underlinePaint != null) {
+                underlineShape.setStroke(underlinePaint);
+
+                Double strokeWidth = 0.5; // text.underlineStrokeWidthProperty().get();
+                Double[] strokeDashArray = {1., 2.}; // text.underlineStrokeDashArrayProperty().get();
+
+                underlineShape.setStrokeWidth(strokeWidth);
+                underlineShape.getStrokeDashArray().addAll(strokeDashArray);
+
+                // Set path elements
+                PathElement[] shape = getUnderlineShape(start, end);
+                underlineShape.getElements().setAll(shape);
+            }
+
             start = end;
+            index++;
         }
     }
 
