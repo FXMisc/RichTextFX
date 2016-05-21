@@ -17,7 +17,6 @@ import java.util.stream.Stream;
 
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -185,21 +184,18 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * Indicates when this text area should display a caret.
      */
-    private final ObjectProperty<CaretVisibility> showCaret
-            = new SimpleObjectProperty<>(this, "showCaret", CaretVisibility.WHEN_EDITABLE);
-    public final CaretVisibility getShowCaret() { return showCaret.get(); }
-    public final void setShowCaret(CaretVisibility value) { showCaret.set(value); }
-    public final ObjectProperty<CaretVisibility> showCaretProperty() { return showCaret; }
+    private final Var<CaretVisibility> showCaret = Var.newSimpleVar(CaretVisibility.AUTO);
+    public final CaretVisibility getShowCaret() { return showCaret.getValue(); }
+    public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
+    public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
 
     public static enum CaretVisibility {
-        /** Display a caret when focused. */
-        ALWAYS,
-        /** Display a caret when focused, enabled, and editable. */
-        WHEN_EDITABLE,
-        /** Display a caret when focused and enabled. */
-        WHEN_ENABLED,
-        /** Never display a caret. */
-        NEVER
+        /** Caret is displayed. */
+        ON,
+        /** Caret is displayed when area is focused, enabled, and editable. */
+        AUTO,
+        /** Caret is not displayed. */
+        OFF
     }
 
     // blinkRate property
@@ -211,7 +207,7 @@ public class StyledTextArea<PS, S> extends Region
     public final Duration getBlinkRate() { return blinkRate.get(); }
     public final void setBlinkRate(Duration value) { blinkRate.set(value); }
     public final ObjectProperty<Duration> blinkRateProperty() { return blinkRate; }
-    
+
     // undo manager
     @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
@@ -604,23 +600,20 @@ public class StyledTextArea<PS, S> extends Region
         EventStream<Boolean> blinkCaret = EventStreams.valuesOf(showCaretProperty())
                 .flatMap(mode -> {
                     switch (mode) {
-                    case ALWAYS:
-                        return EventStreams.valuesOf(focusedProperty());
-                    case NEVER:
-                        return EventStreams.valuesOf(Val.constant(false));
-                    case WHEN_ENABLED:
-                        return EventStreams.valuesOf(focusedProperty()
-                                                     .and(disabledProperty().not()));
-                    default:
-                    case WHEN_EDITABLE:
-                        return EventStreams.valuesOf(focusedProperty()
-                                                     .and(editableProperty())
-                                                     .and(disabledProperty().not()));
-                    }
+                        case ON:
+                            return EventStreams.valuesOf(Val.constant(true));
+                        case OFF:
+                            return EventStreams.valuesOf(Val.constant(false));
+                        default:
+                        case AUTO:
+                            return EventStreams.valuesOf(focusedProperty()
+                                    .and(editableProperty())
+                                    .and(disabledProperty().not()));
+                        }
                 });
 
         // the rate at which to display the caret
-        EventStream<Duration> blinkRates = EventStreams.valuesOf(blinkRateProperty());
+        EventStream<Duration> blinkRates = EventStreams.valuesOf(blinkRate);
  
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
