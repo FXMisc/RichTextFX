@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import static javafx.util.Duration.ZERO;
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
@@ -159,6 +160,13 @@ public class StyledTextArea<PS, S> extends Region
     private final StyleableObjectProperty<Paint> highlightTextFill
             = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
 
+    /**
+     * Controls the blink rate of the caret, when one is displayed. Setting
+     * the duration to zero disables blinking.
+     */
+    private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
+            = new CssProperties.CaretBlinkRateProperty(this, javafx.util.Duration.millis(500));
+
     // editable property
     /**
      * Indicates whether this text area can be edited by the user.
@@ -197,16 +205,6 @@ public class StyledTextArea<PS, S> extends Region
         /** Caret is not displayed. */
         OFF
     }
-
-    // blinkRate property
-    /**
-     * Controls the blink rate of the caret, when one is displayed.  Setting
-     * the duration to zero disables blinking.
-     */
-    private final ObjectProperty<Duration> blinkRate = new SimpleObjectProperty(this, "blinkRate", Duration.ofMillis(500));
-    public final Duration getBlinkRate() { return blinkRate.get(); }
-    public final void setBlinkRate(Duration value) { blinkRate.set(value); }
-    public final ObjectProperty<Duration> blinkRateProperty() { return blinkRate; }
 
     // undo manager
     @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
@@ -613,16 +611,16 @@ public class StyledTextArea<PS, S> extends Region
                 });
 
         // the rate at which to display the caret
-        EventStream<Duration> blinkRates = EventStreams.valuesOf(blinkRate);
+        EventStream<javafx.util.Duration> blinkRate = EventStreams.valuesOf(caretBlinkRate);
  
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
-        caretVisible = EventStreams.combine(blinkCaret, blinkRates)
+        caretVisible = EventStreams.combine(blinkCaret, blinkRate)
                 .flatMap(tuple -> {
                     Boolean blink = tuple.get1();
-                    Duration rate = tuple.get2();
+                    javafx.util.Duration rate = tuple.get2();
                     if(blink) {
-                        return rate.isZero()
+                        return rate.lessThanOrEqualTo(ZERO)
                             ? EventStreams.valuesOf(Val.constant(true))
                             : booleanPulse(rate, caretDirty);
                     } else {
@@ -1264,7 +1262,8 @@ public class StyledTextArea<PS, S> extends Region
         }
     }
 
-    private static EventStream<Boolean> booleanPulse(Duration duration, EventStream<?> restartImpulse) {
+    private static EventStream<Boolean> booleanPulse(javafx.util.Duration javafxDuration, EventStream<?> restartImpulse) {
+        Duration duration = Duration.ofMillis(Math.round(javafxDuration.toMillis()));
         EventStream<?> ticks = EventStreams.restartableTicks(duration, restartImpulse);
         return StateMachine.init(false)
                 .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)

@@ -109,4 +109,33 @@ class CssProperties {
             return cssMetaData;
         }
     }
+
+    static class CaretBlinkRateProperty extends StyleableObjectProperty<javafx.util.Duration> {
+        private final Object bean;
+
+        private final CssMetaData<? extends Styleable, javafx.util.Duration> cssMetaData;
+
+        public CaretBlinkRateProperty(Object bean, javafx.util.Duration initialValue) {
+            super(initialValue);
+            this.bean = bean;
+            cssMetaData = new PropertyCssMetaData<>(
+                    this, "-fx-caret-blink-rate",
+                    StyleConverter.getDurationConverter(), initialValue);
+        }
+
+        @Override
+        public Object getBean() {
+            return bean;
+        }
+
+        @Override
+        public String getName() {
+            return "caretBlinkRate";
+        }
+
+        @Override
+        public CssMetaData<? extends Styleable, javafx.util.Duration> getCssMetaData() {
+            return cssMetaData;
+        }
+    }
 }
