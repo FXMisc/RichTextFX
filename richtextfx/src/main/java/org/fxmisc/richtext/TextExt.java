@@ -3,6 +3,9 @@ package org.fxmisc.richtext;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sun.javafx.css.converters.EnumConverter;
+import com.sun.javafx.css.converters.SizeConverter;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.css.CssMetaData;
 import javafx.css.StyleConverter;
@@ -11,10 +14,11 @@ import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Text;
 
 public class TextExt extends Text {
-
+	
     private final StyleableObjectProperty<Paint> backgroundFill = new StyleableObjectProperty<Paint>(null) {
         @Override
         public Object getBean() {
@@ -32,7 +36,7 @@ public class TextExt extends Text {
         }
     };
 
-    private final StyleableObjectProperty<Paint> underlineStroke = new StyleableObjectProperty<Paint>(null) {
+    private final StyleableObjectProperty<Paint> underlineColor = new StyleableObjectProperty<Paint>(null) {
         @Override
         public Object getBean() {
             return TextExt.this;
@@ -40,16 +44,16 @@ public class TextExt extends Text {
 
         @Override
         public String getName() {
-            return "underlineStroke";
+            return "underlineColor";
         }
 
         @Override
         public CssMetaData<TextExt, Paint> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_STROKE;
+            return StyleableProperties.UNDERLINE_COLOR;
         }
     };
 
-    private final StyleableObjectProperty<Number> underlineStrokeWidth = new StyleableObjectProperty<Number>(null) {
+    private final StyleableObjectProperty<Number> underlineWidth = new StyleableObjectProperty<Number>(null) {
         @Override
         public Object getBean() {
             return TextExt.this;
@@ -57,16 +61,16 @@ public class TextExt extends Text {
 
         @Override
         public String getName() {
-            return "underlineStrokeWidth";
+            return "underlineWidth";
         }
 
         @Override
         public CssMetaData<TextExt, Number> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_STROKE_WIDTH;
+            return StyleableProperties.UNDERLINE_WIDTH;
         }
     };
 
-    private final StyleableObjectProperty<Number> underlineStrokeDashSize = new StyleableObjectProperty<Number>(null) {
+    private final StyleableObjectProperty<Number[]> underlineDashArray = new StyleableObjectProperty<Number[]>(null) {
         @Override
         public Object getBean() {
             return TextExt.this;
@@ -74,12 +78,30 @@ public class TextExt extends Text {
 
         @Override
         public String getName() {
-            return "underlineStrokeDashSize";
+            return "underlineDashArray";
         }
 
         @Override
-        public CssMetaData<TextExt, Number> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_STROKE_DASH_SIZE;
+        public CssMetaData<TextExt, Number[]> getCssMetaData() {
+            return StyleableProperties.UNDERLINE_DASH_ARRAY;
+        }
+    };
+
+
+    private final StyleableObjectProperty<StrokeLineCap> underlineCap = new StyleableObjectProperty<StrokeLineCap>(null) {
+        @Override
+        public Object getBean() {
+            return TextExt.this;
+        }
+
+        @Override
+        public String getName() {
+            return "underlineCap";
+        }
+
+        @Override
+        public CssMetaData<TextExt, StrokeLineCap> getCssMetaData() {
+            return StyleableProperties.UNDERLINE_CAP;
         }
     };
 
@@ -94,9 +116,10 @@ public class TextExt extends Text {
 
         // Add new properties
         styleables.add(StyleableProperties.BACKGROUND_FILL);
-        styleables.add(StyleableProperties.UNDERLINE_STROKE);
-        styleables.add(StyleableProperties.UNDERLINE_STROKE_WIDTH);
-        styleables.add(StyleableProperties.UNDERLINE_STROKE_DASH_SIZE);
+        styleables.add(StyleableProperties.UNDERLINE_COLOR);
+        styleables.add(StyleableProperties.UNDERLINE_WIDTH);
+        styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
+        styleables.add(StyleableProperties.UNDERLINE_CAP);
 
         // Return list value
         return styleables;
@@ -114,20 +137,25 @@ public class TextExt extends Text {
         return backgroundFill;
     }
 
-    // Color of the text underline
-    public Paint getUnderlineStroke() { return underlineStroke.get(); }
-    public void setUnderlineStroke(Paint fill) { underlineStroke.set(fill); }
-    public ObjectProperty<Paint> underlineStrokeProperty() { return underlineStroke; }
+    // Color of the text underline (-fx-underline is already defined by JavaFX)
+    public Paint getUnderlineColor() { return underlineColor.get(); }
+    public void setUnderlineColor(Paint fill) { underlineColor.set(fill); }
+    public ObjectProperty<Paint> underlineColorProperty() { return underlineColor; }
 
     // Width of the text underline
-    public Number getUnderlineStrokeWidth() { return underlineStrokeWidth.get(); }
-    public void setUnderlineStrokeWidth(Number width) { underlineStrokeWidth.set(width); }
-    public ObjectProperty<Number> underlineStrokeWidthProperty() { return underlineStrokeWidth; }
+    public Number getUnderlineWidth() { return underlineWidth.get(); }
+    public void setUnderlineWidth(Number width) { underlineWidth.set(width); }
+    public ObjectProperty<Number> underlineWidthProperty() { return underlineWidth; }
 
-    // Dash size for the text underline (XXX Pending: use an array) 
-    public Number getUnderlineStrokeDashSize() { return underlineStrokeDashSize.get(); }
-    public void setUnderlineStrokeDashSize(Number width) { underlineStrokeDashSize.set(width); }
-    public ObjectProperty<Number> underlineStrokeDashSizeProperty() { return underlineStrokeDashSize; }
+    // Dash array for the text underline 
+    public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
+    public void setUnderlineDashArray(Number[] dashArray) { underlineDashArray.set(dashArray); }
+    public ObjectProperty<Number[]> underlineDashArrayProperty() { return underlineDashArray; }
+
+    // The end cap style of each dash in a dashed underline
+    public StrokeLineCap getUnderlineCap() { return underlineCap.get(); }
+    public void setUnderlineCap(StrokeLineCap cap) { underlineCap.set(cap); }
+    public ObjectProperty<StrokeLineCap> underlineCapProperty() { return underlineCap; }
 
     private static class StyleableProperties {
 
@@ -146,49 +174,67 @@ public class TextExt extends Text {
             }
         };
 
-    
-        private static final CssMetaData<TextExt, Paint> UNDERLINE_STROKE = new CssMetaData<TextExt, Paint>(
-                "-fx-underline-stroke",
+
+        private static final CssMetaData<TextExt, Paint> UNDERLINE_COLOR = new CssMetaData<TextExt, Paint>(
+                "-fx-underline-color",
                 StyleConverter.getPaintConverter(),
                 Color.TRANSPARENT) {
             @Override
             public boolean isSettable(TextExt node) {
-                return !node.underlineStroke.isBound();
+                return !node.underlineColor.isBound();
             }
 
             @Override
             public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
-                return node.underlineStroke;
+                return node.underlineColor;
             }
         };
 
-        private static final CssMetaData<TextExt, Number> UNDERLINE_STROKE_WIDTH = new CssMetaData<TextExt, Number>(
-                "-fx-underline-stroke-width",
-                StyleConverter.getSizeConverter(), 
+        private static final CssMetaData<TextExt, Number> UNDERLINE_WIDTH = new CssMetaData<TextExt, Number>(
+                "-fx-underline-width",
+                StyleConverter.getSizeConverter(),
                 0) {
+
             @Override
             public boolean isSettable(TextExt node) {
-                return !node.underlineStrokeWidth.isBound();
+                return !node.underlineWidth.isBound();
             }
 
             @Override
             public StyleableProperty<Number> getStyleableProperty(TextExt node) {
-                return node.underlineStrokeWidth;
+                return node.underlineWidth;
             }
         };
 
-        private static final CssMetaData<TextExt, Number> UNDERLINE_STROKE_DASH_SIZE = new CssMetaData<TextExt, Number>(
-                "-fx-underline-stroke-dash-size",
-                StyleConverter.getSizeConverter(), 
-                0) {
+        private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CssMetaData<TextExt, Number[]>(
+                "-fx-underline-dash-array",
+                SizeConverter.SequenceConverter.getInstance(),
+                new Double[0]) {
+
             @Override
             public boolean isSettable(TextExt node) {
-                return !node.underlineStrokeDashSize.isBound();
+                return !node.underlineDashArray.isBound();
             }
 
             @Override
-            public StyleableProperty<Number> getStyleableProperty(TextExt node) {
-                return node.underlineStrokeDashSize;
+            public StyleableProperty<Number[]> getStyleableProperty(TextExt node) {
+                return node.underlineDashArray;
+            }
+        };
+
+        private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CssMetaData<TextExt, StrokeLineCap>(
+                "-fx-underline-cap",
+                new EnumConverter<StrokeLineCap>(StrokeLineCap.class),
+                StrokeLineCap.SQUARE) {
+
+            @Override
+            public boolean isSettable(TextExt node) {
+                return !node.underlineCap.isBound();
+            }
+
+            @Override
+            public StyleableProperty<StrokeLineCap> getStyleableProperty(TextExt node) {
+                return node.underlineCap;
             }
         };
     }
