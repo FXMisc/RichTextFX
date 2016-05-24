@@ -1,0 +1,6 @@
+.underlined {
+    -fx-underline-color: red;
+    -fx-underline-dash-array: 2 2;
+    -fx-underline-width: 1;
+    -fx-underline-cap: butt;
+}

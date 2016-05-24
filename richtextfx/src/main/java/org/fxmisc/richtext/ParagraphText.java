@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -17,6 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
+import javafx.scene.shape.StrokeLineCap;
 
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -45,6 +47,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new ArrayList<>();
+    private final List<Path> underlineShapes = new ArrayList<>();
 
     // proxy for caretShape.visibleProperty() that implements unbind() correctly.
     // This is necessary due to a bug in BooleanPropertyBase#unbind().
@@ -108,7 +111,6 @@ class ParagraphText<PS, S> extends TextFlowExt {
             getChildren().add(t);
 
             // add corresponding background node (empty)
-
             Path backgroundShape = new Path();
             backgroundShape.setManaged(false);
             backgroundShape.setStrokeWidth(0);
@@ -116,6 +118,15 @@ class ParagraphText<PS, S> extends TextFlowExt {
             backgroundShape.layoutYProperty().bind(topInset);
             backgroundShapes.add(backgroundShape);
             getChildren().add(0, backgroundShape);
+
+            // add corresponding underline node (empty)
+            Path underlineShape = new Path();
+            underlineShape.setManaged(false);
+            underlineShape.setStrokeWidth(0);
+            underlineShape.layoutXProperty().bind(leftInset);
+            underlineShape.layoutYProperty().bind(topInset);
+            underlineShapes.add(underlineShape);
+            getChildren().add(0, underlineShape);
         }
     }
 
@@ -181,22 +192,100 @@ class ParagraphText<PS, S> extends TextFlowExt {
         FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
         for (Node node : nodeList) {
             TextExt text = (TextExt) node;
-            Path backgroundShape = backgroundShapes.get(index++);
             int end = start + text.getText().length();
 
-            // Set fill
-            Paint paint = text.backgroundFillProperty().get();
-            if (paint != null) {
-                backgroundShape.setFill(paint);
-
-                // Set path elements
-                PathElement[] shape = getRangeShape(start, end);
-                backgroundShape.getElements().setAll(shape);
-            }
+            updateBackground(text, start, end, index);
+            updateUnderline(text, start, end, index);
 
             start = end;
+            index++;
         }
     }
+
+
+    /**
+     * Updates the background shape for a text segment.
+     *
+     * @param text  The text node which specified the style attributes
+     * @param start The index of the first character 
+     * @param end   The index of the last character
+     * @param index The index of the background shape
+     */
+    private void updateBackground(TextExt text, int start, int end, int index) {
+        // Set fill
+        Paint paint = text.backgroundFillProperty().get();
+        if (paint != null) {
+            Path backgroundShape = backgroundShapes.get(index);
+            backgroundShape.setFill(paint);
+
+            // Set path elements
+            PathElement[] shape = getRangeShape(start, end);
+            backgroundShape.getElements().setAll(shape);
+        }
+    }
+
+
+    /**
+     * Updates the shape which renders the text underline.
+     * 
+     * @param text  The text node which specified the style attributes
+     * @param start The index of the first character 
+     * @param end   The index of the last character
+     * @param index The index of the background shape
+     */
+    private void updateUnderline(TextExt text, int start, int end, int index) {
+
+        // get all CSS properties for the underline
+
+        Paint underlineColor = text.underlineColorProperty().get();
+        Number underlineWidth = text.underlineWidthProperty().get();
+
+        // get the dash array - JavaFX CSS parser seems to return either a Number[] array
+        // or a single value, depending on whether only one or more than one value has been
+        // specified in the CSS
+        Double[] underlineDashArray = null;
+        Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
+        if (underlineDashArrayProp != null) {
+            if (underlineDashArrayProp.getClass().isArray()) {
+                Number[] numberArray = (Number[]) underlineDashArrayProp;
+                underlineDashArray = new Double[numberArray.length];
+                int idx = 0;
+                for (Number d : numberArray) {
+                    underlineDashArray[idx++] = (Double) d;
+                }
+            } else {
+                underlineDashArray = new Double[1];
+                underlineDashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
+            }
+        }
+
+        StrokeLineCap underlineCap = text.underlineCapProperty().get();
+
+        // apply style and render the underline
+
+        Path underlineShape = underlineShapes.get(index);
+        if (underlineColor != null) {
+            underlineShape.setStroke(underlineColor);
+        }
+        if (underlineWidth != null) {
+            underlineShape.setStrokeWidth(underlineWidth.doubleValue());
+        }
+        if (underlineDashArray != null) {
+            underlineShape.getStrokeDashArray().addAll(underlineDashArray);
+            underlineShape.setStrokeLineCap(StrokeLineCap.BUTT);
+        }
+        if (underlineCap != null) {
+            underlineShape.setStrokeLineCap(underlineCap);
+        }
+
+        if (underlineColor != null || underlineWidth != null) {
+            
+            // Set path elements
+            PathElement[] shape = getUnderlineShape(start, end);
+            underlineShape.getElements().setAll(shape);
+        }
+    }
+
 
     @Override
     protected void layoutChildren() {
