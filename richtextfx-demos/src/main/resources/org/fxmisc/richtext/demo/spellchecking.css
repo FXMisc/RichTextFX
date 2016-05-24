@@ -2,6 +2,19 @@
     -fx-fill: purple;
     -fx-font-weight: bold;
 }
+
+.underlined {
+    -fx-underline-color: red;
+    -fx-underline-dash-array: 2 2;
+    -fx-underline-width: 1;
+    -fx-underline-cap: butt;
+}
+
+.url {
+    -fx-underline-color: blue;
+    -fx-underline-width: 0.5;
+}
+
 .semicolon {
     -fx-font-weight: bold;
 }

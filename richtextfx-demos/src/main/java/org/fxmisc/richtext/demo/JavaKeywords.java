@@ -32,7 +32,6 @@ public class JavaKeywords extends Application {
     };
 
     private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
-    private static final String ERROR_PATTERN = "\\b(simplements)\\b";
     private static final String PAREN_PATTERN = "\\(|\\)";
     private static final String BRACE_PATTERN = "\\{|\\}";
     private static final String BRACKET_PATTERN = "\\[|\\]";
@@ -42,7 +41,6 @@ public class JavaKeywords extends Application {
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-            + "|(?<ERROR>" + ERROR_PATTERN + ")"
             + "|(?<PAREN>" + PAREN_PATTERN + ")"
             + "|(?<BRACE>" + BRACE_PATTERN + ")"
             + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
@@ -106,7 +104,6 @@ public class JavaKeywords extends Application {
         while(matcher.find()) {
             String styleClass =
                     matcher.group("KEYWORD") != null ? "keyword" :
-                    matcher.group("ERROR") != null ? "underlined" :
                     matcher.group("PAREN") != null ? "paren" :
                     matcher.group("BRACE") != null ? "brace" :
                     matcher.group("BRACKET") != null ? "bracket" :
