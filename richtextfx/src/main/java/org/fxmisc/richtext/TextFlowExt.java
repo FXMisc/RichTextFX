@@ -4,11 +4,15 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
 
 import com.sun.javafx.geom.RectBounds;
 import com.sun.javafx.scene.text.HitInfo;
@@ -68,6 +72,38 @@ class TextFlowExt extends TextFlow {
 
     PathElement[] getRangeShape(int from, int to) {
         return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
+    }
+
+    /**
+     * @param from The index of the first character.
+     * @param to The index of the last character.
+     * @return An array with the PathElement objects which define an
+     *         underline from the first to the last character.
+     */
+    PathElement[] getUnderlineShape(int from, int to) {
+        // get a Path for the text underline
+        PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
+
+        // The shape is returned as a closed Path (a thin rectangle).
+        // If we use the Path as it is, this causes rendering issues.
+        // Hence we only use the MoveTo and the succeeding LineTo elements for the result
+        // so that simple line segments instead of rectangles are returned.
+        List<PathElement> result = new ArrayList<>();
+
+        boolean collect = false;
+        for (PathElement elem : shape) {
+            if (elem instanceof MoveTo) {   // There seems to be no API to get the type of the PathElement
+                result.add(elem);
+                collect = true;
+            } else if (elem instanceof LineTo) {
+                if (collect) {
+                    result.add(elem);
+                    collect = false;
+                }
+            }
+        }
+
+       return result.toArray(new PathElement[0]);
     }
 
     CharacterHit hitLine(double x, int lineIndex) {
