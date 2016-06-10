@@ -214,7 +214,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
      */
     private void updateBackground(TextExt text, int start, int end, int index) {
         // Set fill
-        Paint paint = text.backgroundFillProperty().get();
+        Paint paint = text.backgroundColorProperty().get();
         if (paint != null) {
             Path backgroundShape = backgroundShapes.get(index);
             backgroundShape.setFill(paint);

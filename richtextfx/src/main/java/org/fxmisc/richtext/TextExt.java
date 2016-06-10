@@ -19,7 +19,7 @@ import javafx.scene.text.Text;
 
 public class TextExt extends Text {
 	
-    private final StyleableObjectProperty<Paint> backgroundFill = new StyleableObjectProperty<Paint>(null) {
+    private final StyleableObjectProperty<Paint> backgroundColor = new StyleableObjectProperty<Paint>(null) {
         @Override
         public Object getBean() {
             return TextExt.this;
@@ -27,12 +27,12 @@ public class TextExt extends Text {
 
         @Override
         public String getName() {
-            return "backgroundFill";
+            return "backgroundColor";
         }
 
         @Override
         public CssMetaData<TextExt, Paint> getCssMetaData() {
-            return StyleableProperties.BACKGROUND_FILL;
+            return StyleableProperties.BACKGROUND_COLOR;
         }
     };
 
@@ -115,7 +115,7 @@ public class TextExt extends Text {
         List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(super.getCssMetaData());
 
         // Add new properties
-        styleables.add(StyleableProperties.BACKGROUND_FILL);
+        styleables.add(StyleableProperties.BACKGROUND_COLOR);
         styleables.add(StyleableProperties.UNDERLINE_COLOR);
         styleables.add(StyleableProperties.UNDERLINE_WIDTH);
         styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
@@ -125,16 +125,16 @@ public class TextExt extends Text {
         return styleables;
     }
 
-    public Paint getBackgroundFill() {
-        return backgroundFill.get();
+    public Paint getBackgroundColor() {
+        return backgroundColor.get();
     }
 
-    public void setBackgroundFill(Paint fill) {
-        backgroundFill.set(fill);
+    public void setBackgroundColor(Paint fill) {
+        backgroundColor.set(fill);
     }
 
-    public ObjectProperty<Paint> backgroundFillProperty() {
-        return backgroundFill;
+    public ObjectProperty<Paint> backgroundColorProperty() {
+        return backgroundColor;
     }
 
     // Color of the text underline (-fx-underline is already defined by JavaFX)
@@ -159,18 +159,18 @@ public class TextExt extends Text {
 
     private static class StyleableProperties {
 
-        private static final CssMetaData<TextExt, Paint> BACKGROUND_FILL = new CssMetaData<TextExt, Paint>(
-                "-fx-background-fill",
+        private static final CssMetaData<TextExt, Paint> BACKGROUND_COLOR = new CssMetaData<TextExt, Paint>(
+                "-rtfx-background-color",
                 StyleConverter.getPaintConverter(),
                 Color.TRANSPARENT) {
             @Override
             public boolean isSettable(TextExt node) {
-                return !node.backgroundFill.isBound();
+                return !node.backgroundColor.isBound();
             }
 
             @Override
             public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
-                return node.backgroundFill;
+                return node.backgroundColor;
             }
         };
 
