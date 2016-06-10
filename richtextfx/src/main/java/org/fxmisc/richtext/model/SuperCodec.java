@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public interface SuperCodec<S, T extends S> extends Codec<T> {
+interface SuperCodec<S, T extends S> extends Codec<T> {
     void encodeSuper(DataOutputStream os, S s) throws IOException;
 
     @Override

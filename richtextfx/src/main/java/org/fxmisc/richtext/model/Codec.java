@@ -3,6 +3,7 @@ package org.fxmisc.richtext.model;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +63,10 @@ public interface Codec<T> {
 
     static <T> Codec<List<T>> listCodec(Codec<T> elemCodec) {
         return SuperCodec.collectionListCodec(elemCodec);
+    }
+
+    static <T> Codec<Collection<T>> collectionCodec(Codec<T> elemCodec) {
+        return SuperCodec.upCast(SuperCodec.collectionListCodec(elemCodec));
     }
 
     static <T> Codec<Optional<T>> optionalCodec(Codec<T> elemCodec) {
