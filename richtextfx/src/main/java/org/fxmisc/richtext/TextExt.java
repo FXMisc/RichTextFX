@@ -176,7 +176,7 @@ public class TextExt extends Text {
 
 
         private static final CssMetaData<TextExt, Paint> UNDERLINE_COLOR = new CssMetaData<TextExt, Paint>(
-                "-fx-underline-color",
+                "-rtfx-underline-color",
                 StyleConverter.getPaintConverter(),
                 Color.TRANSPARENT) {
             @Override
@@ -191,7 +191,7 @@ public class TextExt extends Text {
         };
 
         private static final CssMetaData<TextExt, Number> UNDERLINE_WIDTH = new CssMetaData<TextExt, Number>(
-                "-fx-underline-width",
+                "-rtfx-underline-width",
                 StyleConverter.getSizeConverter(),
                 0) {
 
@@ -207,7 +207,7 @@ public class TextExt extends Text {
         };
 
         private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CssMetaData<TextExt, Number[]>(
-                "-fx-underline-dash-array",
+                "-rtfx-underline-dash-array",
                 SizeConverter.SequenceConverter.getInstance(),
                 new Double[0]) {
 
@@ -223,7 +223,7 @@ public class TextExt extends Text {
         };
 
         private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CssMetaData<TextExt, StrokeLineCap>(
-                "-fx-underline-cap",
+                "-rtfx-underline-cap",
                 new EnumConverter<StrokeLineCap>(StrokeLineCap.class),
                 StrokeLineCap.SQUARE) {
 
