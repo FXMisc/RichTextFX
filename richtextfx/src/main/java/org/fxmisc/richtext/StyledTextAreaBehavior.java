@@ -2,7 +2,7 @@ package org.fxmisc.richtext;
 
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.consume;
 import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.sequence;
@@ -20,12 +20,12 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
-import org.fxmisc.richtext.TwoDimensional.Position;
+import org.fxmisc.richtext.model.StyledTextAreaModel;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
+import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.template.InputMapTemplate;
-
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;

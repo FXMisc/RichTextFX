@@ -1,6 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;

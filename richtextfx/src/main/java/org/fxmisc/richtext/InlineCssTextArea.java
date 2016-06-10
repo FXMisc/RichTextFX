@@ -1,6 +1,10 @@
 package org.fxmisc.richtext;
 
 
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
+
 import javafx.scene.text.TextFlow;
 
 /**

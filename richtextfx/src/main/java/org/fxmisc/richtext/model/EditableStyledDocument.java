@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -8,7 +8,7 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.value.Val;
 
 /**
- * Content model for {@link StyledTextArea}. Implements edit operations
+ * Content model for {@link org.fxmisc.richtext.StyledTextArea}. Implements edit operations
  * on styled text, but not worrying about additional aspects such as
  * caret or selection, which are handled by {@link StyledTextAreaModel}.
  */

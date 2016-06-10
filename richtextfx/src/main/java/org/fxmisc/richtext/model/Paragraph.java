@@ -1,6 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import java.util.Objects;
 
 import javafx.scene.control.IndexRange;
 
-import org.fxmisc.richtext.TwoDimensional.Position;
+import org.fxmisc.richtext.model.TwoDimensional.Position;
 
 public final class Paragraph<PS, S> {
 

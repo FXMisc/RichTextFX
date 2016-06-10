@@ -1,6 +1,6 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -28,14 +28,13 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Model for {@link StyledTextArea}
+ * Model for {@link org.fxmisc.richtext.StyledTextArea}
  *
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph
  */
-class StyledTextAreaModel<PS, S>
+public class StyledTextAreaModel<PS, S>
         implements
-        TextEditingArea<PS, S>,
         EditActions<PS, S>,
         NavigationActions<PS, S>,
         UndoActions,
@@ -189,19 +188,19 @@ class StyledTextAreaModel<PS, S>
      * the same document (Model).
      * @return this area's {@link EditableStyledDocument}
      */
-    final EditableStyledDocument<PS, S> getContent() { return content; }
+    public final EditableStyledDocument<PS, S> getContent() { return content; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final S initialTextStyle;
-    final S getInitialTextStyle() { return initialTextStyle; }
+    public final S getInitialTextStyle() { return initialTextStyle; }
 
     /**
      * Style used by default when no other style is provided.
      */
     private final PS initialParagraphStyle;
-    final PS getInitialParagraphStyle() { return initialParagraphStyle; }
+    public final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
     /**
      * Indicates whether style should be preserved on undo/redo,
@@ -209,7 +208,7 @@ class StyledTextAreaModel<PS, S>
      * TODO: Currently, only undo/redo respect this flag.
      */
     private final boolean preserveStyle;
-    final boolean isPreserveStyle() { return preserveStyle; }
+    public final boolean isPreserveStyle() { return preserveStyle; }
 
 
     /* ********************************************************************** *

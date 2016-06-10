@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 
 public class PlainTextChange extends TextChange<String, PlainTextChange> {

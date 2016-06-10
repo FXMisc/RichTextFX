@@ -3,6 +3,8 @@ package org.fxmisc.richtext;
 
 import java.util.Collection;
 
+import org.fxmisc.richtext.model.EditableStyledDocument;
+
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
  * with fixed-width font and an undo manager that observes

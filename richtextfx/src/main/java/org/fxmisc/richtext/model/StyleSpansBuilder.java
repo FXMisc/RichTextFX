@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import java.util.ArrayList;
 import java.util.Collection;

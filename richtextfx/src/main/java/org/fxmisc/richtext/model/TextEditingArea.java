@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+package org.fxmisc.richtext.model;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
