@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import javafx.beans.property.BooleanProperty;
@@ -74,11 +74,9 @@ class ParagraphBox<PS, S> extends Region {
 
     ParagraphBox(Paragraph<PS, S> par, 
                  BiConsumer<TextFlow, PS> applyParagraphStyle, 
-                 BiConsumer<? super TextExt, S> applyStyle,
-                 BiFunction <? super Segment<S>, 
-                             BiConsumer<? super TextExt, S>, Node> nodeFactory) {
+                 Function <? super Segment<S>, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
-        this.text = new ParagraphText<>(par, applyStyle, nodeFactory);
+        this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);

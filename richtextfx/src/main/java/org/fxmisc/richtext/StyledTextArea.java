@@ -37,8 +37,11 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -56,10 +59,11 @@ import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.CustomObject;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.NavigationActions;
-import org.fxmisc.richtext.model.Segment;
+import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
@@ -574,11 +578,33 @@ public class StyledTextArea<PS, S> extends Region
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
-        // register the factory for the default segment types
-        // TODO: Probably a lambda (factory method instead of whole class) would be better!
-        registerFactory(0, new StyledTextFactory());
-        // registerFactory(1, new StyledTextFactory());
-        // registerFactory(2, new StyledTextFactory());
+        // register the factories for the default segment types
+
+        registerFactory(0, segment -> {  
+            TextExt t = new TextExt(segment.getText());
+            t.setTextOrigin(VPos.TOP);
+            t.getStyleClass().add("text");
+            this.applyStyle.accept(t, segment.getStyle());
+
+            // XXX: binding selectionFill to textFill,
+            // see the note at highlightTextFill
+            t.impl_selectionFillProperty().bind(t.fillProperty());
+
+            return t;
+        } );
+
+        registerFactory(1, segment -> {
+            CustomObject<S> customObject = (CustomObject<S>) segment;
+            ObjectData objData = customObject.getObjectData();
+            String imagePath = objData.getData();
+            Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
+                                                // can be stored in the model layer (ObjectData)
+
+            ImageView result = new ImageView(image);
+            return result;
+        } );
+
+        // registerFactory(2, (segment, applyStyle1) -> {} );
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -684,7 +710,7 @@ public class StyledTextArea<PS, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    public void registerFactory(int typeId, SegmentFactory factory) {
+    public void registerFactory(int typeId, SegmentFactory<S> factory) {
         nodeFactories.put(typeId, factory);
     }
 
@@ -1133,15 +1159,14 @@ public class StyledTextArea<PS, S> extends Region
             BiConsumer<TextFlow, PS> applyParagraphStyle) {
 
         ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, 
-                                                     applyStyle, (seg, applyStyle1) -> {
-// TODO: applyStyle does not need to be looped through the whole stack!
-                                                         SegmentFactory factory = nodeFactories.get(seg.getTypeId());
+                                                     seg -> {
+                                                         SegmentFactory<S> factory = nodeFactories.get(seg.getTypeId());
                                                          if (factory == null) {
                                                              throw new RuntimeException("No factory for object type " + seg.getTypeId());
                                                          }
 
-                                                         return factory.createNode(seg, applyStyle1);
-                                                         } );
+                                                         return factory.createNode(seg);
+                                                     } );
 
         box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
@@ -1310,17 +1335,4 @@ public class StyledTextArea<PS, S> extends Region
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
     }
-    
-
-//    
-//    
-//
-//    private Node nodeFactory(Segment<S> seg, BiConsumer<? super TextExt, S> applyStyle) {
-//        SegmentFactory factory = null; // nodeFactories.get(seg.getTypeId());
-//        if (factory == null) {
-//            throw new RuntimeException("No factory for object type " + seg.getTypeId());
-//        }
-//
-//        return null;
-//    }
 }

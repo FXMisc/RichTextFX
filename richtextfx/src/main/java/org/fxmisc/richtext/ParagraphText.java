@@ -1,11 +1,9 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -55,17 +53,13 @@ class ParagraphText<PS, S> extends TextFlowExt {
     // This is necessary due to a bug in BooleanPropertyBase#unbind().
     // See https://bugs.openjdk.java.net/browse/JDK-8130458
     private final Var<Boolean> caretVisible = Var.newSimpleVar(false);
-
-//    private Map<Integer, SegmentFactory> factories = new HashMap<>();
-
-
     {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    ParagraphText(Paragraph<PS, S> par, BiConsumer<? super TextExt, S> applyStyle,
-                  BiFunction <? super Segment<S>, 
-                              BiConsumer<? super TextExt, S>, Node> nodeFactory) {
+    
+    ParagraphText(Paragraph<PS, S> par,
+                  Function <? super Segment<S>, Node> nodeFactory) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -109,8 +103,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         for(Segment<S> segment: par.getSegments()) {
 
             // Create the object node
-            Node t = nodeFactory.apply(segment, applyStyle);
-            // Node t = createNode(segment, applyStyle);
+            Node t = nodeFactory.apply(segment);
             getChildren().add(t);
 
             // add corresponding background node (empty)
@@ -132,35 +125,6 @@ class ParagraphText<PS, S> extends TextFlowExt {
             getChildren().add(0, underlineShape);
         }
     }
-//
-//
-//    private Node createNode(Segment<S> segment, BiConsumer<? super TextExt, S> applyStyle) {
-//        SegmentFactory factory = factories.get(segment.getTypeId());
-//        if (factory == null) {
-//            throw new RuntimeException("No factory for type " + segment.getTypeId());
-//        }
-//
-//        if (segment instanceof CustomObject) {
-//            CustomObject<S> customObject = (CustomObject<S>) segment;
-//            ObjectData objData = customObject.getObjectData();
-//            String imagePath = objData.getData();
-//            Image image = new Image(imagePath); // TODO: No need to create new Image objects each time -
-//                                                // can be stored in the model layer (ObjectData)
-//
-//            return new ImageView(image);
-//        } else {
-//            TextExt t = new TextExt(segment.getText());
-//            t.setTextOrigin(VPos.TOP);
-//            t.getStyleClass().add("text");
-//            applyStyle.accept(t, segment.getStyle());
-//
-//            // XXX: binding selectionFill to textFill,
-//            // see the note at highlightTextFill
-//            t.impl_selectionFillProperty().bind(t.fillProperty());
-//
-//            return t;
-//        }
-//    }
 
     public Paragraph<PS, S> getParagraph() {
         return paragraph;

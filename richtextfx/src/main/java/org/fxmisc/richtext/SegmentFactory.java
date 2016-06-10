@@ -8,5 +8,5 @@ import javafx.scene.Node;
 
 public interface SegmentFactory<S> {
 
-    Node createNode(Segment<S> segment, BiConsumer<? super TextExt, S> applyStyle);
+    Node createNode(Segment<S> segment);
 }
