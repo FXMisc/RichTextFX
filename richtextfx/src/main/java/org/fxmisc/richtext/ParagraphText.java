@@ -209,7 +209,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
      */
     private void updateBackground(TextExt text, int start, int end, int index) {
         // Set fill
-        Paint paint = text.backgroundFillProperty().get();
+        Paint paint = text.backgroundColorProperty().get();
         if (paint != null) {
             Path backgroundShape = backgroundShapes.get(index);
             backgroundShape.setFill(paint);
@@ -231,55 +231,53 @@ class ParagraphText<PS, S> extends TextFlowExt {
      */
     private void updateUnderline(TextExt text, int start, int end, int index) {
 
-        // get all CSS properties for the underline
-
-        Paint underlineColor = text.underlineColorProperty().get();
         Number underlineWidth = text.underlineWidthProperty().get();
+        if (underlineWidth != null && underlineWidth.doubleValue() > 0) {
 
-        // get the dash array - JavaFX CSS parser seems to return either a Number[] array
-        // or a single value, depending on whether only one or more than one value has been
-        // specified in the CSS
-        Double[] underlineDashArray = null;
-        Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
-        if (underlineDashArrayProp != null) {
-            if (underlineDashArrayProp.getClass().isArray()) {
-                Number[] numberArray = (Number[]) underlineDashArrayProp;
-                underlineDashArray = new Double[numberArray.length];
-                int idx = 0;
-                for (Number d : numberArray) {
-                    underlineDashArray[idx++] = (Double) d;
-                }
-            } else {
-                underlineDashArray = new Double[1];
-                underlineDashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
-            }
-        }
-
-        StrokeLineCap underlineCap = text.underlineCapProperty().get();
-
-        // apply style and render the underline
-
-        Path underlineShape = underlineShapes.get(index);
-        if (underlineColor != null) {
-            underlineShape.setStroke(underlineColor);
-        }
-        if (underlineWidth != null) {
+            Path underlineShape = underlineShapes.get(index);
             underlineShape.setStrokeWidth(underlineWidth.doubleValue());
-        }
-        if (underlineDashArray != null) {
-            underlineShape.getStrokeDashArray().addAll(underlineDashArray);
-            underlineShape.setStrokeLineCap(StrokeLineCap.BUTT);
-        }
-        if (underlineCap != null) {
-            underlineShape.setStrokeLineCap(underlineCap);
-        }
 
-        if (underlineColor != null || underlineWidth != null) {
-            
+            // get remaining CSS properties for the underline style
+
+            Paint underlineColor = text.underlineColorProperty().get();
+    
+            // get the dash array - JavaFX CSS parser seems to return either a Number[] array
+            // or a single value, depending on whether only one or more than one value has been
+            // specified in the CSS
+            Double[] underlineDashArray = null;
+            Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
+            if (underlineDashArrayProp != null) {
+                if (underlineDashArrayProp.getClass().isArray()) {
+                    Number[] numberArray = (Number[]) underlineDashArrayProp;
+                    underlineDashArray = new Double[numberArray.length];
+                    int idx = 0;
+                    for (Number d : numberArray) {
+                        underlineDashArray[idx++] = (Double) d;
+                    }
+                } else {
+                    underlineDashArray = new Double[1];
+                    underlineDashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
+                }
+            }
+    
+            StrokeLineCap underlineCap = text.underlineCapProperty().get();
+    
+            // apply style
+            if (underlineColor != null) {
+                underlineShape.setStroke(underlineColor);
+            }
+            if (underlineDashArray != null) {
+                underlineShape.getStrokeDashArray().addAll(underlineDashArray);
+            }
+            if (underlineCap != null) {
+                underlineShape.setStrokeLineCap(underlineCap);
+            }
+
             // Set path elements
             PathElement[] shape = getUnderlineShape(start, end);
             underlineShape.getElements().setAll(shape);
         }
+
     }
 
 

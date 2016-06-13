@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.SuperCodec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
@@ -22,8 +21,8 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
         );
 
         setStyleCodecs(
-                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC)),
-                SuperCodec.upCast(SuperCodec.collectionListCodec(Codec.STRING_CODEC))
+                Codec.collectionCodec(Codec.STRING_CODEC),
+                Codec.collectionCodec(Codec.STRING_CODEC)
         );
     }
     public StyleClassedTextArea(boolean preserveStyle) {
