@@ -246,7 +246,7 @@ class TextStyle {
 
         if(backgroundColor.isPresent()) {
             Color color = backgroundColor.get();
-            sb.append("-fx-background-fill: " + cssColor(color) + ";");
+            sb.append("-rtfx-background-color: " + cssColor(color) + ";");
         }
 
         return sb.toString();
