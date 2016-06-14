@@ -582,7 +582,7 @@ public class StyledTextArea<PS, S> extends Region
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
-        // register the factories for the default segment types
+        // register factories for default segment types
 
         registerFactory(DefaultSegmentTypes.STYLED_TEXT, segment -> {  
             TextExt t = new TextExt(segment.getText());
@@ -607,8 +607,6 @@ public class StyledTextArea<PS, S> extends Region
             ImageView result = new ImageView(image);
             return result;
         } );
-
-        // registerFactory(2, (segment, applyStyle1) -> {} );
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -713,11 +711,6 @@ public class StyledTextArea<PS, S> extends Region
      * Queries are parameterized observables.                                 *
      *                                                                        *
      * ********************************************************************** */
-
-    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> factory) {
-        nodeFactories.put(typeId, factory);
-    }
-
 
     /**
      * Returns caret bounds relative to the viewport, i.e. the visual bounds
@@ -1126,6 +1119,17 @@ public class StyledTextArea<PS, S> extends Region
         virtualFlow.dispose();
     }
 
+    /**
+     * Registers a Node factory for a specific segment type.
+     * 
+     * @param typeId  The segment type 
+     * @param factory The factory which creates a Node for the given segment type
+     */
+    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> factory) {
+        nodeFactories.put(typeId, factory);
+    }
+
+
     /* ********************************************************************** *
      *                                                                        *
      * Layout                                                                 *
@@ -1166,7 +1170,7 @@ public class StyledTextArea<PS, S> extends Region
                                                      seg -> {
                                                          Function<Segment<S>, Node> factory = nodeFactories.get(seg.getTypeId());
                                                          if (factory == null) {
-                                                             throw new RuntimeException("No factory for object type " + seg.getTypeId());
+                                                             throw new RuntimeException("No factory for segment type " + seg.getTypeId());
                                                          }
 
                                                          return factory.apply(seg);
