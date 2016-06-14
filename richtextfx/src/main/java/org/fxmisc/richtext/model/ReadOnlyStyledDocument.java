@@ -107,7 +107,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
      */
     public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(ObjectData data, PS paragraphStyle, S style) {
         List<Paragraph<PS, S>> res = new ArrayList<>(1);
-        CustomObject<S> segment = new CustomObject<S>(style, 1);    // XXX type Id
+        CustomObject<S> segment = new CustomObject<S>(style, DefaultSegmentTypes.INLINE_IMAGE);    // XXX type Id
         segment.setObjectData(data);
         Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(segment));
         res.add(content);

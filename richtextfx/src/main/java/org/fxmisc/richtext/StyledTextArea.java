@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
@@ -68,6 +69,9 @@ import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
+import org.fxmisc.richtext.model.Segment;
+import org.fxmisc.richtext.model.SegmentType;
+import org.fxmisc.richtext.model.DefaultSegmentTypes;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
@@ -580,7 +584,7 @@ public class StyledTextArea<PS, S> extends Region
 
         // register the factories for the default segment types
 
-        registerFactory(0, segment -> {  
+        registerFactory(DefaultSegmentTypes.STYLED_TEXT, segment -> {  
             TextExt t = new TextExt(segment.getText());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
@@ -593,7 +597,7 @@ public class StyledTextArea<PS, S> extends Region
             return t;
         } );
 
-        registerFactory(1, segment -> {
+        registerFactory(DefaultSegmentTypes.INLINE_IMAGE, segment -> {
             CustomObject<S> customObject = (CustomObject<S>) segment;
             ObjectData objData = customObject.getObjectData();
             String imagePath = objData.getData();
@@ -710,7 +714,7 @@ public class StyledTextArea<PS, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    public void registerFactory(int typeId, SegmentFactory<S> factory) {
+    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> factory) {
         nodeFactories.put(typeId, factory);
     }
 
@@ -1151,7 +1155,7 @@ public class StyledTextArea<PS, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private Map<Integer, SegmentFactory> nodeFactories = new HashMap<>();
+    private Map<SegmentType, Function<Segment<S>, Node>> nodeFactories = new HashMap<>();
 
     private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
             Paragraph<PS, S> paragraph,
@@ -1160,12 +1164,12 @@ public class StyledTextArea<PS, S> extends Region
 
         ParagraphBox<PS, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, 
                                                      seg -> {
-                                                         SegmentFactory<S> factory = nodeFactories.get(seg.getTypeId());
+                                                         Function<Segment<S>, Node> factory = nodeFactories.get(seg.getTypeId());
                                                          if (factory == null) {
                                                              throw new RuntimeException("No factory for object type " + seg.getTypeId());
                                                          }
 
-                                                         return factory.createNode(seg);
+                                                         return factory.apply(seg);
                                                      } );
 
         box.highlightFillProperty().bind(highlightFill);

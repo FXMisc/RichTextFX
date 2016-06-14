@@ -72,8 +72,7 @@ class ParagraphBox<PS, S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    ParagraphBox(Paragraph<PS, S> par, 
-                 BiConsumer<TextFlow, PS> applyParagraphStyle, 
+    ParagraphBox(Paragraph<PS, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle, 
                  Function <? super Segment<S>, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, nodeFactory);

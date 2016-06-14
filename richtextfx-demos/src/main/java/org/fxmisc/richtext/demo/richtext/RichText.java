@@ -53,6 +53,8 @@ import org.fxmisc.richtext.model.CustomObject;
 import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.SegmentType;
+import org.fxmisc.richtext.model.DefaultSegmentTypes;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.SuspendableNo;
@@ -376,9 +378,8 @@ public class RichText extends Application {
                                 area.append(ros);
                                 break;
 
-                            case "CustomObject" : 
+                            case "InlineImage" : 
                                 Element customObject = (Element) node;
-                                String type = customObject.getAttribute("type");
                                 String fileName = customObject.getAttribute("fileName");
                                 ObjectData data = new ObjectData(0, fileName);
                                 ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
@@ -427,18 +428,17 @@ public class RichText extends Application {
 
                     par.getSegments().forEach(seg -> {
                         Element segElement;
-                        if (seg instanceof CustomObject) {  // XXX: polymorphic approach?
-                            segElement = doc.createElement("CustomObject");
-                            ObjectData data = ((CustomObject<TextStyle>) seg).getObjectData();
-                            String fileName = data.getData();
-                            String type = "image";
-                            segElement.setAttribute("type", type);
-                            segElement.setAttribute("fileName", fileName);
-                        } else {
-                            segElement = doc.createElement("StyledText");
+                        SegmentType segType = seg.getTypeId();
+                        segElement = doc.createElement(segType.getName());
+                        if (segType == DefaultSegmentTypes.STYLED_TEXT) {
                             segElement.setAttribute("style", seg.getStyle().toCss());
                             Node textNode = doc.createTextNode(seg.getText());
                             segElement.appendChild(textNode);
+                        } else {
+                            // TODO: Generic data - not just a file name!
+                            ObjectData data = ((CustomObject<TextStyle>) seg).getObjectData();
+                            String fileName = data.getData();
+                            segElement.setAttribute("fileName", fileName);
                         }
                         parElement.appendChild(segElement);
                     });

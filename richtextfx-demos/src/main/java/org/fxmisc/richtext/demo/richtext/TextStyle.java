@@ -254,7 +254,7 @@ class TextStyle {
                         strikethrough = Optional.of("true".equals(propValue));
                         break;
 
-                    case "-fx-background-fill" :
+                    case "-rtfx-background-color" :
                         backgroundColor = Optional.of(cssColor(propValue));
                         break;
 

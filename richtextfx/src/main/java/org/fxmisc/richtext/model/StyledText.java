@@ -80,7 +80,7 @@ public class StyledText<S> implements Segment<S> {
     }
 
     @Override
-    public int getTypeId() {
-        return 0;
+    public SegmentType getTypeId() {
+        return DefaultSegmentTypes.STYLED_TEXT;
     }
 }

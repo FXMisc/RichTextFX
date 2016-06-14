@@ -7,23 +7,23 @@ package org.fxmisc.richtext.model;
  */
 public interface Segment<S> {
 
-    public int length();
+    int length();
 
-    public char charAt(int index);
+    char charAt(int index);
 
-    public String getText();
+    String getText();
 
-    public Segment<S> subSequence(int start, int end);
+    Segment<S> subSequence(int start, int end);
 
-    public Segment<S> subSequence(int start);
+    Segment<S> subSequence(int start);
 
-    public Segment<S> append(String str);
+    Segment<S> append(String str);
 
-    public Segment<S> spliced(int from, int to, CharSequence replacement);
+    Segment<S> spliced(int from, int to, CharSequence replacement);
 
-    public S getStyle();
+    S getStyle();
 
-    public void setStyle(S style);
-    
-    int getTypeId();
+    void setStyle(S style);
+
+    SegmentType getTypeId();
 }

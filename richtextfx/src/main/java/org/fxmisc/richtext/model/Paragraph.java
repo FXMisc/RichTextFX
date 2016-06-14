@@ -105,8 +105,7 @@ public final class Paragraph<PS, S> {
 
         Segment<S> left = segments.get(segments.size() - 1);
         Segment<S> right = p.segments.get(0);
-        if(!(left instanceof CustomObject || right instanceof CustomObject) && // XXX: Hack
-           Objects.equals(left.getStyle(), right.getStyle())) {
+        if(canJoin(left, right)) {
             Segment<S> segment = left.append(right.getText());
             List<Segment<S>> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
             segs.addAll(segments.subList(0, segments.size()-1));
@@ -119,6 +118,16 @@ public final class Paragraph<PS, S> {
             segs.addAll(p.segments);
             return new Paragraph<>(paragraphStyle, segs);
         }
+    }
+
+    private boolean canJoin(Segment<S> left, Segment<S> right) {
+        // if either of the segments are not StyledText segments, they can not be joined 
+        if (left.getTypeId() != DefaultSegmentTypes.STYLED_TEXT || right.getTypeId() != DefaultSegmentTypes.STYLED_TEXT) {
+            return false;
+        }
+
+        // otherwise, if the segments have the same style, they can be joined.
+        return Objects.equals(left.getStyle(), right.getStyle());
     }
 
     /**
