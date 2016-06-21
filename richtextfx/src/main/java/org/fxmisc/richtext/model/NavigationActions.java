@@ -27,6 +27,31 @@ public interface NavigationActions<PS, S> extends TextEditingArea<PS, S> {
     }
 
     /**
+     * Moves the caret to the position returned from
+     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}
+     * and clears any selection.
+     *
+     * <p>For example, if "|" represents the caret, "_" represents a newline character, and given the text "Some_Text"
+     * (1st line: 'Some'; 2nd line 'Text'), then...</p>
+     * <ul>
+     *     <li>calling {@code moveTo(0, 4)} results in "Some|_Text" (caret to the left of "_")</li>
+     *     <li>calling {@code moveTo(1, -1)} results in "Some|_Text" (caret in the left of "_")</li>
+     *     <li>calling {@code moveTo(1, 0)} results in "Some_|Text" (caret in the left of "T")</li>
+     *     <li>calling {@code moveTo(0, 5)} results in "Some_|Text" (caret in the left of "T")</li>
+     * </ul>
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     *
+     * @param paragraphIndex the index of the paragraph to which to move the caret
+     * @param columnIndex the index to the left of which to move the caret
+     */
+    default void moveTo(int paragraphIndex, int columnIndex) {
+        int pos = getAbsolutePosition(paragraphIndex, columnIndex);
+        selectRange(pos, pos);
+    }
+
+    /**
      * Moves the caret to the position indicated by {@code pos}.
      * Based on the selection policy, the selection is either <em>cleared</em>
      * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
@@ -55,6 +80,25 @@ public interface NavigationActions<PS, S> extends TextEditingArea<PS, S> {
                 selectRange(anchor, pos);
                 break;
         }
+    }
+
+    /**
+     * Moves the caret to the position returned from
+     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
+     *
+     * Based on the selection policy, the selection is either <em>cleared</em>
+     * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
+     * (i.e. anchor is not moved at all), or <em>extended</em>
+     * (i.e. {@code getAbsolutePosition(paragraphIndex, columnIndex} becomes
+     * the new caret and, if that returned value points outside the current selection,
+     * the far end of the current selection becomes the anchor.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default void moveTo(int paragraphIndex, int columnIndex, SelectionPolicy selectionPolicy) {
+        int pos = getAbsolutePosition(paragraphIndex, columnIndex);
+        moveTo(pos, selectionPolicy);
     }
 
     /**

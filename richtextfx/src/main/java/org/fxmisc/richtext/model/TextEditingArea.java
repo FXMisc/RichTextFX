@@ -127,6 +127,18 @@ public interface TextEditingArea<PS, S> {
     String getText(int start, int end);
 
     /**
+     * Returns text content of the given character range.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default String getText(int startParagraph, int startColumn, int endParagraph, int endColumn) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
+        return getText(start, end);
+    }
+
+    /**
      * Returns rich-text content of the given paragraph.
      */
     StyledDocument<PS, S> subDocument(int paragraphIndex);
@@ -135,6 +147,18 @@ public interface TextEditingArea<PS, S> {
      * Returns rich-text content of the given character range.
      */
     StyledDocument<PS, S> subDocument(int start, int end);
+
+    /**
+     * Returns rich-text content of the given character range.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default StyledDocument<PS, S> subDocument(int startParagraph, int startColumn, int endParagraph, int endColumn) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
+        return subDocument(start, end);
+    }
 
     /***************
      *             *
@@ -149,6 +173,19 @@ public interface TextEditingArea<PS, S> {
     void selectRange(int anchor, int caretPosition);
 
     /**
+     * Positions the anchor and caretPosition explicitly,
+     * effectively creating a selection.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default void selectRange(int anchorParagraph, int anchorColumn, int caretPositionParagraph, int caretPositionColumn) {
+        int anchor = getAbsolutePosition(anchorParagraph, anchorColumn);
+        int caretPosition = getAbsolutePosition(caretPositionParagraph, caretPositionColumn);
+        selectRange(anchor, caretPosition);
+    }
+
+    /**
      * Replaces a range of characters with the given text.
      *
      * It must hold {@code 0 <= start <= end <= getLength()}.
@@ -161,9 +198,40 @@ public interface TextEditingArea<PS, S> {
     void replaceText(int start, int end, String text);
 
     /**
+     * Replaces a range of characters with the given text.
+     *
+     * It must hold {@code 0 <= start <= end <= getLength()} where
+     * {@code start = getAbsolutePosition(startParagraph, startColumn);} and is <b>inclusive</b>, and
+     * {@code int end = getAbsolutePosition(endParagraph, endColumn);} and is <b>exclusive</b>.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     *
+     * @param text The text to put in place of the deleted range.
+     * It must not be null.
+     */
+    default void replaceText(int startParagraph, int startColumn, int endParagraph, int endColumn, String text) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
+        replaceText(start, end, text);
+    }
+
+    /**
      * Replaces a range of characters with the given rich-text document.
      */
     void replace(int start, int end, StyledDocument<PS, S> replacement);
+
+    /**
+     * Replaces a range of characters with the given rich-text document.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default void replace(int startParagraph, int startColumn, int endParagraph, int endColumn, StyledDocument<PS, S> replacement) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
+        replace(start, end, replacement);
+    }
 
     /**
      * Replaces a range of characters with the given text.
