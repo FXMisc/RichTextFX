@@ -901,6 +901,11 @@ public class StyledTextArea<PS, S> extends Region
     }
 
     @Override
+    public int getAbsolutePosition(int paragraphIndex, int columnIndex) {
+        return model.getAbsolutePosition(paragraphIndex, columnIndex);
+    }
+
+    @Override
     public Position position(int row, int col) {
         return model.position(row, col);
     }

@@ -32,12 +32,40 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
     }
 
     /**
+     * Inserts the given text at the position returned from
+     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     *
+     * @param text The text to insert
+     */
+    default void insertText(int paragraphIndex, int columnIndex, String text) {
+        int index = getAbsolutePosition(paragraphIndex, columnIndex);
+        replaceText(index, index, text);
+    }
+
+    /**
      * Inserts the given rich-text content at the given position.
      *
      * @param index The location to insert the text.
      * @param document The rich-text content to insert.
      */
     default void insert(int index, StyledDocument<PS, S> document) {
+        replace(index, index, document);
+    }
+
+    /**
+     * Inserts the given rich-text content at the position returned from
+     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     *
+     * @param document The rich-text content to insert.
+     */
+    default void insert(int paragraphIndex, int columnIndex, StyledDocument<PS, S> document) {
+        int index = getAbsolutePosition(paragraphIndex, columnIndex);
         replace(index, index, document);
     }
 
@@ -61,6 +89,22 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
      * @param end End index of the range to remove, exclusive.
      */
     default void deleteText(int start, int end) {
+        replaceText(start, end, "");
+    }
+
+    /**
+     * Removes a range of text.
+     *
+     * It must hold {@code 0 <= start <= end <= getLength()} where
+     * {@code start = getAbsolutePosition(startParagraph, startColumn);} and is <b>inclusive</b>, and
+     * {@code int end = getAbsolutePosition(endParagraph, endColumn);} and is <b>exclusive</b>.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     */
+    default void deleteText(int startParagraph, int startColumn, int endParagraph, int endColumn) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
         replaceText(start, end, "");
     }
 

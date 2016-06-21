@@ -507,6 +507,10 @@ public class StyledTextAreaModel<PS, S>
         return getStyleSpans(paragraph, range.getStart(), range.getEnd());
     }
 
+    public int getAbsolutePosition(int paragraphIndex, int columnIndex) {
+        return content.getAbsolutePosition(paragraphIndex, columnIndex);
+    }
+
     @Override
     public Position position(int row, int col) {
         return content.position(row, col);
