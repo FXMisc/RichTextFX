@@ -197,4 +197,39 @@ public interface TextEditingArea<PS, S> {
      */
     @Deprecated
     public void positionCaret(int pos);
+
+    /**
+     * Returns the absolute position (i.e. the spot in-between characters) to the left of the given column in the given paragraph.
+     *
+     * <p>For example, given a text with only one line {@code "text"} and the columnIndex value of {@code 1}, "position 1" would be returned:</p>
+     * <pre>
+     *  ┌ character index 0
+     *  | ┌ character index 1
+     *  | |   ┌ character index 3
+     *  | |   |
+     *  v v   v
+     *
+     * |t|e|x|t|
+     *
+     * ^ ^     ^
+     * | |     |
+     * | |     └ position 4
+     * | └ position 1
+     * └ position 0
+     * </pre>
+     *
+     * <h3>Warning: Off-By-One errors can easily occur</h3>
+     * <p>If the column index spans outside of the given paragraph's length, the returned value will
+     * pass on to the previous/next paragraph. In other words, given a document with two paragraphs
+     * (where the first paragraph's text is "some" and the second "thing"), then the following statements are true:</p>
+     * <ul>
+     *     <li><code>getAbsolutePosition(0, "some".length()) == 4 == getAbsolutePosition(1, -1)</code></li>
+     *     <li><code>getAbsolutePosition(0, "some".length() + 1) == 5 == getAbsolutePosition(1, 0)</code></li>
+     * </ul>
+     *
+     * @param paragraphIndex The index of the paragraph from which to start.
+     * @param columnIndex If positive, the index going forward (the given paragraph's line or the next one(s)).
+     *                    If negative, the index going backward (the previous paragraph's line(s)
+     */
+    int getAbsolutePosition(int paragraphIndex, int columnIndex);
 }
