@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class StyledText<S> {
     private final String text;
-    private S style;
+    private final S style;
 
     public StyledText(String text, S style) {
         this.text = text;
@@ -43,10 +43,6 @@ public class StyledText<S> {
 
     public S getStyle() {
         return style;
-    }
-
-    public void setStyle(S style) {
-        this.style = style;
     }
 
     @Override
