@@ -5,7 +5,7 @@ group = 'org.fxmisc.richtext'
 
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
-    compile (group: 'org.fxmisc.undo', name: 'undofx', version: '1.2.1') {
+    compile (group: 'org.fxmisc.undo', name: 'undofx', version: '1.2.2') {
         transitive = false
     }
     compile (group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6-SNAPSHOT') {
