@@ -1,6 +1,6 @@
 package org.fxmisc.richtext;
 
-import static javafx.util.Duration.ZERO;
+import static javafx.util.Duration.*;
 import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
@@ -57,10 +57,10 @@ import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.NavigationActions;
-import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
@@ -105,27 +105,23 @@ import org.reactfx.value.Var;
  *
  * <h3>Overriding keyboard shortcuts</h3>
  *
- * {@code StyledTextArea} comes with {@link #onKeyTypedProperty()} and
- * {@link #onKeyPressedProperty()} handlers installed to handle keyboard input.
- * Ordinary character input is handled by the {@code onKeyTyped} handler and
- * control key combinations (including Enter and Tab) are handled by the
- * {@code onKeyPressed} handler. To add or override some keyboard shortcuts,
- * but keep the rest in place, you would combine the default event handler with
- * a new one that adds or overrides some of the default key combinations. This
- * is how to bind {@code Ctrl+S} to the {@code save()} operation:
+ * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
+ * character input and {@code KEY_PRESSED} handler to handle control key
+ * combinations (including Enter and Tab). To add or override some keyboard
+ * shortcuts, while keeping the rest in place, you would combine the default
+ * event handler with a new one that adds or overrides some of the default
+ * key combinations. This is how to bind {@code Ctrl+S} to the {@code save()}
+ * operation:
  * <pre>
  * {@code
  * import static javafx.scene.input.KeyCode.*;
  * import static javafx.scene.input.KeyCombination.*;
  * import static org.fxmisc.wellbehaved.event.EventPattern.*;
+ * import static org.fxmisc.wellbehaved.event.InputMap.*;
  *
- * import org.fxmisc.wellbehaved.event.EventHandlerHelper;
+ * import org.fxmisc.wellbehaved.event.Nodes;
  *
- * EventHandler<? super KeyEvent> ctrlS = EventHandlerHelper
- *         .on(keyPressed(S, CONTROL_DOWN)).act(event -> save())
- *         .create();
- *
- * EventHandlerHelper.install(area.onKeyPressedProperty(), ctrlS);
+ * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -> save()));
  * }
  * </pre>
  *
@@ -627,7 +623,7 @@ public class StyledTextArea<PS, S> extends Region
 
         // the rate at which to display the caret
         EventStream<javafx.util.Duration> blinkRate = EventStreams.valuesOf(caretBlinkRate);
- 
+
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
         caretVisible = EventStreams.combine(blinkCaret, blinkRate)
