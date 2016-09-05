@@ -90,6 +90,8 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import afester.javafx.components.SimpleDynamicTable;
+
 /**
  * Text editing control. Accepts user input (keyboard, mouse) and
  * provides API to assign style to text ranges. It is suitable for
@@ -605,20 +607,12 @@ public class StyledTextArea<PS, S> extends Region
         } );
 
         registerFactory(DefaultSegmentTypes.INLINE_TABLE, segment -> {
-            System.err.println("Creating TABLE node ...");
-/*            CustomObject<S> customObject = (CustomObject<S>) segment;
-            ObjectData objData = customObject.getObjectData();
-            String imagePath = objData.getData();
-            Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
-                                                // can be stored in the model layer (ObjectData)
-            
-            ImageView result = new ImageView(image);
-*/
-             
-            return null; // result;
+            SimpleDynamicTable result = new SimpleDynamicTable(3, 3);
+            result.setEditable(true);
+            return result;
         } );
 
-        
+
         // allow tab traversal into area
         setFocusTraversable(true);
 

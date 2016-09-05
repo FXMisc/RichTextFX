@@ -101,8 +101,8 @@ public class RichText extends Application {
         Button italicBtn = createButton("italic", this::toggleItalic);
         Button underlineBtn = createButton("underline", this::toggleUnderline);
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
-        Button insertImageBtn = createButton("insertimage", this::insertImage);
-        Button insertTableBtn = createButton("inserttable", this::insertTable);
+        Button insertImageBtn = createButton("insertimage", this::insertImage, "Insert Image");
+        Button insertTableBtn = createButton("inserttable", this::insertTable, "Insert Table");
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
@@ -281,7 +281,12 @@ public class RichText extends Application {
         primaryStage.show();
     }
 
+    @Deprecated
     private Button createButton(String styleClass, Runnable action) {
+        return createButton(styleClass, action, styleClass);
+    }
+
+    private Button createButton(String styleClass, Runnable action, String toolTip) {
         Button button = new Button();
         button.getStyleClass().add(styleClass);
         button.setOnAction(evt -> {
@@ -290,6 +295,7 @@ public class RichText extends Application {
         });
         button.setPrefWidth(20);
         button.setPrefHeight(20);
+        button.setTooltip(new Tooltip(toolTip));
         return button;
     }
 
