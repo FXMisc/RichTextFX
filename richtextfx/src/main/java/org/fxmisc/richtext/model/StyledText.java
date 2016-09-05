@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class StyledText<S> implements Segment<S> {
     private final String text;
-    private S style;
+    private /*final*/ S style;
 
     public StyledText(String text, S style) {
         this.text = text;
