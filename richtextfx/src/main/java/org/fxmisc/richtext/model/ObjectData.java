@@ -5,10 +5,10 @@ package org.fxmisc.richtext.model;
  */
 public class ObjectData {
 
-    private int type;       // The type will be used to get the registered renderer
+    private SegmentType type;       // The type will be used to get the registered renderer
     private String data;    // The data will be used by the renderer (TODO: Make generic)
 
-    public ObjectData(int type, String data) {
+    public ObjectData(SegmentType type, String data) {
         this.type = type;
         this.data = data;
     }
@@ -16,6 +16,11 @@ public class ObjectData {
     public String getData() {
         return data;
     }
+
+    public SegmentType getType() {
+        return type;
+    }
+
 
 
     @Override

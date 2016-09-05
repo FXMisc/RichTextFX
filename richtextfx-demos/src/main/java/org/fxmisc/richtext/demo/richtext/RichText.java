@@ -102,6 +102,7 @@ public class RichText extends Application {
         Button underlineBtn = createButton("underline", this::toggleUnderline);
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
         Button insertImageBtn = createButton("insertimage", this::insertImage);
+        Button insertTableBtn = createButton("inserttable", this::insertTable);
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
@@ -263,7 +264,7 @@ public class RichText extends Application {
                 loadBtn, saveBtn,
                 wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
                 boldBtn, italicBtn, underlineBtn, strikeBtn,
-                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn,
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn, insertTableBtn,
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
@@ -381,7 +382,7 @@ public class RichText extends Application {
                             case "InlineImage" : 
                                 Element customObject = (Element) node;
                                 String fileName = customObject.getAttribute("fileName");
-                                ObjectData data = new ObjectData(0, fileName);
+                                ObjectData data = new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, fileName);
                                 ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
                                 System.err.println("   CustomObject: " + cos);
                                 area.append(cos);
@@ -472,13 +473,22 @@ public class RichText extends Application {
             ReadOnlyStyledDocument<ParStyle, TextStyle> ros = null;
             try {
                 String imageUrl = selectedFile.toURI().toURL().toExternalForm();
-                ros = ReadOnlyStyledDocument.createObject(new ObjectData(0, imageUrl), 
+                ros = ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, imageUrl), 
                                                           ParStyle.EMPTY, TextStyle.EMPTY); 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
             area.replaceSelection(ros);
         }
+    }
+
+
+    private void insertTable() {
+        System.err.println("Inserting table ...");
+        ReadOnlyStyledDocument<ParStyle, TextStyle> ros = 
+                    ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_TABLE, null), 
+                    ParStyle.EMPTY, TextStyle.EMPTY);
+        area.replaceSelection(ros);
     }
 
 

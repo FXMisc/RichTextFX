@@ -608,6 +608,21 @@ public class StyledTextArea<PS, S> extends Region
             return result;
         } );
 
+        registerFactory(DefaultSegmentTypes.INLINE_TABLE, segment -> {
+            System.err.println("Creating TABLE node ...");
+/*            CustomObject<S> customObject = (CustomObject<S>) segment;
+            ObjectData objData = customObject.getObjectData();
+            String imagePath = objData.getData();
+            Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
+                                                // can be stored in the model layer (ObjectData)
+            
+            ImageView result = new ImageView(image);
+*/
+             
+            return null; // result;
+        } );
+
+        
         // allow tab traversal into area
         setFocusTraversable(true);
 
