@@ -63,8 +63,9 @@ import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.CustomObject;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.InlineImage;
+import org.fxmisc.richtext.model.InlineTable;
 import org.fxmisc.richtext.model.NavigationActions;
-import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
@@ -74,6 +75,7 @@ import org.fxmisc.richtext.model.SegmentType;
 import org.fxmisc.richtext.model.DefaultSegmentTypes;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledText;
 import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TwoDimensional;
@@ -582,8 +584,10 @@ public class StyledTextArea<PS, S> extends Region
 
         // register factories for default segment types
 
-        registerFactory(DefaultSegmentTypes.STYLED_TEXT, segment -> {  
-            TextExt t = new TextExt(segment.getText());
+        registerFactory(DefaultSegmentTypes.STYLED_TEXT, segment -> {
+            StyledText<S> styledText = (StyledText<S>) segment;
+
+            TextExt t = new TextExt(styledText.getText());
             t.setTextOrigin(VPos.TOP);
             t.getStyleClass().add("text");
             this.applyStyle.accept(t, segment.getStyle());
@@ -596,9 +600,9 @@ public class StyledTextArea<PS, S> extends Region
         } );
 
         registerFactory(DefaultSegmentTypes.INLINE_IMAGE, segment -> {
-            CustomObject<S> customObject = (CustomObject<S>) segment;
-            ObjectData objData = customObject.getObjectData();
-            String imagePath = objData.getData();
+            InlineImage<S> inlineImage = (InlineImage<S>) segment;
+
+            String imagePath = inlineImage.getImagePath();
             Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
                                                 // can be stored in the model layer (ObjectData)
 
@@ -607,8 +611,11 @@ public class StyledTextArea<PS, S> extends Region
         } );
 
         registerFactory(DefaultSegmentTypes.INLINE_TABLE, segment -> {
+            InlineTable<S> inlineTable = (InlineTable<S>) segment;
+
             SimpleDynamicTable result = new SimpleDynamicTable(3, 3);
             result.setEditable(true);
+            // result.setData(inlineTable.getData());
             return result;
         } );
 

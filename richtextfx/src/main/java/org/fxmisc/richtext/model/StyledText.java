@@ -1,5 +1,7 @@
 package org.fxmisc.richtext.model;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 
 public class StyledText<S> implements Segment<S> {
@@ -82,5 +84,10 @@ public class StyledText<S> implements Segment<S> {
     @Override
     public SegmentType getTypeId() {
         return DefaultSegmentTypes.STYLED_TEXT;
+    }
+
+    @Override
+    public void encode(DataOutputStream os) throws IOException {
+        Codec.STRING_CODEC.encode(os, getText());
     }
 }

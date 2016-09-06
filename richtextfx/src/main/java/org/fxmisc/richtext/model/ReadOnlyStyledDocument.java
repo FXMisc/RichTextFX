@@ -96,7 +96,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
     }
 
     /**
-     * Creates a new custom object.
+     * Creates a new ReadOnlyStyledDocument with a custom object.
      *
      * @param data
      * @param paragraphStyle The paragraph style to use for the custom object.
@@ -105,17 +105,23 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
      * @return A StyledDocument with the custom object. The StyledDocument can be
      *         inserted or appended to the StyledTextArea.
      */
-    public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(ObjectData data, PS paragraphStyle, S style) {
+    public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(CustomObject<S> obj, PS paragraphStyle, S style) {
         List<Paragraph<PS, S>> res = new ArrayList<>(1);
-        CustomObject<S> segment = new CustomObject<S>(style, data.getType());
-        segment.setObjectData(data);
-        Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(segment));
+        Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(obj));
         res.add(content);
         return new ReadOnlyStyledDocument<>(res);
     }
 
+
+    /**
+     * @param pCodec The codec for paragraph style data
+     * @param tCodec The codec for text style data
+     *
+     * @return A codec to encode and decode a StyledDocument into / from a binary format.
+     */
     public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<StyledDocument<PS, S>>() {
+            // create a codec to encode/decode a list of paragraph objects
             private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
 
             @Override
@@ -136,8 +142,15 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         };
     }
 
+    /**
+     * @param pCodec The codec for paragraph style data
+     * @param tCodec The codec for text style data
+     *
+     * @return A coded to encode/decode one paragraph.
+     */
     private static <PS, S> Codec<Paragraph<PS, S>> paragraphCodec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<Paragraph<PS, S>>() {
+            // create a codec to encode/decode a list of segment objects
             private final Codec<List<Segment<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
@@ -160,6 +173,11 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         };
     }
 
+    /**
+     * @param styleCodec The codec for text style data
+     *
+     * @return A coded to encode/decode one text segment.
+     */
     private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
         return new Codec<Segment<S>>() {
 
@@ -170,12 +188,37 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
             @Override
             public void encode(DataOutputStream os, Segment<S> t) throws IOException {
-                STRING_CODEC.encode(os, t.getText());
+                // encode the segment
+                STRING_CODEC.encode(os, t.getTypeId().getName());
+                t.encode(os);
+
+                // encode the segment contents
+                // HERE, WE NEED TO DELEGATE TO THE Segment OBJECT
+//                if (t.getTypeId() == DefaultSegmentTypes.STYLED_TEXT) {
+//                    System.err.println("ENCODING:" + t.getText());
+//                    STRING_CODEC.encode(os, t.getText());
+//                } else {
+//                    System.err.println("CUSTOM OBJECT!" + ((CustomObject) t).getObjectData());
+//                    // TODO: how to encode a custom object in a generic way?
+//                    // Probably need to make CustomObject an interface and have specific custom objects implement that interface
+//                    // Then, no separate ObjectData class would be necessary.
+//                    STRING_CODEC.encode(os, ((CustomObject) t).getObjectData().getData());
+//                }
+
+                // encode the segment style data
                 styleCodec.encode(os, t.getStyle());
             }
 
             @Override
             public StyledText<S> decode(DataInputStream is) throws IOException {
+
+                String segType = STRING_CODEC.decode(is);
+                System.err.println(segType);
+//                return Segment.decode(segType);
+
+//
+//                // HERE, WE NEED TO CREATE THE SEGMENT OBJECT THROUGH SOME FACTORY MECHANISM
+//                
                 String text = STRING_CODEC.decode(is);
                 S style = styleCodec.decode(is);
                 return new StyledText<>(text, style);

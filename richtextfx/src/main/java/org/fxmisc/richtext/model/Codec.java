@@ -9,12 +9,51 @@ import java.util.Optional;
 
 import javafx.scene.paint.Color;
 
+
+/**
+ * The interface to codecs which encode/decode objects into/from a binary 
+ * representation.
+ * A Codec essentially has a name, a method to encode a given object into 
+ * a specific stream, and another method to decode a specific stream to 
+ * recreate the corresponding object.
+ * This interface also contains a couple of static fields with implementations
+ * of the Codec interface for various standard types, such as String, Color,
+ * or List&lt;T&gt;. 
+ *
+ * @param <T> The type of the object to encode/decode.
+ */
 public interface Codec<T> {
 
+    /**
+     * @return The name of this codec.
+     */
     String getName();
+
+    /**
+     * Encodes an object of type T into an output stream.   
+     *
+     * @param os The destination stream.
+     * @param t  The object to encode.
+     *
+     * @throws IOException if an error occurs when writing to the output stream.
+     */
     void encode(DataOutputStream os, T t) throws IOException;
+    
+    /**
+     * Decodes an object of type T from an input stream.
+     * 
+     * @param is The source stream
+     *  
+     * @return The object which was decoded from the input stream.
+     * 
+     * @throws IOException if an error occurs when reading from the input stream.
+     */
     T decode(DataInputStream is) throws IOException;
 
+
+/***************************************
+ * Default Codecs for standard types   *
+ ***************************************/
 
     static final Codec<String> STRING_CODEC = new Codec<String>() {
 

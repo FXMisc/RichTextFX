@@ -1,7 +1,7 @@
 package org.fxmisc.richtext.model;
 
 
-public class CustomObject<S> implements Segment<S> {
+public abstract class CustomObject<S> implements Segment<S> {
 
     private S style;
     private SegmentType typeId;
@@ -10,20 +10,20 @@ public class CustomObject<S> implements Segment<S> {
         this.style = style;
         this.typeId = typeId;
     }
-   
-    private ObjectData objectData;
-    public void setObjectData(ObjectData data) {
-        this.objectData = data;
-    }
-
-    public ObjectData getObjectData() {
-        return objectData;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("CustomObject[objectData=%s", objectData);
-    }
+//   
+//    private ObjectData objectData;
+//    public void setObjectData(ObjectData data) {
+//        this.objectData = data;
+//    }
+//
+//    public ObjectData getObjectData() {
+//        return objectData;
+//    }
+//
+//    @Override
+//    public String toString() {
+//        return String.format("CustomObject[objectData=%s", objectData);
+//    }
 
     @Override
     public Segment<S> subSequence(int start, int end) {

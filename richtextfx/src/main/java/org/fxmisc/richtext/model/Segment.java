@@ -1,7 +1,10 @@
 package org.fxmisc.richtext.model;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
- * An interface to segment types, like StyledText or CustomObject.
+ * An interface to segment types, like StyledText or InlineImage.
  *
  * @param <S>
  */
@@ -11,7 +14,8 @@ public interface Segment<S> {
 
     char charAt(int index);
 
-    String getText();
+    String getText();   // each segment has a string associated with it - for custom objects
+                        // this is the replacement character \ufffc 
 
     Segment<S> subSequence(int start, int end);
 
@@ -26,4 +30,6 @@ public interface Segment<S> {
     void setStyle(S style);
 
     SegmentType getTypeId();
+
+    void encode(DataOutputStream os) throws IOException;
 }

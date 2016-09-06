@@ -10,7 +10,7 @@ public class CustomObjectTest {
         SimpleEditableStyledDocument<Boolean, String> doc = 
                 new SimpleEditableStyledDocument<>(true, "");
         ReadOnlyStyledDocument<Boolean, String> customObj = 
-                ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, "sample.png"), true, "");
+                ReadOnlyStyledDocument.createObject(new InlineImage("", "sample.png"), true, "");
         doc.replace(0, 0, customObj);
         assertEquals(1, doc.getLength());
 

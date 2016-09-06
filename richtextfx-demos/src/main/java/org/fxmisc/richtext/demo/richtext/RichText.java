@@ -6,24 +6,30 @@
 
 package org.fxmisc.richtext.demo.richtext;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.InlineImage;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyledDocument;
+import org.reactfx.SuspendableNo;
+import org.reactfx.util.Tuple2;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -46,23 +52,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.model.CustomObject;
-import org.fxmisc.richtext.model.ObjectData;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.SegmentType;
-import org.fxmisc.richtext.model.DefaultSegmentTypes;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyledDocument;
-import org.reactfx.SuspendableNo;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 public class RichText extends Application {
 
@@ -87,8 +76,8 @@ public class RichText extends Application {
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
 
-        Button loadBtn = createButton("loadfile", this::loadDocument);
-        Button saveBtn = createButton("savefile", this::saveDocument);
+        Button loadBtn = createButton("loadfile", this::loadDocument, "Load document");
+        Button saveBtn = createButton("savefile", this::saveDocument, "Save document");
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
@@ -278,12 +267,15 @@ public class RichText extends Application {
         primaryStage.setScene(scene);
         area.requestFocus();
         primaryStage.setTitle("Rich Text Demo");
+        
+        loadFromXml(new File("sample2.rtfx"));
+        
         primaryStage.show();
     }
 
     @Deprecated
     private Button createButton(String styleClass, Runnable action) {
-        return createButton(styleClass, action, styleClass);
+        return createButton(styleClass, action, null);
     }
 
     private Button createButton(String styleClass, Runnable action, String toolTip) {
@@ -295,7 +287,9 @@ public class RichText extends Application {
         });
         button.setPrefWidth(20);
         button.setPrefHeight(20);
-        button.setTooltip(new Tooltip(toolTip));
+        if (toolTip != null) {
+            button.setTooltip(new Tooltip(toolTip));
+        }
         return button;
     }
 
@@ -352,66 +346,96 @@ public class RichText extends Application {
         File selectedFile = fileChooser.showOpenDialog(mainStage);
         if (selectedFile != null) {
             area.clear();
-            
+            if (selectedFile.getName().endsWith(".rtfx")) {
+                loadFromXml(selectedFile);
+            } else {
+                loadFromBinary(selectedFile);
+            }
+        }
+    }
+
+    private void loadFromBinary(File file) {
+        if(area.getStyleCodecs().isPresent()) {
+            Tuple2<Codec<ParStyle>, Codec<TextStyle>> codecs = area.getStyleCodecs().get();
+            Codec<StyledDocument<ParStyle, TextStyle>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
+
             try {
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(selectedFile);
+                FileInputStream fis = new FileInputStream(file);
+                DataInputStream dis = new DataInputStream(fis);
+                StyledDocument<ParStyle, TextStyle> doc = codec.decode(dis);
+                fis.close();
 
-                doc.getDocumentElement().normalize();
-                System.out.print("Root element: ");
-                System.out.println(doc.getDocumentElement().getNodeName());
-
-                NodeList paragraphs = doc.getElementsByTagName("Paragraph");
-                for (int idx = 0;  idx < paragraphs.getLength();  idx++) {
-                    Element paragraph = (Element) paragraphs.item(idx);
-                    String parStyle = paragraph.getAttribute("style");
-                    ParStyle paraStyle = ParStyle.fromCss(parStyle);
-                    System.err.println("Paragraph: [" + paraStyle + "]");
-
-                    NodeList segments = paragraph.getChildNodes();
-                    for (int segIdx = 0;  segIdx < segments.getLength();  segIdx++) {
-                        Node node = segments.item(segIdx);
-                        switch(node.getNodeName()) {
-                            case "StyledText" : 
-                                Element styledText = (Element) node;
-                                String textStyle = styledText.getAttribute("style");
-                                String text = styledText.getTextContent();
-
-                                TextStyle style = TextStyle.fromCss(textStyle);
-                                // System.err.println("   StyledText: [" + style + "], \"" + text + "\"");
-                                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString(text, paraStyle, style);
-                                System.err.println("   StyledDocument: " + ros);
-                                area.append(ros);
-                                break;
-
-                            case "InlineImage" : 
-                                Element customObject = (Element) node;
-                                String fileName = customObject.getAttribute("fileName");
-                                ObjectData data = new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, fileName);
-                                ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
-                                System.err.println("   CustomObject: " + cos);
-                                area.append(cos);
-                                break;
-
-                            default: 
-                                break;
-                        }
-                    }
-
-                    ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString("\n", paraStyle, new TextStyle());
-                    area.append(ros);
+                if(doc != null) {
+                    area.replaceSelection(doc);
+                    return;
                 }
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
-            } catch (SAXException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-    
+
+    private void loadFromXml(File file) {
+        
+//        try {
+//            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+//            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+//            Document doc = dBuilder.parse(file);
+//
+//            doc.getDocumentElement().normalize();
+//            System.out.print("Root element: ");
+//            System.out.println(doc.getDocumentElement().getNodeName());
+//
+//            NodeList paragraphs = doc.getElementsByTagName("Paragraph");
+//            for (int idx = 0;  idx < paragraphs.getLength();  idx++) {
+//                Element paragraph = (Element) paragraphs.item(idx);
+//                String parStyle = paragraph.getAttribute("style");
+//                ParStyle paraStyle = ParStyle.fromCss(parStyle);
+//                System.err.println("Paragraph: [" + paraStyle + "]");
+//
+//                NodeList segments = paragraph.getChildNodes();
+//                for (int segIdx = 0;  segIdx < segments.getLength();  segIdx++) {
+//                    Node node = segments.item(segIdx);
+//                    switch(node.getNodeName()) {
+//                        case "StyledText" : 
+//                            Element styledText = (Element) node;
+//                            String textStyle = styledText.getAttribute("style");
+//                            String text = styledText.getTextContent();
+//
+//                            TextStyle style = TextStyle.fromCss(textStyle);
+//                            // System.err.println("   StyledText: [" + style + "], \"" + text + "\"");
+//                            ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString(text, paraStyle, style);
+//                            System.err.println("   StyledDocument: " + ros);
+//                            area.append(ros);
+//                            break;
+//
+//                        case "InlineImage" : 
+//                            Element customObject = (Element) node;
+//                            String fileName = customObject.getAttribute("fileName");
+//                            ObjectData data = new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, fileName);
+//                            ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
+//                            System.err.println("   CustomObject: " + cos);
+//                            area.append(cos);
+//                            break;
+//
+//                        default: 
+//                            break;
+//                    }
+//                }
+//
+//                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString("\n", paraStyle, new TextStyle());
+//                area.append(ros);
+//            }
+//        } catch (ParserConfigurationException e) {
+//            e.printStackTrace();
+//        } catch (SAXException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+
     private void saveDocument() {
         String initialDir = System.getProperty("user.dir");
         FileChooser fileChooser = new FileChooser();
@@ -419,50 +443,79 @@ public class RichText extends Application {
         fileChooser.setInitialDirectory(new File(initialDir));
         File selectedFile = fileChooser.showSaveDialog(mainStage);
         if (selectedFile != null) {
-            try {
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder;
-                dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.newDocument();
-                Element rootElement = doc.createElement("StyledDocument");
-                doc.appendChild(rootElement);
-
-                StyledDocument<ParStyle, TextStyle> richDocument = area.getDocument();
-                richDocument.getParagraphs().forEach(par -> {
-                    Element parElement = doc.createElement("Paragraph");
-                    parElement.setAttribute("style", par.getParagraphStyle().toCss());
-                    rootElement.appendChild(parElement);
-
-                    par.getSegments().forEach(seg -> {
-                        Element segElement;
-                        SegmentType segType = seg.getTypeId();
-                        segElement = doc.createElement(segType.getName());
-                        if (segType == DefaultSegmentTypes.STYLED_TEXT) {
-                            segElement.setAttribute("style", seg.getStyle().toCss());
-                            Node textNode = doc.createTextNode(seg.getText());
-                            segElement.appendChild(textNode);
-                        } else {
-                            // TODO: Generic data - not just a file name!
-                            ObjectData data = ((CustomObject<TextStyle>) seg).getObjectData();
-                            String fileName = data.getData();
-                            segElement.setAttribute("fileName", fileName);
-                        }
-                        parElement.appendChild(segElement);
-                    });
-                });
-
-                TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                Transformer transformer = transformerFactory.newTransformer();
-                DOMSource source = new DOMSource(doc);
-
-                StreamResult consoleResult = new StreamResult(selectedFile);
-                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-                transformer.transform(source, consoleResult);
-            } catch (ParserConfigurationException | TransformerException e) {
-                e.printStackTrace();
+            if (selectedFile.getName().endsWith(".rtfx")) {
+                saveAsXml(selectedFile);
+            } else {
+                saveAsBinary(selectedFile);
             }
         }
+    }
+
+
+    private void saveAsBinary(File file) {
+        StyledDocument<ParStyle, TextStyle> doc = area.getDocument();
+
+        // Use the Codec to save the document in a binary format
+        area.getStyleCodecs().ifPresent(codecs -> {
+            Codec<StyledDocument<ParStyle, TextStyle>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2);
+            try {
+                FileOutputStream fos = new FileOutputStream(file);
+                DataOutputStream dos = new DataOutputStream(fos);
+                codec.encode(dos, doc);
+                fos.close();
+            } catch (IOException fnfe) {
+                fnfe.printStackTrace();
+            }
+        });
+    }
+
+
+    private void saveAsXml(File file) {
+        System.err.println("Saving as XML ...");
+
+//        try {
+//            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+//            DocumentBuilder dBuilder;
+//            dBuilder = dbFactory.newDocumentBuilder();
+//            Document doc = dBuilder.newDocument();
+//            Element rootElement = doc.createElement("StyledDocument");
+//            doc.appendChild(rootElement);
+//
+//            StyledDocument<ParStyle, TextStyle> richDocument = area.getDocument();
+//            richDocument.getParagraphs().forEach(par -> {
+//                Element parElement = doc.createElement("Paragraph");
+//                parElement.setAttribute("style", par.getParagraphStyle().toCss());
+//                rootElement.appendChild(parElement);
+//
+//                par.getSegments().forEach(seg -> {
+//                    Element segElement;
+//                    SegmentType segType = seg.getTypeId();
+//                    segElement = doc.createElement(segType.getName());
+//                    if (segType == DefaultSegmentTypes.STYLED_TEXT) {
+//                        segElement.setAttribute("style", seg.getStyle().toCss());
+//                        Node textNode = doc.createTextNode(seg.getText());
+//                        segElement.appendChild(textNode);
+//                    } else {
+//                        // TODO: Generic data - not just a file name!
+//                        ObjectData data = ((CustomObject<TextStyle>) seg).getObjectData();
+//                        String fileName = data.getData();
+//                        segElement.setAttribute("fileName", fileName);
+//                    }
+//                    parElement.appendChild(segElement);
+//                });
+//            });
+//
+//            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+//            Transformer transformer = transformerFactory.newTransformer();
+//            DOMSource source = new DOMSource(doc);
+//
+//            StreamResult consoleResult = new StreamResult(file);
+//            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+//            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+//            transformer.transform(source, consoleResult);
+//        } catch (ParserConfigurationException | TransformerException e) {
+//            e.printStackTrace();
+//        }
     }
 
     /**
@@ -476,25 +529,26 @@ public class RichText extends Application {
         File selectedFile = fileChooser.showOpenDialog(mainStage);
         if (selectedFile != null) {
 
-            ReadOnlyStyledDocument<ParStyle, TextStyle> ros = null;
             try {
                 String imageUrl = selectedFile.toURI().toURL().toExternalForm();
-                ros = ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, imageUrl), 
+                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = 
+                        ReadOnlyStyledDocument.createObject(new InlineImage(TextStyle.EMPTY, imageUrl), 
                                                           ParStyle.EMPTY, TextStyle.EMPTY); 
+                area.replaceSelection(ros);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-            area.replaceSelection(ros);
         }
     }
 
 
     private void insertTable() {
         System.err.println("Inserting table ...");
-        ReadOnlyStyledDocument<ParStyle, TextStyle> ros = 
-                    ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_TABLE, null), 
-                    ParStyle.EMPTY, TextStyle.EMPTY);
-        area.replaceSelection(ros);
+
+//        ReadOnlyStyledDocument<ParStyle, TextStyle> ros = 
+//                    ReadOnlyStyledDocument.createObject(new ObjectData(DefaultSegmentTypes.INLINE_TABLE, null), 
+//                    ParStyle.EMPTY, TextStyle.EMPTY);
+//        area.replaceSelection(ros);
     }
 
 
