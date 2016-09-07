@@ -1,7 +1,8 @@
 package org.fxmisc.richtext.model;
 
-import static org.reactfx.util.Either.*;
-import static org.reactfx.util.Tuples.*;
+import static org.reactfx.util.Either.left;
+import static org.reactfx.util.Either.right;
+import static org.reactfx.util.Tuples.t;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -120,6 +121,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
      * @return A codec to encode and decode a StyledDocument into / from a binary format.
      */
     public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
+
         return new Codec<StyledDocument<PS, S>>() {
             // create a codec to encode/decode a list of paragraph objects
             private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
@@ -179,6 +181,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
      * @return A coded to encode/decode one text segment.
      */
     private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
+
         return new Codec<Segment<S>>() {
 
             @Override
@@ -188,42 +191,25 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
             @Override
             public void encode(DataOutputStream os, Segment<S> t) throws IOException {
-                // encode the segment
+                // encode the segment type and content
                 STRING_CODEC.encode(os, t.getTypeId().getName());
                 t.encode(os);
 
-                // encode the segment contents
-                // HERE, WE NEED TO DELEGATE TO THE Segment OBJECT
-//                if (t.getTypeId() == DefaultSegmentTypes.STYLED_TEXT) {
-//                    System.err.println("ENCODING:" + t.getText());
-//                    STRING_CODEC.encode(os, t.getText());
-//                } else {
-//                    System.err.println("CUSTOM OBJECT!" + ((CustomObject) t).getObjectData());
-//                    // TODO: how to encode a custom object in a generic way?
-//                    // Probably need to make CustomObject an interface and have specific custom objects implement that interface
-//                    // Then, no separate ObjectData class would be necessary.
-//                    STRING_CODEC.encode(os, ((CustomObject) t).getObjectData().getData());
-//                }
-
-                // encode the segment style data
+                // encode the segment style
                 styleCodec.encode(os, t.getStyle());
             }
 
             @Override
-            public StyledText<S> decode(DataInputStream is) throws IOException {
+            public Segment<S> decode(DataInputStream is) throws IOException {
 
-                String segType = STRING_CODEC.decode(is);
-                System.err.println(segType);
-//                return Segment.decode(segType);
+                //String segType = STRING_CODEC.decode(is);
+                Segment<S> result = SegmentFactory.decode(is, styleCodec);
+                //S style = styleCodec.decode(is);
+                //result.setStyle(style);
 
-//
-//                // HERE, WE NEED TO CREATE THE SEGMENT OBJECT THROUGH SOME FACTORY MECHANISM
-//                
-                String text = STRING_CODEC.decode(is);
-                S style = styleCodec.decode(is);
-                return new StyledText<>(text, style);
+                return result;
             }
-
+            
         };
     }
 
@@ -467,4 +453,12 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             }
         }
     }
+    
+
+//    private static Map<SegmentType, Function<Segment<S>, Node>> modelFactories = new HashMap<>();
+//
+//    @Override
+//    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> modelFactory) {
+//        modelFactories.put(typeId,  modelFactory);
+//    }
 }

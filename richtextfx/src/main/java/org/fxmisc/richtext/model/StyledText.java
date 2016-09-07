@@ -1,5 +1,6 @@
 package org.fxmisc.richtext.model;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Objects;
@@ -89,5 +90,12 @@ public class StyledText<S> implements Segment<S> {
     @Override
     public void encode(DataOutputStream os) throws IOException {
         Codec.STRING_CODEC.encode(os, getText());
+    }
+
+
+    public static <S> Segment<S> decode(DataInputStream is, Codec<S> styleCodec) throws IOException {
+        String text = Codec.STRING_CODEC.decode(is);
+        S style = styleCodec.decode(is);
+        return new StyledText<>(text, style);
     }
 }

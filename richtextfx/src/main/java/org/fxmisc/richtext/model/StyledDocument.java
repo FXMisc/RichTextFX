@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 
 import java.util.ArrayList;
 import java.util.Collections;

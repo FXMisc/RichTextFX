@@ -5,11 +5,13 @@ import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
+import java.io.DataInputStream;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
@@ -60,7 +62,6 @@ import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.CustomObject;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.InlineImage;
@@ -71,6 +72,7 @@ import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.Segment;
+import org.fxmisc.richtext.model.SegmentFactory;
 import org.fxmisc.richtext.model.SegmentType;
 import org.fxmisc.richtext.model.DefaultSegmentTypes;
 import org.fxmisc.richtext.model.StyleSpans;
@@ -584,40 +586,77 @@ public class StyledTextArea<PS, S> extends Region
 
         // register factories for default segment types
 
-        registerFactory(DefaultSegmentTypes.STYLED_TEXT, segment -> {
-            StyledText<S> styledText = (StyledText<S>) segment;
+        registerFactory(DefaultSegmentTypes.STYLED_TEXT,
 
-            TextExt t = new TextExt(styledText.getText());
-            t.setTextOrigin(VPos.TOP);
-            t.getStyleClass().add("text");
-            this.applyStyle.accept(t, segment.getStyle());
+                segment -> {
+                    StyledText<S> styledText = (StyledText<S>) segment;
+        
+                    TextExt t = new TextExt(styledText.getText());
+                    t.setTextOrigin(VPos.TOP);
+                    t.getStyleClass().add("text");
+                    this.applyStyle.accept(t, segment.getStyle());
+        
+                    // XXX: binding selectionFill to textFill,
+                    // see the note at highlightTextFill
+                    t.impl_selectionFillProperty().bind(t.fillProperty());
+        
+                    return t;
+                },
 
-            // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
-            t.impl_selectionFillProperty().bind(t.fillProperty());
+                (is, styleCodec) -> {
+                    Segment<S> result = null;
+                    try {
+                        result = StyledText.decode(is, styleCodec);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return result;
+                }
+        );
 
-            return t;
-        } );
+        registerFactory(DefaultSegmentTypes.INLINE_IMAGE, 
+            segment -> {
+                InlineImage<S> inlineImage = (InlineImage<S>) segment;
+    
+                String imagePath = inlineImage.getImagePath();
+                Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
+                                                    // can be stored in the model layer (ObjectData)
+    
+                ImageView result = new ImageView(image);
+                return result;
+            },
 
-        registerFactory(DefaultSegmentTypes.INLINE_IMAGE, segment -> {
-            InlineImage<S> inlineImage = (InlineImage<S>) segment;
+            (is, styleCodec) -> {
+                Segment<S> result = null;
+                try {
+                    result = InlineImage.decode(is, styleCodec);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+        );
 
-            String imagePath = inlineImage.getImagePath();
-            Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
-                                                // can be stored in the model layer (ObjectData)
+        registerFactory(DefaultSegmentTypes.INLINE_TABLE, 
+            segment -> {
+                InlineTable<S> inlineTable = (InlineTable<S>) segment;
+    
+                SimpleDynamicTable result = new SimpleDynamicTable(3, 3);
+                result.setEditable(true);
+                // result.setData(inlineTable.getData());
+                return result;
+            },
 
-            ImageView result = new ImageView(image);
-            return result;
-        } );
-
-        registerFactory(DefaultSegmentTypes.INLINE_TABLE, segment -> {
-            InlineTable<S> inlineTable = (InlineTable<S>) segment;
-
-            SimpleDynamicTable result = new SimpleDynamicTable(3, 3);
-            result.setEditable(true);
-            // result.setData(inlineTable.getData());
-            return result;
-        } );
+            (is, styleCodec) -> {
+                Segment<S> result = null;
+                try {
+                    result = InlineTable.decode(is, styleCodec);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+        );
 
 
         // allow tab traversal into area
@@ -1140,10 +1179,14 @@ public class StyledTextArea<PS, S> extends Region
      * Registers a Node factory for a specific segment type.
      * 
      * @param typeId  The segment type 
-     * @param factory The factory which creates a Node for the given segment type
+     * @param nodeFactory The factory which creates a Node for the given segment type
+     * @param modelFactory The factory which creates a model object for the given segment type
      */
-    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> factory) {
-        nodeFactories.put(typeId, factory);
+    public void registerFactory(SegmentType typeId, 
+                                Function<Segment<S>, Node> nodeFactory,
+                                BiFunction<DataInputStream, Codec<S>, Segment<S>> modelFactory) {
+        nodeFactories.put(typeId, nodeFactory);
+        SegmentFactory.registerFactory(typeId.getName(), modelFactory);
     }
 
 
@@ -1177,6 +1220,7 @@ public class StyledTextArea<PS, S> extends Region
      * ********************************************************************** */
 
     private Map<SegmentType, Function<Segment<S>, Node>> nodeFactories = new HashMap<>();
+    private Map<String, Function<DataInputStream, Segment<S>>> modelFactories = new HashMap<>();
 
     private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
             Paragraph<PS, S> paragraph,

@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.model.Codec;
@@ -30,6 +34,11 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.SuspendableNo;
 import org.reactfx.util.Tuple2;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -268,7 +277,7 @@ public class RichText extends Application {
         area.requestFocus();
         primaryStage.setTitle("Rich Text Demo");
         
-        loadFromXml(new File("sample2.rtfx"));
+        loadFromBinary(new File("sample2.rtfb2"));
         
         primaryStage.show();
     }
@@ -377,62 +386,62 @@ public class RichText extends Application {
 
     private void loadFromXml(File file) {
         
-//        try {
-//            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-//            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-//            Document doc = dBuilder.parse(file);
-//
-//            doc.getDocumentElement().normalize();
-//            System.out.print("Root element: ");
-//            System.out.println(doc.getDocumentElement().getNodeName());
-//
-//            NodeList paragraphs = doc.getElementsByTagName("Paragraph");
-//            for (int idx = 0;  idx < paragraphs.getLength();  idx++) {
-//                Element paragraph = (Element) paragraphs.item(idx);
-//                String parStyle = paragraph.getAttribute("style");
-//                ParStyle paraStyle = ParStyle.fromCss(parStyle);
-//                System.err.println("Paragraph: [" + paraStyle + "]");
-//
-//                NodeList segments = paragraph.getChildNodes();
-//                for (int segIdx = 0;  segIdx < segments.getLength();  segIdx++) {
-//                    Node node = segments.item(segIdx);
-//                    switch(node.getNodeName()) {
-//                        case "StyledText" : 
-//                            Element styledText = (Element) node;
-//                            String textStyle = styledText.getAttribute("style");
-//                            String text = styledText.getTextContent();
-//
-//                            TextStyle style = TextStyle.fromCss(textStyle);
-//                            // System.err.println("   StyledText: [" + style + "], \"" + text + "\"");
-//                            ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString(text, paraStyle, style);
-//                            System.err.println("   StyledDocument: " + ros);
-//                            area.append(ros);
-//                            break;
-//
-//                        case "InlineImage" : 
-//                            Element customObject = (Element) node;
-//                            String fileName = customObject.getAttribute("fileName");
-//                            ObjectData data = new ObjectData(DefaultSegmentTypes.INLINE_IMAGE, fileName);
-//                            ReadOnlyStyledDocument<ParStyle, TextStyle> cos = ReadOnlyStyledDocument.createObject(data, paraStyle, new TextStyle());
-//                            System.err.println("   CustomObject: " + cos);
-//                            area.append(cos);
-//                            break;
-//
-//                        default: 
-//                            break;
-//                    }
-//                }
-//
-//                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString("\n", paraStyle, new TextStyle());
-//                area.append(ros);
-//            }
-//        } catch (ParserConfigurationException e) {
-//            e.printStackTrace();
-//        } catch (SAXException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(file);
+
+            doc.getDocumentElement().normalize();
+            System.out.print("Root element: ");
+            System.out.println(doc.getDocumentElement().getNodeName());
+
+            NodeList paragraphs = doc.getElementsByTagName("Paragraph");
+            for (int idx = 0;  idx < paragraphs.getLength();  idx++) {
+                Element paragraph = (Element) paragraphs.item(idx);
+                String parStyle = paragraph.getAttribute("style");
+                ParStyle paraStyle = ParStyle.fromCss(parStyle);
+                System.err.println("Paragraph: [" + paraStyle + "]");
+
+                NodeList segments = paragraph.getChildNodes();
+                for (int segIdx = 0;  segIdx < segments.getLength();  segIdx++) {
+                    Node node = segments.item(segIdx);
+                    switch(node.getNodeName()) {
+                        case "StyledText" : 
+                            Element styledText = (Element) node;
+                            String textStyle = styledText.getAttribute("style");
+                            String text = styledText.getTextContent();
+
+                            TextStyle style = TextStyle.fromCss(textStyle);
+                            // System.err.println("   StyledText: [" + style + "], \"" + text + "\"");
+                            ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString(text, paraStyle, style);
+                            System.err.println("   StyledDocument: " + ros);
+                            area.append(ros);
+                            break;
+
+                        case "InlineImage" : 
+                            Element customObject = (Element) node;
+                            String fileName = customObject.getAttribute("fileName");
+                            ReadOnlyStyledDocument<ParStyle, TextStyle> cos = 
+                                    ReadOnlyStyledDocument.createObject(new InlineImage<>(fileName, new TextStyle()), paraStyle, new TextStyle());
+                            System.err.println("   CustomObject: " + cos);
+                            area.append(cos);
+                            break;
+
+                        default: 
+                            break;
+                    }
+                }
+
+                ReadOnlyStyledDocument<ParStyle, TextStyle> ros = ReadOnlyStyledDocument.fromString("\n", paraStyle, new TextStyle());
+                area.append(ros);
+            }
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -532,7 +541,7 @@ public class RichText extends Application {
             try {
                 String imageUrl = selectedFile.toURI().toURL().toExternalForm();
                 ReadOnlyStyledDocument<ParStyle, TextStyle> ros = 
-                        ReadOnlyStyledDocument.createObject(new InlineImage(TextStyle.EMPTY, imageUrl), 
+                        ReadOnlyStyledDocument.createObject(new InlineImage<>(imageUrl, TextStyle.EMPTY), 
                                                           ParStyle.EMPTY, TextStyle.EMPTY); 
                 area.replaceSelection(ros);
             } catch (MalformedURLException e) {

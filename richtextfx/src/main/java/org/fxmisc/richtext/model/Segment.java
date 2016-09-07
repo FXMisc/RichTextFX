@@ -29,7 +29,7 @@ public interface Segment<S> {
 
     void setStyle(S style);
 
-    SegmentType getTypeId();
+    SegmentType getTypeId();        // ????????????????
 
     void encode(DataOutputStream os) throws IOException;
 }
