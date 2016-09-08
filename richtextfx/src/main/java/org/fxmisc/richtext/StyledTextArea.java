@@ -64,8 +64,7 @@ import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.InlineImage;
-import org.fxmisc.richtext.model.InlineTable;
+import org.fxmisc.richtext.model.LinkedImage;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
@@ -94,7 +93,6 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import afester.javafx.components.SimpleDynamicTable;
 
 /**
  * Text editing control. Accepts user input (keyboard, mouse) and
@@ -614,13 +612,13 @@ public class StyledTextArea<PS, S> extends Region
                 }
         );
 
-        registerFactory(DefaultSegmentTypes.INLINE_IMAGE, 
+        registerFactory(DefaultSegmentTypes.LINKED_IMAGE, 
             segment -> {
-                InlineImage<S> inlineImage = (InlineImage<S>) segment;
+                LinkedImage<S> inlineImage = (LinkedImage<S>) segment;
     
                 String imagePath = inlineImage.getImagePath();
                 Image image = new Image(imagePath); // XXX: No need to create new Image objects each time -
-                                                    // can be stored in the model layer (ObjectData)
+                                                    // could be cached in the model layer
     
                 ImageView result = new ImageView(image);
                 return result;
@@ -629,35 +627,13 @@ public class StyledTextArea<PS, S> extends Region
             (is, styleCodec) -> {
                 Segment<S> result = null;
                 try {
-                    result = InlineImage.decode(is, styleCodec);
+                    result = LinkedImage.decode(is, styleCodec);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 return result;
             }
         );
-
-        registerFactory(DefaultSegmentTypes.INLINE_TABLE, 
-            segment -> {
-                InlineTable<S> inlineTable = (InlineTable<S>) segment;
-    
-                SimpleDynamicTable result = new SimpleDynamicTable(3, 3);
-                result.setEditable(true);
-                // result.setData(inlineTable.getData());
-                return result;
-            },
-
-            (is, styleCodec) -> {
-                Segment<S> result = null;
-                try {
-                    result = InlineTable.decode(is, styleCodec);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return result;
-            }
-        );
-
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -1220,7 +1196,6 @@ public class StyledTextArea<PS, S> extends Region
      * ********************************************************************** */
 
     private Map<SegmentType, Function<Segment<S>, Node>> nodeFactories = new HashMap<>();
-    private Map<String, Function<DataInputStream, Segment<S>>> modelFactories = new HashMap<>();
 
     private Cell<Paragraph<PS, S>, ParagraphBox<PS, S>> createCell(
             Paragraph<PS, S> paragraph,

@@ -7,8 +7,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
- * Temporary helper class to overcome the static hell of Codec.
+ * Temporary helper class to overcome the "static hell" of Codec ...
  * Allows to register factory classes so that they can be retrieved later on.
+ * Requires some unusual casts and should be replaced with a better approach.
  */
 public class SegmentFactory  {
 
@@ -16,7 +17,6 @@ public class SegmentFactory  {
 
     public static <S> void registerFactory(String id, 
                                            BiFunction<DataInputStream, Codec<S>, Segment<S>> factory) {
-        // this definitely sucks ...
        factories.put(id, ((BiFunction<DataInputStream, Codec, Segment>) (Object) factory));
     }
 

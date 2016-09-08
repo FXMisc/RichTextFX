@@ -4,7 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * An interface to segment types, like StyledText or InlineImage.
+ * An interface to segment types, like StyledText or LinkedImage.
  *
  * @param <S>
  */
@@ -27,9 +27,7 @@ public interface Segment<S> {
 
     S getStyle();
 
-    void setStyle(S style);
-
-    SegmentType getTypeId();        // ????????????????
+    SegmentType getTypeId();
 
     void encode(DataOutputStream os) throws IOException;
 }

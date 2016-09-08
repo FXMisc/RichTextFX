@@ -2,11 +2,11 @@ package org.fxmisc.richtext.model;
 
 /**
  * The default segment types supported by the core RichTextFX component.
- * TODO: Since this needs to be extendible, an enum is probably not the
- * best solution. Simply use a String instead as the key.  
+ * Whenever one if those enums is used as parameter, the SegmentType interface
+ * should be used instead so that users can extend the segment types accordingly. 
  */
 public enum DefaultSegmentTypes implements SegmentType {
-    STYLED_TEXT("StyledText"), INLINE_IMAGE("InlineImage"), INLINE_TABLE("InlineTable");
+    STYLED_TEXT("StyledText"), LINKED_IMAGE("LinkedImage");
 
     private String theName;
 

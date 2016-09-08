@@ -5,25 +5,3 @@
 .styled-text-area .paragraph-box .paragraph-text {
     -fx-padding: 0 2px;
 }
-
-
-
-
-.live-text-field-table-cell {
-	-fx-control-inner-background: #FFFFE8;	/* highlighted background */
-	-fx-padding: 1px;						/* reduce consumed space */
-}
-
-.text-field {
-}
-
-.live-text-field-table-cell > .text-input{
-	-fx-background-color: white; /* #FFFFE0;*/	
-    -fx-background-radius: 3, 2;
-    -fx-padding: 0px;						/* reduce consumed space */
-}
-
-/* Disable highlighting of currently focused text field */
-.live-text-field-table-cell > .text-input:focused {
-	-fx-background-color: #FFFFE0; 
-}

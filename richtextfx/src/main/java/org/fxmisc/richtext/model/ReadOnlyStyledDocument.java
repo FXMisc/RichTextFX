@@ -201,15 +201,10 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
 
             @Override
             public Segment<S> decode(DataInputStream is) throws IOException {
-
-                //String segType = STRING_CODEC.decode(is);
                 Segment<S> result = SegmentFactory.decode(is, styleCodec);
-                //S style = styleCodec.decode(is);
-                //result.setStyle(style);
-
                 return result;
             }
-            
+
         };
     }
 
@@ -453,12 +448,4 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             }
         }
     }
-    
-
-//    private static Map<SegmentType, Function<Segment<S>, Node>> modelFactories = new HashMap<>();
-//
-//    @Override
-//    public void registerFactory(SegmentType typeId, Function<Segment<S>, Node> modelFactory) {
-//        modelFactories.put(typeId,  modelFactory);
-//    }
 }

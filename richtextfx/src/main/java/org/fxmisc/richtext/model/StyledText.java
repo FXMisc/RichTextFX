@@ -5,9 +5,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * The default segment type which is a styled text string. 
+ *
+ * @param <S>
+ */
 public class StyledText<S> implements Segment<S> {
     private final String text;
-    private /*final*/ S style;
+    private final S style;
 
     public StyledText(String text, S style) {
         this.text = text;
@@ -54,11 +59,6 @@ public class StyledText<S> implements Segment<S> {
     @Override
     public S getStyle() {
         return style;
-    }
-
-    @Override
-    public void setStyle(S style) {
-        this.style = style;
     }
 
     @Override

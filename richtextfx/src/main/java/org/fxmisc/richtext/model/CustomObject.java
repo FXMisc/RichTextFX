@@ -1,6 +1,13 @@
 package org.fxmisc.richtext.model;
 
 
+/**
+ * This is the base class for custom objects in the model layer.
+ * Its String representation is always one character long and contains
+ * the "object replacement character" (\ufffc). 
+ *
+ * @param <S>
+ */
 public abstract class CustomObject<S> implements Segment<S> {
 
     private S style;
@@ -10,20 +17,7 @@ public abstract class CustomObject<S> implements Segment<S> {
         this.style = style;
         this.typeId = typeId;
     }
-//   
-//    private ObjectData objectData;
-//    public void setObjectData(ObjectData data) {
-//        this.objectData = data;
-//    }
-//
-//    public ObjectData getObjectData() {
-//        return objectData;
-//    }
-//
-//    @Override
-//    public String toString() {
-//        return String.format("CustomObject[objectData=%s", objectData);
-//    }
+
 
     @Override
     public Segment<S> subSequence(int start, int end) {
@@ -33,6 +27,7 @@ public abstract class CustomObject<S> implements Segment<S> {
         return new StyledText<>("", getStyle());
     }
 
+
     @Override
     public Segment<S> subSequence(int start) {
         if (start == 1) {
@@ -41,11 +36,13 @@ public abstract class CustomObject<S> implements Segment<S> {
         return this;
     }
 
+
     @Override
     public Segment<S> append(String str) {
         throw new UnsupportedOperationException();
         // return new StyledText<>(text + str, style);
     }
+
 
     @Override
     public Segment<S> spliced(int from, int to, CharSequence replacement) {
@@ -55,30 +52,30 @@ public abstract class CustomObject<S> implements Segment<S> {
         return new StyledText<>(left + replacement + right, style);*/
     }
 
+
     @Override
     public int length() {
         return 1;
     }
+
 
     @Override
     public char charAt(int index) {
         return getText().charAt(0);
     }
 
+
     @Override
     public String getText() {
         return "\ufffc";
     }
+
 
     @Override
     public S getStyle() {
         return style;
     }
 
-    @Override
-    public void setStyle(S style) {
-        this.style = style;
-    }
 
     @Override
     public SegmentType getTypeId() {
