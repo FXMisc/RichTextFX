@@ -12,7 +12,7 @@ import javafx.scene.text.Font;
 
 
 /**
- * CSS stuff related to {@link StyledTextArea}.
+ * CSS stuff related to {@link GenericRichtextArea}.
  */
 class CssProperties {
 

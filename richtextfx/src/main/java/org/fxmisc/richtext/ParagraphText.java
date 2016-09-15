@@ -3,7 +3,7 @@ package org.fxmisc.richtext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -19,11 +19,10 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
 import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.Segment;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-class ParagraphText<PS, S> extends TextFlowExt {
+class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -38,11 +37,11 @@ class ParagraphText<PS, S> extends TextFlowExt {
     public void setCaretPosition(int pos) { caretPosition.setValue(pos); }
     private final Val<Integer> clampedCaretPosition;
 
-    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
+    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(GenericRichtextArea.EMPTY_RANGE);
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
-    private final Paragraph<PS, S> paragraph;
+    private final Paragraph<PS, SEG, S> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -57,7 +56,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    public ParagraphText(Paragraph<PS, S> par, BiConsumer<? super TextExt, S> applyStyle) {
+    ParagraphText(Paragraph<PS, SEG, S> par, Function<SEG, Node> nodeFactory) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -97,12 +96,11 @@ class ParagraphText<PS, S> extends TextFlowExt {
 //            }
 //        });
 
-        // populate with nodes
-        for(Segment<S> segment: par.getSegments()) {
-
-            // Create the object node
-            Node t = segment.createNode();
-            getChildren().add(t);
+        // populate with text nodes
+        for(SEG segment: par.getSegments()) {
+            // create Segment
+            Node fxNode = nodeFactory.apply(segment);
+            getChildren().add(fxNode);
 
             // add corresponding background node (empty)
             Path backgroundShape = new Path();
@@ -124,7 +122,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         }
     }
 
-    public Paragraph<PS, S> getParagraph() {
+    public Paragraph<PS, SEG, S> getParagraph() {
         return paragraph;
     }
 

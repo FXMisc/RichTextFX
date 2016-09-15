@@ -3,23 +3,23 @@ package org.fxmisc.richtext.model;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javafx.scene.control.IndexRange;
 
-public interface StyledDocument<PS, S> extends TwoDimensional {
+public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
 
     int length();
 
     String getText();
 
-    List<Paragraph<PS, S>> getParagraphs();
+    List<Paragraph<PS, SEG, S>> getParagraphs();
 
-    StyledDocument<PS, S> concat(StyledDocument<PS, S> that);
+    StyledDocument<PS, SEG, S> concat(StyledDocument<PS, SEG, S> that);
 
-    StyledDocument<PS, S> subSequence(int start, int end);
+    StyledDocument<PS, SEG, S> subSequence(int start, int end);
 
+    SegmentOps<SEG, S> getSegOps();
 
     default String getText(IndexRange range) {
         return getText(range.getStart(), range.getEnd());
@@ -29,12 +29,12 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
         return subSequence(start, end).getText();
     }
 
-    default StyledDocument<PS, S> subSequence(IndexRange range) {
+    default StyledDocument<PS, SEG, S> subSequence(IndexRange range) {
         return subSequence(range.getStart(), range.getEnd());
     }
 
-    default StyledDocument<PS, S> subDocument(int paragraphIndex) {
-        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)));
+    default StyledDocument<PS, SEG, S> subDocument(int paragraphIndex) {
+        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)), getSegOps());
     }
 
     default char charAt(int index) {
@@ -95,18 +95,18 @@ public interface StyledDocument<PS, S> extends TwoDimensional {
         List<StyleSpans<S>> subSpans = new ArrayList<>(affectedPars);
 
         if(startParIdx == endParIdx) {
-            Paragraph<PS, S> par = getParagraphs().get(startParIdx);
+            Paragraph<PS, SEG, S> par = getParagraphs().get(startParIdx);
             subSpans.add(par.getStyleSpans(start.getMinor(), end.getMinor()));
         } else {
-            Paragraph<PS, S> startPar = getParagraphs().get(startParIdx);
+            Paragraph<PS, SEG, S> startPar = getParagraphs().get(startParIdx);
             subSpans.add(startPar.getStyleSpans(start.getMinor(), startPar.length() + 1));
 
             for(int i = startParIdx + 1; i < endParIdx; ++i) {
-                Paragraph<PS, S> par = getParagraphs().get(i);
+                Paragraph<PS, SEG, S> par = getParagraphs().get(i);
                 subSpans.add(par.getStyleSpans(0, par.length() + 1));
             }
 
-            Paragraph<PS, S> endPar = getParagraphs().get(endParIdx);
+            Paragraph<PS, SEG, S> endPar = getParagraphs().get(endParIdx);
             subSpans.add(endPar.getStyleSpans(0, end.getMinor()));
         }
 

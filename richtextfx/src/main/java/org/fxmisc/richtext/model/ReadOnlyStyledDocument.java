@@ -25,7 +25,7 @@ import org.reactfx.util.ToSemigroup;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuple3;
 
-public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S> {
+public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<PS, SEG, S> {
 
     private static class Summary {
         private final int paragraphCount;
@@ -44,11 +44,11 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         }
     }
 
-    private static <PS, S> ToSemigroup<Paragraph<PS, S>, Summary> summaryProvider() {
-        return new ToSemigroup<Paragraph<PS, S>, Summary>() {
+    private static <PS, SEG, S> ToSemigroup<Paragraph<PS, SEG, S>, Summary> summaryProvider() {
+        return new ToSemigroup<Paragraph<PS, SEG, S>, Summary>() {
 
             @Override
-            public Summary apply(Paragraph<PS, S> p) {
+            public Summary apply(Paragraph<PS, SEG, S> p) {
                 return new Summary(1, p.length());
             }
 
@@ -67,143 +67,108 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
     private static final BiFunction<Summary, Integer, Either<Integer, Integer>> NAVIGATE =
             (s, i) -> i <= s.length() ? left(i) : right(i - (s.length() + 1));
 
-    public static <PS, S> ReadOnlyStyledDocument<PS, S> fromString(String str, PS paragraphStyle, S style) {
+    public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromString(String str, PS paragraphStyle, S style, TextOps<SEG, S> segmentOps) {
         Matcher m = LINE_TERMINATOR.matcher(str);
 
         int n = 1;
         while(m.find()) ++n;
-        List<Paragraph<PS, S>> res = new ArrayList<>(n);
+        List<Paragraph<PS, SEG, S>> res = new ArrayList<>(n);
 
         int start = 0;
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            res.add(new Paragraph<>(paragraphStyle, s, style));
+            res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(s, style)));
             start = m.end();
         }
         String last = str.substring(start);
-        res.add(new Paragraph<>(paragraphStyle, last, style));
+        res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(last, style)));
 
-        return new ReadOnlyStyledDocument<>(res);
+        return new ReadOnlyStyledDocument<>(res, segmentOps);
     }
 
-    public static <PS, S> ReadOnlyStyledDocument<PS, S> from(StyledDocument<PS, S> doc) {
+    public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromSegment(SEG segment,  PS paragraphStyle, S style, SegmentOps<SEG, S> segmentOps) {
+        Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, Arrays.asList(segment));
+        List<Paragraph<PS, SEG, S>> res = Arrays.asList(content);
+        return new ReadOnlyStyledDocument<>(res, segmentOps);
+    }
+
+    public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> from(StyledDocument<PS, SEG, S> doc) {
         if(doc instanceof ReadOnlyStyledDocument) {
-            return (ReadOnlyStyledDocument<PS, S>) doc;
+            return (ReadOnlyStyledDocument<PS, SEG, S>) doc;
         } else {
-            return new ReadOnlyStyledDocument<>(doc.getParagraphs());
+            return new ReadOnlyStyledDocument<>(doc.getParagraphs(), doc.getSegOps());
         }
     }
 
-    /**
-     * Creates a new ReadOnlyStyledDocument with one Segment.
-     * The resulting ReadOnlyStyledDocument can be inserted or appended to a StyledTextArea.
-     *
-     * @param seg   The segment which shall be contained in the document.
-     * @param paragraphStyle The paragraph style to use for the paragraph which contains the segment.
-     *
-     * @return A ReadOnlyStyledDocument with the given segment.
-     */
-    public static <PS, S> ReadOnlyStyledDocument<PS, S> from(Segment<S> seg, PS paragraphStyle) {
-        List<Paragraph<PS, S>> res = new ArrayList<>(1);
-        Paragraph<PS, S> content = new Paragraph<PS, S>(paragraphStyle, Arrays.asList(seg));
-        res.add(content);
-        return new ReadOnlyStyledDocument<>(res);
-    }
 
-    public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
-        return new Codec<StyledDocument<PS, S>>() {
-            private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
+    public static <PS, SEG, S> Codec<StyledDocument<PS, SEG, S>> codec(Codec<PS> pCodec, Codec<SEG> segCodec, SegmentOps<SEG, S> segmentOps) {
+        return new Codec<StyledDocument<PS, SEG, S>>() {
+            private final Codec<List<Paragraph<PS, SEG, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, segCodec, segmentOps));
 
             @Override
             public String getName() {
-                return "application/richtextfx-styled-document<" + tCodec.getName() + ";" + pCodec.getName() + ">";
+                return "application/richtextfx-styled-document<" + pCodec.getName() + ";" + segCodec.getName() + ">";
             }
 
             @Override
-            public void encode(DataOutputStream os, StyledDocument<PS, S> doc) throws IOException {
+            public void encode(DataOutputStream os, StyledDocument<PS, SEG, S> doc) throws IOException {
                 codec.encode(os, doc.getParagraphs());
             }
 
             @Override
-            public StyledDocument<PS, S> decode(DataInputStream is) throws IOException {
-                return new ReadOnlyStyledDocument<>(codec.decode(is));
+            public StyledDocument<PS, SEG, S> decode(DataInputStream is) throws IOException {
+                return new ReadOnlyStyledDocument<>(codec.decode(is), segmentOps);
             }
 
         };
     }
 
-    private static <PS, S> Codec<Paragraph<PS, S>> paragraphCodec(Codec<PS> pCodec, Codec<S> tCodec) {
-        return new Codec<Paragraph<PS, S>>() {
-            private final Codec<List<Segment<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
+    private static <PS, SEG, S> Codec<Paragraph<PS, SEG, S>> paragraphCodec(Codec<PS> pCodec, Codec<SEG> segCodec, SegmentOps<SEG, S> segmentOps) {
+        return new Codec<Paragraph<PS, SEG, S>>() {
+            private final Codec<List<SEG>> segmentsCodec = Codec.listCodec(segCodec);
 
             @Override
             public String getName() {
-                return "paragraph<" + tCodec.getName() + ";" + pCodec.getName() + ">";
+                return "paragraph<" + pCodec.getName() + ";" + segCodec.getName() + ">";
             }
 
             @Override
-            public void encode(DataOutputStream os, Paragraph<PS, S> p) throws IOException {
+            public void encode(DataOutputStream os, Paragraph<PS, SEG, S> p) throws IOException {
                 pCodec.encode(os, p.getParagraphStyle());
                 segmentsCodec.encode(os, p.getSegments());
             }
 
             @Override
-            public Paragraph<PS, S> decode(DataInputStream is) throws IOException {
+            public Paragraph<PS, SEG, S> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
-                List<Segment<S>> segments = segmentsCodec.decode(is);
-                return new Paragraph<>(paragraphStyle, segments);
+                List<SEG> segments = segmentsCodec.decode(is);
+                return new Paragraph<>(paragraphStyle, segmentOps, segments);
             }
         };
     }
 
-    private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
-        return new Codec<Segment<S>>() {
 
-            @Override
-            public String getName() {
-                return "styledtext<" + styleCodec.getName() + ">";
-            }
-
-            @Override
-            public void encode(DataOutputStream os, Segment<S> t) throws IOException {
-                // encode the segment type and content
-                STRING_CODEC.encode(os, t.getClass().getName());
-                t.encode(os, styleCodec);
-            }
-
-            @Override
-            public Segment<S> decode(DataInputStream is) throws IOException {
-                String segmentType = is.readUTF();
-                try {
-                    @SuppressWarnings("unchecked")
-                    Class<Segment<S>> clazz = (Class<Segment<S>>) Class.forName(segmentType);
-                    Segment<S> result = (Segment<S>) clazz.newInstance();
-                    result.decode(is, styleCodec);
-                    return result;
-                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                    throw new IOException("Could not create Segment for " + segmentType, e);
-                }
-            }
-
-        };
-    }
-
-
-    private final NonEmptyFingerTree<Paragraph<PS, S>, Summary> tree;
+    private final NonEmptyFingerTree<Paragraph<PS, SEG, S>, Summary> tree;
 
     private String text = null;
-    private List<Paragraph<PS, S>> paragraphs = null;
+    private List<Paragraph<PS, SEG, S>> paragraphs = null;
 
-    private ReadOnlyStyledDocument(NonEmptyFingerTree<Paragraph<PS, S>, Summary> tree) {
+    private final SegmentOps<SEG, S> segmentOps;
+    @Override
+    public final SegmentOps<SEG, S> getSegOps() { return segmentOps; }
+
+    private ReadOnlyStyledDocument(NonEmptyFingerTree<Paragraph<PS, SEG, S>, Summary> tree, SegmentOps<SEG, S> segmentOps) {
         this.tree = tree;
+        this.segmentOps = segmentOps;
     }
 
-    ReadOnlyStyledDocument(List<Paragraph<PS, S>> paragraphs) {
+    ReadOnlyStyledDocument(List<Paragraph<PS, SEG, S>> paragraphs, SegmentOps<SEG, S> segmentOps) {
         this.tree =
                 FingerTree.mkTree(paragraphs, summaryProvider()).caseEmpty().unify(
                         emptyTree -> { throw new AssertionError("Unreachable code"); },
                         neTree -> neTree);
+        this.segmentOps = segmentOps;
     }
 
     @Override
@@ -226,12 +191,12 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return tree.getLeafCount();
     }
 
-    public Paragraph<PS, S> getParagraph(int index) {
+    public Paragraph<PS, SEG, S> getParagraph(int index) {
         return tree.getLeaf(index);
     }
 
     @Override
-    public List<Paragraph<PS, S>> getParagraphs() {
+    public List<Paragraph<PS, SEG, S>> getParagraphs() {
         if(paragraphs == null) {
             paragraphs = tree.asList();
         }
@@ -248,94 +213,99 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         return position(0, 0).offsetBy(offset, bias);
     }
 
-    public Tuple2<ReadOnlyStyledDocument<PS, S>, ReadOnlyStyledDocument<PS, S>> split(int position) {
+    public Tuple2<ReadOnlyStyledDocument<PS, SEG, S>, ReadOnlyStyledDocument<PS, SEG, S>> split(int position) {
         return tree.locate(NAVIGATE, position).map(this::split);
     }
 
-    public Tuple2<ReadOnlyStyledDocument<PS, S>, ReadOnlyStyledDocument<PS, S>> split(
+    public Tuple2<ReadOnlyStyledDocument<PS, SEG, S>, ReadOnlyStyledDocument<PS, SEG, S>> split(
             int row, int col) {
         return tree.splitAt(row).map((l, p, r) -> {
-            Paragraph<PS, S> p1 = p.trim(col);
-            Paragraph<PS, S> p2 = p.subSequence(col);
-            ReadOnlyStyledDocument<PS, S> doc1 = new ReadOnlyStyledDocument<>(l.append(p1));
-            ReadOnlyStyledDocument<PS, S> doc2 = new ReadOnlyStyledDocument<>(r.prepend(p2));
+            Paragraph<PS, SEG, S> p1 = p.trim(col);
+            Paragraph<PS, SEG, S> p2 = p.subSequence(col);
+            ReadOnlyStyledDocument<PS, SEG, S> doc1 = new ReadOnlyStyledDocument<>(l.append(p1), segmentOps);
+            ReadOnlyStyledDocument<PS, SEG, S> doc2 = new ReadOnlyStyledDocument<>(r.prepend(p2), segmentOps);
             return t(doc1, doc2);
         });
     }
 
     @Override
-    public ReadOnlyStyledDocument<PS, S> concat(StyledDocument<PS, S> other) {
+    public ReadOnlyStyledDocument<PS, SEG, S> concat(StyledDocument<PS, SEG, S> other) {
         return concat0(other, Paragraph::concat);
     }
 
-    private ReadOnlyStyledDocument<PS, S> concatR(StyledDocument<PS, S> other) {
+    private ReadOnlyStyledDocument<PS, SEG, S> concatR(StyledDocument<PS, SEG, S> other) {
         return concat0(other, Paragraph::concatR);
     }
 
-    private ReadOnlyStyledDocument<PS, S> concat0(StyledDocument<PS, S> other, BinaryOperator<Paragraph<PS, S>> parConcat) {
+    private ReadOnlyStyledDocument<PS, SEG, S> concat0(StyledDocument<PS, SEG, S> other, BinaryOperator<Paragraph<PS, SEG, S>> parConcat) {
         int n = tree.getLeafCount() - 1;
-        Paragraph<PS, S> p0 = tree.getLeaf(n);
-        Paragraph<PS, S> p1 = other.getParagraphs().get(0);
-        Paragraph<PS, S> p = parConcat.apply(p0, p1);
-        NonEmptyFingerTree<Paragraph<PS, S>, Summary> tree1 = tree.updateLeaf(n, p);
-        FingerTree<Paragraph<PS, S>, Summary> tree2 = (other instanceof ReadOnlyStyledDocument)
-                ? ((ReadOnlyStyledDocument<PS, S>) other).tree.split(1)._2
+        Paragraph<PS, SEG, S> p0 = tree.getLeaf(n);
+        Paragraph<PS, SEG, S> p1 = other.getParagraphs().get(0);
+        Paragraph<PS, SEG, S> p = parConcat.apply(p0, p1);
+        NonEmptyFingerTree<Paragraph<PS, SEG, S>, Summary> tree1 = tree.updateLeaf(n, p);
+        FingerTree<Paragraph<PS, SEG, S>, Summary> tree2 = (other instanceof ReadOnlyStyledDocument)
+                ? ((ReadOnlyStyledDocument<PS, SEG, S>) other).tree.split(1)._2
                 : FingerTree.mkTree(other.getParagraphs().subList(1, other.getParagraphs().size()), summaryProvider());
-        return new ReadOnlyStyledDocument<>(tree1.join(tree2));
+        return new ReadOnlyStyledDocument<>(tree1.join(tree2), segmentOps);
     }
 
     @Override
-    public StyledDocument<PS, S> subSequence(int start, int end) {
+    public StyledDocument<PS, SEG, S> subSequence(int start, int end) {
         return split(end)._1.split(start)._2;
     }
 
-    public Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
-            int from, int to, ReadOnlyStyledDocument<PS, S> replacement) {
+    @Override
+    public StyledDocument<PS, SEG, S> subDocument(int paragraphIndex) {
+        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)), segmentOps);
+    }
+
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            int from, int to, ReadOnlyStyledDocument<PS, SEG, S> replacement) {
         return replace(from, to, x -> replacement);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
-            int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
+    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
         return replace(start, end, f);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replace(
-            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, S>> f) {
+    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
 
-        List<Paragraph<PS, S>> removedPars =
+        List<Paragraph<PS, SEG, S>> removedPars =
                 getParagraphs().subList(start.major, end.major + 1);
 
         return end.map(this::split).map((l0, r) -> {
             return start.map(l0::split).map((l, removed) -> {
-                ReadOnlyStyledDocument<PS, S> replacement = f.apply(removed);
-                ReadOnlyStyledDocument<PS, S> doc = l.concatR(replacement).concat(r);
-                RichTextChange<PS, S> change = new RichTextChange<>(pos, removed, replacement);
-                List<Paragraph<PS, S>> addedPars = doc.getParagraphs().subList(start.major, start.major + replacement.getParagraphCount());
-                MaterializedListModification<Paragraph<PS, S>> parChange =
+                ReadOnlyStyledDocument<PS, SEG, S> replacement = f.apply(removed);
+                ReadOnlyStyledDocument<PS, SEG, S> doc = l.concatR(replacement).concat(r);
+                RichTextChange<PS, SEG, S> change = new RichTextChange<>(pos, removed, replacement);
+                List<Paragraph<PS, SEG, S>> addedPars = doc.getParagraphs().subList(start.major, start.major + replacement.getParagraphCount());
+                MaterializedListModification<Paragraph<PS, SEG, S>> parChange =
                         MaterializedListModification.create(start.major, removedPars, addedPars);
                 return t(doc, change, parChange);
             });
         });
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, S>, RichTextChange<PS, S>, MaterializedListModification<Paragraph<PS, S>>> replaceParagraph(
-            int parIdx, UnaryOperator<Paragraph<PS, S>> f) {
+    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
+            int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> f) {
         return replace(
                 new BiIndex(parIdx, 0),
                 new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
                 doc -> doc.mapParagraphs(f));
     }
 
-    ReadOnlyStyledDocument<PS, S> mapParagraphs(UnaryOperator<Paragraph<PS, S>> f) {
+    ReadOnlyStyledDocument<PS, SEG, S> mapParagraphs(UnaryOperator<Paragraph<PS, SEG, S>> f) {
         int n = tree.getLeafCount();
-        List<Paragraph<PS, S>> pars = new ArrayList<>(n);
+        List<Paragraph<PS, SEG, S>> pars = new ArrayList<>(n);
         for(int i = 0; i < n; ++i) {
             pars.add(f.apply(tree.getLeaf(i)));
         }
-        return new ReadOnlyStyledDocument<>(pars);
+        return new ReadOnlyStyledDocument<>(pars, segmentOps);
     }
 
     @Override
@@ -350,7 +320,7 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
     @Override
     public final boolean equals(Object other) {
         if(other instanceof StyledDocument) {
-            StyledDocument<?, ?> that = (StyledDocument<?, ?>) other;
+            StyledDocument<?, ?, ?> that = (StyledDocument<?, ?, ?>) other;
             return Objects.equals(this.getParagraphs(), that.getParagraphs());
         } else {
             return false;

@@ -5,7 +5,7 @@ import javafx.scene.control.IndexRange;
 /**
  * Extended edit actions for {@link TextEditingArea}.
  */
-public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
+public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
 
     /**
      * Appends the given text to the end of the text content.
@@ -17,7 +17,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
     /**
      * Appends the given rich-text content to the end of this text-editing area.
      */
-    default void append(StyledDocument<PS, S> document) {
+    default void append(StyledDocument<PS, SEG, S> document) {
         insert(getLength(), document);
     }
 
@@ -51,7 +51,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
      * @param index The location to insert the text.
      * @param document The rich-text content to insert.
      */
-    default void insert(int index, StyledDocument<PS, S> document) {
+    default void insert(int index, StyledDocument<PS, SEG, S> document) {
         replace(index, index, document);
     }
 
@@ -64,7 +64,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
      *
      * @param document The rich-text content to insert.
      */
-    default void insert(int paragraphIndex, int columnIndex, StyledDocument<PS, S> document) {
+    default void insert(int paragraphIndex, int columnIndex, StyledDocument<PS, SEG, S> document) {
         int index = getAbsolutePosition(paragraphIndex, columnIndex);
         replace(index, index, document);
     }
@@ -149,7 +149,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
     /**
      * Replaces the entire content with the given rich-text content.
      */
-    default void replace(StyledDocument<PS, S> replacement) {
+    default void replace(StyledDocument<PS, SEG, S> replacement) {
         replace(0, getLength(), replacement);
     }
 
@@ -169,7 +169,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
      * caret position. If there was a selection, then the selection is cleared
      * and the given replacement text is inserted.
      */
-    default void replaceSelection(StyledDocument<PS, S> replacement) {
+    default void replaceSelection(StyledDocument<PS, SEG, S> replacement) {
         replace(getSelection(), replacement);
     }
 
@@ -180,7 +180,7 @@ public interface EditActions<PS, S> extends TextEditingArea<PS, S> {
             // no move, just position the caret
             selectRange(pos, pos);
         } else {
-            StyledDocument<PS, S> text = this.subDocument(sel.getStart(), sel.getEnd());
+            StyledDocument<PS, SEG, S> text = this.subDocument(sel.getStart(), sel.getEnd());
             if(pos > sel.getEnd())
                 pos -= sel.getLength();
             deleteText(sel);

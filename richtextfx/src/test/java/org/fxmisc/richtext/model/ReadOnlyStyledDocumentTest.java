@@ -1,22 +1,24 @@
 package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.ReadOnlyStyledDocument.*;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 import java.util.List;
+
 import org.junit.Test;
 
 public class ReadOnlyStyledDocumentTest {
 
     @Test
     public void testUndo() {
-        ReadOnlyStyledDocument<String, String> doc0 = fromString("", "X", "X");
+        TextOps<StyledText<String>, String> segOps = StyledText.textOps();
+        ReadOnlyStyledDocument<String, StyledText<String>, String> doc0 = fromString("", "X", "X", segOps);
 
-        doc0.replace(0, 0, fromString("abcd", "Y", "Y")).exec((doc1, chng1, pchng1) -> {
+        doc0.replace(0, 0, fromString("abcd", "Y", "Y", segOps)).exec((doc1, chng1, pchng1) -> {
             // undo chng1
-            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved())).exec((doc2, chng2, pchng2) -> {
+            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved(), ops)).exec((doc2, chng2, pchng2) -> {
                 // we should have arrived at the original document
                 assertEquals(doc0, doc2);
 
@@ -28,15 +30,16 @@ public class ReadOnlyStyledDocumentTest {
 
     @Test
     public void deleteNewlineTest() {
-        ReadOnlyStyledDocument<Void, Void> doc0 = fromString("Foo\nBar", null, null);
-        doc0.replace(3, 4, fromString("", null, null)).exec((doc1, ch, pch) -> {
-            List<? extends Paragraph<Void, Void>> removed = pch.getRemoved();
-            List<? extends Paragraph<Void, Void>> added = pch.getAdded();
+        TextOps<StyledText<Void>, Void> segOps = StyledText.textOps();
+        ReadOnlyStyledDocument<Void, StyledText<Void>, Void> doc0 = fromString("Foo\nBar", null, null, segOps);
+        doc0.replace(3, 4, fromString("", null, null, segOps)).exec((doc1, ch, pch) -> {
+            List<? extends Paragraph<Void, StyledText<Void>, Void>> removed = pch.getRemoved();
+            List<? extends Paragraph<Void, StyledText<Void>, Void>> added = pch.getAdded();
             assertEquals(2, removed.size());
-            assertEquals(new Paragraph<Void, Void>(null, "Foo", null), removed.get(0));
-            assertEquals(new Paragraph<Void, Void>(null, "Bar", null), removed.get(1));
+            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("Foo", null)), removed.get(0));
+            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("Bar", null)), removed.get(1));
             assertEquals(1, added.size());
-            assertEquals(new Paragraph<Void, Void>(null, "FooBar", null), added.get(0));
+            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("FooBar", null)), added.get(0));
         });
     }
 
@@ -45,8 +48,9 @@ public class ReadOnlyStyledDocumentTest {
         final String fooBar = "Foo Bar";
         final String and = " and ";
         final String helloWorld = "Hello World";
-        
-        SimpleEditableStyledDocument<String, String> doc0 = new SimpleEditableStyledDocument<>("", "");
+        TextOps<StyledText<String>, String> segOps = StyledText.textOps();
+
+        SimpleEditableStyledDocument<String, StyledText<String>, String> doc0 = new SimpleEditableStyledDocument<>("", "", segOps);
 
         ReadOnlyStyledDocument<String, String> text = fromString(fooBar, "", "bold");
         doc0.replace(doc0.getLength(),  doc0.getLength(), text);
@@ -73,5 +77,5 @@ public class ReadOnlyStyledDocumentTest {
         assertThat(result.get(1).getText(), equalTo("Bar and Hello"));
         assertThat(result.get(2).getText(), equalTo(" World"));
     }
-    
+
 }

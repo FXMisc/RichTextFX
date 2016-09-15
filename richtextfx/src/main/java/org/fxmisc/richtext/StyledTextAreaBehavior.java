@@ -1,16 +1,13 @@
 package org.fxmisc.richtext;
 
-import static java.lang.Character.isWhitespace;
+import static java.lang.Character.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
-import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.consume;
-import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.sequence;
-import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.when;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
 import static org.reactfx.EventStreams.*;
 
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import javafx.event.Event;
@@ -21,19 +18,17 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
+import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
-import org.fxmisc.richtext.ParagraphBox.CaretOffsetX;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.template.InputMapTemplate;
 import org.reactfx.EventStream;
-import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Controller for StyledTextArea.
+ * Controller for GenericStyledArea.
  */
 class StyledTextAreaBehavior {
 
@@ -209,9 +204,9 @@ class StyledTextAreaBehavior {
      * Fields                                                                 *
      * ********************************************************************** */
 
-    private final StyledTextArea<?, ?> view;
+    private final GenericStyledArea<?, ?, ?> view;
 
-    private final StyledTextAreaModel<?, ?> model;
+    private final StyledTextAreaModel<?, ?, ?> model;
 
     /**
      * Indicates whether selection is being dragged by the user.
@@ -224,7 +219,7 @@ class StyledTextAreaBehavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    StyledTextAreaBehavior(StyledTextArea<?, ?> area) {
+    StyledTextAreaBehavior(GenericStyledArea<?, ?, ?> area) {
         this.view = area;
         this.model = area.getModel();
 
