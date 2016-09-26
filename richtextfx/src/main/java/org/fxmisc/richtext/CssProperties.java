@@ -52,16 +52,16 @@ class CssProperties {
         }
     }
 
-    static class HighlightFillProperty extends StyleableObjectProperty<Paint> {
+    static class SelectionBackgroundFillProperty extends StyleableObjectProperty<Paint> {
         private final Object bean;
 
         private final CssMetaData<? extends Styleable, Paint> cssMetaData;
 
-        public HighlightFillProperty(Object bean, Paint initialValue) {
+        public SelectionBackgroundFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
             this.bean = bean;
             cssMetaData = new PropertyCssMetaData<>(
-                    this, "-fx-highlight-fill",
+                    this, "-fx-selection-background-fill",
                     StyleConverter.getPaintConverter(), initialValue);
         }
 
@@ -72,7 +72,7 @@ class CssProperties {
 
         @Override
         public String getName() {
-            return "highlightFill";
+            return "selectionBackgroundFill";
         }
 
         @Override
@@ -81,16 +81,16 @@ class CssProperties {
         }
     }
 
-    static class HighlightTextFillProperty extends StyleableObjectProperty<Paint> {
+    static class SelectionForegroundFillProperty extends StyleableObjectProperty<Paint> {
         private final Object bean;
 
         private final CssMetaData<? extends Styleable, Paint> cssMetaData;
 
-        public HighlightTextFillProperty(Object bean, Paint initialValue) {
+        public SelectionForegroundFillProperty(Object bean, Paint initialValue) {
             super(initialValue);
             this.bean = bean;
             cssMetaData = new PropertyCssMetaData<>(
-                    this, "-fx-highlight-text-fill",
+                    this, "-fx-selection-foreground-fill",
                     StyleConverter.getPaintConverter(), initialValue);
         }
 
@@ -101,7 +101,7 @@ class CssProperties {
 
         @Override
         public String getName() {
-            return "highlightTextFill";
+            return "selectionForegroundFill";
         }
 
         @Override
