@@ -16,6 +16,7 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -1102,7 +1103,7 @@ public class StyledTextArea<PS, S> extends Region
         PopupAlignment alignment = getPopupAlignment();
         UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
         if(popup != null) {
-            positionPopup(popup, alignment, adjustment);
+            Platform.runLater(() -> positionPopup(popup, alignment, adjustment));
         }
     }
 
