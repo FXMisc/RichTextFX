@@ -494,10 +494,13 @@ class StyledTextAreaBehavior {
                 model.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
                 break;
             case DRAG:
-                // move selection to the target position
-                CharacterHit h = view.hit(e.getX(), e.getY());
-                view.getOnSelectionDrop().accept(h.getInsertionIndex());
-                // do nothing, handled by mouseDragReleased
+                // only handle drags if mouse was released inside of view
+                if (view.getLayoutBounds().contains(e.getX(), e.getY())) {
+                    // move selection to the target position
+                    CharacterHit h = view.hit(e.getX(), e.getY());
+                    view.getOnSelectionDrop().accept(h.getInsertionIndex());
+                    // do nothing, handled by mouseDragReleased
+                }
             case NO_DRAG:
                 // do nothing, caret already repositioned in mousePressed
         }
