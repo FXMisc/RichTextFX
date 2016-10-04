@@ -605,6 +605,13 @@ public class StyledTextArea<PS, S> extends Region
         EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
         subscribeTo(caretDirty, x -> requestFollowCaret());
 
+        // relayout the popup when any of its settings values change (besides the caret being dirty)
+        EventStream<?> popupAlignmentDirty = invalidationsOf(popupAlignmentProperty());
+        EventStream<?> popupAnchorAdjustmentDirty = invalidationsOf(popupAnchorAdjustmentProperty());
+        EventStream<?> popupAnchorOffsetDirty = invalidationsOf(popupAnchorOffsetProperty());
+        EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
+        subscribeTo(popupDirty, x -> layoutPopup());
+
         // whether or not to display the caret
         EventStream<Boolean> blinkCaret = EventStreams.valuesOf(showCaretProperty())
                 .flatMap(mode -> {
@@ -1098,12 +1105,7 @@ public class StyledTextArea<PS, S> extends Region
         }
 
         // position popup
-        PopupWindow popup = getPopupWindow();
-        PopupAlignment alignment = getPopupAlignment();
-        UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
-        if(popup != null) {
-            positionPopup(popup, alignment, adjustment);
-        }
+        layoutPopup();
     }
 
     /* ********************************************************************** *
@@ -1200,6 +1202,15 @@ public class StyledTextArea<PS, S> extends Region
 
     private int getParagraphOffset(int parIdx) {
         return position(parIdx, 0).toOffset();
+    }
+
+    private void layoutPopup() {
+        PopupWindow popup = getPopupWindow();
+        PopupAlignment alignment = getPopupAlignment();
+        UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
+        if(popup != null) {
+            positionPopup(popup, alignment, adjustment);
+        }
     }
 
     private void positionPopup(
