@@ -448,6 +448,9 @@ public class StyledTextArea<PS, S> extends Region
 
     private Subscription subscriptions = () -> {};
 
+    // Remembers horizontal position when traversing up / down.
+    private Optional<ParagraphBox.CaretOffsetX> targetCaretOffset = Optional.empty();
+
     private final Binding<Boolean> caretVisible;
 
     private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
@@ -968,6 +971,30 @@ public class StyledTextArea<PS, S> extends Region
     }
 
     /**
+     * Moves caret to the previous page (i.e. page up)
+     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
+     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *                        to the place to where the caret is moved is desired.
+     */
+    public void prevPage(SelectionPolicy selectionPolicy) {
+        showCaretAtBottom();
+        CharacterHit hit = hit(getTargetCaretOffset(), 1.0);
+        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
+    }
+
+    /**
+     * Moves caret to the next page (i.e. page down)
+     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
+     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *                        to the place to where the caret is moved is desired.
+     */
+    public void nextPage(SelectionPolicy selectionPolicy) {
+        showCaretAtTop();
+        CharacterHit hit = hit(getTargetCaretOffset(), getViewportHeight() - 1.0);
+        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
+    }
+
+    /**
      * Sets style for the given character range.
      */
     public void setStyle(int from, int to, S style) {
@@ -1287,6 +1314,16 @@ public class StyledTextArea<PS, S> extends Region
                     b.getMinX() - w, b.getMinY(),
                     b.getWidth() + w, b.getHeight());
         }
+    }
+
+    void clearTargetCaretOffset() {
+        targetCaretOffset = Optional.empty();
+    }
+
+    ParagraphBox.CaretOffsetX getTargetCaretOffset() {
+        if(!targetCaretOffset.isPresent())
+            targetCaretOffset = Optional.of(getCaretOffsetX());
+        return targetCaretOffset.get();
     }
 
     private static EventStream<Boolean> booleanPulse(javafx.util.Duration javafxDuration, EventStream<?> restartImpulse) {
