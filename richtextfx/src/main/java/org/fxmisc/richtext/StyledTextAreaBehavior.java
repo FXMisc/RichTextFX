@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import static java.lang.Character.isWhitespace;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
@@ -107,12 +108,12 @@ class StyledTextAreaBehavior {
                         anyOf(
                                 keyPressed(RIGHT,    SHORTCUT_DOWN),
                                 keyPressed(KP_RIGHT, SHORTCUT_DOWN)
-                        ), (b, e) -> b.model.wordBreaksForwards(2, SelectionPolicy.CLEAR)),
+                        ), (b, e) -> b.skipToNextWord(SelectionPolicy.CLEAR)),
                 consume(
                         anyOf(
                                 keyPressed(LEFT,     SHORTCUT_DOWN),
                                 keyPressed(KP_LEFT,  SHORTCUT_DOWN)
-                        ), (b, e) -> b.model.wordBreaksBackwards(2, SelectionPolicy.CLEAR)),
+                        ), (b, e) -> b.skipToPrevWord(SelectionPolicy.CLEAR)),
                 consume(keyPressed(HOME, SHORTCUT_DOWN), (b, e) -> b.model.start(SelectionPolicy.CLEAR)),
                 consume(keyPressed(END,  SHORTCUT_DOWN), (b, e) -> b.model.end(SelectionPolicy.CLEAR)),
                 // selection
@@ -134,12 +135,12 @@ class StyledTextAreaBehavior {
                         anyOf(
                                 keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN),
                                 keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)
-                        ), (b, e) -> b.model.wordBreaksForwards(2, selPolicy)),
+                        ), (b, e) -> b.skipToNextWord(selPolicy)),
                 consume(
                         anyOf(
                                 keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN),
                                 keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)
-                        ), (b, e) -> b.model.wordBreaksBackwards(2, selPolicy)),
+                        ), (b, e) -> b.skipToPrevWord(selPolicy)),
                 consume(keyPressed(A, SHORTCUT_DOWN), (b, e) -> b.model.selectAll())
         );
 
@@ -359,6 +360,27 @@ class StyledTextAreaBehavior {
 
     private void nextLine(SelectionPolicy selectionPolicy) {
         downLines(selectionPolicy, 1);
+    }
+
+    private void skipToPrevWord(SelectionPolicy selectionPolicy) {
+        int caretPos = model.getCaretPosition();
+
+        // if (0 == caretPos), do nothing as can't move to the left anyway
+        if (1 <= caretPos ) {
+            boolean prevCharIsWhiteSpace = isWhitespace(model.getText(caretPos - 1, caretPos).charAt(0));
+            model.wordBreaksBackwards(prevCharIsWhiteSpace ? 2 : 1, selectionPolicy);
+        }
+    }
+
+    private void skipToNextWord(SelectionPolicy selectionPolicy) {
+        int caretPos = model.getCaretPosition();
+        int length = model.getLength();
+
+        // if (caretPos == length), do nothing as can't move to the right anyway
+        if (caretPos <= length - 1) {
+            boolean nextCharIsWhiteSpace = isWhitespace(model.getText(caretPos, caretPos + 1).charAt(0));
+            model.wordBreaksForwards(nextCharIsWhiteSpace ? 2 : 1, selectionPolicy);
+        }
     }
 
     /* ********************************************************************** *
