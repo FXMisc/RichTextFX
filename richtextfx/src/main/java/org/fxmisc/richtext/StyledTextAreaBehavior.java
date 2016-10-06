@@ -169,13 +169,16 @@ class StyledTextAreaBehavior {
                 .orElse(otherNavigation).ifConsumed((b, e) -> b.view.clearTargetCaretOffset())
                 .orElse(verticalNavigation)
                 .orElse(copyAction)
+                .ifConsumed((b, e) -> b.view.requestFollowCaret())
+                // no need to add 'ifConsumed' after charPress since
+                // requestFollowCaret is called in keyTypedTemplate
                 .orElse(charPressConsumer);
 
         InputMapTemplate<StyledTextAreaBehavior, KeyEvent> keyTypedBase = consume(
                 // character input
                 EventPattern.keyTyped().onlyIf(noControlKeys.and(e -> isLegal(e.getCharacter()))),
                 StyledTextAreaBehavior::keyTyped
-        );
+        ).ifConsumed((b, e) -> b.view.requestFollowCaret());
         InputMapTemplate<StyledTextAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
 
         InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseEventTemplate = sequence(
