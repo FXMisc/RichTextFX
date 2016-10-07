@@ -103,6 +103,20 @@ import org.reactfx.value.Var;
  * }
  * </pre>
  *
+ * <h3>Auto-Scrolling to the Caret</h3>
+ *
+ * <p>Every time the underlying {@link EditableStyledDocument} changes via user interaction (e.g. typing) through
+ * the {@code StyledTextArea}, the area will scroll to insure the caret is kept in view. However, this does not
+ * occur if changes are done programmatically. For example, let's say the area is displaying the bottom part
+ * of the area's {@link EditableStyledDocument} and some code changes something in the top part of the document
+ * that is not currently visible. If there is no call to {@link #requestFollowCaret()} at the end of that code,
+ * the area will not auto-scroll to that section of the document. The change will occur, and the user will continue
+ * to see the bottom part of the document as before. If such a call is there, then the area will scroll
+ * to the top of the document and no longer display the bottom part of it.</p>
+ *
+ * <p>Additionally, when overriding the default user-interaction behavior, remember to include a call
+ * to {@link #requestFollowCaret()}.</p>
+ *
  * <h3>Overriding keyboard shortcuts</h3>
  *
  * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
@@ -955,7 +969,12 @@ public class StyledTextArea<PS, S> extends Region
         virtualFlow.showAtOffset(parIdx, -y);
     }
 
-    void requestFollowCaret() {
+    /**
+     * If the caret is not visible within the area's view, the area will scroll so that caret
+     * is visible in the next layout pass. Use this method when you wish to "follow the caret"
+     * (i.e. auto-scroll to caret) after making a change (add/remove/modify area's segments).
+     */
+    public void requestFollowCaret() {
         followCaretRequested = true;
         requestLayout();
     }
