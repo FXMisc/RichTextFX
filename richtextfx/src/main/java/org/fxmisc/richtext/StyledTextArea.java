@@ -600,20 +600,19 @@ public class StyledTextArea<PS, S> extends Region
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
-        // follow the caret every time the caret position or paragraphs change
-        EventStream<?> caretPosDirty = invalidationsOf(caretPositionProperty());
-        EventStream<?> paragraphsDirty = invalidationsOf(getParagraphs());
-        EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
-        // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
-        EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-        subscribeTo(caretDirty, x -> requestFollowCaret());
-
         // relayout the popup when any of its settings values change (besides the caret being dirty)
         EventStream<?> popupAlignmentDirty = invalidationsOf(popupAlignmentProperty());
         EventStream<?> popupAnchorAdjustmentDirty = invalidationsOf(popupAnchorAdjustmentProperty());
         EventStream<?> popupAnchorOffsetDirty = invalidationsOf(popupAnchorOffsetProperty());
         EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
         subscribeTo(popupDirty, x -> layoutPopup());
+
+        // follow the caret every time the caret position or paragraphs change
+        EventStream<?> caretPosDirty = invalidationsOf(caretPositionProperty());
+        EventStream<?> paragraphsDirty = invalidationsOf(getParagraphs());
+        EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
+        // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
+        EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
 
         // whether or not to display the caret
         EventStream<Boolean> blinkCaret = EventStreams.valuesOf(showCaretProperty())
