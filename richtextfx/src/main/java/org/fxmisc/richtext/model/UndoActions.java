@@ -3,7 +3,6 @@ package org.fxmisc.richtext.model;
 import javafx.beans.value.ObservableBooleanValue;
 
 import org.fxmisc.undo.UndoManager;
-import org.fxmisc.undo.UndoManagerFactory;
 
 /**
  * Undo/redo actions for {@link TextEditingArea}.
@@ -14,7 +13,8 @@ public interface UndoActions {
      * Undo manager of this text area.
      */
     UndoManager getUndoManager();
-    void setUndoManager(UndoManagerFactory undoManagerFactory);
+
+    void setUndoManager(UndoManager undoManager);
 
     default void undo() { getUndoManager().undo(); }
 

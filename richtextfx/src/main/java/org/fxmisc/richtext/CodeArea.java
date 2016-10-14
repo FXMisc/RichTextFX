@@ -4,6 +4,7 @@ package org.fxmisc.richtext;
 import java.util.Collection;
 
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.undo.UndoManager;
 
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
@@ -24,6 +25,10 @@ public class CodeArea extends StyleClassedTextArea {
 
     public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document) {
         super(document, false);
+    }
+
+    public CodeArea(EditableStyledDocument<Collection<String>, Collection<String>> document, UndoManager undoManager) {
+        super(document, false, undoManager);
     }
 
     public CodeArea() {

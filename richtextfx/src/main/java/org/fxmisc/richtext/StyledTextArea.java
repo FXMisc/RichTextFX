@@ -8,6 +8,7 @@ import static org.reactfx.util.Tuples.*;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
@@ -233,9 +234,7 @@ public class StyledTextArea<PS, S> extends Region
 
     // undo manager
     @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
-    @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        model.setUndoManager(undoManagerFactory);
-    }
+    @Override public void setUndoManager(UndoManager undoManager) { model.setUndoManager(undoManager); }
 
     /**
      * Popup window that will be positioned by this text area relative to the
@@ -538,16 +537,16 @@ public class StyledTextArea<PS, S> extends Region
     /**
      * Creates a text area with empty text content.
      *
-     * @param initialTextStyle style to use in places where no other style is
-     * specified (yet).
-     * @param applyStyle function that, given a {@link Text} node and
-     * a style, applies the style to the text node. This function is
-     * used by the default skin to apply style to text nodes.
      * @param initialParagraphStyle style to use in places where no other style is
      * specified (yet).
      * @param applyParagraphStyle function that, given a {@link TextFlow} node and
      * a style, applies the style to the paragraph node. This function is
      * used by the default skin to apply style to paragraph nodes.
+     * @param initialTextStyle style to use in places where no other style is
+     * specified (yet).
+     * @param applyStyle function that, given a {@link Text} node and
+     * a style, applies the style to the text node. This function is
+     * used by the default skin to apply style to text nodes.
      */
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle
@@ -580,7 +579,36 @@ public class StyledTextArea<PS, S> extends Region
                           S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
                           EditableStyledDocument<PS, S> document, boolean preserveStyle
     ) {
-        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, applyStyle, document, preserveStyle, null);
+    }
+
+    /**
+     * Constructs an empty text area. This constructor exposes all options in construction.
+     *
+     *
+     * @param initialParagraphStyle style to use in places where no other style is
+     *                              specified (yet).
+     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
+     *                            a style, applies the style to the paragraph node. This function is
+     *                            used by the default skin to apply style to paragraph nodes.
+     * @param initialTextStyle style to use in places where no other style is
+     *                         specified (yet).
+     * @param applyStyle function that, given a {@link Text} node and
+     *                   a style, applies the style to the text node. This function is
+     *                   used by the default skin to apply style to text nodes.
+     * @param document the content to display
+     * @param preserveStyle whether to preserve styles when doing changes. <em>Note: currently only undo/redo respects
+     *                      this flag if a {@code null} value is passed in for {@code undoManager}. See its parameter
+     *                      explanation.</em>
+     * @param undoManager the {@link UndoManager} for the area. Passing a {@code null} value will install a linear
+     *                    {@link UndoManager} with unlimited history. If {@code preserveStyle} is true, this
+     *                    undoManager will handle rich text changes; otherwise, it will handle plain text changes.
+     */
+    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
+                          EditableStyledDocument<PS, S> document, boolean preserveStyle, UndoManager undoManager
+    ) {
+        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, preserveStyle, undoManager);
         this.applyStyle = applyStyle;
         this.applyParagraphStyle = applyParagraphStyle;
 
@@ -1133,6 +1161,32 @@ public class StyledTextArea<PS, S> extends Region
         subscriptions.unsubscribe();
         model.dispose();
         virtualFlow.dispose();
+    }
+
+    public UndoManager createPlainLinearUndoManager(UndoManagerFactory factory) {
+        return model.createPlainLinearUndoManager(factory);
+    }
+
+    /**
+     * Convenience method that removes the area's previous {@link UndoManager} and sets one that handles
+     * plain text changes. <em>Note: any previous undo manager undo/redo history will be lost!</em> See
+     * {@link #installNewRichLinearUndoManager(UndoManagerFactory)}} for rich text undo manager.
+     */
+    public void installNewPlainLinearUndoManager(UndoManagerFactory factory) {
+        setUndoManager(createPlainLinearUndoManager(factory));
+    }
+
+    public UndoManager createRichLinearUndoManager(UndoManagerFactory factory) {
+        return model.createRichLinearUndoManager(factory);
+    }
+
+    /**
+     * Convenience method that removes the area's previous {@link UndoManager} and sets one that handles
+     * rich text changes. <em>Note: any previous undo manager undo/redo history will be lost!</em> See
+     * {@link #installNewPlainLinearUndoManager(UndoManagerFactory)}} for plain text undo manager
+     */
+    public void installNewRichLinearUndoManager(UndoManagerFactory factory) {
+        setUndoManager(createRichLinearUndoManager(factory));
     }
 
     /* ********************************************************************** *
