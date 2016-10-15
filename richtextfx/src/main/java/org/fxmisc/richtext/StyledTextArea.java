@@ -8,7 +8,6 @@ import static org.reactfx.util.Tuples.*;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
@@ -1163,30 +1162,30 @@ public class StyledTextArea<PS, S> extends Region
         virtualFlow.dispose();
     }
 
-    public UndoManager createPlainLinearUndoManager(UndoManagerFactory factory) {
-        return model.createPlainLinearUndoManager(factory);
+    public UndoManager createPlainUndoManager(UndoManagerFactory<PlainTextChange> factory, int capacity) {
+        return model.createPlainUndoManager(factory, capacity);
     }
 
     /**
      * Convenience method that removes the area's previous {@link UndoManager} and sets one that handles
      * plain text changes. <em>Note: any previous undo manager undo/redo history will be lost!</em> See
-     * {@link #installNewRichLinearUndoManager(UndoManagerFactory)}} for rich text undo manager.
+     * {@link #installNewRichUndoManager(UndoManagerFactory, int)}} for rich text undo manager.
      */
-    public void installNewPlainLinearUndoManager(UndoManagerFactory factory) {
-        setUndoManager(createPlainLinearUndoManager(factory));
+    public void installNewPlainUndoManager(UndoManagerFactory<PlainTextChange> factory, int capacity) {
+        setUndoManager(createPlainUndoManager(factory, capacity));
     }
 
-    public UndoManager createRichLinearUndoManager(UndoManagerFactory factory) {
-        return model.createRichLinearUndoManager(factory);
+    public UndoManager createRichUndoManager(UndoManagerFactory<RichTextChange<PS, S>> factory, int capacity) {
+        return model.createRichUndoManager(factory, capacity);
     }
 
     /**
      * Convenience method that removes the area's previous {@link UndoManager} and sets one that handles
      * rich text changes. <em>Note: any previous undo manager undo/redo history will be lost!</em> See
-     * {@link #installNewPlainLinearUndoManager(UndoManagerFactory)}} for plain text undo manager
+     * {@link #installNewPlainUndoManager(UndoManagerFactory, int)} for plain text undo manager
      */
-    public void installNewRichLinearUndoManager(UndoManagerFactory factory) {
-        setUndoManager(createRichLinearUndoManager(factory));
+    public void installNewRichUndoManager(UndoManagerFactory<RichTextChange<PS, S>> factory, int capacity) {
+        setUndoManager(createRichUndoManager(factory, capacity));
     }
 
     /* ********************************************************************** *

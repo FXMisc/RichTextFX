@@ -2,8 +2,6 @@ package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
-import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import javafx.beans.property.BooleanProperty;
@@ -72,13 +70,14 @@ public class StyledTextAreaModel<PS, S>
     @Override public UndoManager getUndoManager() { return undoManager; }
     @Override public void setUndoManager(UndoManager newUndoManager) {
         undoManager.close();
-        if (undoManager == null) {
-            this.undoManager = preserveStyle
-                    ? createRichLinearUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                    : createPlainLinearUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
-        } else {
-            this.undoManager = newUndoManager;
-        }
+        this.undoManager = newUndoManager == null
+                ? defaultUnlimitedLinearUndoManager()
+                : newUndoManager;
+    }
+    private UndoManager defaultUnlimitedLinearUndoManager() {
+        return preserveStyle
+                ? createRichUndoManager(UndoManagerFactory.linearFactory(), -1)
+                : createPlainUndoManager(UndoManagerFactory.linearFactory(), -1);
     }
 
     /**
@@ -171,16 +170,26 @@ public class StyledTextAreaModel<PS, S>
     @Override
     public final EventStream<RichTextChange<PS, S>> richChanges() { return richTextChanges; }
 
-    public UndoManager createPlainLinearUndoManager(UndoManagerFactory factory) {
+    public UndoManager createPlainUndoManager(UndoManagerFactory<PlainTextChange> factory, int capacity) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
-        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
+        if (capacity < 0) {
+            return factory.unlimitedHistory(plainTextChanges(), PlainTextChange::invert, apply, PlainTextChange::mergeWith);
+        } else if (capacity == 0) {
+            return factory.zeroHistory(plainTextChanges());
+        } else {
+            return factory.fixedSizeHistory(capacity, plainTextChanges(), PlainTextChange::invert, apply, PlainTextChange::mergeWith);
+        }
     }
 
-    public UndoManager createRichLinearUndoManager(UndoManagerFactory factory) {
+    public UndoManager createRichUndoManager(UndoManagerFactory<RichTextChange<PS, S>> factory, int capacity) {
         Consumer<RichTextChange<PS, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<PS, S>, RichTextChange<PS, S>, Optional<RichTextChange<PS, S>>> merge = RichTextChange::mergeWith;
-        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
+        if (capacity < 0) {
+            return factory.unlimitedHistory(richChanges(), RichTextChange::invert, apply, RichTextChange::mergeWith);
+        } else if (capacity == 0) {
+            return factory.zeroHistory(richChanges());
+        } else {
+            return factory.fixedSizeHistory(capacity, richChanges(), RichTextChange::invert, apply, RichTextChange::mergeWith);
+        }
     }
 
     /* ********************************************************************** *
@@ -332,13 +341,9 @@ public class StyledTextAreaModel<PS, S>
             }
         });
 
-        if (undoManager == null) {
-            this.undoManager = preserveStyle
-                    ? createRichLinearUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                    : createPlainLinearUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
-        } else {
-            this.undoManager = undoManager;
-        }
+        this.undoManager = undoManager == null
+                ? defaultUnlimitedLinearUndoManager()
+                : undoManager;
 
         Val<Position> caretPosition2D = Val.create(
                 () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
