@@ -7,8 +7,8 @@ import org.reactfx.util.Either;
 /**
  * Defines the operations which are supported on a specific segment type.
  *
- * @param <SEG>
- * @param <S>
+ * @param <SEG> The segment type
+ * @param <S> The style type for the segment
  */
 public interface SegmentOps<SEG, S> {
     public int length(SEG seg);

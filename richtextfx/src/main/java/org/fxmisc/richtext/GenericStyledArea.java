@@ -56,15 +56,15 @@ import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.GenericEditableStyledDocument;
+import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
-import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
@@ -529,7 +529,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    @Override public final SegmentOps<SEG, S> getSegOps() { return getContent().getSegOps(); }
+    private final TextOps<SEG, S> segmentOps;
+    @Override public final SegmentOps<SEG, S> getSegOps() { return segmentOps; }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -561,7 +562,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                           S initialTextStyle, TextOps<SEG, S> segmentOps,
                           boolean preserveStyle, Function<SEG, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle,
-                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps), segmentOps, preserveStyle, nodeFactory);
+                new GenericEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps), segmentOps, preserveStyle, nodeFactory);
     }
 
     /**
@@ -590,6 +591,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             Function<SEG, Node> nodeFactory) {
         this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, textOps, preserveStyle);
         this.applyParagraphStyle = applyParagraphStyle;
+        this.segmentOps = textOps;
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -1050,7 +1052,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int from, StyleSpans</*? extends */ S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         model.setStyleSpans(from, styleSpans);
     }
 
@@ -1064,7 +1066,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int paragraph, int from, StyleSpans</*? extends*/ S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         model.setStyleSpans(paragraph, from, styleSpans);
     }
 

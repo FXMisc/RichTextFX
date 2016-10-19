@@ -15,10 +15,10 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
 
     public StyleClassedTextArea(EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document, boolean preserveStyle) {
         super(Collections.<String>emptyList(),
-              (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
-              Collections.<String>emptyList(),
-              (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
-              document, preserveStyle
+                (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
+                Collections.<String>emptyList(),
+                (text, styleClasses) -> text.getStyleClass().addAll(styleClasses),
+                document, preserveStyle
         );
 
         setStyleCodecs(
@@ -29,7 +29,7 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
     public StyleClassedTextArea(boolean preserveStyle) {
         this(
                 new SimpleEditableStyledDocument<>(
-                    Collections.<String>emptyList(), Collections.<String>emptyList(), StyledText.textOps()
+                    Collections.<String>emptyList(), Collections.<String>emptyList()
                 ), preserveStyle);
     }
 

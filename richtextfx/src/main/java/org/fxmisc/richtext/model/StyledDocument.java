@@ -19,8 +19,6 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
 
     StyledDocument<PS, SEG, S> subSequence(int start, int end);
 
-    SegmentOps<SEG, S> getSegOps();
-
     default String getText(IndexRange range) {
         return getText(range.getStart(), range.getEnd());
     }
@@ -34,7 +32,7 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
     }
 
     default StyledDocument<PS, SEG, S> subDocument(int paragraphIndex) {
-        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)), getSegOps());
+        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)));
     }
 
     default char charAt(int index) {

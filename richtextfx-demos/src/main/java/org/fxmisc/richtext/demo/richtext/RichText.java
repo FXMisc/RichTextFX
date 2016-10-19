@@ -413,7 +413,7 @@ public class RichText extends Application {
         // Use the Codec to save the document in a binary format
         area.getStyleCodecs().ifPresent(codecs -> {
             Codec<StyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle>> codec =
-                    ReadOnlyStyledDocument.codec(codecs._1, codecs._2, doc.getSegOps());
+                    ReadOnlyStyledDocument.codec(codecs._1, codecs._2, area.getSegOps());
             try {
                 FileOutputStream fos = new FileOutputStream(file);
                 DataOutputStream dos = new DataOutputStream(fos);

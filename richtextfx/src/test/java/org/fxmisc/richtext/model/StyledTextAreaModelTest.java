@@ -9,7 +9,6 @@ import org.junit.Test;
 
 public class StyledTextAreaModelTest {
 
-
     @Test
     public void testUndoWithWinNewlines() {
         final TextOps<StyledText<Collection<String>>, Collection<String>> segOps = StyledText.textOps();
@@ -38,7 +37,7 @@ public class StyledTextAreaModelTest {
         // set up area with some styled text content
         boolean initialStyle = false;
         StyledTextAreaModel<String, StyledText<Boolean>, Boolean> model = new StyledTextAreaModel<>(
-                "", initialStyle, new SimpleEditableStyledDocument<>("", initialStyle, segOps), segOps, true);
+                "", initialStyle, new SimpleEditableStyledDocument<>("", initialStyle), segOps, true);
         model.replaceText("testtest");
         model.setStyle(0, 8, true);
 

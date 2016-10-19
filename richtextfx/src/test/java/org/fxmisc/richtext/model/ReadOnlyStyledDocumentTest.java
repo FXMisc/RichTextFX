@@ -50,7 +50,7 @@ public class ReadOnlyStyledDocumentTest {
         final String helloWorld = "Hello World";
         TextOps<StyledText<String>, String> segOps = StyledText.textOps();
 
-        SimpleEditableStyledDocument<String, StyledText<String>, String> doc0 = new SimpleEditableStyledDocument<>("", "", segOps);
+        SimpleEditableStyledDocument<String, String> doc0 = new SimpleEditableStyledDocument<>("", "");
 
         ReadOnlyStyledDocument<String, String> text = fromString(fooBar, "", "bold");
         doc0.replace(doc0.getLength(),  doc0.getLength(), text);

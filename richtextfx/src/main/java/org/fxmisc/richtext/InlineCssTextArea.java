@@ -14,7 +14,7 @@ import org.fxmisc.richtext.model.StyledText;
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
     public InlineCssTextArea() {
-        this(new SimpleEditableStyledDocument<>("", "", StyledText.textOps()));
+        this(new SimpleEditableStyledDocument<>("", ""));
     }
 
     public InlineCssTextArea(EditableStyledDocument<String, StyledText<String>, String> document) {

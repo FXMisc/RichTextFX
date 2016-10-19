@@ -180,8 +180,6 @@ public class StyledTextAreaModel<PS, SEG, S>
     private Position selectionStart2D;
     private Position selectionEnd2D;
 
-    private final SegmentOps<SEG, S> segmentOps;
-
     /**
      * content model
      */
@@ -236,7 +234,7 @@ public class StyledTextAreaModel<PS, SEG, S>
     public StyledTextAreaModel(PS initialParagraphStyle, S initialTextStyle, TextOps<SEG, S> segmentOps, boolean preserveStyle
     ) {
         this(initialParagraphStyle, initialTextStyle,
-                new SimpleEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps),
+                new GenericEditableStyledDocumentBase<>(initialParagraphStyle, initialTextStyle, segmentOps),
                 segmentOps, preserveStyle);
     }
 
@@ -262,7 +260,6 @@ public class StyledTextAreaModel<PS, SEG, S>
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
-        this.segmentOps = segmentOps;
 
         content = document;
         paragraphs = LiveList.suspendable(content.getParagraphs());
@@ -574,7 +571,7 @@ public class StyledTextAreaModel<PS, SEG, S>
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int from, StyleSpans</*? extends */S> styleSpans) {
+    public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         content.setStyleSpans(from, styleSpans);
     }
 
@@ -588,7 +585,7 @@ public class StyledTextAreaModel<PS, SEG, S>
      * </pre>
      * but the actual implementation is more efficient.
      */
-    public void setStyleSpans(int paragraph, int from, StyleSpans</*? extends */ S> styleSpans) {
+    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         content.setStyleSpans(paragraph, from, styleSpans);
     }
 

@@ -72,9 +72,9 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
 
     void setStyle(int paragraph, int fromCol, int toCol, S style);
 
-    void setStyleSpans(int from, StyleSpans<S> styleSpens);
+    void setStyleSpans(int from, StyleSpans<? extends S> styleSpens);
 
-    void setStyleSpans(int paragraph, int from, StyleSpans</*? extends */S> styleSpens);
+    void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpens);
 
     void setParagraphStyle(int parIdx, PS style);
 
