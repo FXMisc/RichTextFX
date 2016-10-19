@@ -170,6 +170,8 @@ public class StyledTextAreaModel<PS, S>
     @Override
     public final EventStream<RichTextChange<PS, S>> richChanges() { return richTextChanges; }
 
+    private final SuspendableNo doneByThisObject = new SuspendableNo();
+
     public UndoManager createPlainUndoManager(UndoManagerFactory<PlainTextChange> factory, int capacity) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
         if (capacity < 0) {
@@ -288,8 +290,8 @@ public class StyledTextAreaModel<PS, S>
 
         text = Val.suspendable(content.textProperty());
         length = Val.suspendable(content.lengthProperty());
-        plainTextChanges = content.plainChanges().pausable();
-        richTextChanges = content.richChanges().pausable();
+        plainTextChanges = content.plainChanges().conditionOn(doneByThisObject).pausable();
+        richTextChanges = content.richChanges().conditionOn(doneByThisObject).pausable();
 
         // when content is updated by an area, update the caret
         // and selection ranges of all the other
@@ -655,7 +657,7 @@ public class StyledTextAreaModel<PS, S>
 
     @Override
     public void replace(int start, int end, StyledDocument<PS, S> replacement) {
-        try (Guard g = content.beingUpdatedProperty().suspend()) {
+        try (Guard g = Suspendable.combine(content.beingUpdatedProperty(), doneByThisObject).suspend()) {
             start = clamp(0, start, getLength());
             end = clamp(0, end, getLength());
 
