@@ -11,7 +11,7 @@ public class StyledTextAreaModelTest {
 
     @Test
     public void testUndoWithWinNewlines() {
-        final TextOps<StyledText<Collection<String>>, Collection<String>> segOps = StyledText.textOps();
+        final TextOps<StyledText<Collection<String>>, Collection<String>> segOps = StyledText.textOps(Collections.emptyList());
 
         String text1 = "abc\r\ndef";
         String text2 = "A\r\nB\r\nC";
@@ -32,7 +32,7 @@ public class StyledTextAreaModelTest {
 
     @Test
     public void testForBug216() {
-        final TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps();
+        final TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps(false);
 
         // set up area with some styled text content
         boolean initialStyle = false;

@@ -91,7 +91,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
      * Creates an empty {@link EditableStyledDocument}
      */
     public GenericEditableStyledDocumentBase(PS initialParagraphStyle, S initialStyle, TextOps<SEG, S> segmentOps) {
-        this(new Paragraph<>(initialParagraphStyle, segmentOps, segmentOps.create("", initialStyle)));
+        this(new NonEmptyParagraph<>(initialParagraphStyle, segmentOps, segmentOps.create("", initialStyle)));
     }
 
 

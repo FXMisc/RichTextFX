@@ -5,7 +5,7 @@ import org.junit.Test;
 
 public class SimpleEditableStyledDocumentTest {
 
-    private final TextOps<StyledText<String>, String> segOps = StyledText.textOps();
+    private final TextOps<StyledText<String>, String> segOps = StyledText.textOps("");
 
     /**
      * The style of the inserted text will be the style at position
