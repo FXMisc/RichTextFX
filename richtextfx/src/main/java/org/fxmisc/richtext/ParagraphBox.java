@@ -134,7 +134,8 @@ class ParagraphBox<PS, S> extends Region {
     public CharacterHit hit(double x, double y) {
         Point2D onScreen = this.localToScreen(x, y);
         Point2D inText = text.screenToLocal(onScreen);
-        return text.hit(inText.getX(), inText.getY());
+        Insets textInsets = text.getInsets();
+        return text.hit(inText.getX() - textInsets.getLeft(), inText.getY() - textInsets.getTop());
     }
 
     public CaretOffsetX getCaretOffsetX() {
