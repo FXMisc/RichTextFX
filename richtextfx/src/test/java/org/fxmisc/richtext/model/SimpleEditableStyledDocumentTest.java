@@ -10,7 +10,6 @@ public class SimpleEditableStyledDocumentTest {
     /**
      * The style of the inserted text will be the style at position
      * {@code start} in the current document.
-     * @param ops 
      */
     private <PS> void replaceText(EditableStyledDocument<PS, StyledText<String>, String> doc, int start, int end, String text) {
         StyledDocument<PS, StyledText<String>, String> styledDoc = ReadOnlyStyledDocument.fromString(

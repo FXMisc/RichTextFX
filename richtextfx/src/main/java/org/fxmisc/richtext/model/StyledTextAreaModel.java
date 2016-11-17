@@ -28,7 +28,7 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Model for {@link org.fxmisc.richtext.GenericRichtextArea}
+ * Model for {@link org.fxmisc.richtext.GenericStyledArea}
  *
  * @param <S> type of style that can be applied to text.
  * @param <PS> type of style that can be applied to Paragraph

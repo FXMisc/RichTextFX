@@ -28,6 +28,7 @@ import org.reactfx.util.Tuple2;
 public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
 
     Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs();
+
     SegmentOps<SEG, S> getSegOps();
 
     /**
