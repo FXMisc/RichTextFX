@@ -155,7 +155,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 TextExt t = (TextExt) n;
                 // XXX: binding selectionFill to textFill,
                 // see the note at highlightTextFill
-                t.selectionFillProperty().bind(t.fillProperty());
+                t.selectionFillProperty().bind(highlightTextFill);
             }
             getChildren().add(n);
         });
@@ -435,6 +435,35 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
     }
 
+    // XXX: Because of JDK bug https://bugs.openjdk.java.net/browse/JDK-8149134
+    //      this does not work correctly if a paragraph contains more than one segment
+    //      and the selection is (also) in the second or later segments.
+    //      Visually the text color of the selection may be mix black & white.
+    private void updateTextSelection() {
+        int selStart = selection.get().getStart();
+        int selEnd = selection.get().getEnd();
+
+        int start = 0;
+        FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
+        for (Node node : nodeList) {
+            TextExt text = (TextExt) node;
+            int end = start + text.getText().length();
+
+            int textSelStart = Math.max(start, selStart);
+            int textSelEnd = Math.min(end, selEnd);
+            if (textSelEnd > textSelStart) {
+                textSelStart -= start;
+                textSelEnd -= start;
+            } else {
+                textSelStart = textSelEnd = -1;
+            }
+            text.setImpl_selectionStart(textSelStart);
+            text.setImpl_selectionEnd(textSelEnd);
+
+            start = end;
+        }
+    }
+
     private void updateBackgroundShapes() {
         int start = 0;
 
@@ -482,8 +511,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        updateAllCaretShapes();
-        updateAllSelectionShapes();
+        updateCaretShape();
+        updateSelectionShape();
+        updateTextSelection();
         updateBackgroundShapes();
     }
 
