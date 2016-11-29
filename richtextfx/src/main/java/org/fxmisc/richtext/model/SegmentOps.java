@@ -83,8 +83,8 @@ class EitherSegmentOps<L, R, S> implements SegmentOps<Either<L, R>, S> {
 
     @Override
     public S getStyle(Either<L, R> seg) {
-        return seg.unify(l -> lOps.getStyle(l),
-                         r -> rOps.getStyle(r));
+        return seg.unify(lOps::getStyle,
+                         rOps::getStyle);
     }
 
     @Override
