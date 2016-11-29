@@ -16,6 +16,7 @@ public interface TextOps<SEG, S> extends SegmentOps<SEG, S> {
     public static <L, R, S> TextOps<Either<L, R>, S> eitherR(SegmentOps<L, S> lOps, TextOps<R, S> rOps) {
         return new RightTextOps<>(lOps, rOps);
     }
+
 }
 
 class LeftTextOps<L, R, S> extends EitherSegmentOps<L, R, S> implements TextOps<Either<L, R>, S> {

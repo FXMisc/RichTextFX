@@ -133,6 +133,9 @@ public final class Paragraph<PS, SEG, S> {
             List<SEG> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
             segs.add(segmentOps.subSequence(segments.get(segIdx), 0, pos.getMinor()));
+            if (segs.isEmpty()) {
+                segs.add(segmentOps.createEmpty());
+            }
             return new Paragraph<>(paragraphStyle, segmentOps, segs);
         }
     }
@@ -148,6 +151,9 @@ public final class Paragraph<PS, SEG, S> {
             List<SEG> segs = new ArrayList<>(segments.size() - segIdx);
             segs.add(segmentOps.subSequence(segments.get(segIdx), pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
+            if (segs.isEmpty()) {
+                segs.add(segmentOps.createEmpty());
+            }
             return new Paragraph<>(paragraphStyle, segmentOps, segs);
         } else {
             throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");

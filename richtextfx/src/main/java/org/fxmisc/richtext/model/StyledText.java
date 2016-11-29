@@ -54,6 +54,11 @@ public class StyledText<S>  {
             }
 
             @Override
+            public StyledText<S> createEmpty() {
+                return new StyledText<>("", null);
+            }
+
+            @Override
             public StyledText<S> create(String text, S style) {
                 return new StyledText<>(text, style);
             }

@@ -27,6 +27,8 @@ public interface SegmentOps<SEG, S> {
 
     public Optional<SEG> join(SEG currentSeg, SEG nextSeg);
 
+    public SEG createEmpty();
+
     public default <R> SegmentOps<Either<SEG, R>, S> or(SegmentOps<R, S> rOps) {
         return either(this, rOps);
     }
@@ -36,7 +38,7 @@ public interface SegmentOps<SEG, S> {
     }
 
     public static <L, R, S> SegmentOps<Either<L, R>, S> either(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps) {
-        return new EitherSegmentOps<L, R, S>(lOps, rOps);
+        return new EitherSegmentOps<>(lOps, rOps);
     }
 }
 
@@ -95,5 +97,9 @@ class EitherSegmentOps<L, R, S> implements SegmentOps<Either<L, R>, S> {
     public Optional<Either<L, R>> join(Either<L, R> left, Either<L, R> right) {
         return left.unify(ll -> right.unify(rl -> lOps.join(ll, rl).map(Either::left), rr -> Optional.empty()),
                           lr -> right.unify(rl -> Optional.empty(), rr -> rOps.join(lr, rr).map(Either::right)));
+    }
+
+    public Either<L, R> createEmpty() {
+        return Either.left(lOps.createEmpty());
     }
 }

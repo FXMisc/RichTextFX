@@ -18,7 +18,7 @@ public class ReadOnlyStyledDocumentTest {
 
         doc0.replace(0, 0, fromString("abcd", "Y", "Y", segOps)).exec((doc1, chng1, pchng1) -> {
             // undo chng1
-            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved(), ops)).exec((doc2, chng2, pchng2) -> {
+            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved())).exec((doc2, chng2, pchng2) -> {
                 // we should have arrived at the original document
                 assertEquals(doc0, doc2);
 
@@ -52,13 +52,13 @@ public class ReadOnlyStyledDocumentTest {
 
         SimpleEditableStyledDocument<String, String> doc0 = new SimpleEditableStyledDocument<>("", "");
 
-        ReadOnlyStyledDocument<String, String> text = fromString(fooBar, "", "bold");
+        ReadOnlyStyledDocument<String, StyledText<String>, String> text = fromString(fooBar, "", "bold", segOps);
         doc0.replace(doc0.getLength(),  doc0.getLength(), text);
 
-        text = fromString(and, "", "");
+        text = fromString(and, "", "", segOps);
         doc0.replace(doc0.getLength(),  doc0.getLength(), text);
 
-        text = fromString(helloWorld, "", "bold");
+        text = fromString(helloWorld, "", "bold", segOps);
         doc0.replace(doc0.getLength(),  doc0.getLength(), text);
 
         StyleSpans<String> styles = doc0.getStyleSpans(4,  17);
@@ -71,7 +71,7 @@ public class ReadOnlyStyledDocumentTest {
         //  StyledText[text="Foo ", style=bold]
         //  StyledText[text="Bar and Hello", style=italic]
         //  StyledText[text=" World", style=bold]
-        List<Segment<String>> result = doc0.getParagraphs().get(0).getSegments();
+        List<StyledText<String>> result = doc0.getParagraphs().get(0).getSegments();
         assertThat(result.size(), equalTo(3));
         assertThat(result.get(0).getText(), equalTo("Foo "));
         assertThat(result.get(1).getText(), equalTo("Bar and Hello"));
