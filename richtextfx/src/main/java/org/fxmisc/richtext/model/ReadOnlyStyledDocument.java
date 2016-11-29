@@ -248,11 +248,6 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         return split(end)._1.split(start)._2;
     }
 
-    @Override
-    public StyledDocument<PS, SEG, S> subDocument(int paragraphIndex) {
-        return new ReadOnlyStyledDocument<>(Collections.singletonList(getParagraphs().get(paragraphIndex)), segmentOps);
-    }
-
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int from, int to, ReadOnlyStyledDocument<PS, SEG, S> replacement) {
         return replace(from, to, x -> replacement);

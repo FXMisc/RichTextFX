@@ -37,7 +37,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     public void setCaretPosition(int pos) { caretPosition.setValue(pos); }
     private final Val<Integer> clampedCaretPosition;
 
-    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(GenericRichtextArea.EMPTY_RANGE);
+    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
