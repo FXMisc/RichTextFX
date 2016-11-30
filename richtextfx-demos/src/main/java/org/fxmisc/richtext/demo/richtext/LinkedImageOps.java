@@ -6,19 +6,21 @@ import org.fxmisc.richtext.model.SegmentOps;
 
 public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
 
+    private final LinkedImage<S> emptySeg = new LinkedImage<>("", null);
+
     @Override
     public int length(LinkedImage<S> seg) {
-        return 1;
+        return seg == emptySeg ? 0 : 1;
     }
 
     @Override
     public char charAt(LinkedImage<S> seg, int index) {
-        return '\ufffc';
+        return seg == emptySeg ? '\0' : '\ufffc';
     }
 
     @Override
     public String getText(LinkedImage<S> seg) {
-        return "\ufffc";
+        return seg == emptySeg ? "" : "\ufffc";
     }
 
     @Override
@@ -31,7 +33,7 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
         }
         return start == 0 && end == 1
                 ? seg
-                : createEmpty();
+                : emptySeg;
     }
 
     @Override
@@ -41,7 +43,7 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
         }
         return start == 0
                 ? seg
-                : createEmpty();
+                : emptySeg;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
 
     @Override
     public LinkedImage<S> setStyle(LinkedImage<S> seg, S style) {
-        return seg.setStyle(style);
+        return seg == emptySeg ? emptySeg : seg.setStyle(style);
     }
 
     @Override
@@ -61,6 +63,6 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
 
     @Override
     public LinkedImage<S> createEmpty() {
-        return new LinkedImage<S>("", null);
+        return emptySeg;
     }
 }
