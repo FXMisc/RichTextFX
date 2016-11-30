@@ -6,12 +6,6 @@ import org.fxmisc.richtext.model.SegmentOps;
 
 public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
 
-    private final S defaultStyle;
-
-    public LinkedImageOps(S defaultStyle) {
-        this.defaultStyle = defaultStyle;
-    }
-
     @Override
     public int length(LinkedImage<S> seg) {
         return 1;
@@ -28,21 +22,26 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
     }
 
     @Override
-    public Optional<LinkedImage<S>> subSequence(LinkedImage<S> linkedImage, int start, int end) {
-        return start < length(linkedImage) && end > 0
-                ? Optional.of(linkedImage)
-                : Optional.empty();
+    public LinkedImage<S> subSequence(LinkedImage<S> seg, int start, int end) {
+        if (start < 0) {
+            throw new IllegalArgumentException("Start cannot be negative. Start = " + start);
+        }
+        if (end > length(seg)) {
+            throw new IllegalArgumentException("End cannot be greater than segment's length");
+        }
+        return start == 0 && end == 1
+                ? seg
+                : createEmpty();
     }
 
     @Override
-    public Optional<LinkedImage<S>> subSequence(LinkedImage<S> linkedImage, int start) {
-        return start < length(linkedImage)
-                ? Optional.of(linkedImage)
-                : Optional.empty();
-    }
-
-    public S defaultStyle() {
-        return defaultStyle;
+    public LinkedImage<S> subSequence(LinkedImage<S> seg, int start) {
+        if (start < 0) {
+            throw new IllegalArgumentException("Start cannot be negative. Start = " + start);
+        }
+        return start == 0
+                ? seg
+                : createEmpty();
     }
 
     @Override
@@ -60,4 +59,8 @@ public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
         return Optional.empty();
     }
 
+    @Override
+    public LinkedImage<S> createEmpty() {
+        return new LinkedImage<S>("", null);
+    }
 }

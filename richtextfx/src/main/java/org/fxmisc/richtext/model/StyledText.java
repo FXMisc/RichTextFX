@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public class StyledText<S>  {
 
-    public static <S> TextOps<StyledText<S>, S> textOps(S defaultStyle) {
+    public static <S> TextOps<StyledText<S>, S> textOps() {
         return new TextOps<StyledText<S>, S>() {
 
             @Override
@@ -27,18 +27,13 @@ public class StyledText<S>  {
             }
 
             @Override
-            public Optional<StyledText<S>> subSequence(StyledText<S> styledText, int start, int end) {
-                return Optional.of(new StyledText<>(styledText.getText().substring(start, end), styledText.getStyle()));
+            public StyledText<S> subSequence(StyledText<S> styledText, int start, int end) {
+                return new StyledText<>(styledText.getText().substring(start, end), styledText.getStyle());
             }
 
             @Override
-            public Optional<StyledText<S>> subSequence(StyledText<S> styledText, int start) {
-                 return Optional.of(new StyledText<>(styledText.getText().substring(start), styledText.getStyle()));
-            }
-
-            @Override
-            public S defaultStyle() {
-                return defaultStyle;
+            public StyledText<S> subSequence(StyledText<S> styledText, int start) {
+                return new StyledText<>(styledText.getText().substring(start), styledText.getStyle());
             }
 
             @Override
@@ -56,6 +51,11 @@ public class StyledText<S>  {
                 return Objects.equals(left.getStyle(), right.getStyle())
                         ? Optional.of(new StyledText<>(left.getText() + right.getText(), left.getStyle()))
                         : Optional.empty();
+            }
+
+            @Override
+            public StyledText<S> createEmpty() {
+                return new StyledText<>("", null);
             }
 
             @Override

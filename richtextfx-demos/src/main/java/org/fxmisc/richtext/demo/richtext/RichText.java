@@ -66,8 +66,8 @@ public class RichText extends Application {
         launch(args);
     }
 
-    private final TextOps<StyledText<TextStyle>, TextStyle> styledTextOps = StyledText.textOps(TextStyle.EMPTY);
-    private final LinkedImageOps<TextStyle> linkedImageOps = new LinkedImageOps<>(TextStyle.EMPTY);
+    private final TextOps<StyledText<TextStyle>, TextStyle> styledTextOps = StyledText.textOps();
+    private final LinkedImageOps<TextStyle> linkedImageOps = new LinkedImageOps<>();
 
     private final GenericStyledArea<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> area =
             new GenericStyledArea<>(
@@ -120,7 +120,7 @@ public class RichText extends Application {
         ColorPicker textColorPicker = new ColorPicker(Color.BLACK);
         ColorPicker backgroundColorPicker = new ColorPicker();
 
-        paragraphBackgroundPicker.setTooltip(new Tooltip("NonEmptyParagraph background"));
+        paragraphBackgroundPicker.setTooltip(new Tooltip("Paragraph background"));
         textColorPicker.setTooltip(new Tooltip("Text color"));
         backgroundColorPicker.setTooltip(new Tooltip("Text background"));
 

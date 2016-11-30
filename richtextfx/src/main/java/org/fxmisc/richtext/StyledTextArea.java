@@ -66,8 +66,8 @@ public class StyledTextArea<PS, S> extends GenericStyledArea<PS, StyledText<S>, 
                           EditableStyledDocument<PS, StyledText<S>, S> document, boolean preserveStyle) {
         super(initialParagraphStyle, applyParagraphStyle,
               initialTextStyle,
-              document, StyledText.textOps(initialTextStyle), preserveStyle,
-              seg -> createStyledTextNode(seg, StyledText.textOps(initialTextStyle), applyStyle));
+              document, StyledText.textOps(), preserveStyle,
+              seg -> createStyledTextNode(seg, StyledText.textOps(), applyStyle));
     }
 
     public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,

@@ -6,28 +6,25 @@ public interface TextOps<SEG, S> extends SegmentOps<SEG, S> {
     public SEG create(String text, S style);
 
     public default <R> TextOps<Either<SEG, R>, S> _or(SegmentOps<R, S> rOps) {
-        return _or(rOps, EitherSegmentOps.StyleChoice.LEFT);
+        return eitherL(this, rOps);
     }
 
-    public default <R> TextOps<Either<SEG, R>, S> _or(SegmentOps<R, S> rOps, EitherSegmentOps.StyleChoice choice) {
-        return eitherL(this, rOps, choice);
+    public static <L, R, S> TextOps<Either<L, R>, S> eitherL(TextOps<L, S> lOps, SegmentOps<R, S> rOps) {
+        return new LeftTextOps<>(lOps, rOps);
     }
 
-    public static <L, R, S> TextOps<Either<L, R>, S> eitherL(TextOps<L, S> lOps, SegmentOps<R, S> rOps, EitherSegmentOps.StyleChoice choice) {
-        return new LeftTextOps<>(lOps, rOps, choice);
+    public static <L, R, S> TextOps<Either<L, R>, S> eitherR(SegmentOps<L, S> lOps, TextOps<R, S> rOps) {
+        return new RightTextOps<>(lOps, rOps);
     }
 
-    public static <L, R, S> TextOps<Either<L, R>, S> eitherR(SegmentOps<L, S> lOps, TextOps<R, S> rOps, EitherSegmentOps.StyleChoice choice) {
-        return new RightTextOps<>(lOps, rOps, choice);
-    }
 }
 
 class LeftTextOps<L, R, S> extends EitherSegmentOps<L, R, S> implements TextOps<Either<L, R>, S> {
 
     private final TextOps<L, S> lOps;
 
-    LeftTextOps(TextOps<L, S> lOps, SegmentOps<R, S> rOps, StyleChoice choice) {
-        super(lOps, rOps, choice);
+    LeftTextOps(TextOps<L, S> lOps, SegmentOps<R, S> rOps) {
+        super(lOps, rOps);
         this.lOps = lOps;
     }
 
@@ -42,8 +39,8 @@ class RightTextOps<L, R, S> extends EitherSegmentOps<L, R, S> implements TextOps
 
     private final TextOps<R, S> rOps;
 
-    RightTextOps(SegmentOps<L, S> lOps, TextOps<R, S> rOps, StyleChoice choice) {
-        super(lOps, rOps, choice);
+    RightTextOps(SegmentOps<L, S> lOps, TextOps<R, S> rOps) {
+        super(lOps, rOps);
         this.rOps = rOps;
     }
 

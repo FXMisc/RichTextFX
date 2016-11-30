@@ -17,11 +17,9 @@ public interface SegmentOps<SEG, S> {
 
     public String getText(SEG seg);
 
-    public Optional<SEG> subSequence(SEG seg, int start, int end);
+    public SEG subSequence(SEG seg, int start, int end);
 
-    public Optional<SEG> subSequence(SEG seg, int start);
-
-    public S defaultStyle();
+    public SEG subSequence(SEG seg, int start);
 
     public S getStyle(SEG seg);
 
@@ -29,34 +27,29 @@ public interface SegmentOps<SEG, S> {
 
     public Optional<SEG> join(SEG currentSeg, SEG nextSeg);
 
+    public SEG createEmpty();
+
     public default <R> SegmentOps<Either<SEG, R>, S> or(SegmentOps<R, S> rOps) {
-        return either(this, rOps, EitherSegmentOps.StyleChoice.LEFT);
+        return either(this, rOps);
     }
 
-    public default <R> TextOps<Either<SEG, R>, S> or_(TextOps<R, S> rOps, EitherSegmentOps.StyleChoice choice) {
-        return TextOps.eitherR(this, rOps, choice);
+    public default <R> TextOps<Either<SEG, R>, S> or_(TextOps<R, S> rOps) {
+        return TextOps.eitherR(this, rOps);
     }
 
-    public static <L, R, S> SegmentOps<Either<L, R>, S> either(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps, EitherSegmentOps.StyleChoice choice) {
-        return new EitherSegmentOps<>(lOps, rOps, choice);
+    public static <L, R, S> SegmentOps<Either<L, R>, S> either(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps) {
+        return new EitherSegmentOps<>(lOps, rOps);
     }
 }
 
 class EitherSegmentOps<L, R, S> implements SegmentOps<Either<L, R>, S> {
 
-    public static enum StyleChoice {
-        LEFT,
-        RIGHT
-    }
-
     private final SegmentOps<L, S> lOps;
     private final SegmentOps<R, S> rOps;
-    private final StyleChoice choice;
 
-    EitherSegmentOps(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps, StyleChoice choice) {
+    EitherSegmentOps(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps) {
         this.lOps = lOps;
         this.rOps = rOps;
-        this.choice = choice;
     }
 
 
@@ -77,32 +70,21 @@ class EitherSegmentOps<L, R, S> implements SegmentOps<Either<L, R>, S> {
     }
 
     @Override
-    public Optional<Either<L, R>> subSequence(Either<L, R> seg, int start, int end) {
-        return seg.unify(ll -> seg.unify(l -> lOps.subSequence(l, start, end).map(Either::left),
-                                         e -> Optional.empty()),
-                         rr -> seg.unify(e -> Optional.empty(),
-                                         r -> rOps.subSequence(r, start, end).map(Either::right)));
+    public Either<L, R> subSequence(Either<L, R> seg, int start, int end) {
+        return seg.map(l -> lOps.subSequence(l, start, end),
+                       r -> rOps.subSequence(r, start, end));
     }
 
     @Override
-    public Optional<Either<L, R>> subSequence(Either<L, R> seg, int start) {
-        return seg.unify(ll -> seg.unify(l -> lOps.subSequence(l, start).map(Either::left),
-                                         e -> Optional.empty()),
-                         rr -> seg.unify(e -> Optional.empty(),
-                                         r -> rOps.subSequence(r, start).map(Either::right)));
-    }
-
-    @Override
-    public S defaultStyle() {
-        return choice == StyleChoice.LEFT
-                ? lOps.defaultStyle()
-                : rOps.defaultStyle();
+    public Either<L, R> subSequence(Either<L, R> seg, int start) {
+        return seg.map(l -> lOps.subSequence(l, start),
+                       r -> rOps.subSequence(r, start));
     }
 
     @Override
     public S getStyle(Either<L, R> seg) {
-        return seg.unify(l -> lOps.getStyle(l),
-                         r -> rOps.getStyle(r));
+        return seg.unify(lOps::getStyle,
+                         rOps::getStyle);
     }
 
     @Override
@@ -115,5 +97,9 @@ class EitherSegmentOps<L, R, S> implements SegmentOps<Either<L, R>, S> {
     public Optional<Either<L, R>> join(Either<L, R> left, Either<L, R> right) {
         return left.unify(ll -> right.unify(rl -> lOps.join(ll, rl).map(Either::left), rr -> Optional.empty()),
                           lr -> right.unify(rl -> Optional.empty(), rr -> rOps.join(lr, rr).map(Either::right)));
+    }
+
+    public Either<L, R> createEmpty() {
+        return Either.left(lOps.createEmpty());
     }
 }
