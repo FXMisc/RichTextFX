@@ -127,7 +127,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
             underlineShape.layoutXProperty().bind(leftInset);
             underlineShape.layoutYProperty().bind(topInset);
             underlineShapes.add(underlineShape);
-            getChildren().add(0, underlineShape);
+            getChildren().add(underlineShape);
         }
     }
 
