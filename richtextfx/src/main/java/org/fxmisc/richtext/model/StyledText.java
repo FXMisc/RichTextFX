@@ -1,8 +1,16 @@
 package org.fxmisc.richtext.model;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 
-public class StyledText<S> {
+/**
+ * The default segment type which is a styled text string. 
+ *
+ * @param <S>
+ */
+public class StyledText<S> implements Segment<S> {
     private final String text;
     private final S style;
 
@@ -11,36 +19,44 @@ public class StyledText<S> {
         this.style = style;
     }
 
+    @Override
     public int length() {
         return text.length();
     }
 
+    @Override
     public char charAt(int index) {
         return text.charAt(index);
     }
 
+    @Override
     public String getText() {
         return text;
     }
 
-    public StyledText<S> subSequence(int start, int end) {
+    @Override
+    public Segment<S> subSequence(int start, int end) {
         return new StyledText<>(text.substring(start, end), style);
     }
 
-    public StyledText<S> subSequence(int start) {
+    @Override
+    public Segment<S> subSequence(int start) {
         return new StyledText<>(text.substring(start), style);
     }
 
-    public StyledText<S> append(String str) {
+    @Override
+    public Segment<S> append(String str) {
         return new StyledText<>(text + str, style);
     }
 
-    public StyledText<S> spliced(int from, int to, CharSequence replacement) {
+    @Override
+    public Segment<S> spliced(int from, int to, CharSequence replacement) {
         String left = text.substring(0, from);
         String right = text.substring(to);
         return new StyledText<>(left + replacement + right, style);
     }
 
+    @Override
     public S getStyle() {
         return style;
     }
@@ -64,5 +80,22 @@ public class StyledText<S> {
     @Override
     public int hashCode() {
         return Objects.hash(text, style);
+    }
+
+    @Override
+    public SegmentType getTypeId() {
+        return DefaultSegmentTypes.STYLED_TEXT;
+    }
+
+    @Override
+    public void encode(DataOutputStream os) throws IOException {
+        Codec.STRING_CODEC.encode(os, getText());
+    }
+
+
+    public static <S> Segment<S> decode(DataInputStream is, Codec<S> styleCodec) throws IOException {
+        String text = Codec.STRING_CODEC.decode(is);
+        S style = styleCodec.decode(is);
+        return new StyledText<>(text, style);
     }
 }

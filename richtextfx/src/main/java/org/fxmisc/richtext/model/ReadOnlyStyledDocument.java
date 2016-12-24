@@ -1,12 +1,14 @@
 package org.fxmisc.richtext.model;
 
-import static org.reactfx.util.Either.*;
-import static org.reactfx.util.Tuples.*;
+import static org.reactfx.util.Either.left;
+import static org.reactfx.util.Either.right;
+import static org.reactfx.util.Tuples.t;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -94,8 +96,34 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         }
     }
 
+    /**
+     * Creates a new ReadOnlyStyledDocument with a custom object.
+     *
+     * @param data
+     * @param paragraphStyle The paragraph style to use for the custom object.
+     * @param style The text style to use for the custom object.
+     *
+     * @return A StyledDocument with the custom object. The StyledDocument can be
+     *         inserted or appended to the StyledTextArea.
+     */
+    public static <PS, S> ReadOnlyStyledDocument<PS, S> createObject(CustomObject<S> obj, PS paragraphStyle, S style) {
+        List<Paragraph<PS, S>> res = new ArrayList<>(1);
+        Paragraph<PS, S> content = new Paragraph<>(paragraphStyle, Arrays.asList(obj));
+        res.add(content);
+        return new ReadOnlyStyledDocument<>(res);
+    }
+
+
+    /**
+     * @param pCodec The codec for paragraph style data
+     * @param tCodec The codec for text style data
+     *
+     * @return A codec to encode and decode a StyledDocument into / from a binary format.
+     */
     public static <PS, S> Codec<StyledDocument<PS, S>> codec(Codec<PS> pCodec, Codec<S> tCodec) {
+
         return new Codec<StyledDocument<PS, S>>() {
+            // create a codec to encode/decode a list of paragraph objects
             private final Codec<List<Paragraph<PS, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, tCodec));
 
             @Override
@@ -116,9 +144,16 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
         };
     }
 
+    /**
+     * @param pCodec The codec for paragraph style data
+     * @param tCodec The codec for text style data
+     *
+     * @return A coded to encode/decode one paragraph.
+     */
     private static <PS, S> Codec<Paragraph<PS, S>> paragraphCodec(Codec<PS> pCodec, Codec<S> tCodec) {
         return new Codec<Paragraph<PS, S>>() {
-            private final Codec<List<StyledText<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
+            // create a codec to encode/decode a list of segment objects
+            private final Codec<List<Segment<S>>> segmentsCodec = Codec.listCodec(styledTextCodec(tCodec));
 
             @Override
             public String getName() {
@@ -134,14 +169,20 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             @Override
             public Paragraph<PS, S> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
-                List<StyledText<S>> segments = segmentsCodec.decode(is);
+                List<Segment<S>> segments = segmentsCodec.decode(is);
                 return new Paragraph<>(paragraphStyle, segments);
             }
         };
     }
 
-    private static <S> Codec<StyledText<S>> styledTextCodec(Codec<S> styleCodec) {
-        return new Codec<StyledText<S>>() {
+    /**
+     * @param styleCodec The codec for text style data
+     *
+     * @return A coded to encode/decode one text segment.
+     */
+    private static <S> Codec<Segment<S>> styledTextCodec(Codec<S> styleCodec) {
+
+        return new Codec<Segment<S>>() {
 
             @Override
             public String getName() {
@@ -149,16 +190,19 @@ public final class ReadOnlyStyledDocument<PS, S> implements StyledDocument<PS, S
             }
 
             @Override
-            public void encode(DataOutputStream os, StyledText<S> t) throws IOException {
-                STRING_CODEC.encode(os, t.getText());
+            public void encode(DataOutputStream os, Segment<S> t) throws IOException {
+                // encode the segment type and content
+                STRING_CODEC.encode(os, t.getTypeId().getName());
+                t.encode(os);
+
+                // encode the segment style
                 styleCodec.encode(os, t.getStyle());
             }
 
             @Override
-            public StyledText<S> decode(DataInputStream is) throws IOException {
-                String text = STRING_CODEC.decode(is);
-                S style = styleCodec.decode(is);
-                return new StyledText<>(text, style);
+            public Segment<S> decode(DataInputStream is) throws IOException {
+                Segment<S> result = SegmentFactory.decode(is, styleCodec);
+                return result;
             }
 
         };
