@@ -1285,7 +1285,11 @@ public class StyledTextArea<PS, S> extends Region
         });
     }
 
-    private Optional<Bounds> getCaretBoundsOnScreen() {
+    public int getParagraphLinesCount(int index){
+        return virtualFlow.getCell(index).getNode().getLineCount();
+    }
+
+    public Optional<Bounds> getCaretBoundsOnScreen() {
         return virtualFlow.getCellIfVisible(getCurrentParagraph())
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
