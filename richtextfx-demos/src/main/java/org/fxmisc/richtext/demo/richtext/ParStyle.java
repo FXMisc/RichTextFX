@@ -122,4 +122,38 @@ class ParStyle {
         return new ParStyle(alignment, Optional.of(backgroundColor));
     }
 
+    /**
+     * Parses a CSS declaration into a ParStyle object.
+     * 
+     * @param style The CSS style declaration to parse.
+     * @return A ParStyle which represents the parsed CSS style declaration.
+     */
+    public static ParStyle fromCss(String style) {
+        Optional<TextAlignment> alignment = Optional.empty();
+        Optional<Color> backgroundColor = Optional.empty();
+
+        if (style.length() > 0) {
+            for (String property : style.split(";", 0)) {
+                String[] pair = property.split(":");
+                String propName = pair[0].trim();
+                String propValue = pair[1].trim();
+
+                switch(propName) {
+                    case "-fx-text-alignment"   :
+                        alignment = Optional.of(TextAlignment.valueOf(propValue.toUpperCase()));
+                        break;
+    
+                    case "-fx-background-color" :
+                        backgroundColor = Optional.of(TextStyle.cssColor(propValue));
+                        break;
+    
+                    default:
+                        throw new IllegalArgumentException("Unknown CSS property: " + property);
+                }
+            }
+        }
+
+        return new ParStyle(alignment, backgroundColor); 
+    }
+
 }

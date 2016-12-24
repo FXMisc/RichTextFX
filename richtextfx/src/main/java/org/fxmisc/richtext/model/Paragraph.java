@@ -80,6 +80,12 @@ public final class Paragraph<PS, S> {
      * The paragraph style of the result will be that of this paragraph,
      * unless this paragraph is empty and {@code p} is non-empty, in which
      * case the paragraph style of the result will be that of {@code p}.
+     * 
+     * @param p The paragraph to append.
+     * @return A paragraph which contains all text segments from this paragraph plus all
+     *         text segments from the other paragraph. If the style of the last text segment from this
+     *         paragraph matches the style of the first text segment of the other
+     *         paragraph, the text segments are combined into one single text segment.
      */
     public Paragraph<PS, S> concat(Paragraph<PS, S> p) {
         if(p.length() == 0) {
@@ -92,7 +98,8 @@ public final class Paragraph<PS, S> {
 
         StyledText<S> left = segments.get(segments.size() - 1);
         StyledText<S> right = p.segments.get(0);
-        if(Objects.equals(left.getStyle(), right.getStyle())) {
+        if(!(left instanceof CustomObject || right instanceof CustomObject) && // XXX: Hack
+           Objects.equals(left.getStyle(), right.getStyle())) {
             StyledText<S> segment = left.append(right.getText());
             List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
             segs.addAll(segments.subList(0, segments.size()-1));

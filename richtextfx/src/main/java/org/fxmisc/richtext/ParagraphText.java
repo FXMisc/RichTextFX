@@ -13,12 +13,16 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
+import org.fxmisc.richtext.model.CustomObject;
+import org.fxmisc.richtext.model.ObjectData;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyledText;
 import org.reactfx.value.Val;
@@ -98,17 +102,11 @@ class ParagraphText<PS, S> extends TextFlowExt {
 //            }
 //        });
 
-        // populate with text nodes
+        // populate with nodes
         for(StyledText<S> segment: par.getSegments()) {
-            TextExt t = new TextExt(segment.getText());
-            t.setTextOrigin(VPos.TOP);
-            t.getStyleClass().add("text");
-            applyStyle.accept(t, segment.getStyle());
 
-            // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
-            t.impl_selectionFillProperty().bind(t.fillProperty());
-
+            // Create the object node
+            Node t = createNode(segment, applyStyle);
             getChildren().add(t);
 
             // add corresponding background node (empty)
@@ -128,6 +126,30 @@ class ParagraphText<PS, S> extends TextFlowExt {
             underlineShape.layoutYProperty().bind(topInset);
             underlineShapes.add(underlineShape);
             getChildren().add(underlineShape);
+        }
+    }
+
+
+    private Node createNode(StyledText<S> segment, BiConsumer<? super TextExt, S> applyStyle) {
+        if (segment instanceof CustomObject) {
+            CustomObject<S> customObject = (CustomObject<S>) segment;
+            ObjectData objData = customObject.getObjectData();
+            String imagePath = objData.getData();
+            Image image = new Image(imagePath); // TODO: No need to create new Image objects each time -
+                                                // can be stored in the model layer (ObjectData)
+
+            return new ImageView(image);
+        } else {
+            TextExt t = new TextExt(segment.getText());
+            t.setTextOrigin(VPos.TOP);
+            t.getStyleClass().add("text");
+            applyStyle.accept(t, segment.getStyle());
+
+            // XXX: binding selectionFill to textFill,
+            // see the note at highlightTextFill
+            t.impl_selectionFillProperty().bind(t.fillProperty());
+
+            return t;
         }
     }
 
