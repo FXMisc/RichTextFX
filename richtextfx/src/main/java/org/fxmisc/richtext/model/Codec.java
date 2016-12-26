@@ -9,6 +9,8 @@ import java.util.Optional;
 
 import javafx.scene.paint.Color;
 
+import org.reactfx.util.Either;
+
 public interface Codec<T> {
 
     String getName();
@@ -116,6 +118,35 @@ public interface Codec<T> {
                 return enumType.getEnumConstants()[ord];
             }
 
+        };
+    }
+
+    static <L, R> Codec<Either<L, R>> eitherCodec(Codec<L> lCodec, Codec<R> rCodec) {
+        return new Codec<Either<L, R>>() {
+
+            @Override
+            public String getName() {
+                return "either<" + lCodec.getName() + ", " + rCodec.getName() + ">";
+            }
+
+            @Override
+            public void encode(DataOutputStream os, Either<L, R> e) throws IOException {
+                if(e.isLeft()) {
+                    os.writeBoolean(false);
+                    lCodec.encode(os, e.getLeft());
+                } else {
+                    os.writeBoolean(true);
+                    rCodec.encode(os, e.getRight());
+                }
+            }
+
+            @Override
+            public Either<L, R> decode(DataInputStream is) throws IOException {
+                boolean isRight = is.readBoolean();
+                return isRight
+                        ? Either.right(rCodec.decode(is))
+                        : Either.left (lCodec.decode(is));
+            }
         };
     }
 }

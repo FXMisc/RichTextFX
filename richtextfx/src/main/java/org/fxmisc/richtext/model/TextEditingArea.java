@@ -14,7 +14,7 @@ import org.reactfx.EventStream;
  *
  * @param <S> type of style that can be applied to text.
  */
-public interface TextEditingArea<PS, S> {
+public interface TextEditingArea<PS, SEG, S> {
 
     /*******************
      *                 *
@@ -39,7 +39,7 @@ public interface TextEditingArea<PS, S> {
      * The returned document is immutable, it does not reflect
      * subsequent edits of this text-editing area.
      */
-    StyledDocument<PS, S> getDocument();
+    StyledDocument<PS, SEG, S> getDocument();
 
     /**
      * The current position of the caret, as a character offset in the text.
@@ -90,7 +90,7 @@ public interface TextEditingArea<PS, S> {
     /**
      * Unmodifiable observable list of paragraphs in this text area.
      */
-    ObservableList<Paragraph<PS, S>> getParagraphs();
+    ObservableList<Paragraph<PS, SEG, S>> getParagraphs();
 
 
     /*********************
@@ -107,7 +107,7 @@ public interface TextEditingArea<PS, S> {
     /**
      * Stream of rich text changes.
      */
-    EventStream<RichTextChange<PS, S>> richChanges();
+    EventStream<RichTextChange<PS, SEG, S>> richChanges();
 
 
     /***************
@@ -141,12 +141,12 @@ public interface TextEditingArea<PS, S> {
     /**
      * Returns rich-text content of the given paragraph.
      */
-    StyledDocument<PS, S> subDocument(int paragraphIndex);
+    StyledDocument<PS, SEG, S> subDocument(int paragraphIndex);
 
     /**
      * Returns rich-text content of the given character range.
      */
-    StyledDocument<PS, S> subDocument(int start, int end);
+    StyledDocument<PS, SEG, S> subDocument(int start, int end);
 
     /**
      * Returns rich-text content of the given character range.
@@ -154,7 +154,7 @@ public interface TextEditingArea<PS, S> {
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
      */
-    default StyledDocument<PS, S> subDocument(int startParagraph, int startColumn, int endParagraph, int endColumn) {
+    default StyledDocument<PS, SEG, S> subDocument(int startParagraph, int startColumn, int endParagraph, int endColumn) {
         int start = getAbsolutePosition(startParagraph, startColumn);
         int end = getAbsolutePosition(endParagraph, endColumn);
         return subDocument(start, end);
@@ -219,7 +219,7 @@ public interface TextEditingArea<PS, S> {
     /**
      * Replaces a range of characters with the given rich-text document.
      */
-    void replace(int start, int end, StyledDocument<PS, S> replacement);
+    void replace(int start, int end, StyledDocument<PS, SEG, S> replacement);
 
     /**
      * Replaces a range of characters with the given rich-text document.
@@ -227,7 +227,7 @@ public interface TextEditingArea<PS, S> {
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
      */
-    default void replace(int startParagraph, int startColumn, int endParagraph, int endColumn, StyledDocument<PS, S> replacement) {
+    default void replace(int startParagraph, int startColumn, int endParagraph, int endColumn, StyledDocument<PS, SEG, S> replacement) {
         int start = getAbsolutePosition(startParagraph, startColumn);
         int end = getAbsolutePosition(endParagraph, endColumn);
         replace(start, end, replacement);
@@ -250,7 +250,7 @@ public interface TextEditingArea<PS, S> {
      * Equivalent to
      * {@code replace(range.getStart(), range.getEnd(), replacement)}.
      */
-    default void replace(IndexRange range, StyledDocument<PS, S> replacement) {
+    default void replace(IndexRange range, StyledDocument<PS, SEG, S> replacement) {
         replace(range.getStart(), range.getEnd(), replacement);
     }
 

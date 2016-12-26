@@ -3,14 +3,13 @@ package org.fxmisc.richtext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
@@ -20,11 +19,10 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
 import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyledText;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-class ParagraphText<PS, S> extends TextFlowExt {
+class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -43,7 +41,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
-    private final Paragraph<PS, S> paragraph;
+    private final Paragraph<PS, SEG, S> paragraph;
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
@@ -58,7 +56,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    public ParagraphText(Paragraph<PS, S> par, BiConsumer<? super TextExt, S> applyStyle) {
+    ParagraphText(Paragraph<PS, SEG, S> par, Function<SEG, Node> nodeFactory) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -99,17 +97,10 @@ class ParagraphText<PS, S> extends TextFlowExt {
 //        });
 
         // populate with text nodes
-        for(StyledText<S> segment: par.getSegments()) {
-            TextExt t = new TextExt(segment.getText());
-            t.setTextOrigin(VPos.TOP);
-            t.getStyleClass().add("text");
-            applyStyle.accept(t, segment.getStyle());
-
-            // XXX: binding selectionFill to textFill,
-            // see the note at highlightTextFill
-            t.impl_selectionFillProperty().bind(t.fillProperty());
-
-            getChildren().add(t);
+        for(SEG segment: par.getSegments()) {
+            // create Segment
+            Node fxNode = nodeFactory.apply(segment);
+            getChildren().add(fxNode);
 
             // add corresponding background node (empty)
             Path backgroundShape = new Path();
@@ -131,7 +122,7 @@ class ParagraphText<PS, S> extends TextFlowExt {
         }
     }
 
-    public Paragraph<PS, S> getParagraph() {
+    public Paragraph<PS, SEG, S> getParagraph() {
         return paragraph;
     }
 

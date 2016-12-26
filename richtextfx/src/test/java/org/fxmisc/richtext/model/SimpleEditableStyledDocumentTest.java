@@ -5,13 +5,15 @@ import org.junit.Test;
 
 public class SimpleEditableStyledDocumentTest {
 
+    private final TextOps<StyledText<String>, String> segOps = StyledText.textOps();
+
     /**
      * The style of the inserted text will be the style at position
      * {@code start} in the current document.
      */
-    private <PS, S> void replaceText(EditableStyledDocument<PS, S> doc, int start, int end, String text) {
-        StyledDocument<PS, S> styledDoc = ReadOnlyStyledDocument.fromString(
-                text, doc.getParagraphStyleAtPosition(start), doc.getStyleAtPosition(start));
+    private <PS> void replaceText(EditableStyledDocument<PS, StyledText<String>, String> doc, int start, int end, String text) {
+        StyledDocument<PS, StyledText<String>, String> styledDoc = ReadOnlyStyledDocument.fromString(
+                text, doc.getParagraphStyleAtPosition(start), doc.getStyleAtPosition(start), segOps);
         doc.replace(start, end, styledDoc);
     }
 

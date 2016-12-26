@@ -4,14 +4,16 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 
-public final class Paragraph<PS, S> {
+public final class Paragraph<PS, SEG, S> {
 
     @SafeVarargs
     private static <T> List<T> list(T head, T... tail) {
@@ -25,28 +27,28 @@ public final class Paragraph<PS, S> {
         }
     }
 
-    private final List<StyledText<S>> segments;
+    private final List<SEG> segments;
     private final TwoLevelNavigator navigator;
     private final PS paragraphStyle;
 
-    public Paragraph(PS paragraphStyle, String text, S style) {
-        this(paragraphStyle, new StyledText<>(text, style));
-    }
+    private final SegmentOps<SEG, S> segmentOps;
 
     @SafeVarargs
-    public Paragraph(PS paragraphStyle, StyledText<S> text, StyledText<S>... texts) {
-        this(paragraphStyle, list(text, texts));
+    public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG text, SEG... texts) {
+        this(paragraphStyle, segmentOps, list(text, texts));
     }
 
-    Paragraph(PS paragraphStyle, List<StyledText<S>> segments) {
+    Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<SEG> segments) {
         assert !segments.isEmpty();
+
+        this.segmentOps = segmentOps;
         this.segments = segments;
         this.paragraphStyle = paragraphStyle;
         navigator = new TwoLevelNavigator(segments::size,
-                i -> segments.get(i).length());
+                i -> segmentOps.length(segments.get(i)));
     }
 
-    public List<StyledText<S>> getSegments() {
+    public List<SEG> getSegments() {
         return Collections.unmodifiableList(segments);
     }
 
@@ -57,14 +59,14 @@ public final class Paragraph<PS, S> {
     private int length = -1;
     public int length() {
         if(length == -1) {
-            length = segments.stream().mapToInt(StyledText::length).sum();
+            length = segments.stream().mapToInt(segmentOps::length).sum();
         }
         return length;
     }
 
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
-        return segments.get(pos.getMajor()).charAt(pos.getMinor());
+        return segmentOps.charAt(segments.get(pos.getMajor()), pos.getMinor());
     }
 
     public String substring(int from, int to) {
@@ -81,7 +83,7 @@ public final class Paragraph<PS, S> {
      * unless this paragraph is empty and {@code p} is non-empty, in which
      * case the paragraph style of the result will be that of {@code p}.
      */
-    public Paragraph<PS, S> concat(Paragraph<PS, S> p) {
+    public Paragraph<PS, SEG, S> concat(Paragraph<PS, SEG, S> p) {
         if(p.length() == 0) {
             return this;
         }
@@ -90,20 +92,21 @@ public final class Paragraph<PS, S> {
             return p;
         }
 
-        StyledText<S> left = segments.get(segments.size() - 1);
-        StyledText<S> right = p.segments.get(0);
-        if(Objects.equals(left.getStyle(), right.getStyle())) {
-            StyledText<S> segment = left.append(right.getText());
-            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
+        SEG left = segments.get(segments.size() - 1);
+        SEG right = p.segments.get(0);
+        Optional<SEG> joined = segmentOps.join(left, right);
+        if(joined.isPresent()) {
+            SEG segment = joined.get();
+            List<SEG> segs = new ArrayList<>(segments.size() + p.segments.size() - 1);
             segs.addAll(segments.subList(0, segments.size()-1));
             segs.add(segment);
             segs.addAll(p.segments.subList(1, p.segments.size()));
-            return new Paragraph<>(paragraphStyle, segs);
+            return new Paragraph<>(paragraphStyle, segmentOps, segs);
         } else {
-            List<StyledText<S>> segs = new ArrayList<>(segments.size() + p.segments.size());
+            List<SEG> segs = new ArrayList<>(segments.size() + p.segments.size());
             segs.addAll(segments);
             segs.addAll(p.segments);
-            return new Paragraph<>(paragraphStyle, segs);
+            return new Paragraph<>(paragraphStyle, segmentOps, segs);
         }
     }
 
@@ -111,56 +114,33 @@ public final class Paragraph<PS, S> {
      * Similar to {@link #concat(Paragraph)}, except in case both paragraphs
      * are empty, the result's paragraph style will be that of the argument.
      */
-    Paragraph<PS, S> concatR(Paragraph<PS, S> that) {
+    Paragraph<PS, SEG, S> concatR(Paragraph<PS, SEG, S> that) {
         return this.length() == 0 && that.length() == 0
             ? that
             : concat(that);
     }
 
-    public Paragraph<PS, S> append(String str) {
-        if(str.length() == 0) {
-            return this;
-        }
-
-        List<StyledText<S>> segs = new ArrayList<>(segments);
-        int lastIdx = segments.size() - 1;
-        segs.set(lastIdx, segments.get(lastIdx).append(str));
-        return new Paragraph<>(paragraphStyle, segs);
-    }
-
-    public Paragraph<PS, S> insert(int offset, CharSequence str) {
-        if(offset < 0 || offset > length()) {
-            throw new IndexOutOfBoundsException(String.valueOf(offset));
-        }
-
-        Position pos = navigator.offsetToPosition(offset, Backward);
-        int segIdx = pos.getMajor();
-        int segPos = pos.getMinor();
-        StyledText<S> seg = segments.get(segIdx);
-        StyledText<S> replacement = seg.spliced(segPos, segPos, str);
-        List<StyledText<S>> segs = new ArrayList<>(segments);
-        segs.set(segIdx, replacement);
-        return new Paragraph<>(paragraphStyle, segs);
-    }
-
-    public Paragraph<PS, S> subSequence(int start, int end) {
+    public Paragraph<PS, SEG, S> subSequence(int start, int end) {
         return trim(end).subSequence(start);
     }
 
-    public Paragraph<PS, S> trim(int length) {
+    public Paragraph<PS, SEG, S> trim(int length) {
         if(length >= length()) {
             return this;
         } else {
             Position pos = navigator.offsetToPosition(length, Backward);
             int segIdx = pos.getMajor();
-            List<StyledText<S>> segs = new ArrayList<>(segIdx + 1);
+            List<SEG> segs = new ArrayList<>(segIdx + 1);
             segs.addAll(segments.subList(0, segIdx));
-            segs.add(segments.get(segIdx).subSequence(0, pos.getMinor()));
-            return new Paragraph<>(paragraphStyle, segs);
+            segs.add(segmentOps.subSequence(segments.get(segIdx), 0, pos.getMinor()));
+            if (segs.isEmpty()) {
+                segs.add(segmentOps.createEmpty());
+            }
+            return new Paragraph<>(paragraphStyle, segmentOps, segs);
         }
     }
 
-    public Paragraph<PS, S> subSequence(int start) {
+    public Paragraph<PS, SEG, S> subSequence(int start) {
         if(start < 0) {
             throw new IllegalArgumentException("start must not be negative (was: " + start + ")");
         } else if(start == 0) {
@@ -168,60 +148,76 @@ public final class Paragraph<PS, S> {
         } else if(start <= length()) {
             Position pos = navigator.offsetToPosition(start, Forward);
             int segIdx = pos.getMajor();
-            List<StyledText<S>> segs = new ArrayList<>(segments.size() - segIdx);
-            segs.add(segments.get(segIdx).subSequence(pos.getMinor()));
+            List<SEG> segs = new ArrayList<>(segments.size() - segIdx);
+            segs.add(segmentOps.subSequence(segments.get(segIdx), pos.getMinor()));
             segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            return new Paragraph<>(paragraphStyle, segs);
+            if (segs.isEmpty()) {
+                segs.add(segmentOps.createEmpty());
+            }
+            return new Paragraph<>(paragraphStyle, segmentOps, segs);
         } else {
             throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
         }
     }
 
-    public Paragraph<PS, S> delete(int start, int end) {
+    public Paragraph<PS, SEG, S> delete(int start, int end) {
         return trim(start).concat(subSequence(end));
     }
 
-    public Paragraph<PS, S> restyle(S style) {
-        return new Paragraph<>(paragraphStyle, getText(), style);
+    public Paragraph<PS, SEG, S> restyle(S style) {
+        List<SEG> segs = new ArrayList<>();
+        Iterator<SEG> it = segments.iterator();
+        segs.add(segmentOps.setStyle(it.next(), style));
+        while (it.hasNext()) {
+            SEG prev = segs.get(segs.size() - 1);
+            SEG cur = segmentOps.setStyle(it.next(), style);
+            Optional<SEG> joined = segmentOps.join(prev, cur);
+            if(joined.isPresent()) {
+                segs.set(segs.size() - 1, joined.get());
+            } else {
+                segs.add(cur);
+            }
+        }
+        return new Paragraph<>(paragraphStyle, segmentOps, segs);
     }
 
-    public Paragraph<PS, S> restyle(int from, int to, S style) {
+    public Paragraph<PS, SEG, S> restyle(int from, int to, S style) {
         if(from >= length()) {
             return this;
         } else {
             to = Math.min(to, length());
-            Paragraph<PS, S> left = subSequence(0, from);
-            Paragraph<PS, S> middle = new Paragraph<>(paragraphStyle, substring(from, to), style);
-            Paragraph<PS, S> right = subSequence(to);
+            Paragraph<PS, SEG, S> left = subSequence(0, from);
+            Paragraph<PS, SEG, S> middle = subSequence(from, to).restyle(style);
+            Paragraph<PS, SEG, S> right = subSequence(to);
             return left.concat(middle).concat(right);
         }
     }
 
-    public Paragraph<PS, S> restyle(int from, StyleSpans<? extends S> styleSpans) {
+    public Paragraph<PS, SEG, S> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
         if(styleSpans.equals(getStyleSpans(from, from + len))) {
             return this;
         }
 
-        Paragraph<PS, S> left = trim(from);
-        Paragraph<PS, S> right = subSequence(from + len);
+        Paragraph<PS, SEG, S> left = trim(from);
+        Paragraph<PS, SEG, S> right = subSequence(from + len);
 
-        String middleString = substring(from, from + len);
-        List<StyledText<S>> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
+        Paragraph<PS, SEG, S> middle = subSequence(from, from + len);
+        List<SEG> middleSegs = new ArrayList<>(styleSpans.getSpanCount());
         int offset = 0;
         for(StyleSpan<? extends S> span: styleSpans) {
             int end = offset + span.getLength();
-            String text = middleString.substring(offset, end);
-            middleSegs.add(new StyledText<>(text, span.getStyle()));
+            Paragraph<PS, SEG, S> text = middle.subSequence(offset, end);
+            middleSegs.addAll(text.restyle(span.getStyle()).segments);
             offset = end;
         }
-        Paragraph<PS, S> middle = new Paragraph<>(paragraphStyle, middleSegs);
+        Paragraph<PS, SEG, S> newMiddle = new Paragraph<>(paragraphStyle, segmentOps, middleSegs);
 
-        return left.concat(middle).concat(right);
+        return left.concat(newMiddle).concat(right);
     }
 
-    public Paragraph<PS, S> setParagraphStyle(PS paragraphStyle) {
-        return new Paragraph<>(paragraphStyle, segments);
+    public Paragraph<PS, SEG, S> setParagraphStyle(PS paragraphStyle) {
+        return new Paragraph<>(paragraphStyle, segmentOps, segments);
     }
 
     /**
@@ -231,11 +227,11 @@ public final class Paragraph<PS, S> {
      */
     public S getStyleOfChar(int charIdx) {
         if(charIdx < 0) {
-            return segments.get(0).getStyle();
+            return segmentOps.getStyle(segments.get(0));
         }
 
         Position pos = navigator.offsetToPosition(charIdx, Forward);
-        return segments.get(pos.getMajor()).getStyle();
+        return segmentOps.getStyle(segments.get(pos.getMajor()));
     }
 
     /**
@@ -256,7 +252,7 @@ public final class Paragraph<PS, S> {
         }
 
         Position pos = navigator.offsetToPosition(position, Backward);
-        return segments.get(pos.getMajor()).getStyle();
+        return segmentOps.getStyle(segments.get(pos.getMajor()));
     }
 
     /**
@@ -267,14 +263,15 @@ public final class Paragraph<PS, S> {
     public IndexRange getStyleRangeAtPosition(int position) {
         Position pos = navigator.offsetToPosition(position, Backward);
         int start = position - pos.getMinor();
-        int end = start + segments.get(pos.getMajor()).length();
+        int end = start + segmentOps.length(segments.get(pos.getMajor()));
         return new IndexRange(start, end);
     }
 
     public StyleSpans<S> getStyleSpans() {
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(segments.size());
-        for(StyledText<S> seg: segments) {
-            builder.add(seg.getStyle(), seg.length());
+        for(SEG seg: segments) {
+            builder.add(segmentOps.getStyle(seg),
+                        segmentOps.length(seg));
         }
         return builder.create();
     }
@@ -291,19 +288,20 @@ public final class Paragraph<PS, S> {
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>(n);
 
         if(startSegIdx == endSegIdx) {
-            StyledText<S> seg = segments.get(startSegIdx);
-            builder.add(seg.getStyle(), to - from);
+            SEG seg = segments.get(startSegIdx);
+            builder.add(segmentOps.getStyle(seg), to - from);
         } else {
-            StyledText<S> startSeg = segments.get(startSegIdx);
-            builder.add(startSeg.getStyle(), startSeg.length() - start.getMinor());
+            SEG startSeg = segments.get(startSegIdx);
+            builder.add(segmentOps.getStyle(startSeg), segmentOps.length(startSeg) - start.getMinor());
 
             for(int i = startSegIdx + 1; i < endSegIdx; ++i) {
-                StyledText<S> seg = segments.get(i);
-                builder.add(seg.getStyle(), seg.length());
+                SEG seg = segments.get(i);
+                builder.add(segmentOps.getStyle(seg),
+                            segmentOps.length(seg));
             }
 
-            StyledText<S> endSeg = segments.get(endSegIdx);
-            builder.add(endSeg.getStyle(), end.getMinor());
+            SEG endSeg = segments.get(endSegIdx);
+            builder.add(segmentOps.getStyle(endSeg), end.getMinor());
         }
 
         return builder.create();
@@ -317,8 +315,8 @@ public final class Paragraph<PS, S> {
     public String getText() {
         if(text == null) {
             StringBuilder sb = new StringBuilder(length());
-            for(StyledText<S> seg: segments)
-                sb.append(seg.getText());
+            for(SEG seg: segments)
+                sb.append(segmentOps.getText(seg));
             text = sb.toString();
         }
         return text;
@@ -328,7 +326,7 @@ public final class Paragraph<PS, S> {
     public String toString() {
         return
                 "Par[" + paragraphStyle  + "; " +
-                segments.stream().map(StyledText::toString)
+                segments.stream().map(Object::toString)
                         .reduce((s1, s2) -> s1 + "," + s2).orElse("") +
                 "]";
     }
@@ -336,7 +334,7 @@ public final class Paragraph<PS, S> {
     @Override
     public boolean equals(Object other) {
         if(other instanceof Paragraph) {
-            Paragraph<?, ?> that = (Paragraph<?, ?>) other;
+            Paragraph<?, ?, ?> that = (Paragraph<?, ?, ?>) other;
             return Objects.equals(this.paragraphStyle, that.paragraphStyle)
                 && Objects.equals(this.segments, that.segments);
         } else {

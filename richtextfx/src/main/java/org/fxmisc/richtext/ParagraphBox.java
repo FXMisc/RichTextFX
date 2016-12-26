@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import javafx.beans.property.BooleanProperty;
@@ -32,7 +33,7 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-class ParagraphBox<PS, S> extends Region {
+class ParagraphBox<PS, SEG, S> extends Region {
 
     /**
      * An opaque class representing horizontal caret offset.
@@ -47,7 +48,7 @@ class ParagraphBox<PS, S> extends Region {
         }
     }
 
-    private final ParagraphText<PS, S> text;
+    private final ParagraphText<PS, SEG, S> text;
 
     private final ObjectProperty<IntFunction<? extends Node>> graphicFactory
             = new SimpleObjectProperty<>(null);
@@ -70,9 +71,10 @@ class ParagraphBox<PS, S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    ParagraphBox(Paragraph<PS, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle, BiConsumer<? super TextExt, S> applyStyle) {
+    ParagraphBox(Paragraph<PS, SEG, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle,
+                 Function<SEG, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
-        this.text = new ParagraphText<>(par, applyStyle);
+        this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         this.index = Var.newSimpleVar(0);
         getChildren().add(text);
@@ -108,7 +110,7 @@ class ParagraphBox<PS, S> extends Region {
 
     public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 
-    Paragraph<PS, S> getParagraph() {
+    Paragraph<PS, SEG, S> getParagraph() {
         return text.getParagraph();
     }
 

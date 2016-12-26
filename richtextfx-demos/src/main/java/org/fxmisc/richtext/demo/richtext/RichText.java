@@ -8,14 +8,22 @@ package org.fxmisc.richtext.demo.richtext;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -31,33 +39,61 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TextExt;
+import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.richtext.model.TextOps;
 import org.reactfx.SuspendableNo;
+import org.reactfx.util.Either;
+import org.reactfx.util.Tuple2;
 
 public class RichText extends Application {
 
     public static void main(String[] args) {
+        // The following properties are required on Linux for improved text rendering
+        //System.setProperty("prism.lcdtext", "false");
+        //System.setProperty("prism.text", "t2k");
         launch(args);
     }
 
-    private final StyledTextArea<ParStyle, TextStyle> area = new StyledTextArea<>(
-                    ParStyle.EMPTY, ( paragraph, style) -> paragraph.setStyle(style.toCss()),
-                    TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),
-                    ( text, style) -> text.setStyle(style.toCss()));
+    private final TextOps<StyledText<TextStyle>, TextStyle> styledTextOps = StyledText.textOps();
+    private final LinkedImageOps<TextStyle> linkedImageOps = new LinkedImageOps<>();
+
+    private final GenericStyledArea<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> area =
+            new GenericStyledArea<>(
+                    ParStyle.EMPTY,                                                 // default paragraph style
+                    (paragraph, style) -> paragraph.setStyle(style.toCss()),        // paragraph style setter
+
+                    TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),  // default segment style
+                    styledTextOps._or(linkedImageOps),                                                          // segment operations
+                    seg -> createNode(seg, (text, style) -> text.setStyle(style.toCss())));                     // Node creator and segment style setter
     {
         area.setWrapText(true);
-        area.setStyleCodecs(ParStyle.CODEC, TextStyle.CODEC);
+        area.setStyleCodecs(
+                ParStyle.CODEC,
+                Codec.eitherCodec(StyledText.codec(TextStyle.CODEC), LinkedImage.codec(TextStyle.CODEC)));
     }
+
+    private Stage mainStage;
 
     private final SuspendableNo updatingToolbar = new SuspendableNo();
 
     @Override
     public void start(Stage primaryStage) {
+        mainStage = primaryStage;
+
+        Button loadBtn = createButton("loadfile", this::loadDocument, "Load document");
+        Button saveBtn = createButton("savefile", this::saveDocument, "Save document");
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
@@ -70,6 +106,7 @@ public class RichText extends Application {
         Button italicBtn = createButton("italic", this::toggleItalic);
         Button underlineBtn = createButton("underline", this::toggleUnderline);
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
+        Button insertImageBtn = createButton("insertimage", this::insertImage, "Insert Image");
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
@@ -147,7 +184,7 @@ public class RichText extends Application {
 
                 int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
                 int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
-                List<Paragraph<ParStyle, TextStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
+                List<Paragraph<ParStyle, Either<StyledText<TextStyle>,LinkedImage<TextStyle>>, TextStyle>> pars = area.getParagraphs().subList(startPar, endPar + 1);
 
                 @SuppressWarnings("unchecked")
                 Optional<TextAlignment>[] alignments = pars.stream().map(p -> p.getParagraphStyle().alignment).distinct().toArray(Optional[]::new);
@@ -228,13 +265,14 @@ public class RichText extends Application {
         HBox panel1 = new HBox(3.0);
         HBox panel2 = new HBox(3.0);
         panel1.getChildren().addAll(
+                loadBtn, saveBtn,
                 wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
                 boldBtn, italicBtn, underlineBtn, strikeBtn,
-                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn,
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn,
                 paragraphBackgroundPicker);
         panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
-        VirtualizedScrollPane<StyledTextArea<ParStyle, TextStyle>> vsPane = new VirtualizedScrollPane<>(area);
+        VirtualizedScrollPane<GenericStyledArea<ParStyle, Either<StyledText<TextStyle>,LinkedImage<TextStyle>>, TextStyle>> vsPane = new VirtualizedScrollPane<>(area);
         VBox vbox = new VBox();
         VBox.setVgrow(vsPane, Priority.ALWAYS);
         vbox.getChildren().addAll(panel1, panel2, vsPane);
@@ -247,7 +285,22 @@ public class RichText extends Application {
         primaryStage.show();
     }
 
+
+    private Node createNode(Either<StyledText<TextStyle>, LinkedImage<TextStyle>> seg,
+                            BiConsumer<? super TextExt, TextStyle> applyStyle) {
+        if (seg.isLeft()) {
+            return StyledTextArea.createStyledTextNode(seg.getLeft(), styledTextOps, applyStyle);
+        } else {
+            return seg.getRight().createNode();
+        }
+    }
+
+    @Deprecated
     private Button createButton(String styleClass, Runnable action) {
+        return createButton(styleClass, action, null);
+    }
+
+    private Button createButton(String styleClass, Runnable action, String toolTip) {
         Button button = new Button();
         button.getStyleClass().add(styleClass);
         button.setOnAction(evt -> {
@@ -256,6 +309,9 @@ public class RichText extends Application {
         });
         button.setPrefWidth(20);
         button.setPrefHeight(20);
+        if (toolTip != null) {
+            button.setTooltip(new Tooltip(toolTip));
+        }
         return button;
     }
 
@@ -304,6 +360,91 @@ public class RichText extends Application {
         updateParagraphStyleInSelection(ParStyle.alignJustify());
     }
 
+    private void loadDocument() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load document");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showOpenDialog(mainStage);
+        if (selectedFile != null) {
+            area.clear();
+            load(selectedFile);
+        }
+    }
+
+    private void load(File file) {
+        if(area.getStyleCodecs().isPresent()) {
+            Tuple2<Codec<ParStyle>, Codec<Either<StyledText<TextStyle>, LinkedImage<TextStyle>>>> codecs = area.getStyleCodecs().get();
+            Codec<StyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle>>
+                codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, area.getSegOps());
+
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                DataInputStream dis = new DataInputStream(fis);
+                StyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> doc = codec.decode(dis);
+                fis.close();
+
+                if(doc != null) {
+                    area.replaceSelection(doc);
+                    return;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private void saveDocument() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save document");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showSaveDialog(mainStage);
+        if (selectedFile != null) {
+            save(selectedFile);
+        }
+    }
+
+
+    private void save(File file) {
+        StyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> doc = area.getDocument();
+
+        // Use the Codec to save the document in a binary format
+        area.getStyleCodecs().ifPresent(codecs -> {
+            Codec<StyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle>> codec =
+                    ReadOnlyStyledDocument.codec(codecs._1, codecs._2, area.getSegOps());
+            try {
+                FileOutputStream fos = new FileOutputStream(file);
+                DataOutputStream dos = new DataOutputStream(fos);
+                codec.encode(dos, doc);
+                fos.close();
+            } catch (IOException fnfe) {
+                fnfe.printStackTrace();
+            }
+        });
+    }
+
+
+    /**
+     * Action listener which inserts a new image at the current caret position.
+     */
+    private void insertImage() {
+        String initialDir = System.getProperty("user.dir");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Insert image");
+        fileChooser.setInitialDirectory(new File(initialDir));
+        File selectedFile = fileChooser.showOpenDialog(mainStage);
+        if (selectedFile != null) {
+            String imagePath = selectedFile.getAbsolutePath();
+            imagePath = imagePath.replace('\\',  '/');
+            ReadOnlyStyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> ros =
+                    ReadOnlyStyledDocument.fromSegment(Either.right(new LinkedImage<>(imagePath, TextStyle.EMPTY)),
+                                                       ParStyle.EMPTY, TextStyle.EMPTY, area.getSegOps());
+            area.replaceSelection(ros);
+        }
+    }
+
     private void updateStyleInSelection(Function<StyleSpans<TextStyle>, TextStyle> mixinGetter) {
         IndexRange selection = area.getSelection();
         if(selection.getLength() != 0) {
@@ -328,7 +469,7 @@ public class RichText extends Application {
         int startPar = area.offsetToPosition(selection.getStart(), Forward).getMajor();
         int endPar = area.offsetToPosition(selection.getEnd(), Backward).getMajor();
         for(int i = startPar; i <= endPar; ++i) {
-            Paragraph<ParStyle, TextStyle> paragraph = area.getParagraph(i);
+            Paragraph<ParStyle, Either<StyledText<TextStyle>,LinkedImage<TextStyle>>, TextStyle> paragraph = area.getParagraph(i);
             area.setParagraphStyle(i, updater.apply(paragraph.getParagraphStyle()));
         }
     }

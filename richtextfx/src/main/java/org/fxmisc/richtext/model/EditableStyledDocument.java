@@ -8,11 +8,11 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.value.Val;
 
 /**
- * Content model for {@link org.fxmisc.richtext.StyledTextArea}. Implements edit operations
+ * Content model for {@link org.fxmisc.richtext.GenericStyledArea}. Implements edit operations
  * on styled text, but not worrying about additional aspects such as
  * caret or selection, which are handled by {@link StyledTextAreaModel}.
  */
-public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
+public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, SEG, S> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -30,12 +30,12 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
     Val<Integer> lengthProperty();
 
     @Override
-    ObservableList<Paragraph<PS, S>> getParagraphs();
+    ObservableList<Paragraph<PS, SEG, S>> getParagraphs();
 
     /**
      * Read-only snapshot of the current state of this document.
      */
-    ReadOnlyStyledDocument<PS, S> snapshot();
+    ReadOnlyStyledDocument<PS, SEG, S> snapshot();
 
     /* ********************************************************************** *
      *                                                                        *
@@ -50,7 +50,7 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
                 .filter(pc -> !pc.removed.equals(pc.inserted));
     }
 
-    EventStream<RichTextChange<PS, S>> richChanges();
+    EventStream<RichTextChange<PS, SEG, S>> richChanges();
 
     SuspendableNo beingUpdatedProperty();
     boolean isBeingUpdated();
@@ -64,7 +64,7 @@ public interface EditableStyledDocument<PS, S> extends StyledDocument<PS, S> {
      *                                                                        *
      * ********************************************************************** */
 
-    void replace(int start, int end, StyledDocument<PS, S> replacement);
+    void replace(int start, int end, StyledDocument<PS, SEG, S> replacement);
 
     void setStyle(int from, int to, S style);
 
