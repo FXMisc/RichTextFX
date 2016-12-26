@@ -953,7 +953,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    void scrollBy(Point2D deltas) {
+    /**
+     * Scroll area horizontally by {@code deltas.getX()} and vertically by {@code deltas.getY()}
+     * @param deltas negative values scroll left/up, positive scroll right/down
+     */
+    public void scrollBy(Point2D deltas) {
         virtualFlow.scrollXBy(deltas.getX());
         virtualFlow.scrollYBy(deltas.getY());
     }
