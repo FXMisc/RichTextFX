@@ -22,7 +22,7 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
   - [0.6.10](http://fxmisc.github.io/richtext/javadoc/0.6.10/org/fxmisc/richtext/package-summary.html)
-  - [0.7-M2](http://fxmisc.github.io/richtext/javadoc/0.7-M2/org/fxmisc/richtext/package-summary.html)
+  - [0.7-M3](http://fxmisc.github.io/richtext/javadoc/0.7-M3/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [How can I contribute?](#how-can-i-contribute)
 
@@ -261,31 +261,31 @@ Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/downl
 
 ### Milestone release
 
-Milestone version of the upcoming release is 0.7-M2.
+Milestone version of the upcoming release is 0.7-M3.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.7-M2  |
+| org.fxmisc.richtext | richtextfx  | 0.7-M3  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M2'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M3'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M2"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M3"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M2/richtextfx-0.7-M2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M2/richtextfx-fat-0.7-M2.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M3/richtextfx-0.7-M3.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M3/richtextfx-fat-0.7-M3.jar) and place it on your classpath.
 
 
 ### Snapshot releases
