@@ -4,6 +4,8 @@ import static org.fxmisc.richtext.PopupAlignment.HorizontalAlignment.*;
 import static org.fxmisc.richtext.PopupAlignment.AnchorObject.*;
 import static org.fxmisc.richtext.PopupAlignment.VerticalAlignment.*;
 
+/** Deprecated now that caret and selection bounds have an API */
+@Deprecated
 public enum PopupAlignment {
     CARET_TOP(CARET, TOP, H_CENTER),
     CARET_CENTER(CARET, V_CENTER, H_CENTER),

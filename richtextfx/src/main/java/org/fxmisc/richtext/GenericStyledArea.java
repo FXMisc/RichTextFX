@@ -74,8 +74,10 @@ import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
+import org.reactfx.Guard;
 import org.reactfx.StateMachine;
 import org.reactfx.Subscription;
+import org.reactfx.SuspendableEventStream;
 import org.reactfx.collection.LiveList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
@@ -245,19 +247,47 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * how the popup should be positioned relative to the caret or selection.
      * Use {@link #popupAnchorOffsetProperty()} or
      * {@link #popupAnchorAdjustmentProperty()} to further adjust the position.
+     *
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
      */
+    @Deprecated
     private final ObjectProperty<PopupWindow> popupWindow = new SimpleObjectProperty<>();
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public void setPopupWindow(PopupWindow popup) { popupWindow.set(popup); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public PopupWindow getPopupWindow() { return popupWindow.get(); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public ObjectProperty<PopupWindow> popupWindowProperty() { return popupWindow; }
 
-    /** @deprecated Use {@link #setPopupWindow(PopupWindow)}. */
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
     @Deprecated
     public void setPopupAtCaret(PopupWindow popup) { popupWindow.set(popup); }
-    /** @deprecated Use {@link #getPopupWindow()}. */
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
     @Deprecated
     public PopupWindow getPopupAtCaret() { return popupWindow.get(); }
-    /** @deprecated Use {@link #popupWindowProperty()}. */
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
     @Deprecated
     public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupWindow; }
 
@@ -267,10 +297,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *
      * <p>If {@link #popupAnchorAdjustmentProperty()} is also specified, then
      * it overrides the offset set by this property.
+     *
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
      */
+    @Deprecated
     private final ObjectProperty<Point2D> popupAnchorOffset = new SimpleObjectProperty<>();
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public void setPopupAnchorOffset(Point2D offset) { popupAnchorOffset.set(offset); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public Point2D getPopupAnchorOffset() { return popupAnchorOffset.get(); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public ObjectProperty<Point2D> popupAnchorOffsetProperty() { return popupAnchorOffset; }
 
     /**
@@ -281,9 +330,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *
      * <p>Setting this property overrides {@link #popupAnchorOffsetProperty()}.
      */
+    @Deprecated
     private final ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustment = new SimpleObjectProperty<>();
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public void setPopupAnchorAdjustment(UnaryOperator<Point2D> f) { popupAnchorAdjustment.set(f); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public UnaryOperator<Point2D> getPopupAnchorAdjustment() { return popupAnchorAdjustment.get(); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustmentProperty() { return popupAnchorAdjustment; }
 
     /**
@@ -291,10 +356,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * is anchored, i.e. where its anchor point is positioned. This position
      * can further be adjusted by {@link #popupAnchorOffsetProperty()} or
      * {@link #popupAnchorAdjustmentProperty()}.
+     *
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
      */
+    @Deprecated
     private final ObjectProperty<PopupAlignment> popupAlignment = new SimpleObjectProperty<>(CARET_TOP);
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public void setPopupAlignment(PopupAlignment pos) { popupAlignment.set(pos); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
+    /**
+     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
+     * {@link #selectionBoundsProperty()} instead.
+     */
+    @Deprecated
     public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
 
     /**
@@ -395,6 +479,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final int getCaretPosition() { return model.getCaretPosition(); }
     @Override public final ObservableValue<Integer> caretPositionProperty() { return model.caretPositionProperty(); }
 
+    // caret bounds
+    /**
+     * The bounds of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
+     * in the viewport.
+     */
+    private final Val<Optional<Bounds>> caretBounds;
+    public final Optional<Bounds> getCaretBounds() { return caretBounds.getValue(); }
+    public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return caretBounds; }
+
     // selection anchor
     @Override public final int getAnchor() { return model.getAnchor(); }
     @Override public final ObservableValue<Integer> anchorProperty() { return model.anchorProperty(); }
@@ -406,6 +499,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // selected text
     @Override public final String getSelectedText() { return model.getSelectedText(); }
     @Override public final ObservableValue<String> selectedTextProperty() { return model.selectedTextProperty(); }
+
+    // selection bounds
+    /**
+     * The bounds of the selection in the Screen's coordinate system if something is selected and visible in the
+     * viewport, {@link #caretBounds} if nothing is selected and caret is visible in the viewport, or
+     * {@link Optional#empty()} if selection is not visible in the viewport.
+     */
+    private final Val<Optional<Bounds>> selectionBounds;
+    public final Optional<Bounds> getSelectionBounds() { return selectionBounds.getValue(); }
+    public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return selectionBounds; }
 
     // current paragraph index
     @Override public final int getCurrentParagraph() { return model.getCurrentParagraph(); }
@@ -476,6 +579,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final TwoLevelNavigator navigator;
 
     private boolean followCaretRequested = false;
+
+    private final SuspendableEventStream<?> viewportDirty;
 
     /**
      * model
@@ -673,6 +778,26 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .toBinding(false);
         manageBinding(caretVisible);
 
+        viewportDirty = merge(
+                // no need to check for width & height invalidations as scroll values update when these do
+
+                // scale
+                invalidationsOf(scaleXProperty()),
+                invalidationsOf(scaleYProperty()),
+
+                // scroll
+                invalidationsOf(estimatedScrollXProperty()),
+                invalidationsOf(estimatedScrollYProperty())
+        ).suppressible();
+        EventStream<?> caretBoundsDirty = merge(viewportDirty, caretDirty)
+                .suppressWhen(model.beingUpdatedProperty());
+        EventStream<?> selectionBoundsDirty = merge(viewportDirty, invalidationsOf(selectionProperty()))
+                .suppressWhen(model.beingUpdatedProperty());
+
+        // updates the bounds of the caret/selection
+        caretBounds = Val.create(this::getCaretBoundsOnScreen, caretBoundsDirty);
+        selectionBounds = Val.create(this::impl_bounds_getSelectionBoundsOnScreen, selectionBoundsDirty);
+
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
         Val<UnaryOperator<Point2D>> userOffset = Val.map(
@@ -707,7 +832,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Returns caret bounds relative to the viewport, i.e. the visual bounds
      * of the embedded VirtualFlow.
      */
-    Optional<Bounds> getCaretBounds() {
+    Optional<Bounds> getCaretBoundsInViewport() {
         return virtualFlow.getCellIfVisible(getCurrentParagraph())
                 .map(c -> {
                     Bounds cellBounds = c.getNode().getCaretBounds();
@@ -1217,7 +1342,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.resize(getWidth(), getHeight());
         if(followCaretRequested) {
             followCaretRequested = false;
-            followCaret();
+            try (Guard g = viewportDirty.suspend()) {
+                followCaret();
+            }
         }
 
         // position popup
@@ -1340,7 +1467,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Optional<Bounds> bounds = null;
         switch(alignment.getAnchorObject()) {
             case CARET: bounds = getCaretBoundsOnScreen(); break;
-            case SELECTION: bounds = getSelectionBoundsOnScreen(); break;
+            case SELECTION: bounds = impl_popup_getSelectionBoundsOnScreen(); break;
         }
         bounds.ifPresent(b -> {
             double x = 0, y = 0;
@@ -1365,12 +1492,24 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
-    private Optional<Bounds> getSelectionBoundsOnScreen() {
+    private Optional<Bounds> impl_popup_getSelectionBoundsOnScreen() {
         IndexRange selection = getSelection();
         if(selection.getLength() == 0) {
             return getCaretBoundsOnScreen();
         }
 
+        return impl_getSelectionBoundsOnScreen();
+    }
+
+    private Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen() {
+        IndexRange selection = getSelection();
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+        return impl_getSelectionBoundsOnScreen();
+    }
+
+    private Optional<Bounds> impl_getSelectionBoundsOnScreen() {
         Bounds[] bounds = virtualFlow.visibleCells().stream()
                 .map(c -> c.getNode().getSelectionBoundsOnScreen())
                 .filter(Optional::isPresent)
