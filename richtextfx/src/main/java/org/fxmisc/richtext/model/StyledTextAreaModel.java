@@ -657,7 +657,12 @@ public class StyledTextAreaModel<PS, SEG, S>
         }
     }
 
-    @Override
+    /**
+     * Positions only the caret. Doesn't move the anchor and doesn't change
+     * the selection. Can be used to achieve the special case of positioning
+     * the caret outside or inside the selection, as opposed to always being
+     * at the boundary. Use with care.
+     */
     public void positionCaret(int pos) {
         try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
             internalCaretPosition.setValue(pos);
