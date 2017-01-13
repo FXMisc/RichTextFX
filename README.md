@@ -24,7 +24,7 @@ RichTextFX provides a text area for JavaFX with API to style ranges of text. It 
   - [0.6.10](http://fxmisc.github.io/richtext/javadoc/0.6.10/org/fxmisc/richtext/package-summary.html)
   - [0.7-M3](http://fxmisc.github.io/richtext/javadoc/0.7-M3/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
-* [How can I contribute?](#how-can-i-contribute)
+* [Contributing](./CONTRIBUTING.md)
 
 
 Who uses RichTextFX?
@@ -325,16 +325,3 @@ License
 -------
 
 Dual-licensed under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause) and [GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html).
-
-
-How can I contribute?
----------------------
-
-There are many ways how you can contribute:
-
-* Report bugs.
-* Fix bugs ;)
-* Spread the word: write blog posts, tutorials, ...
-* Implement features. There are plenty of [feature requests](https://github.com/TomasMikula/RichTextFX/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
-* [Create a bounty](https://www.bountysource.com/trackers/503734-tomasmikula-richtextfx) for a feature.
-* [Support the author](https://gratipay.com/TomasMikula/).
