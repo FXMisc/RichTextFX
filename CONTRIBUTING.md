@@ -11,3 +11,4 @@ Commiters can merge pull requests. If you are a committer, please follow these (
 
  - [TomasMikula](https://github.com/TomasMikula)
  - [JordanMartinez](https://github.com/JordanMartinez)
+ - [afester](https://github.com/afester)
