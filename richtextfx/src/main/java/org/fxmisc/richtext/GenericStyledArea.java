@@ -1125,17 +1125,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         model.selectRange(anchor, caretPosition);
     }
 
-    /**
-     * {@inheritDoc}
-     * @deprecated You probably meant to use {@link #moveTo(int)}. This method will be made
-     * package-private in the future
-     */
-    @Deprecated
-    @Override
-    public void positionCaret(int pos) {
-        model.positionCaret(pos);
-    }
-
     /* ********************************************************************** *
      *                                                                        *
      * Public API                                                             *
@@ -1246,6 +1235,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 cellSelection.dispose();
             }
         };
+    }
+
+    private void positionCaret(int pos) {
+        model.positionCaret(pos);
     }
 
     private ParagraphBox<PS, SEG, S> getCell(int index) {
