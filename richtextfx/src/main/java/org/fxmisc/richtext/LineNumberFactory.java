@@ -28,12 +28,12 @@ public class LineNumberFactory implements IntFunction<Node> {
     private static final Background DEFAULT_BACKGROUND =
             new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
-    public static IntFunction<Node> get(StyledTextArea<?, ?> area) {
+    public static IntFunction<Node> get(GenericStyledArea<?, ?, ?> area) {
         return get(area, digits -> "%0" + digits + "d");
     }
 
     public static IntFunction<Node> get(
-            StyledTextArea<?, ?> area,
+            GenericStyledArea<?, ?, ?> area,
             IntFunction<String> format) {
         return new LineNumberFactory(area, format);
     }
@@ -42,7 +42,7 @@ public class LineNumberFactory implements IntFunction<Node> {
     private final IntFunction<String> format;
 
     private LineNumberFactory(
-            StyledTextArea<?, ?> area,
+            GenericStyledArea<?, ?, ?> area,
             IntFunction<String> format) {
         nParagraphs = LiveList.sizeOf(area.getParagraphs());
         this.format = format;
