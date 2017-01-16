@@ -407,7 +407,7 @@ class StyledTextAreaBehavior {
                 switch (e.getClickCount()) {
                     case 1: firstLeftPress(hit); break;
                     case 2: selectWord(); break;
-                    case 3: model.selectLine(); break;
+                    case 3: model.selectParagraph(); break;
                     default: // do nothing
                 }
             }
