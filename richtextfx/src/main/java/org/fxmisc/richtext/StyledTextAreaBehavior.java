@@ -97,8 +97,8 @@ class StyledTextAreaBehavior {
                 // caret movement
                 consume(anyOf(keyPressed(RIGHT), keyPressed(KP_RIGHT)), StyledTextAreaBehavior::right),
                 consume(anyOf(keyPressed(LEFT),  keyPressed(KP_LEFT)),  StyledTextAreaBehavior::left),
-                consume(keyPressed(HOME), (b, e) -> b.model.lineStart(SelectionPolicy.CLEAR)),
-                consume(keyPressed(END),  (b, e) -> b.model.lineEnd(SelectionPolicy.CLEAR)),
+                consume(keyPressed(HOME), (b, e) -> b.view.lineStart(SelectionPolicy.CLEAR)),
+                consume(keyPressed(END),  (b, e) -> b.view.lineEnd(SelectionPolicy.CLEAR)),
                 consume(
                         anyOf(
                                 keyPressed(RIGHT,    SHORTCUT_DOWN),
@@ -122,8 +122,8 @@ class StyledTextAreaBehavior {
                                 keyPressed(LEFT,     SHIFT_DOWN),
                                 keyPressed(KP_LEFT,  SHIFT_DOWN)
                         ), StyledTextAreaBehavior::selectLeft),
-                consume(keyPressed(HOME, SHIFT_DOWN),                (b, e) -> b.model.lineStart(selPolicy)),
-                consume(keyPressed(END,  SHIFT_DOWN),                (b, e) -> b.model.lineEnd(selPolicy)),
+                consume(keyPressed(HOME, SHIFT_DOWN),                (b, e) -> b.view.lineStart(selPolicy)),
+                consume(keyPressed(END,  SHIFT_DOWN),                (b, e) -> b.view.lineEnd(selPolicy)),
                 consume(keyPressed(HOME, SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.model.start(selPolicy)),
                 consume(keyPressed(END,  SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.model.end(selPolicy)),
                 consume(
