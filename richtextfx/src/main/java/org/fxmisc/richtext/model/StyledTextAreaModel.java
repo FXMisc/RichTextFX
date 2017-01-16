@@ -12,6 +12,9 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
 
+import org.fxmisc.richtext.model.actions.EditActions;
+import org.fxmisc.richtext.model.actions.NavigationActions;
+import org.fxmisc.richtext.model.actions.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;

@@ -1,6 +1,7 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext.model.actions;
 
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyledDocument;
 
 /**
  * Extended edit actions for {@link TextEditingArea}.
