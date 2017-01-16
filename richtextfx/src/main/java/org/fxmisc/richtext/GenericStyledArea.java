@@ -22,7 +22,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -54,9 +53,9 @@ import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.actions.ClipboardActions;
+import org.fxmisc.richtext.actions.ViewActions;
 import org.fxmisc.richtext.model.actions.EditActions;
 import org.fxmisc.richtext.model.actions.NavigationActions;
-import org.fxmisc.richtext.model.actions.TextEditingArea;
 import org.fxmisc.richtext.model.actions.UndoActions;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
@@ -146,10 +145,10 @@ import org.reactfx.value.Var;
  */
 public class GenericStyledArea<PS, SEG, S> extends Region
         implements
-        TextEditingArea<PS, SEG, S>,
         EditActions<PS, SEG, S>,
-        ClipboardActions<PS, SEG, S>,
         NavigationActions<PS, SEG, S>,
+        ViewActions<PS, SEG, S>,
+        ClipboardActions<PS, SEG, S>,
         UndoActions,
         TwoDimensional,
         Virtualized {
@@ -196,43 +195,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             = new CssProperties.CaretBlinkRateProperty(this, javafx.util.Duration.millis(500));
 
     // editable property
-    /**
-     * Indicates whether this text area can be edited by the user.
-     * Note that this property doesn't affect editing through the API.
-     */
     private final BooleanProperty editable = new EditableProperty<>(this);
-    public final boolean isEditable() { return editable.get(); }
-    public final void setEditable(boolean value) { editable.set(value); }
-    public final BooleanProperty editableProperty() { return editable; }
+    @Override public final boolean isEditable() { return editable.get(); }
+    @Override public final void setEditable(boolean value) { editable.setValue(value); }
+    @Override public final BooleanProperty editableProperty() { return editable; }
 
     // wrapText property
-    /**
-     * When a run of text exceeds the width of the text region,
-     * then this property indicates whether the text should wrap
-     * onto another line.
-     */
     private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
-    public final boolean isWrapText() { return wrapText.get(); }
-    public final void setWrapText(boolean value) { wrapText.set(value); }
-    public final BooleanProperty wrapTextProperty() { return wrapText; }
+    @Override public final boolean isWrapText() { return wrapText.get(); }
+    @Override public final void setWrapText(boolean value) { wrapText.set(value); }
+    @Override public final BooleanProperty wrapTextProperty() { return wrapText; }
 
     // showCaret property
-    /**
-     * Indicates when this text area should display a caret.
-     */
     private final Var<CaretVisibility> showCaret = Var.newSimpleVar(CaretVisibility.AUTO);
-    public final CaretVisibility getShowCaret() { return showCaret.getValue(); }
-    public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
-    public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
-
-    public static enum CaretVisibility {
-        /** Caret is displayed. */
-        ON,
-        /** Caret is displayed when area is focused, enabled, and editable. */
-        AUTO,
-        /** Caret is not displayed. */
-        OFF
-    }
+    @Override public final CaretVisibility getShowCaret() { return showCaret.getValue(); }
+    @Override public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
+    @Override public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
 
     // undo manager
     @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
@@ -298,35 +276,21 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
     public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
 
-    /**
-     * Defines how long the mouse has to stay still over the text before a
-     * {@link MouseOverTextEvent} of type {@code MOUSE_OVER_TEXT_BEGIN} is
-     * fired on this text area. When set to {@code null}, no
-     * {@code MouseOverTextEvent}s are fired on this text area.
-     *
-     * <p>Default value is {@code null}.
-     */
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
-    public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
-    public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
-    public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
+    @Override public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
+    @Override public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
+    @Override public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
-    /**
-     * Defines how to handle an event in which the user has selected some text, dragged it to a
-     * new location within the area, and released the mouse at some character {@code index}
-     * within the area.
-     *
-     * <p>By default, this will relocate the selected text to the character index where the mouse
-     * was released. To override it, use {@link #setOnSelectionDrop(IntConsumer)}.
-     */
-    private Property<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
-    public final void setOnSelectionDrop(IntConsumer consumer) { onSelectionDrop.setValue(consumer); }
-    public final IntConsumer getOnSelectionDrop() { return onSelectionDrop.getValue(); }
+    // onSelectionDrop property
+    private ObjectProperty<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
+    @Override public final void setOnSelectionDrop(IntConsumer consumer) { onSelectionDrop.setValue(consumer); }
+    @Override public final IntConsumer getOnSelectionDrop() { return onSelectionDrop.getValue(); }
+    @Override public final ObjectProperty<IntConsumer> onSelectionDropProperty() { return onSelectionDrop; }
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
-    public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
-    public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
-    public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
+    @Override public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
+    @Override public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
+    @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
     /**
      * Indicates whether the initial style should also be used for plain text
@@ -338,15 +302,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public boolean getUseInitialStyleForInsertion() { return model.getUseInitialStyleForInsertion(); }
 
     private Optional<Tuple2<Codec<PS>, Codec<SEG>>> styleCodecs = Optional.empty();
-    /**
-     * Sets codecs to encode/decode style information to/from binary format.
-     * Providing codecs enables clipboard actions to retain the style information.
-     */
-    public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec) {
+    @Override public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec) {
         styleCodecs = Optional.of(t(paragraphStyleCodec, textStyleCodec));
     }
-    @Override
-    public Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs() {
+    @Override public Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs() {
         return styleCodecs;
     }
 
@@ -355,20 +314,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    @Override
-    public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
-    public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
-    public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
+    @Override public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
+    @Override public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
+    @Override public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
 
     /**
      * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    @Override
-    public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
-    public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
-    public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
+    @Override public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
+    @Override public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
+    @Override public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
 
     /* ********************************************************************** *
@@ -429,9 +386,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    @Override
-    public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
-    public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
+    @Override public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
+    @Override public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
     // total height estimate
     /**
@@ -439,9 +395,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    @Override
-    public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
-    public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
+    @Override public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
+    @Override public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -724,8 +679,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return getCell(idx).getCaretOffsetX();
     }
 
-    double getViewportHeight() {
+    @Override public final double getViewportHeight() {
         return virtualFlow.getHeight();
+    }
+
+    @Override public final double getViewportWidth() {
+        return virtualFlow.getWidth();
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
@@ -751,20 +710,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    /**
-     * Helpful for determining which letter is at point x, y:
-     * <pre>
-     *     {@code
-     *     StyledTextArea area = // creation code
-     *     area.addEventHandler(MouseEvent.MOUSE_PRESSED, (MouseEvent e) -> {
-     *         CharacterHit hit = area.hit(e.getX(), e.getY());
-     *         int characterPosition = hit.getInsertionIndex();
-     *
-     *         // move the caret to that character's position
-     *         area.moveTo(characterPosition, SelectionPolicy.CLEAR);
-     *     }}
-     * </pre>
-     */
+    @Override
     public CharacterHit hit(double x, double y) {
         VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(x, y);
         if(hit.isBeforeCells()) {
@@ -800,9 +746,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return navigator.position(par, line);
     }
 
-    /**
-     * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
-     */
+    @Override
     public int getParagraphLinesCount(int paragraphIndex) {
         return virtualFlow.getCell(paragraphIndex).getNode().getLineCount();
     }
@@ -961,10 +905,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Scroll area horizontally by {@code deltas.getX()} and vertically by {@code deltas.getY()}
-     * @param deltas negative values scroll left/up, positive scroll right/down
-     */
+    @Override
     public void scrollBy(Point2D deltas) {
         virtualFlow.scrollXBy(deltas.getX());
         virtualFlow.scrollYBy(deltas.getY());
@@ -974,34 +915,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.show(y);
     }
 
-    /**
-     * Shows the paragraph somewhere in the viewport. If the line is already visible, no noticeable change occurs.
-     * If line is above the current view, it appears at the top of the viewport. If the line is below the current
-     * view, it appears at the bottom of the viewport.
-     */
+    @Override
     public void showParagraphInViewport(int paragraphIndex) {
         virtualFlow.show(paragraphIndex);
     }
 
-    /**
-     * Lays out the viewport so that the paragraph is the first line (top) displayed in the viewport. Note: if
-     * the given area does not have enough lines that follow the given line to span its entire height, the paragraph
-     * may not appear at the very top of the viewport. Instead, it may simply be shown in the viewport. For example,
-     * given an unwrapped area whose height could show 10 lines but whose content only has 3 lines, calling
-     * {@code showParagraphAtTop(3)} would be no different than {@code showParagraphAtTop(1)}.
-     */
+    @Override
     public void showParagraphAtTop(int paragraphIndex) {
         virtualFlow.showAsFirst(paragraphIndex);
     }
 
-    /**
-     * Lays out the viewport so that the paragraph is the last line (bottom) displayed in the viewport. Note: if
-     * the given area does not have enough lines preceding the given line to span its entire height, the paragraph
-     * may not appear at the very bottom of the viewport. Instead, it may appear towards the bottom of the viewport
-     * with some extra space following it. For example, given an unwrapped area whose height could show 10 lines but
-     * whose content only has 7 lines, calling {@code showParagraphAtBottom(1)} would be no different than calling
-     * {@code showParagraphAtBottom(7)}.
-     */
+    @Override
     public void showParagraphAtBottom(int paragraphIndex) {
         virtualFlow.showAsLast(paragraphIndex);
     }
@@ -1022,11 +946,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.showAtOffset(parIdx, -y);
     }
 
-    /**
-     * If the caret is not visible within the area's view, the area will scroll so that caret
-     * is visible in the next layout pass. Use this method when you wish to "follow the caret"
-     * (i.e. auto-scroll to caret) after making a change (add/remove/modify area's segments).
-     */
+    @Override
     public void requestFollowCaret() {
         followCaretRequested = true;
         requestLayout();
@@ -1041,54 +961,32 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.show(parIdx, region);
     }
 
-    /**
-     * Move the caret to the start of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy
-     */
+    @Override
     public void lineStart(SelectionPolicy policy) {
         int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition();
         moveTo(getCurrentParagraph(), columnPos, policy);
     }
 
-    /**
-     * Move the caret to the end of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy
-     */
+    @Override
     public void lineEnd(SelectionPolicy policy) {
         int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition();
         moveTo(getCurrentParagraph(), columnPos, policy);
     }
 
-    /**
-     * Selects the current line.
-     */
+    @Override
     public void selectLine() {
         lineStart(SelectionPolicy.CLEAR);
         lineEnd(SelectionPolicy.ADJUST);
     }
 
-    /**
-     * Moves caret to the previous page (i.e. page up)
-     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
+    @Override
     public void prevPage(SelectionPolicy selectionPolicy) {
         showCaretAtBottom();
         CharacterHit hit = hit(getTargetCaretOffset(), 1.0);
         model.moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
-    /**
-     * Moves caret to the next page (i.e. page down)
-     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
+    @Override
     public void nextPage(SelectionPolicy selectionPolicy) {
         showCaretAtTop();
         CharacterHit hit = hit(getTargetCaretOffset(), getViewportHeight() - 1.0);
