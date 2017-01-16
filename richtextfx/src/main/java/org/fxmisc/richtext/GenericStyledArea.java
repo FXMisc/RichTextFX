@@ -799,6 +799,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return navigator.position(par, line);
     }
 
+    /**
+     * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
+     */
+    public int getParagraphLinesCount(int paragraphIndex) {
+        return virtualFlow.getCell(paragraphIndex).getNode().getLineCount();
+    }
+
     @Override
     public final String getText(int start, int end) {
         return model.getText(start, end);
