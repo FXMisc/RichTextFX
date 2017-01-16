@@ -166,16 +166,16 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     }
 
     /**
-     * Moves the caret to the beginning of the current line.
+     * Moves the caret to the beginning of the current paragraph.
      */
-    default void lineStart(SelectionPolicy selectionPolicy) {
+    default void paragraphStart(SelectionPolicy selectionPolicy) {
         moveTo(getCaretPosition() - getCaretColumn(), selectionPolicy);
     }
 
     /**
-     * Moves the caret to the end of the current line.
+     * Moves the caret to the end of the current paragraph.
      */
-    default void lineEnd(SelectionPolicy selectionPolicy) {
+    default void paragraphEnd(SelectionPolicy selectionPolicy) {
         int lineLen = getText(getCurrentParagraph()).length();
         int newPos = getCaretPosition() - getCaretColumn() + lineLen;
         moveTo(newPos, selectionPolicy);
@@ -198,9 +198,9 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     /**
      * Selects the current line.
      */
-    default void selectLine() {
-        lineStart(SelectionPolicy.CLEAR);
-        lineEnd(SelectionPolicy.ADJUST);
+    default void selectParagraph() {
+        paragraphStart(SelectionPolicy.CLEAR);
+        paragraphEnd(SelectionPolicy.ADJUST);
     }
 
     /**

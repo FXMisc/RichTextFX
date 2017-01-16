@@ -1041,6 +1041,36 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     /**
+     * Move the caret to the start of either the line in a multi-line wrapped paragraph or the paragraph
+     * in a single-line / non-wrapped paragraph
+     *
+     * @param policy
+     */
+    public void lineStart(SelectionPolicy policy) {
+        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition();
+        moveTo(getCurrentParagraph(), columnPos, policy);
+    }
+
+    /**
+     * Move the caret to the end of either the line in a multi-line wrapped paragraph or the paragraph
+     * in a single-line / non-wrapped paragraph
+     *
+     * @param policy
+     */
+    public void lineEnd(SelectionPolicy policy) {
+        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition();
+        moveTo(getCurrentParagraph(), columnPos, policy);
+    }
+
+    /**
+     * Selects the current line.
+     */
+    public void selectLine() {
+        lineStart(SelectionPolicy.CLEAR);
+        lineEnd(SelectionPolicy.ADJUST);
+    }
+
+    /**
      * Moves caret to the previous page (i.e. page up)
      * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
      *                        {@link SelectionPolicy#ADJUST} when a selection from starting point

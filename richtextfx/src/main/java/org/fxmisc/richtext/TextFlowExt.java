@@ -58,6 +58,25 @@ class TextFlowExt extends TextFlow {
         return getLines().length;
     }
 
+    int getLineStartPosition(int charIdx) {
+        TextLine[] lines = getLines();
+        TwoLevelNavigator navigator = new TwoLevelNavigator(
+                () -> lines.length,
+                i -> lines[i].getLength());
+        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
+        return navigator.position(currentLineIndex, 0).toOffset();
+    }
+
+    int getLineEndPosition(int charIdx) {
+        TextLine[] lines = getLines();
+        TwoLevelNavigator navigator = new TwoLevelNavigator(
+                () -> lines.length,
+                i -> lines[i].getLength());
+        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
+        int minor = currentLineIndex == lines.length - 1 ? 0 : -1;
+        return navigator.position(currentLineIndex + 1, minor).toOffset();
+    }
+
     int getLineOfCharacter(int charIdx) {
         TextLine[] lines = getLines();
         TwoLevelNavigator navigator = new TwoLevelNavigator(

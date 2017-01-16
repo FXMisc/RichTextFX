@@ -145,6 +145,16 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return new CaretOffsetX(text.getCaretOffsetX());
     }
 
+    public int getCurrentLineStartPosition() {
+        layout(); // ensure layout, is a no-op if not dirty
+        return text.getCurrentLineStartPosition();
+    }
+
+    public int getCurrentLineEndPosition() {
+        layout(); // ensure layout, is a no-op if not dirty
+        return text.getCurrentLineEndPosition();
+    }
+
     public int getLineCount() {
         layout(); // ensure layout, is a no-op if not dirty
         return text.getLineCount();
