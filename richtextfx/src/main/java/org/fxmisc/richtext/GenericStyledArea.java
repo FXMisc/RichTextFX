@@ -973,6 +973,38 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.show(y);
     }
 
+    /**
+     * Shows the paragraph somewhere in the viewport. If the line is already visible, no noticeable change occurs.
+     * If line is above the current view, it appears at the top of the viewport. If the line is below the current
+     * view, it appears at the bottom of the viewport.
+     */
+    public void showParagraphInViewport(int paragraphIndex) {
+        virtualFlow.show(paragraphIndex);
+    }
+
+    /**
+     * Lays out the viewport so that the paragraph is the first line (top) displayed in the viewport. Note: if
+     * the given area does not have enough lines that follow the given line to span its entire height, the paragraph
+     * may not appear at the very top of the viewport. Instead, it may simply be shown in the viewport. For example,
+     * given an unwrapped area whose height could show 10 lines but whose content only has 3 lines, calling
+     * {@code showParagraphAtTop(3)} would be no different than {@code showParagraphAtTop(1)}.
+     */
+    public void showParagraphAtTop(int paragraphIndex) {
+        virtualFlow.showAsFirst(paragraphIndex);
+    }
+
+    /**
+     * Lays out the viewport so that the paragraph is the last line (bottom) displayed in the viewport. Note: if
+     * the given area does not have enough lines preceding the given line to span its entire height, the paragraph
+     * may not appear at the very bottom of the viewport. Instead, it may appear towards the bottom of the viewport
+     * with some extra space following it. For example, given an unwrapped area whose height could show 10 lines but
+     * whose content only has 7 lines, calling {@code showParagraphAtBottom(1)} would be no different than calling
+     * {@code showParagraphAtBottom(7)}.
+     */
+    public void showParagraphAtBottom(int paragraphIndex) {
+        virtualFlow.showAsLast(paragraphIndex);
+    }
+
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
