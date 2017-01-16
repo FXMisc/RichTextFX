@@ -161,6 +161,14 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         }
     }
 
+    public int getCurrentLineStartPosition() {
+        return getLineStartPosition(clampedCaretPosition.getValue());
+    }
+
+    public int getCurrentLineEndPosition() {
+        return getLineEndPosition(clampedCaretPosition.getValue());
+    }
+
     public int currentLineIndex() {
         return getLineOfCharacter(clampedCaretPosition.getValue());
     }
