@@ -806,6 +806,43 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return virtualFlow.getCell(paragraphIndex).getNode().getLineCount();
     }
 
+    /**
+     * When {@link #isWrapText()} is true and the caret is in a multi-line paragraph, gets the line index within that
+     * paragraph that has the caret, or returns 0.
+     */
+    public int getCaretLineIndexInParagraph() {
+        if (!isWrapText()) {
+            return 0;
+        }
+        return virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineIndex();
+    }
+
+    /**
+     * When {@link #isWrapText()} is true, gets the line index (not paragraph index) that has the caret with
+     * an index of 0 starting at the top of the viewport, or returns -1 if the caret is not currently visible. For
+     * example, if a wrapped area has 5 paragraphs that span 3 lines each and the caret is in the second paragraph's
+     * second line, this method would return 5 (3 lines from the first paragraph + 2 lines from the second paragraph).
+     * <em>Note:</em> this method may return an unexpected value if the first line that the viewport displays is barely
+     * shown.
+     */
+    public int getCaretLineIndexInViewport() {
+        Optional<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> currentPar = virtualFlow.getCellIfVisible(getCurrentParagraph());
+        if (currentPar.isPresent()) {
+            Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cellWithCaret = currentPar.get();
+            int count = cellWithCaret.getNode().getCurrentLineIndex();
+            for (Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> c : virtualFlow.visibleCells()) {
+                if (c == cellWithCaret) {
+                    break;
+                }
+                count += c.getNode().getLineCount();
+            }
+            return count;
+
+        } else {
+            return -1;
+        }
+    }
+
     @Override
     public final String getText(int start, int end) {
         return model.getText(start, end);
