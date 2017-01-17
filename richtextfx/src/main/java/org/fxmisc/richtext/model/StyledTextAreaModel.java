@@ -14,6 +14,7 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.model.actions.EditActions;
 import org.fxmisc.richtext.model.actions.NavigationActions;
+import org.fxmisc.richtext.model.actions.StyleableSequence;
 import org.fxmisc.richtext.model.actions.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
@@ -40,6 +41,7 @@ public class StyledTextAreaModel<PS, SEG, S>
         implements
         EditActions<PS, SEG, S>,
         NavigationActions<PS, SEG, S>,
+        StyleableSequence<PS, S>,
         UndoActions,
         TwoDimensional {
 
@@ -80,15 +82,10 @@ public class StyledTextAreaModel<PS, SEG, S>
                 : createPlainUndoManager(undoManagerFactory);
     }
 
-    /**
-     * Indicates whether the initial style should also be used for plain text
-     * inserted into this text area. When {@code false}, the style immediately
-     * preceding the insertion position is used. Default value is {@code false}.
-     */
     final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
-    public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
-    public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
-    public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
+    @Override public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
+    @Override public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
+    @Override public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -420,100 +417,62 @@ public class StyledTextAreaModel<PS, SEG, S>
         return new IndexRange(start, end);
     }
 
-    /**
-     * Returns the style of the character with the given index.
-     * If {@code index} points to a line terminator character,
-     * the last style used in the paragraph terminated by that
-     * line terminator is returned.
-     */
+    @Override
+    public PS getParagraphStyle(int paragraphIndex) {
+        return content.getParagraphStyle(paragraphIndex);
+    }
+
+    @Override
     public S getStyleOfChar(int index) {
         return content.getStyleOfChar(index);
     }
 
-    /**
-     * Returns the style at the given position. That is the style of the
-     * character immediately preceding {@code position}, except when
-     * {@code position} points to a paragraph boundary, in which case it
-     * is the style at the beginning of the latter paragraph.
-     *
-     * <p>In other words, most of the time {@code getStyleAtPosition(p)}
-     * is equivalent to {@code getStyleOfChar(p-1)}, except when {@code p}
-     * points to a paragraph boundary, in which case it is equivalent to
-     * {@code getStyleOfChar(p)}.
-     */
+    @Override
     public S getStyleAtPosition(int position) {
         return content.getStyleAtPosition(position);
     }
 
-    /**
-     * Returns the range of homogeneous style that includes the given position.
-     * If {@code position} points to a boundary between two styled ranges, then
-     * the range preceding {@code position} is returned. If {@code position}
-     * points to a boundary between two paragraphs, then the first styled range
-     * of the latter paragraph is returned.
-     */
+    @Override
     public IndexRange getStyleRangeAtPosition(int position) {
         return content.getStyleRangeAtPosition(position);
     }
 
-    /**
-     * Returns the styles in the given character range.
-     */
+    @Override
     public StyleSpans<S> getStyleSpans(int from, int to) {
         return content.getStyleSpans(from, to);
     }
 
-    /**
-     * Returns the styles in the given character range.
-     */
+    @Override
     public StyleSpans<S> getStyleSpans(IndexRange range) {
         return getStyleSpans(range.getStart(), range.getEnd());
     }
 
-    /**
-     * Returns the style of the character with the given index in the given
-     * paragraph. If {@code index} is beyond the end of the paragraph, the
-     * style at the end of line is returned. If {@code index} is negative, it
-     * is the same as if it was 0.
-     */
+    @Override
     public S getStyleOfChar(int paragraph, int index) {
         return content.getStyleOfChar(paragraph, index);
     }
 
-    /**
-     * Returns the style at the given position in the given paragraph.
-     * This is equivalent to {@code getStyleOfChar(paragraph, position-1)}.
-     */
+    @Override
     public S getStyleAtPosition(int paragraph, int position) {
         return content.getStyleOfChar(paragraph, position);
     }
 
-    /**
-     * Returns the range of homogeneous style that includes the given position
-     * in the given paragraph. If {@code position} points to a boundary between
-     * two styled ranges, then the range preceding {@code position} is returned.
-     */
+    @Override
     public IndexRange getStyleRangeAtPosition(int paragraph, int position) {
         return content.getStyleRangeAtPosition(paragraph, position);
     }
 
-    /**
-     * Returns styles of the whole paragraph.
-     */
+    @Override
     public StyleSpans<S> getStyleSpans(int paragraph) {
         return content.getStyleSpans(paragraph);
     }
 
-    /**
-     * Returns the styles in the given character range of the given paragraph.
-     */
+    @Override
     public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
         return content.getStyleSpans(paragraph, from, to);
     }
 
-    /**
-     * Returns the styles in the given character range of the given paragraph.
-     */
+    @Override
     public StyleSpans<S> getStyleSpans(int paragraph, IndexRange range) {
         return getStyleSpans(paragraph, range.getStart(), range.getEnd());
     }
@@ -543,87 +502,52 @@ public class StyledTextAreaModel<PS, SEG, S>
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Sets style for the given character range.
-     */
+    @Override
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
     }
 
-    /**
-     * Sets style for the whole paragraph.
-     */
+    @Override
     public void setStyle(int paragraph, S style) {
         content.setStyle(paragraph, style);
     }
 
-    /**
-     * Sets style for the given range relative in the given paragraph.
-     */
+    @Override
     public void setStyle(int paragraph, int from, int to, S style) {
         content.setStyle(paragraph, from, to, style);
     }
 
-    /**
-     * Set multiple style ranges at once. This is equivalent to
-     * <pre>
-     * for(StyleSpan{@code <S>} span: styleSpans) {
-     *     setStyle(from, from + span.getLength(), span.getStyle());
-     *     from += span.getLength();
-     * }
-     * </pre>
-     * but the actual implementation is more efficient.
-     */
+    @Override
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         content.setStyleSpans(from, styleSpans);
     }
 
-    /**
-     * Set multiple style ranges of a paragraph at once. This is equivalent to
-     * <pre>
-     * for(StyleSpan{@code <S>} span: styleSpans) {
-     *     setStyle(paragraph, from, from + span.getLength(), span.getStyle());
-     *     from += span.getLength();
-     * }
-     * </pre>
-     * but the actual implementation is more efficient.
-     */
+    @Override
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
         content.setStyleSpans(paragraph, from, styleSpans);
     }
 
-    /**
-     * Sets style for the whole paragraph.
-     */
+    @Override
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
         content.setParagraphStyle(paragraph, paragraphStyle);
     }
 
-    /**
-     * Resets the style of the given range to the initial style.
-     */
+    @Override
     public void clearStyle(int from, int to) {
         setStyle(from, to, initialTextStyle);
     }
 
-    /**
-     * Resets the style of the given paragraph to the initial style.
-     */
+    @Override
     public void clearStyle(int paragraph) {
         setStyle(paragraph, initialTextStyle);
     }
 
-    /**
-     * Resets the style of the given range in the given paragraph
-     * to the initial style.
-     */
+    @Override
     public void clearStyle(int paragraph, int from, int to) {
         setStyle(paragraph, from, to, initialTextStyle);
     }
 
-    /**
-     * Resets the style of the given paragraph to the initial style.
-     */
+    @Override
     public void clearParagraphStyle(int paragraph) {
         setParagraphStyle(paragraph, initialParagraphStyle);
     }
