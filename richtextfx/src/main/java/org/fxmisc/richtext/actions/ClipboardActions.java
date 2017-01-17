@@ -1,6 +1,4 @@
-package org.fxmisc.richtext;
-
-import static org.fxmisc.richtext.ClipboardHelper.*;
+package org.fxmisc.richtext.actions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,11 +13,11 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 
 import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.EditActions;
+import org.fxmisc.richtext.model.actions.EditActions;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.TextEditingArea;
+import org.fxmisc.richtext.model.actions.TextEditingArea;
 import org.reactfx.util.Tuple2;
 
 /**
@@ -54,7 +52,7 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
 
             getStyleCodecs().ifPresent(codecs -> {
                 Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
-                DataFormat format = dataFormat(codec.getName());
+                DataFormat format = ClipboardHelper.dataFormat(codec.getName());
                 StyledDocument<PS, SEG, S> doc = subDocument(selection.getStart(), selection.getEnd());
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(os);
@@ -82,7 +80,7 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
         if(getStyleCodecs().isPresent()) {
             Tuple2<Codec<PS>, Codec<SEG>> codecs = getStyleCodecs().get();
             Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
-            DataFormat format = dataFormat(codec.getName());
+            DataFormat format = ClipboardHelper.dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
                 byte[] bytes = (byte[]) clipboard.getContent(format);
                 ByteArrayInputStream is = new ByteArrayInputStream(bytes);

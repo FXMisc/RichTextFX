@@ -1,7 +1,8 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext.model.actions;
 
 import javafx.beans.value.ObservableBooleanValue;
 
+import org.fxmisc.richtext.model.actions.TextEditingArea;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 
