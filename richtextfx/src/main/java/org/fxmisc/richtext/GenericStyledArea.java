@@ -6,6 +6,8 @@ import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -29,7 +31,9 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
+import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
@@ -262,7 +266,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * <p>By default, this will relocate the selected text to the character index where the mouse
      * was released. To override it, use {@link #setOnSelectionDrop(IntConsumer)}.
      */
-    private Property<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
+    private final Property<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
     public final void setOnSelectionDrop(IntConsumer consumer) { onSelectionDrop.setValue(consumer); }
     public final IntConsumer getOnSelectionDrop() { return onSelectionDrop.getValue(); }
 
@@ -677,6 +681,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new StyledTextAreaBehavior(this);
+    }
+
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * CSS                                                                    *
+     *                                                                        *
+     * ********************************************************************** */
+
+    @Override
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+        List<CssMetaData<? extends Styleable, ?>> styleables =
+                new ArrayList<>(Region.getClassCssMetaData());
+        styleables.add(highlightFill.getCssMetaData());
+        styleables.add(highlightTextFill.getCssMetaData());
+        styleables.add(caretBlinkRate.getCssMetaData());
+        return styleables;
     }
 
 
