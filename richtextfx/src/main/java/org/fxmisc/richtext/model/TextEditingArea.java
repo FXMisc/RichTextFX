@@ -78,8 +78,8 @@ public interface TextEditingArea<PS, SEG, S> {
     /**
      * Index of the current paragraph, i.e. the paragraph with the caret.
      */
-    int getCurrentParagraph();
-    ObservableValue<Integer> currentParagraphProperty();
+    int getCaretParagraph();
+    ObservableValue<Integer> caretParagraphProperty();
 
     /**
      * The caret position within the current paragraph.

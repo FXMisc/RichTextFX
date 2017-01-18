@@ -371,8 +371,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return selectionBounds; }
 
     // current paragraph index
-    @Override public final int getCurrentParagraph() { return model.getCurrentParagraph(); }
-    @Override public final ObservableValue<Integer> currentParagraphProperty() { return model.currentParagraphProperty(); }
+    @Override public final int getCaretParagraph() { return model.getCaretParagraph(); }
+    @Override public final ObservableValue<Integer> caretParagraphProperty() { return model.caretParagraphProperty(); }
 
     // caret column
     @Override public final int getCaretColumn() { return model.getCaretColumn(); }
@@ -710,7 +710,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * of the embedded VirtualFlow.
      */
     Optional<Bounds> getCaretBoundsInViewport() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
+        return virtualFlow.getCellIfVisible(getCaretParagraph())
                 .map(c -> {
                     Bounds cellBounds = c.getNode().getCaretBounds();
                     return virtualFlow.cellToViewport(c, cellBounds);
@@ -721,7 +721,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Returns x coordinate of the caret in the current paragraph.
      */
     ParagraphBox.CaretOffsetX getCaretOffsetX() {
-        int idx = getCurrentParagraph();
+        int idx = getCaretParagraph();
         return getCell(idx).getCaretOffsetX();
     }
 
@@ -791,7 +791,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * paragraph to the viewport if it is not already visible.
      */
     TwoDimensional.Position currentLine() {
-        int parIdx = getCurrentParagraph();
+        int parIdx = getCaretParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return _position(parIdx, lineIdx);
@@ -1008,7 +1008,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     void showCaretAtBottom() {
-        int parIdx = getCurrentParagraph();
+        int parIdx = getCaretParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMaxY();
@@ -1016,7 +1016,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     void showCaretAtTop() {
-        int parIdx = getCurrentParagraph();
+        int parIdx = getCaretParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMinY();
@@ -1034,7 +1034,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     private void followCaret() {
-        int parIdx = getCurrentParagraph();
+        int parIdx = getCaretParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
@@ -1049,8 +1049,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * @param policy
      */
     public void lineStart(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition();
-        moveTo(getCurrentParagraph(), columnPos, policy);
+        int columnPos = virtualFlow.getCell(getCaretParagraph()).getNode().getCurrentLineStartPosition();
+        moveTo(getCaretParagraph(), columnPos, policy);
     }
 
     /**
@@ -1060,8 +1060,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * @param policy
      */
     public void lineEnd(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition();
-        moveTo(getCurrentParagraph(), columnPos, policy);
+        int columnPos = virtualFlow.getCell(getCaretParagraph()).getNode().getCurrentLineEndPosition();
+        moveTo(getCaretParagraph(), columnPos, policy);
     }
 
     /**
@@ -1249,7 +1249,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         Val<Boolean> hasCaret = Val.combine(
                 box.indexProperty(),
-                currentParagraphProperty(),
+                caretParagraphProperty(),
                 (bi, cp) -> bi.intValue() == cp.intValue());
 
         Subscription hasCaretPseudoClass = hasCaret.values().subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
@@ -1365,7 +1365,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
+        return virtualFlow.getCellIfVisible(getCaretParagraph())
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
