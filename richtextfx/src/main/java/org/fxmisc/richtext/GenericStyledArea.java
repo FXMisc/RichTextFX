@@ -410,6 +410,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final CaretSelectionView mainCaret;
     public final Caret getMainCaret() { return mainCaret; }
+    public final Selection getMainSelection() { return mainCaret; }
 
     /* ********************************************************************** *
      *                                                                        *
