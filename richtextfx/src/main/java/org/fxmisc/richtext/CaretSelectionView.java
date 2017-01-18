@@ -18,7 +18,7 @@ import java.util.Optional;
 
 import static javafx.util.Duration.ZERO;
 
-public class CaretSelectionView implements Caret {
+public class CaretSelectionView implements Caret, Selection {
 
     private final CaretSelectionModel model;
 
