@@ -94,6 +94,7 @@ public class StyledTextAreaModel<PS, SEG, S>
     @Override public final ObservableValue<Integer> lengthProperty() { return length; }
 
     private final CaretSelectionModel mainCaret;
+    public final CaretSelectionModel getMainCaret() { return mainCaret; }
 
     // caret position
     @Override public final int getCaretPosition() { return mainCaret.getCaretPosition(); }
