@@ -195,6 +195,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
             = new CssProperties.CaretBlinkRateProperty(this, javafx.util.Duration.millis(500));
+    final EventStream<javafx.util.Duration> blinkRates() { return EventStreams.valuesOf(caretBlinkRate); }
+
 
     // editable property
     /**
@@ -1384,7 +1386,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return impl_getSelectionBoundsOnScreen();
     }
 
-    private Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen() {
+    Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen() {
         IndexRange selection = getSelection();
         if (selection.getLength() == 0) {
             return Optional.empty();
@@ -1448,6 +1450,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
+    }
+
+    EventStream<?> boundsDirtyFor(EventStream<?> caretOrSelectionDirtyEvents) {
+        return merge(viewportDirty, caretOrSelectionDirtyEvents).suppressWhen(model.beingUpdatedProperty());
     }
 
     /* ********************************************************************** *
