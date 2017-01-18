@@ -1,6 +1,8 @@
 package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.util.Utilities.EMPTY_RANGE;
+import static org.fxmisc.richtext.util.Utilities.clamp;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -39,21 +41,6 @@ public class StyledTextAreaModel<PS, SEG, S>
         NavigationActions<PS, SEG, S>,
         UndoActions,
         TwoDimensional {
-
-    /**
-     * Index range [0, 0).
-     */
-    public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
-
-    /**
-     * Private helper method.
-     */
-    private static int clamp(int min, int val, int max) {
-        return val < min ? min
-                : val > max ? max
-                : val;
-    }
-
 
     /* ********************************************************************** *
      *                                                                        *

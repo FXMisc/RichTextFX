@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import static javafx.util.Duration.*;
 import static org.fxmisc.richtext.PopupAlignment.*;
+import static org.fxmisc.richtext.util.Utilities.EMPTY_RANGE;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
@@ -158,11 +159,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         UndoActions,
         TwoDimensional,
         Virtualized {
-
-    /**
-     * Index range [0, 0).
-     */
-    public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
     private static final PseudoClass HAS_CARET = PseudoClass.getPseudoClass("has-caret");
     private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
@@ -1278,7 +1274,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             int idx = box.getIndex();
             return idx != -1
                     ? getParagraphSelection(idx)
-                    : StyledTextArea.EMPTY_RANGE;
+                    : EMPTY_RANGE;
         }, selectionProperty(), box.indexProperty());
         box.selectionProperty().bind(cellSelection);
 
