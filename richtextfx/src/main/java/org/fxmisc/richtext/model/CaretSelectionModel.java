@@ -31,7 +31,7 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
  * </ul>
  *
  */
-final class CaretSelectionModel {
+public final class CaretSelectionModel {
 
     // caret position
     private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
