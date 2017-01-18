@@ -155,9 +155,12 @@ public final class CaretSelectionModel {
                 }
             }
         });
+
         caretDirty = merge(
+                // follow the caret every time the caret position or paragraphs change
                 invalidationsOf(caretPositionProperty()),
                 invalidationsOf(model.getParagraphs()),
+                // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
                 invalidationsOf(selectionProperty())
         );
         selectionDirty = invalidationsOf(selectionProperty());
