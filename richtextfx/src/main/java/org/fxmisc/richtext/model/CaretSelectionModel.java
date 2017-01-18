@@ -75,9 +75,9 @@ public final class CaretSelectionModel {
     private final Suspendable modelBeingUpdated;
     private final Subscription subscription;
 
-    CaretSelectionModel(StyledTextAreaModel<?, ?, ?> model, Supplier<Suspendable> beingUpdatedSupplier) {
+    CaretSelectionModel(StyledTextAreaModel<?, ?, ?> model, Suspendable modelBeingUpdated) {
         this.model = model;
-        modelBeingUpdated = beingUpdatedSupplier.get();
+        this.modelBeingUpdated = modelBeingUpdated;
         Val<Position> caretPosition2D = Val.create(
                 () -> offsetToPosition(internalCaretPosition.getValue(), Forward),
                 internalCaretPosition, model.getParagraphs()

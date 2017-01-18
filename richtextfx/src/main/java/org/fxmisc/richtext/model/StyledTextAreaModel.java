@@ -243,7 +243,7 @@ public class StyledTextAreaModel<PS, SEG, S>
         plainTextChanges = content.plainChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
-        mainCaret = new CaretSelectionModel(this, () -> beingUpdated);
+        mainCaret = new CaretSelectionModel(this, beingUpdated);
         manageSubscription(mainCaret::dispose);
 
         undoManager = preserveStyle
