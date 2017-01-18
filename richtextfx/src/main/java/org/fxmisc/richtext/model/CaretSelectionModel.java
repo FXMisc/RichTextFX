@@ -72,6 +72,9 @@ public final class CaretSelectionModel {
     private final EventStream<?> caretDirty;
     public final EventStream<?> caretDirtyEvents() { return caretDirty; }
 
+    private final EventStream<?> selectionDirty;
+    public final EventStream<?> selectionDirtyEvents() { return selectionDirty; }
+
     private Position selectionStart2D;
     private Position selectionEnd2D;
 
@@ -157,6 +160,7 @@ public final class CaretSelectionModel {
                 invalidationsOf(model.getParagraphs()),
                 invalidationsOf(selectionProperty())
         );
+        selectionDirty = invalidationsOf(selectionProperty());
     }
 
     Suspendable omniSuspendable() {
