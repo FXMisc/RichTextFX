@@ -4,6 +4,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.TwoDimensional.Bias;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
+import org.reactfx.EventStream;
 import org.reactfx.Guard;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
@@ -12,12 +13,12 @@ import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import java.util.function.Supplier;
-
 import static org.fxmisc.richtext.util.Utilities.EMPTY_RANGE;
 import static org.fxmisc.richtext.util.Utilities.clamp;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
+import static org.reactfx.EventStreams.merge;
+import static org.reactfx.EventStreams.invalidationsOf;
 
 /**
  * Encapsulates all caret and selection related information for {@link StyledTextAreaModel} and utilizes
@@ -67,6 +68,9 @@ public final class CaretSelectionModel {
     private final SuspendableVal<Integer> caretColumn;
     public final int getCaretColumn() { return caretColumn.getValue(); }
     public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
+
+    private final EventStream<?> caretDirty;
+    public final EventStream<?> caretDirtyEvents() { return caretDirty; }
 
     private Position selectionStart2D;
     private Position selectionEnd2D;
@@ -148,6 +152,11 @@ public final class CaretSelectionModel {
                 }
             }
         });
+        caretDirty = merge(
+                invalidationsOf(caretPositionProperty()),
+                invalidationsOf(model.getParagraphs()),
+                invalidationsOf(selectionProperty())
+        );
     }
 
     Suspendable omniSuspendable() {

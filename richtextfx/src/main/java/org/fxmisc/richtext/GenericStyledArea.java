@@ -441,6 +441,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private boolean followCaretRequested = false;
 
     private final SuspendableEventStream<?> viewportDirty;
+    final EventStream<?> viewportDirtyEvents() { return viewportDirty; }
 
     /**
      * model
@@ -1362,6 +1363,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             popup.setAnchorX(anchor.getX());
             popup.setAnchorY(anchor.getY());
         });
+    }
+
+    Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex)
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
