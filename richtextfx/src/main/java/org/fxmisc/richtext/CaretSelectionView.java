@@ -75,6 +75,7 @@ public class CaretSelectionView implements Caret {
     CaretSelectionView(CaretSelectionModel model, GenericStyledArea<?, ?, ?> area) {
         this.model = model;
 
+        // whether or not to display the caret
         EventStream<Boolean> blinkCaret = showCaret.values()
                 .flatMap(mode -> {
                     switch (mode) {
@@ -92,7 +93,7 @@ public class CaretSelectionView implements Caret {
 
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
-        caretVisible = EventStreams.combine(blinkCaret, area.blinkRates())
+        caretVisible = EventStreams.combine(blinkCaret, area.caretBlinkRateEvents())
                 .flatMap(tuple -> {
                     Boolean blink = tuple.get1();
                     javafx.util.Duration rate = tuple.get2();
