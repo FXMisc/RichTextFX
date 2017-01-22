@@ -196,7 +196,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     }
 
     /**
-     * Selects the current line.
+     * Selects the current paragraph.
      */
     default void selectParagraph() {
         paragraphStart(SelectionPolicy.CLEAR);
