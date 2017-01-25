@@ -33,7 +33,10 @@ javadoc {
         'http://docs.oracle.com/javase/8/javafx/api/',
 
         // resolve links to ReactFX
-        'http://www.reactfx.org/javadoc/2.0-M5/'
+        'http://www.reactfx.org/javadoc/2.0-M5/',
+            
+        // resolve links to Flowless
+        'https://fxmisc.github.io/flowless/javadoc/0.5/'
     ]
 }
 
