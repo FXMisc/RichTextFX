@@ -285,7 +285,7 @@ libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M3"
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M3/richtextfx-0.7-M3.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/0.7-M3/richtextfx-fat-0.7-M3.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M3/richtextfx-0.7-M3.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M3/richtextfx-fat-0.7-M3.jar) and place it on your classpath.
 
 
 ### Snapshot releases
