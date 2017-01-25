@@ -6,7 +6,7 @@ import org.fxmisc.richtext.model.SegmentOps;
 
 public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
 
-    private final LinkedImage<S> emptySeg = new LinkedImage<>("", null);
+    private final EmptyLinkedImage<S> emptySeg = new EmptyLinkedImage<>();
 
     @Override
     public int length(LinkedImage<S> seg) {
