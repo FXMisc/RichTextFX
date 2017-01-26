@@ -41,6 +41,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -274,6 +275,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
     public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
     public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
+
+    /** The {@link ContextMenu} for the area, which is by default null. */
+    private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
+    public final ContextMenu getContextMenu() { return contextMenu.get(); }
+    public final void setContextMenu(ContextMenu menu) { contextMenu.setValue(menu); }
+    public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
+    protected final boolean isContextMenuPresent() { return contextMenu.get() != null; }
+
+    /**
+     * The horizontal amount in pixels by which to offset the {@link #contextMenu} when it is shown, which has
+     * a default value of 2.
+     */
+    private double contextMenuXOffset = 2;
+    public final double getContextMenuXOffset() { return contextMenuXOffset; }
+    public final void setContextMenuXOffset(double offset) { contextMenuXOffset = offset; }
+
+    /**
+     * The vertical amount in pixels by which to offset the {@link #contextMenu} when it is shown, which has
+     * a default value of 2.
+     */
+    private double contextMenuYOffset = 2;
+    public final double getContextMenuYOffset() { return contextMenuYOffset; }
+    public final void setContextMenuYOffset(double offset) { contextMenuYOffset = offset; }
 
     /**
      * Indicates whether the initial style should also be used for plain text

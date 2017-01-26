@@ -13,7 +13,9 @@ import java.util.function.Predicate;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -183,7 +185,13 @@ class StyledTextAreaBehavior {
             consume(eventType(MouseEvent.MOUSE_RELEASED), StyledTextAreaBehavior::mouseReleased)
         );
 
-        EVENT_TEMPLATE = sequence(mouseEventTemplate, keyPressedTemplate, keyTypedTemplate);
+        InputMapTemplate<StyledTextAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
+                EventPattern.eventType(ContextMenuEvent.CONTEXT_MENU_REQUESTED),
+                b -> !b.view.isDisabled() && b.view.isContextMenuPresent(),
+                StyledTextAreaBehavior::showContextMenu
+        );
+
+        EVENT_TEMPLATE = sequence(mouseEventTemplate, keyPressedTemplate, keyTypedTemplate, contextMenuEventTemplate);
     }
 
     /**
@@ -385,10 +393,22 @@ class StyledTextAreaBehavior {
      * Mouse handling implementation                                          *
      * ********************************************************************** */
 
+    private void showContextMenu(ContextMenuEvent e) {
+        ContextMenu menu = view.getContextMenu();
+        double xOffset = view.getContextMenuXOffset();
+        double yOffset = view.getContextMenuYOffset();
+
+        menu.show(view, e.getScreenX() + xOffset, e.getScreenY() + yOffset);
+    }
+
     private void mousePressed(MouseEvent e) {
         // don't respond if disabled
         if(view.isDisabled()) {
             return;
+        }
+
+        if (view.isContextMenuPresent() && view.getContextMenu().isShowing()) {
+            view.getContextMenu().hide();
         }
 
         if(e.getButton() == MouseButton.PRIMARY) {
