@@ -439,7 +439,7 @@ public class RichText extends Application {
             String imagePath = selectedFile.getAbsolutePath();
             imagePath = imagePath.replace('\\',  '/');
             ReadOnlyStyledDocument<ParStyle, Either<StyledText<TextStyle>, LinkedImage<TextStyle>>, TextStyle> ros =
-                    ReadOnlyStyledDocument.fromSegment(Either.right(new LinkedImage<>(imagePath, TextStyle.EMPTY)),
+                    ReadOnlyStyledDocument.fromSegment(Either.right(new RealLinkedImage<>(imagePath, TextStyle.EMPTY)),
                                                        ParStyle.EMPTY, TextStyle.EMPTY, area.getSegOps());
             area.replaceSelection(ros);
         }
