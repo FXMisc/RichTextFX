@@ -18,6 +18,7 @@ dependencies {
     testCompile ("org.testfx:testfx-junit:4.0.5-alpha") {
         exclude(group: "junit", module: "junit")
     }
+    testCompile group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
 }
 
 javadoc {
