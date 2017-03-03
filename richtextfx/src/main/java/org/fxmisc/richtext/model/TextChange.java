@@ -42,6 +42,22 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
      * {@code null} otherwise.
      */
     public Optional<Self> mergeWith(Self latter) {
+        if(this.insertedLength() > 0 && this.removedLength() > 0) {
+            return Optional.empty();
+        }
+
+        if(latter.insertedLength() > 0 && latter.removedLength() > 0) {
+            return Optional.empty();
+        }
+
+        if(this.insertedLength() > 0 && latter.removedLength() > 0) {
+            return Optional.empty();
+        }
+
+        if(this.removedLength() > 0 && latter.insertedLength() > 0) {
+            return Optional.empty();
+        }
+
         if(latter.position == this.position + this.insertedLength()) {
             S removedText = concat(this.removed, latter.removed);
             S addedText = concat(this.inserted, latter.inserted);
