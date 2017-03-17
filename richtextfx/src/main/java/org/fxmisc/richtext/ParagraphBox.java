@@ -181,6 +181,11 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.getSelectionBoundsOnScreen();
     }
 
+    public Bounds getRangeBoundsOnScreen(int from, int to) {
+        layout(); // ensure layout, is a no-op if not dirty
+        return text.getRangeBoundsOnScreen(from, to);
+    }
+
     @Override
     protected double computeMinWidth(double ignoredHeight) {
         return computePrefWidth(-1);

@@ -151,6 +151,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return caretShape.localToScreen(localBounds);
     }
 
+    public Bounds getRangeBoundsOnScreen(int from, int to) {
+        layout(); // ensure layout, is a no-op if not dirty
+        PathElement[] rangeShape = getRangeShape(from, to);
+
+        // switch out shapes to calculate the bounds on screen
+        List<PathElement> selShape = selectionShape.getElements();
+        selectionShape.getElements().setAll(rangeShape);
+        Bounds localBounds = selectionShape.getBoundsInLocal();
+        Bounds rangeBoundsOnScreen = selectionShape.localToScreen(localBounds);
+        selectionShape.getElements().setAll(selShape);
+
+        return rangeBoundsOnScreen;
+    }
+
     public Optional<Bounds> getSelectionBoundsOnScreen() {
         if(selection.get().getLength() == 0) {
             return Optional.empty();
