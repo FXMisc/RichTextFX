@@ -1,15 +1,22 @@
 RichTextFX
 ==========
 
-RichTextFX provides a text area for JavaFX with API to style ranges of text. It is intended as a base for rich-text editors and code editors with syntax highlighting.
+RichTextFX provides a memory-efficient text area for JavaFX that allows the developer to style ranges of text, display custom objects in-line (no more HTMLEditor), and override the default behavior only where necessary without overriding any other part of the behavior.
+
+It does not follow the MVC paradigm as this prevented access to view-specific API (e.g., getting the bounds of the caret/selection/characters, scrolling by some amount, .
+
+It is intended as a base for rich-text editors and code editors with syntax highlighting. Since it is a base, a number of suggested features (specific syntax highlighters, search-and-replace, specific support for hyperlinks, etc.) will not be implemented directly in this project. Rather, developers can implement these on top of RichTextFX and submit their work as a PR to the `richtextfx-demos` package.
+
+For a greater explanation of RichTextFX, its design principles, how it works, and how to style its areas via CSS, please [see the wiki](https://github.com/TomasMikula/RichTextFX/wiki)
 
 * [Who uses RichTextFX?](#who-uses-richtextfx)
 * [Features](#features)
 * [Flavors](#flavors)
-  * [StyleClassedTextArea](#styleclassedtextarea)
-     * [CodeArea](#codearea)
-  * [InlineCssTextArea](#inlinecsstextarea)
-  * [InlineStyleTextArea](#inlinestyletextarea)
+  * [GenericStyledArea (Base area class requiring customization)](#genericstyledarea)
+  * [StyledTextArea (Areas ready out-of-box)](#styledtextarea)
+     * [InlineCssTextArea](#inlinecsstextarea)
+     * [StyleClassedTextArea](#styleclassedtextarea)
+         * [CodeArea (Base for code editors)](#codearea)
 * [Requirements](#requirements)
 * [Demos](#demos)
   * [Highlighting of Java keywords](#automatic-highlighting-of-java-keywords)
@@ -45,24 +52,55 @@ If you use RichTextFX in an interesting project, I would like to know!
 Features
 --------
 
-* Assign arbitrary styles to arbitrary ranges of text.
+* Assign arbitrary styles to arbitrary ranges of text. A style can be an object, a CSS string, or a style class string.
 * Display line numbers or, more generally, any graphic in front of each paragraph. Can be used to show breakpoint toggles on each line of code.
+* Support for displaying other `Node`s in-line
 * Positioning a popup window relative to the caret or selection. Useful e.g. to position an autocompletion box.
 * Getting the character index under the mouse when the mouse stays still over the text for a specified period of time. Useful for displaying tooltips depending on the word under the mouse.
+* Overriding the default behavior only where necessary without overriding any other part.
 
 
 Flavors
 -------
 
-### StyleClassedTextArea
+The following explains the different rich text area classes. The first one is the base class from which all others extend: it needs further customization before it can be used but provides all aspects of the project's features. The later ones extend this base class in various ways to provide out-of-box functionality for specific use cases. **Most will use one of these subclasses.**
 
-`StyleClassedTextArea` lets you assign style classes to ranges of text. You can define the style classes in your stylesheet.
+### GenericStyledArea
 
-Example.java:
+`GenericStyledArea` allows one to inline custom objects into the area alongside of text. As such, it uses generics and functional programming to accomplish this task in a completely type-safe way.
+
+It has three parameter types:
+ - `PS`, the paragraph style. This can be used for text alignment or setting the background color for the entire paragraph. A paragraph is either one line when text wrap is off or a long text displayed over multiple lines in a narrow viewport when text wrap is on,
+ - `SEG`, the segment object. This specifies what immutable object to store in the model part of the area: text, hyperlinks, images, emojis, or any combination thereof.
+ - `S`, the segment style. This can be used for text and object styling. Usually, this will be a CSS style or CSS style class.
+
+Functional programming via lambdas specify how to apply styles, how to create a `Node` for a given segment, and how to operate on a given segment (e.g., getting its length, combining it with another segment, etc.).
+
+`GenericStyledArea` is used in the [Rich-text demo](#rich-text-editor) below.
+
+See the wiki for a basic pattern that one must follow to implement custom objects correctly.
+
+### StyledTextArea
+
+`StyledTextArea<PS, S>`, or one of its subclasses below, is the area you will most likely use if you don't need to display custom objects in your area.
+
+It extends `GenericStyledArea<PS, StyledText<S>, S>>`. `StyledText` is simply a text (`String`) and a style object (`S`). A slightly-enhanced [JavaFX `Text`](https://docs.oracle.com/javase/8/javafx/api/javafx/scene/text/Text.html) node is used to display the `StyledText<S>`, so you can style it using [its CSS properties](https://docs.oracle.com/javase/8/javafx/api/javafx/scene/doc-files/cssref.html#text) and additional RichTextFX-specific CSS (see the wiki for more details).
+
+It properly handles the aforementioned functional programming to properly display and operate on `StyledText<S>` objects.
+
+The style object (`S`) can either be a CSS String (`-fx-fill: red;`), a CSS styleclass (`.red { -fx-fill: red; }`), or an object that handles this in a different way. Since most will use either the CSS String or CSS style class approach, there are two subclasses that already handle this correctly.
+
+### InlineCssTextArea
+
+`InlineCssTextArea` uses the `Node#setStyle(String cssStyle)` method to style `Text` objects:
 
 ```java
-area.setStyleClass(from, to, "red");
+area.setStyle(from, to, "-fx-font-weight: bold;");
 ```
+
+### StyleClassedTextArea
+
+`StyleClassedTextArea` uses the `Node#setStyleClass(String styleClass) method to style `Text` objects. You can define the style classes in your stylesheet.
 
 example.css:
 
@@ -70,63 +108,17 @@ example.css:
 .red { -fx-fill: red; }
 ```
 
-This renders the text in the range `[from, to)` in red.
+Example.java:
 
-Note that the style classes are assigned to instances of [Text](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/Text.html), so you can specify any [CSS properties applicable to a Text node](http://docs.oracle.com/javafx/2/api/javafx/scene/doc-files/cssref.html#text).
+```java
+area.setStyleClass(from, to, "red");
+```
+
+This renders the text in the range `[from, to)` in red.
 
 #### CodeArea
 
 `CodeArea` is a variant of `StyleClassedTextArea` that uses a fixed width font by default, making it a convenient base for source code editors. `CodeArea` is used in the [Java Keywords demo](#automatic-highlighting-of-java-keywords) below.
-
-
-### InlineCssTextArea
-
-`InlineCssTextArea` lets you specify inline CSS for a range of text.
-
-```java
-area.setStyle(from, to, "-fx-font-weight: bold;");
-```
-
-Again, you can use any CSS properties applicable to a `Text` node.
-
-
-### InlineStyleTextArea
-
-`InlineStyleTextArea<S>` is a more general version of `InlineCssTextArea`. In the end, there is still inline CSS assigned to `Text` nodes, but instead of using the CSS string directly, you use an instance of your custom style representation `S` and provide a way (function) to convert `S` to CSS string in `InlineStyleTextArea` constructor.
-
-```java
-class MyStyleInfo {
-    boolean bold;
-    boolean italic;
-    
-    String toCss() {
-        return "-fx-font-weight: " + (bold ? "bold" : "normal") + ";"
-               + "-fx-font-style: " + (italic ? "italic" : "normal") + ";";
-    }
-}
-
-InlineStyleTextArea<MyStyleInfo> area =
-        new InlineStyleTextArea<>(new MyStyleInfo(), styleInfo -> styleInfo.toCss());
-```
-
-The first constructor argument is the default style to use for ranges of text where you don't set the style explicitly. The second constructor argument is the function to convert the custom style representation to CSS.
-
-You then assign an instance of your custom style representation to a range of text.
-
-```java
-MyStyleInfo styleInfo = ...;
-
-area.setStyle(from, to, styleInfo);
-```
-
-You appreciate the benefits of this approach over `InlineCssTextArea` when you need to query the style used at a given position in text - you get back an instance of your style representation instead of a CSS string.
-
-```java
-MyStyleInfo styleInfo = area.getStyleAt(charIndex);
-```
-
-`InlineStyleTextArea` is used in the [Rich-text demo](#rich-text-editor) below.
-
 
 Requirements
 ------------
@@ -141,7 +133,7 @@ Demos
 
 ### Automatic highlighting of Java keywords
 
-![Screenshot of the JavaKeywords demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/java-keywords.png)
+![Screenshot of the JavaKeywords demo](https://cloud.githubusercontent.com/assets/8413037/24158979/1ef7af14-0e1b-11e7-8c06-69cb9e5a2dd7.png)
 
 #### Run using the pre-built JAR
 
@@ -191,7 +183,7 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 
 ### Rich-text editor
 
-![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/rich-text.png)
+![Screenshot of the RichText demo](https://cloud.githubusercontent.com/assets/8413037/24158984/22d36a10-0e1b-11e7-95e0-f4546cb528c3.png)
 
 #### Run using the pre-built JAR
 [Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-demos-fat-0.6.10.jar) the pre-built "fat" JAR file and run
@@ -211,7 +203,7 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 
 When the mouse pauses over the text area, you can get index of the character under the mouse. This allows you to implement, for example, custom tooltips whose content depends on the text under the mouse.
 
-![Screenshot of the RichText demo](https://googledrive.com/host/0B4a5AnNnZhkbYlVlbVprYnhPdVk/tooltip-demo.png)
+![Screenshot of the RichText demo](https://cloud.githubusercontent.com/assets/8413037/24158992/2741225e-0e1b-11e7-9d6b-6040dc30cee1.png)
 
 #### Run using the pre-built JAR
 [Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-demos-fat-0.6.10.jar) the pre-built "fat" JAR file and run
