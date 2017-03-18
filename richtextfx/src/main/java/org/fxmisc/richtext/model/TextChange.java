@@ -5,6 +5,33 @@ import java.util.Optional;
 
 public abstract class TextChange<S, Self extends TextChange<S, Self>> {
 
+    public static enum ChangeType {
+        /** Indicates that the change will insert something but not remove anything */
+        INSERTION,
+        /** Indicates that the change will delete something but not insert anything */
+        DELETION,
+        /** Indicates that the change will remove something and insert something as its replacement */
+        REPLACEMENT
+    }
+
+    private ChangeType type;
+    public final ChangeType getType() {
+        if (type == null) {
+            if (insertedLength() == 0) {
+                if (removedLength() == 0) {
+                    throw new IllegalStateException("Cannot get the type of a change that neither inserts nor deletes anything.");
+                } else {
+                    type = ChangeType.DELETION;
+                }
+            } else if (removedLength() == 0) {
+                type = ChangeType.INSERTION;
+            } else {
+                type = ChangeType.REPLACEMENT;
+            }
+        }
+        return type;
+    }
+
     protected final int position;
     protected final S removed;
     protected final S inserted;
@@ -29,51 +56,21 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     protected abstract Self create(int position, S removed, S inserted);
 
     /**
-     * Merges this change with the given change, if possible.
-     * This change is considered to be the former and the given
-     * change is considered to be the latter.
-     * Changes can be merged if either
-     * <ul>
-     *   <li>the latter's start matches the former's added text end; or</li>
-     *   <li>the latter's removed text end matches the former's added text end.</li>
-     * </ul>
+     * Merges this change with the given change only if the end of this change's inserted text
+     * equals the latter's position and both are either insertion or deletion changes.
+     *
      * @param latter change to merge with this change.
      * @return a new merged change if changes can be merged,
      * {@code null} otherwise.
      */
     public Optional<Self> mergeWith(Self latter) {
-        if(this.insertedLength() > 0 && this.removedLength() > 0) {
-            return Optional.empty();
-        }
-
-        if(latter.insertedLength() > 0 && latter.removedLength() > 0) {
-            return Optional.empty();
-        }
-
-        if(this.insertedLength() > 0 && latter.removedLength() > 0) {
-            return Optional.empty();
-        }
-
-        if(this.removedLength() > 0 && latter.insertedLength() > 0) {
-            return Optional.empty();
-        }
-
-        if(latter.position == this.position + this.insertedLength()) {
+        if(this.getType() != ChangeType.REPLACEMENT
+                && this.getType() == latter.getType()
+                && this.getInsertionEnd() == latter.position) {
             S removedText = concat(this.removed, latter.removed);
             S addedText = concat(this.inserted, latter.inserted);
             return Optional.of(create(this.position, removedText, addedText));
-        }
-        else if(latter.position + latter.removedLength() == this.position + this.insertedLength()) {
-            if(this.position <= latter.position) {
-                S addedText = concat(sub(this.inserted, 0, latter.position - this.position), latter.inserted);
-                return Optional.of(create(this.position, this.removed, addedText));
-            }
-            else {
-                S removedText = concat(sub(latter.removed, 0, this.position - latter.position), this.removed);
-                return Optional.of(create(latter.position, removedText, latter.inserted));
-            }
-        }
-        else {
+        } else {
             return Optional.empty();
         }
     }
@@ -99,9 +96,10 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     public final String toString() {
         return
                 this.getClass().getSimpleName() + "{\n" +
-                "\tposition: " + position + "\n" +
-                "\tremoved: " + removed + "\n" +
-                "\tinserted: " + inserted + "\n" +
+                "\tposition: "  + position  + "\n" +
+                "\ttype: "      + getType() + "\n" +
+                "\tremoved: "   + removed   + "\n" +
+                "\tinserted: "  + inserted  + "\n" +
                 "}";
     }
 }
