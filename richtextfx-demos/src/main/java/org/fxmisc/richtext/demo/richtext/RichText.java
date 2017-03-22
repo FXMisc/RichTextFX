@@ -169,7 +169,7 @@ public class RichText extends Application {
                     Color[] backgrounds = styles.styleStream().map(s -> s.backgroundColor.orElse(null)).distinct().toArray(i -> new Color[i]);
                     backgroundColor = backgrounds.length == 1 ? backgrounds[0] : null;
                 } else {
-                    int p = area.getCurrentParagraph();
+                    int p = area.getCaretParagraph();
                     int col = area.getCaretColumn();
                     TextStyle style = area.getStyleAtPosition(p, col);
                     bold = style.bold.orElse(false);

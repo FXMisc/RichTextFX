@@ -176,7 +176,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * Moves the caret to the end of the current paragraph.
      */
     default void paragraphEnd(SelectionPolicy selectionPolicy) {
-        int lineLen = getText(getCurrentParagraph()).length();
+        int lineLen = getText(getCaretParagraph()).length();
         int newPos = getCaretPosition() - getCaretColumn() + lineLen;
         moveTo(newPos, selectionPolicy);
     }

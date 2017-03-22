@@ -34,7 +34,7 @@ public class LineIndicatorDemo extends Application {
         CodeArea codeArea = new CodeArea();
 
         IntFunction<Node> numberFactory = LineNumberFactory.get(codeArea);
-        IntFunction<Node> arrowFactory = new ArrowFactory(codeArea.currentParagraphProperty());
+        IntFunction<Node> arrowFactory = new ArrowFactory(codeArea.caretParagraphProperty());
         IntFunction<Node> graphicFactory = line -> {
             HBox hbox = new HBox(
                     numberFactory.apply(line),

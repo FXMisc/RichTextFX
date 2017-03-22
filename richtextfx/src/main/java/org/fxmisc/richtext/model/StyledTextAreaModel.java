@@ -1,6 +1,6 @@
 package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.util.Utilities.clamp;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -23,9 +23,7 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.value.SuspendableVal;
-import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 /**
  * Model for {@link org.fxmisc.richtext.GenericStyledArea}
@@ -39,21 +37,6 @@ public class StyledTextAreaModel<PS, SEG, S>
         NavigationActions<PS, SEG, S>,
         UndoActions,
         TwoDimensional {
-
-    /**
-     * Index range [0, 0).
-     */
-    public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
-
-    /**
-     * Private helper method.
-     */
-    private static int clamp(int min, int val, int max) {
-        return val < min ? min
-                : val > max ? max
-                : val;
-    }
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -110,37 +93,32 @@ public class StyledTextAreaModel<PS, SEG, S>
     @Override public final int getLength() { return length.getValue(); }
     @Override public final ObservableValue<Integer> lengthProperty() { return length; }
 
+    private final CaretSelectionModel mainCaret;
+    public final CaretSelectionModel getMainCaret() { return mainCaret; }
+
     // caret position
-    private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
-    private final SuspendableVal<Integer> caretPosition = internalCaretPosition.suspendable();
-    @Override public final int getCaretPosition() { return caretPosition.getValue(); }
-    @Override public final ObservableValue<Integer> caretPositionProperty() { return caretPosition; }
+    @Override public final int getCaretPosition() { return mainCaret.getCaretPosition(); }
+    @Override public final ObservableValue<Integer> caretPositionProperty() { return mainCaret.caretPositionProperty(); }
 
     // selection anchor
-    private final SuspendableVar<Integer> anchor = Var.newSimpleVar(0).suspendable();
-    @Override public final int getAnchor() { return anchor.getValue(); }
-    @Override public final ObservableValue<Integer> anchorProperty() { return anchor; }
+    @Override public final int getAnchor() { return mainCaret.getAnchor(); }
+    @Override public final ObservableValue<Integer> anchorProperty() { return mainCaret.anchorProperty(); }
 
     // selection
-    private final Var<IndexRange> internalSelection = Var.newSimpleVar(EMPTY_RANGE);
-    private final SuspendableVal<IndexRange> selection = internalSelection.suspendable();
-    @Override public final IndexRange getSelection() { return selection.getValue(); }
-    @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
+    @Override public final IndexRange getSelection() { return mainCaret.getSelection(); }
+    @Override public final ObservableValue<IndexRange> selectionProperty() { return mainCaret.selectionProperty(); }
 
     // selected text
-    private final SuspendableVal<String> selectedText;
-    @Override public final String getSelectedText() { return selectedText.getValue(); }
-    @Override public final ObservableValue<String> selectedTextProperty() { return selectedText; }
+    @Override public final String getSelectedText() { return mainCaret.getSelectedText(); }
+    @Override public final ObservableValue<String> selectedTextProperty() { return mainCaret.selectedTextProperty(); }
 
-    // current paragraph index
-    private final SuspendableVal<Integer> currentParagraph;
-    @Override public final int getCurrentParagraph() { return currentParagraph.getValue(); }
-    @Override public final ObservableValue<Integer> currentParagraphProperty() { return currentParagraph; }
+    // caret paragraph
+    @Override public final int getCaretParagraph() { return mainCaret.getCaretParagraph(); }
+    @Override public final ObservableValue<Integer> caretParagraphProperty() { return mainCaret.caretParagraphProperty(); }
 
     // caret column
-    private final SuspendableVal<Integer> caretColumn;
-    @Override public final int getCaretColumn() { return caretColumn.getValue(); }
-    @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
+    @Override public final int getCaretColumn() { return mainCaret.getCaretColumn(); }
+    @Override public final ObservableValue<Integer> caretColumnProperty() { return mainCaret.caretColumnProperty(); }
 
     // paragraphs
     private final SuspendableList<Paragraph<PS, SEG, S>> paragraphs;
@@ -176,9 +154,6 @@ public class StyledTextAreaModel<PS, SEG, S>
     private final TextOps<SEG, S> textOps;
 
     private Subscription subscriptions = () -> {};
-
-    private Position selectionStart2D;
-    private Position selectionEnd2D;
 
     /**
      * content model
@@ -269,91 +244,18 @@ public class StyledTextAreaModel<PS, SEG, S>
         plainTextChanges = content.plainChanges().pausable();
         richTextChanges = content.richChanges().pausable();
 
-        // when content is updated by an area, update the caret
-        // and selection ranges of all the other
-        // clones that also share this document
-        subscribeTo(content.plainChanges(), plainTextChange -> {
-            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
-            if (changeLength != 0) {
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(changeLength);
-
-                // update caret
-                int caretPosition = getCaretPosition();
-                if (indexOfChange < caretPosition) {
-                    // if caret is within the changed content, move it to indexOfChange
-                    // otherwise offset it by changeLength
-                    positionCaret(
-                            caretPosition < endOfChange
-                                    ? indexOfChange
-                                    : caretPosition + changeLength
-                    );
-                }
-                // update selection
-                int selectionStart = getSelection().getStart();
-                int selectionEnd = getSelection().getEnd();
-                if (selectionStart != selectionEnd) {
-                    // if start/end is within the changed content, move it to indexOfChange
-                    // otherwise, offset it by changeLength
-                    // Note: if both are moved to indexOfChange, selection is empty.
-                    if (indexOfChange < selectionStart) {
-                        selectionStart = selectionStart < endOfChange
-                                ? indexOfChange
-                                : selectionStart + changeLength;
-                    }
-                    if (indexOfChange < selectionEnd) {
-                        selectionEnd = selectionEnd < endOfChange
-                                ? indexOfChange
-                                : selectionEnd + changeLength;
-                    }
-                    selectRange(selectionStart, selectionEnd);
-                } else {
-                    // force-update internalSelection in case caret is
-                    // at the end of area and a character was deleted
-                    // (prevents a StringIndexOutOfBoundsException because
-                    // selection's end is one char farther than area's length).
-                    int internalCaretPos = internalCaretPosition.getValue();
-                    selectRange(internalCaretPos, internalCaretPos);
-                }
-            }
-        });
+        mainCaret = new CaretSelectionModel(this, beingUpdated);
+        manageSubscription(mainCaret::dispose);
 
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        Val<Position> caretPosition2D = Val.create(
-                () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
-                internalCaretPosition, paragraphs);
-
-        currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
-        caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
-
-        selectionStart2D = position(0, 0);
-        selectionEnd2D = position(0, 0);
-        internalSelection.addListener(obs -> {
-            IndexRange sel = internalSelection.getValue();
-            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
-            selectionEnd2D = sel.getLength() == 0
-                    ? selectionStart2D
-                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
-        });
-
-        selectedText = Val.create(
-                () -> content.getText(internalSelection.getValue()),
-                internalSelection, content.getParagraphs()).suspendable();
-
         final Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
                 text,
                 length,
-                caretPosition,
-                anchor,
-                selection,
-                selectedText,
-                currentParagraph,
-                caretColumn,
+                mainCaret.omniSuspendable(),
 
                 // add streams after properties, to be released before them
                 plainTextChanges,
@@ -372,6 +274,10 @@ public class StyledTextAreaModel<PS, SEG, S>
      * Queries are parameterized observables.                                 *
      *                                                                        *
      * ********************************************************************** */
+
+    final String getText(IndexRange range) {
+        return content.getText(range);
+    }
 
     @Override
     public final String getText(int start, int end) {
@@ -401,20 +307,7 @@ public class StyledTextAreaModel<PS, SEG, S>
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
-        int startPar = selectionStart2D.getMajor();
-        int endPar = selectionEnd2D.getMajor();
-
-        if(paragraph < startPar || paragraph > endPar) {
-            return EMPTY_RANGE;
-        }
-
-        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
-        int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
-
-        // force selectionProperty() to be valid
-        getSelection();
-
-        return new IndexRange(start, end);
+        return mainCaret.getParagraphSelection(paragraph);
     }
 
     /**
@@ -647,14 +540,7 @@ public class StyledTextAreaModel<PS, SEG, S>
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        try(Guard g = suspend(
-                this.caretPosition, currentParagraph,
-                caretColumn, this.anchor,
-                selection, selectedText)) {
-            this.internalCaretPosition.setValue(clamp(0, caretPosition, getLength()));
-            this.anchor.setValue(clamp(0, anchor, getLength()));
-            this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
-        }
+        mainCaret.selectRange(anchor, caretPosition);
     }
 
     /**
@@ -664,9 +550,7 @@ public class StyledTextAreaModel<PS, SEG, S>
      * at the boundary. Use with care.
      */
     public void positionCaret(int pos) {
-        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.setValue(pos);
-        }
+        mainCaret.positionCaret(pos);
     }
 
     /* ********************************************************************** *
@@ -701,10 +585,6 @@ public class StyledTextAreaModel<PS, SEG, S>
         }
     }
 
-    private <T> void subscribeTo(EventStream<T> src, Consumer<T> consumer) {
-        manageSubscription(src.subscribe(consumer));
-    }
-
     private void manageSubscription(Subscription subscription) {
         subscriptions = subscriptions.and(subscription);
     }
@@ -721,7 +601,4 @@ public class StyledTextAreaModel<PS, SEG, S>
         return factory.create(richChanges(), RichTextChange::invert, apply, merge);
     }
 
-    private Guard suspend(Suspendable... suspendables) {
-        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
-    }
 }

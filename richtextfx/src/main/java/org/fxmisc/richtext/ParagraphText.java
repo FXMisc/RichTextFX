@@ -22,6 +22,8 @@ import org.fxmisc.richtext.model.Paragraph;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import static org.fxmisc.richtext.util.Utilities.EMPTY_RANGE;
+
 class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because
@@ -37,7 +39,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     public void setCaretPosition(int pos) { caretPosition.setValue(pos); }
     private final Val<Integer> clampedCaretPosition;
 
-    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
+    private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(EMPTY_RANGE);
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
