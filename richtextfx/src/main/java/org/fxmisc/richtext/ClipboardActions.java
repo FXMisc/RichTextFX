@@ -27,7 +27,12 @@ import org.reactfx.util.Tuple2;
  */
 public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
 
+    /**
+     * Gets codecs to encode/decode style information to/from binary format.
+     * Providing codecs enables clipboard actions to retain the style information.
+     */
     Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs();
+    void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec);
 
     SegmentOps<SEG, S> getSegOps();
 

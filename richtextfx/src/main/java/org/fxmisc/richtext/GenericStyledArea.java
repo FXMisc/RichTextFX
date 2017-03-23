@@ -267,10 +267,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public boolean getUseInitialStyleForInsertion() { return model.getUseInitialStyleForInsertion(); }
 
     private Optional<Tuple2<Codec<PS>, Codec<SEG>>> styleCodecs = Optional.empty();
-    /**
-     * Sets codecs to encode/decode style information to/from binary format.
-     * Providing codecs enables clipboard actions to retain the style information.
-     */
+    @Override
     public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec) {
         styleCodecs = Optional.of(t(paragraphStyleCodec, textStyleCodec));
     }
