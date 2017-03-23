@@ -5,12 +5,12 @@ import javafx.collections.ObservableList;
 
 import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
+import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 
 /**
  * Content model for {@link org.fxmisc.richtext.GenericStyledArea}. Implements edit operations
- * on styled text, but not worrying about additional aspects such as
- * caret or selection, which are handled by {@link StyledTextAreaModel}.
+ * on styled text, but not worrying about view aspects.
  */
 public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, SEG, S> {
 
@@ -30,7 +30,7 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
     Val<Integer> lengthProperty();
 
     @Override
-    ObservableList<Paragraph<PS, SEG, S>> getParagraphs();
+    LiveList<Paragraph<PS, SEG, S>> getParagraphs();
 
     /**
      * Read-only snapshot of the current state of this document.

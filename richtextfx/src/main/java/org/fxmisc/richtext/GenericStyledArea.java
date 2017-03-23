@@ -2,6 +2,8 @@ package org.fxmisc.richtext;
 
 import static javafx.util.Duration.*;
 import static org.fxmisc.richtext.PopupAlignment.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
@@ -63,8 +66,8 @@ import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.GenericEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyleActions;
-import org.fxmisc.richtext.model.StyledTextAreaModel;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
@@ -83,9 +86,14 @@ import org.reactfx.EventStreams;
 import org.reactfx.Guard;
 import org.reactfx.StateMachine;
 import org.reactfx.Subscription;
+import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
+import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
+import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
+import org.reactfx.value.SuspendableVal;
+import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -168,6 +176,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
+    /**
+     * Private helper method.
+     */
+    private static int clamp(int min, int val, int max) {
+        return val < min ? min
+                : val > max ? max
+                : val;
+    }
+
     private static final PseudoClass HAS_CARET = PseudoClass.getPseudoClass("has-caret");
     private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
     private static final PseudoClass LAST_PAR  = PseudoClass.getPseudoClass("last-paragraph");
@@ -223,9 +240,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
 
     // undo manager
-    @Override public UndoManager getUndoManager() { return model.getUndoManager(); }
+    private UndoManager undoManager;
+    @Override public UndoManager getUndoManager() { return undoManager; }
     @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        model.setUndoManager(undoManagerFactory);
+        undoManager.close();
+        undoManager = preserveStyle
+                ? createRichUndoManager(undoManagerFactory)
+                : createPlainUndoManager(undoManagerFactory);
     }
 
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
@@ -259,12 +280,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final double getContextMenuYOffset() { return contextMenuYOffset; }
     @Override public final void setContextMenuYOffset(double offset) { contextMenuYOffset = offset; }
 
+    private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
     @Override
-    public BooleanProperty useInitialStyleForInsertionProperty() { return model.useInitialStyleForInsertionProperty(); }
+    public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
     @Override
-    public void setUseInitialStyleForInsertion(boolean value) { model.setUseInitialStyleForInsertion(value); }
+    public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
     @Override
-    public boolean getUseInitialStyleForInsertion() { return model.getUseInitialStyleForInsertion(); }
+    public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
     private Optional<Tuple2<Codec<PS>, Codec<SEG>>> styleCodecs = Optional.empty();
     @Override
@@ -302,19 +324,21 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     // text
-    @Override public final String getText() { return model.getText(); }
-    @Override public final ObservableValue<String> textProperty() { return model.textProperty(); }
+    @Override public final String getText() { return content.getText(); }
+    @Override public final ObservableValue<String> textProperty() { return content.textProperty(); }
 
     // rich text
-    @Override public final StyledDocument<PS, SEG, S> getDocument() { return model.getDocument(); }
+    @Override public final StyledDocument<PS, SEG, S> getDocument() { return content; }
 
     // length
-    @Override public final int getLength() { return model.getLength(); }
-    @Override public final ObservableValue<Integer> lengthProperty() { return model.lengthProperty(); }
+    @Override public final int getLength() { return content.getLength(); }
+    @Override public final ObservableValue<Integer> lengthProperty() { return content.lengthProperty(); }
 
     // caret position
-    @Override public final int getCaretPosition() { return model.getCaretPosition(); }
-    @Override public final ObservableValue<Integer> caretPositionProperty() { return model.caretPositionProperty(); }
+    private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
+    private final SuspendableVal<Integer> caretPosition = internalCaretPosition.suspendable();
+    @Override public final int getCaretPosition() { return caretPosition.getValue(); }
+    @Override public final ObservableValue<Integer> caretPositionProperty() { return caretPosition; }
 
     // caret bounds
     private final Val<Optional<Bounds>> caretBounds;
@@ -322,16 +346,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return caretBounds; }
 
     // selection anchor
-    @Override public final int getAnchor() { return model.getAnchor(); }
-    @Override public final ObservableValue<Integer> anchorProperty() { return model.anchorProperty(); }
+    private final SuspendableVar<Integer> anchor = Var.newSimpleVar(0).suspendable();
+    @Override public final int getAnchor() { return anchor.getValue(); }
+    @Override public final ObservableValue<Integer> anchorProperty() { return anchor; }
 
     // selection
-    @Override public final IndexRange getSelection() { return model.getSelection(); }
-    @Override public final ObservableValue<IndexRange> selectionProperty() { return model.selectionProperty(); }
+    private final Var<IndexRange> internalSelection = Var.newSimpleVar(EMPTY_RANGE);
+    private final SuspendableVal<IndexRange> selection = internalSelection.suspendable();
+    @Override public final IndexRange getSelection() { return selection.getValue(); }
+    @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
 
     // selected text
-    @Override public final String getSelectedText() { return model.getSelectedText(); }
-    @Override public final ObservableValue<String> selectedTextProperty() { return model.selectedTextProperty(); }
+    private final SuspendableVal<String> selectedText;
+    @Override public final String getSelectedText() { return selectedText.getValue(); }
+    @Override public final ObservableValue<String> selectedTextProperty() { return selectedText; }
 
     // selection bounds
     private final Val<Optional<Bounds>> selectionBounds;
@@ -339,19 +367,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return selectionBounds; }
 
     // current paragraph index
-    @Override public final int getCurrentParagraph() { return model.getCurrentParagraph(); }
-    @Override public final ObservableValue<Integer> currentParagraphProperty() { return model.currentParagraphProperty(); }
+    private final SuspendableVal<Integer> currentParagraph;
+    @Override public final int getCurrentParagraph() { return currentParagraph.getValue(); }
+    @Override public final ObservableValue<Integer> currentParagraphProperty() { return currentParagraph; }
 
     // caret column
-    @Override public final int getCaretColumn() { return model.getCaretColumn(); }
-    @Override public final ObservableValue<Integer> caretColumnProperty() { return model.caretColumnProperty(); }
+    private final SuspendableVal<Integer> caretColumn;
+    @Override public final int getCaretColumn() { return caretColumn.getValue(); }
+    @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return model.getParagraphs(); }
+    @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return content.getParagraphs(); }
 
     // beingUpdated
-    public ObservableBooleanValue beingUpdatedProperty() { return model.beingUpdatedProperty(); }
-    public boolean isBeingUpdated() { return model.isBeingUpdated(); }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
+    public boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     @Override
@@ -372,16 +403,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     // text changes
-    @Override public final EventStream<PlainTextChange> plainTextChanges() { return model.plainTextChanges(); }
+    @Override public final EventStream<PlainTextChange> plainTextChanges() { return content.plainChanges(); }
 
     // rich text changes
-    @Override public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return model.richChanges(); }
+    @Override public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return content.richChanges(); }
 
     /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
      *                                                                        *
      * ********************************************************************** */
+
+    private Position selectionStart2D;
+    private Position selectionEnd2D;
 
     private Subscription subscriptions = () -> {};
 
@@ -402,42 +436,31 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final SuspendableEventStream<?> viewportDirty;
 
-    /**
-     * model
-     */
-    private final StyledTextAreaModel<PS, SEG, S> model;
-
-    /**
-     * @return this area's {@link StyledTextAreaModel}
-     */
-    final StyledTextAreaModel<PS, SEG, S> getModel() {
-        return model;
-    }
-
     /* ********************************************************************** *
      *                                                                        *
      * Fields necessary for Cloning                                           *
      *                                                                        *
      * ********************************************************************** */
 
+    private final EditableStyledDocument<PS, SEG, S> content;
     /**
      * The underlying document that can be displayed by multiple {@code StyledTextArea}s.
      */
-    public final EditableStyledDocument<PS, SEG, S> getContent() { return model.getContent(); }
+    public final EditableStyledDocument<PS, SEG, S> getContent() { return content; }
 
-    @Override
-    public final S getInitialTextStyle() { return model.getInitialTextStyle(); }
+    private final S initialTextStyle;
+    @Override public final S getInitialTextStyle() { return initialTextStyle; }
 
-    @Override
-    public final PS getInitialParagraphStyle() { return model.getInitialParagraphStyle(); }
+    private final PS initialParagraphStyle;
+    @Override public final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
     @Override
     public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
 
     // TODO: Currently, only undo/redo respect this flag.
-    @Override
-    public final boolean isPreserveStyle() { return model.isPreserveStyle(); }
+    private final boolean preserveStyle;
+    @Override public final boolean isPreserveStyle() { return preserveStyle; }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -505,9 +528,98 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             TextOps<SEG, S> textOps,
             boolean preserveStyle,
             Function<SEG, Node> nodeFactory) {
-        this.model = new StyledTextAreaModel<>(initialParagraphStyle, initialTextStyle, document, textOps, preserveStyle);
+        this.initialTextStyle = initialTextStyle;
+        this.initialParagraphStyle = initialParagraphStyle;
+        this.preserveStyle = preserveStyle;
+        this.content = document;
         this.applyParagraphStyle = applyParagraphStyle;
         this.segmentOps = textOps;
+
+        undoManager = preserveStyle
+                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
+                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+
+        Val<Position> caretPosition2D = Val.create(
+                () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
+                internalCaretPosition, getParagraphs());
+
+        currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
+        caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
+
+        selectionStart2D = position(0, 0);
+        selectionEnd2D = position(0, 0);
+        internalSelection.addListener(obs -> {
+            IndexRange sel = internalSelection.getValue();
+            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
+            selectionEnd2D = sel.getLength() == 0
+                    ? selectionStart2D
+                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
+        });
+
+        selectedText = Val.create(
+                () -> content.getText(internalSelection.getValue()),
+                internalSelection, content.getParagraphs()).suspendable();
+
+        final Suspendable omniSuspendable = Suspendable.combine(
+                beingUpdated, // must be first, to be the last one to release
+
+                caretPosition,
+                anchor,
+                selection,
+                selectedText,
+                currentParagraph,
+                caretColumn);
+        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
+
+        // when content is updated by an area, update the caret
+        // and selection ranges of all the other
+        // clones that also share this document
+        subscribeTo(plainTextChanges(), plainTextChange -> {
+            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
+            if (changeLength != 0) {
+                int indexOfChange = plainTextChange.getPosition();
+                // in case of a replacement: "hello there" -> "hi."
+                int endOfChange = indexOfChange + Math.abs(changeLength);
+
+                // update caret
+                int caretPosition = getCaretPosition();
+                if (indexOfChange < caretPosition) {
+                    // if caret is within the changed content, move it to indexOfChange
+                    // otherwise offset it by changeLength
+                    positionCaret(
+                            caretPosition < endOfChange
+                                    ? indexOfChange
+                                    : caretPosition + changeLength
+                    );
+                }
+                // update selection
+                int selectionStart = getSelection().getStart();
+                int selectionEnd = getSelection().getEnd();
+                if (selectionStart != selectionEnd) {
+                    // if start/end is within the changed content, move it to indexOfChange
+                    // otherwise, offset it by changeLength
+                    // Note: if both are moved to indexOfChange, selection is empty.
+                    if (indexOfChange < selectionStart) {
+                        selectionStart = selectionStart < endOfChange
+                                ? indexOfChange
+                                : selectionStart + changeLength;
+                    }
+                    if (indexOfChange < selectionEnd) {
+                        selectionEnd = selectionEnd < endOfChange
+                                ? indexOfChange
+                                : selectionEnd + changeLength;
+                    }
+                    selectRange(selectionStart, selectionEnd);
+                } else {
+                    // force-update internalSelection in case caret is
+                    // at the end of area and a character was deleted
+                    // (prevents a StringIndexOutOfBoundsException because
+                    // selection's end is one char farther than area's length).
+                    int internalCaretPos = internalCaretPosition.getValue();
+                    selectRange(internalCaretPos, internalCaretPos);
+                }
+            }
+        });
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -601,9 +713,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 invalidationsOf(estimatedScrollYProperty())
         ).suppressible();
         EventStream<?> caretBoundsDirty = merge(viewportDirty, caretDirty)
-                .suppressWhen(model.beingUpdatedProperty());
+                .suppressWhen(beingUpdatedProperty());
         EventStream<?> selectionBoundsDirty = merge(viewportDirty, invalidationsOf(selectionProperty()))
-                .suppressWhen(model.beingUpdatedProperty());
+                .suppressWhen(beingUpdatedProperty());
 
         // updates the bounds of the caret/selection
         caretBounds = Val.create(this::getCaretBoundsOnScreen, caretBoundsDirty);
@@ -801,93 +913,110 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final String getText(int start, int end) {
-        return model.getText(start, end);
+        return content.getText(start, end);
     }
 
     @Override
     public String getText(int paragraph) {
-        return model.getText(paragraph);
+        return content.getText(paragraph);
     }
 
     public Paragraph<PS, SEG, S> getParagraph(int index) {
-        return model.getParagraph(index);
+        return content.getParagraph(index);
+    }
+
+    public int getParagraphLenth(int index) {
+        return content.getParagraphLength(index);
     }
 
     @Override
     public StyledDocument<PS, SEG, S> subDocument(int start, int end) {
-        return model.subDocument(start, end);
+        return content.subSequence(start, end);
     }
 
     @Override
     public StyledDocument<PS, SEG, S> subDocument(int paragraphIndex) {
-        return model.subDocument(paragraphIndex);
+        return content.subDocument(paragraphIndex);
     }
 
     /**
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
-        return model.getParagraphSelection(paragraph);
+        int startPar = selectionStart2D.getMajor();
+        int endPar = selectionEnd2D.getMajor();
+
+        if(paragraph < startPar || paragraph > endPar) {
+            return EMPTY_RANGE;
+        }
+
+        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
+        int end = paragraph == endPar ? selectionEnd2D.getMinor() : getParagraphLenth(paragraph);
+
+        // force selectionProperty() to be valid
+        getSelection();
+
+        return new IndexRange(start, end);
     }
 
     @Override
     public S getStyleOfChar(int index) {
-        return model.getStyleOfChar(index);
+        return content.getStyleOfChar(index);
     }
 
     @Override
     public S getStyleAtPosition(int position) {
-        return model.getStyleAtPosition(position);
+        return content.getStyleAtPosition(position);
     }
 
     @Override
     public IndexRange getStyleRangeAtPosition(int position) {
-        return model.getStyleRangeAtPosition(position);
+        return content.getStyleRangeAtPosition(position);
     }
 
     @Override
     public StyleSpans<S> getStyleSpans(int from, int to) {
-        return model.getStyleSpans(from, to);
+        return content.getStyleSpans(from, to);
     }
 
     @Override
     public S getStyleOfChar(int paragraph, int index) {
-        return model.getStyleOfChar(paragraph, index);
+        return content.getStyleOfChar(paragraph, index);
     }
 
     @Override
     public S getStyleAtPosition(int paragraph, int position) {
-        return model.getStyleAtPosition(paragraph, position);
+        return content.getStyleAtPosition(paragraph, position);
     }
 
     @Override
     public IndexRange getStyleRangeAtPosition(int paragraph, int position) {
-        return model.getStyleRangeAtPosition(paragraph, position);
+        return content.getStyleRangeAtPosition(paragraph, position);
     }
 
     @Override
     public StyleSpans<S> getStyleSpans(int paragraph) {
-        return model.getStyleSpans(paragraph);
+        return content.getStyleSpans(paragraph);
     }
 
     @Override
     public StyleSpans<S> getStyleSpans(int paragraph, int from, int to) {
-        return model.getStyleSpans(paragraph, from, to);
+        return content.getStyleSpans(paragraph, from, to);
     }
 
     @Override
     public int getAbsolutePosition(int paragraphIndex, int columnIndex) {
-        return model.getAbsolutePosition(paragraphIndex, columnIndex);
+        return content.getAbsolutePosition(paragraphIndex, columnIndex);
     }
 
     @Override
     public Position position(int row, int col) {
-        return model.position(row, col);
+        return content.position(row, col);
     }
 
     @Override
     public Position offsetToPosition(int charOffset, Bias bias) {
-        return model.offsetToPosition(charOffset, bias);
+        return content.offsetToPosition(charOffset, bias);
     }
 
 
@@ -978,58 +1107,67 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public void prevPage(SelectionPolicy selectionPolicy) {
         showCaretAtBottom();
         CharacterHit hit = hit(getTargetCaretOffset(), 1.0);
-        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
+        moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     @Override
     public void nextPage(SelectionPolicy selectionPolicy) {
         showCaretAtTop();
         CharacterHit hit = hit(getTargetCaretOffset(), getViewportHeight() - 1.0);
-        model.moveTo(hit.getInsertionIndex(), selectionPolicy);
+        moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
     @Override
     public void setStyle(int from, int to, S style) {
-        model.setStyle(from, to, style);
+        content.setStyle(from, to, style);
     }
 
     @Override
     public void setStyle(int paragraph, S style) {
-        model.setStyle(paragraph, style);
+        content.setStyle(paragraph, style);
     }
 
     @Override
     public void setStyle(int paragraph, int from, int to, S style) {
-        model.setStyle(paragraph, from, to, style);
+        content.setStyle(paragraph, from, to, style);
     }
 
     @Override
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
-        model.setStyleSpans(from, styleSpans);
+        content.setStyleSpans(from, styleSpans);
     }
 
     @Override
     public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        model.setStyleSpans(paragraph, from, styleSpans);
+        content.setStyleSpans(paragraph, from, styleSpans);
     }
 
     @Override
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
-        model.setParagraphStyle(paragraph, paragraphStyle);
+        content.setParagraphStyle(paragraph, paragraphStyle);
     }
     @Override
     public void replaceText(int start, int end, String text) {
-        model.replaceText(start, end, text);
+        StyledDocument<PS, SEG, S> doc = ReadOnlyStyledDocument.fromString(
+                text, getParagraphStyleForInsertionAt(start), getStyleForInsertionAt(start), segmentOps);
+        replace(start, end, doc);
     }
 
     @Override
     public void replace(int start, int end, StyledDocument<PS, SEG, S> replacement) {
-        model.replace(start, end, replacement);
+        content.replace(start, end, replacement);
     }
 
     @Override
     public void selectRange(int anchor, int caretPosition) {
-        model.selectRange(anchor, caretPosition);
+        try(Guard g = suspend(
+                this.caretPosition, currentParagraph,
+                caretColumn, this.anchor,
+                selection, selectedText)) {
+            this.internalCaretPosition.setValue(clamp(0, caretPosition, getLength()));
+            this.anchor.setValue(clamp(0, anchor, getLength()));
+            this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
+        }
     }
 
     /* ********************************************************************** *
@@ -1040,7 +1178,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     public void dispose() {
         subscriptions.unsubscribe();
-        model.dispose();
         virtualFlow.dispose();
     }
 
@@ -1144,10 +1281,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 cellSelection.dispose();
             }
         };
-    }
-
-    private void positionCaret(int pos) {
-        model.positionCaret(pos);
     }
 
     private ParagraphBox<PS, SEG, S> getCell(int index) {
@@ -1263,6 +1396,50 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             return new BoundingBox(
                     b.getMinX() - w, b.getMinY(),
                     b.getWidth() + w, b.getHeight());
+        }
+    }
+
+    private S getStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialTextStyle;
+        } else {
+            return content.getStyleAtPosition(pos);
+        }
+    }
+
+    private PS getParagraphStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialParagraphStyle;
+        } else {
+            return content.getParagraphStyleAtPosition(pos);
+        }
+    }
+
+    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
+        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
+        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
+    }
+
+    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
+        Consumer<RichTextChange<PS, SEG, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+        BiFunction<RichTextChange<PS, SEG, S>, RichTextChange<PS, SEG, S>, Optional<RichTextChange<PS, SEG, S>>> merge = RichTextChange<PS, SEG, S>::mergeWith;
+        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
+    }
+
+    private Guard suspend(Suspendable... suspendables) {
+        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
+    }
+
+    /**
+     * Positions only the caret. Doesn't move the anchor and doesn't change
+     * the selection. Can be used to achieve the special case of positioning
+     * the caret outside or inside the selection, as opposed to always being
+     * at the boundary. Use with care.
+     */
+    void positionCaret(int pos) {
+        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
+            internalCaretPosition.setValue(pos);
         }
     }
 

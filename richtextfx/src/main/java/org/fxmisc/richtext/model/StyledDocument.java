@@ -28,6 +28,18 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
         return subSequence(start, end).getText();
     }
 
+    default String getText(int paragraphIndex) {
+        return getParagraph(paragraphIndex).getText();
+    }
+
+    default Paragraph<PS, SEG, S> getParagraph(int index) {
+        return getParagraphs().get(index);
+    }
+
+    default int getParagraphLength(int paragraphIndex) {
+        return getParagraph(paragraphIndex).length();
+    }
+
     default StyledDocument<PS, SEG, S> subSequence(IndexRange range) {
         return subSequence(range.getStart(), range.getEnd());
     }
