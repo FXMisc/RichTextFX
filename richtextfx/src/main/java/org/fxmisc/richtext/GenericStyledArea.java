@@ -745,6 +745,61 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override
+    public Optional<Bounds> getCharacterBoundsOnScreen(int from, int to) {
+        if (from < 0) {
+            throw new IllegalArgumentException("From is negative: " + from);
+        }
+        if (from > to) {
+            throw new IllegalArgumentException(String.format("From is greater than to. from=%s to=%s", from, to));
+        }
+        if (to > getLength()) {
+            throw new IllegalArgumentException(String.format("To is greater than area's length. length=%s, to=%s", getLength(), to));
+        }
+
+        // no bounds exist if range is just a newline character
+        if (getText(from, to).equals("\n")) {
+            return Optional.empty();
+        }
+
+        // if 'from' is the newline character at the end of a multi-line paragraph, it returns a Bounds that whose
+        //  minX & minY are the minX and minY of the paragraph itself, not the newline character. So, ignore it.
+        int realFrom = getText(from, from + 1).equals("\n") ? from + 1 : from;
+
+        Position startPosition = offsetToPosition(realFrom, Bias.Forward);
+        int startRow = startPosition.getMajor();
+        Position endPosition = startPosition.offsetBy(to - realFrom, Bias.Forward);
+        int endRow = endPosition.getMajor();
+        if (startRow == endRow) {
+            return getRangeBoundsOnScreen(startRow, startPosition.getMinor(), endPosition.getMinor());
+        } else {
+            Optional<Bounds> rangeBounds = getRangeBoundsOnScreen(startRow, startPosition.getMinor(),
+                    getParagraph(startRow).length());
+            for (int i = startRow + 1; i <= endRow; i++) {
+                Optional<Bounds> nextLineBounds = getRangeBoundsOnScreen(i, 0,
+                        i == endRow
+                                ? endPosition.getMinor()
+                                : getParagraph(i).length()
+                );
+                if (nextLineBounds.isPresent()) {
+                    if (rangeBounds.isPresent()) {
+                        Bounds lineBounds = nextLineBounds.get();
+                        rangeBounds = rangeBounds.map(b -> {
+                            double minX = Math.min(b.getMinX(),   lineBounds.getMinX());
+                            double minY = Math.min(b.getMinY(),   lineBounds.getMinY());
+                            double maxX = Math.max(b.getMaxX(),   lineBounds.getMaxX());
+                            double maxY = Math.max(b.getMaxY(),   lineBounds.getMaxY());
+                            return new BoundingBox(minX, minY, maxX - minX, maxY - minY);
+                        });
+                    } else {
+                        rangeBounds = nextLineBounds;
+                    }
+                }
+            }
+            return rangeBounds;
+        }
+    }
+
+    @Override
     public final String getText(int start, int end) {
         return model.getText(start, end);
     }
@@ -1143,61 +1198,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             popup.setAnchorX(anchor.getX());
             popup.setAnchorY(anchor.getY());
         });
-    }
-
-    @Override
-    public Optional<Bounds> getCharacterBoundsOnScreen(int from, int to) {
-        if (from < 0) {
-            throw new IllegalArgumentException("From is negative: " + from);
-        }
-        if (from > to) {
-            throw new IllegalArgumentException(String.format("From is greater than to. from=%s to=%s", from, to));
-        }
-        if (to > getLength()) {
-            throw new IllegalArgumentException(String.format("To is greater than area's length. length=%s, to=%s", getLength(), to));
-        }
-
-        // no bounds exist if range is just a newline character
-        if (getText(from, to).equals("\n")) {
-            return Optional.empty();
-        }
-
-        // if 'from' is the newline character at the end of a multi-line paragraph, it returns a Bounds that whose
-        //  minX & minY are the minX and minY of the paragraph itself, not the newline character. So, ignore it.
-        int realFrom = getText(from, from + 1).equals("\n") ? from + 1 : from;
-
-        Position startPosition = offsetToPosition(realFrom, Bias.Forward);
-        int startRow = startPosition.getMajor();
-        Position endPosition = startPosition.offsetBy(to - realFrom, Bias.Forward);
-        int endRow = endPosition.getMajor();
-        if (startRow == endRow) {
-            return getRangeBoundsOnScreen(startRow, startPosition.getMinor(), endPosition.getMinor());
-        } else {
-            Optional<Bounds> rangeBounds = getRangeBoundsOnScreen(startRow, startPosition.getMinor(),
-                    getParagraph(startRow).length());
-            for (int i = startRow + 1; i <= endRow; i++) {
-                Optional<Bounds> nextLineBounds = getRangeBoundsOnScreen(i, 0,
-                        i == endRow
-                            ? endPosition.getMinor()
-                            : getParagraph(i).length()
-                );
-                if (nextLineBounds.isPresent()) {
-                    if (rangeBounds.isPresent()) {
-                        Bounds lineBounds = nextLineBounds.get();
-                        rangeBounds = rangeBounds.map(b -> {
-                            double minX = Math.min(b.getMinX(),   lineBounds.getMinX());
-                            double minY = Math.min(b.getMinY(),   lineBounds.getMinY());
-                            double maxX = Math.max(b.getMaxX(),   lineBounds.getMaxX());
-                            double maxY = Math.max(b.getMaxY(),   lineBounds.getMaxY());
-                            return new BoundingBox(minX, minY, maxX - minX, maxY - minY);
-                        });
-                    } else {
-                        rangeBounds = nextLineBounds;
-                    }
-                }
-            }
-            return rangeBounds;
-        }
     }
 
     private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
