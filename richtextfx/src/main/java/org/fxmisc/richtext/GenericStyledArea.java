@@ -22,6 +22,7 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import javafx.beans.NamedArg;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -502,15 +503,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * @param nodeFactory A function which is used to create the JavaFX scene nodes for a
      *        particular segment.
      */
-    public GenericStyledArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                             S initialTextStyle, TextOps<SEG, S> segmentOps,
-                             Function<SEG, Node> nodeFactory) {
+    public GenericStyledArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                             @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                             @NamedArg("initialTextStyle")      S initialTextStyle,
+                             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+                             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, segmentOps, true, nodeFactory);
     }
 
-    public GenericStyledArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, TextOps<SEG, S> segmentOps,
-                          boolean preserveStyle, Function<SEG, Node> nodeFactory) {
+    public GenericStyledArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                             @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                             @NamedArg("initialTextStyle")      S initialTextStyle,
+                             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+                             @NamedArg("preserveStyle")         boolean preserveStyle,
+                             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle,
                 new GenericEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps), segmentOps, preserveStyle, nodeFactory);
     }
@@ -521,30 +527,30 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * shares the same {@link EditableStyledDocument}.
      */
     public GenericStyledArea(
-            PS initialParagraphStyle,
-            BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialTextStyle,
-            EditableStyledDocument<PS, SEG, S> document,
-            TextOps<SEG, S> textOps,
-            Function<SEG, Node> nodeFactory) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, document, textOps, true, nodeFactory);
+            @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+            @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+            @NamedArg("initialTextStyle")      S initialTextStyle,
+            @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
+            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+            @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, document, segmentOps, true, nodeFactory);
 
     }
 
     public GenericStyledArea(
-            PS initialParagraphStyle,
-            BiConsumer<TextFlow, PS> applyParagraphStyle,
-            S initialTextStyle,
-            EditableStyledDocument<PS, SEG, S> document,
-            TextOps<SEG, S> textOps,
-            boolean preserveStyle,
-            Function<SEG, Node> nodeFactory) {
+            @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+            @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+            @NamedArg("initialTextStyle")      S initialTextStyle,
+            @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
+            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+            @NamedArg("preserveStyle")         boolean preserveStyle,
+            @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
         this.content = document;
         this.applyParagraphStyle = applyParagraphStyle;
-        this.segmentOps = textOps;
+        this.segmentOps = segmentOps;
 
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())

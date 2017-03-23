@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import java.util.Collection;
 import java.util.Collections;
 
+import javafx.beans.NamedArg;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
@@ -13,7 +14,8 @@ import org.fxmisc.richtext.model.StyledText;
  */
 public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Collection<String>> {
 
-    public StyleClassedTextArea(EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document, boolean preserveStyle) {
+    public StyleClassedTextArea(@NamedArg("document") EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document,
+                                @NamedArg("preserveStyle") boolean preserveStyle) {
         super(Collections.<String>emptyList(),
                 (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
                 Collections.<String>emptyList(),
@@ -26,7 +28,7 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
                 StyledText.codec(Codec.collectionCodec(Codec.STRING_CODEC))
         );
     }
-    public StyleClassedTextArea(boolean preserveStyle) {
+    public StyleClassedTextArea(@NamedArg("preserveStyle") boolean preserveStyle) {
         this(
                 new SimpleEditableStyledDocument<>(
                     Collections.<String>emptyList(), Collections.<String>emptyList()

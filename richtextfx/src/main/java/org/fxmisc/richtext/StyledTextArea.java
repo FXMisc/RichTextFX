@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import java.util.function.BiConsumer;
 
+import javafx.beans.NamedArg;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.text.TextFlow;
@@ -61,25 +62,32 @@ import org.fxmisc.richtext.model.StyledText;
  */
 public class StyledTextArea<PS, S> extends GenericStyledArea<PS, StyledText<S>, S> {
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, StyledText<S>, S> document, boolean preserveStyle) {
+    public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                          @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          @NamedArg("initialTextStyle")      S initialTextStyle,
+                          @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
+                          @NamedArg("document")              EditableStyledDocument<PS, StyledText<S>, S> document,
+                          @NamedArg("preserveStyle")         boolean preserveStyle) {
         super(initialParagraphStyle, applyParagraphStyle,
               initialTextStyle,
               document, StyledText.textOps(), preserveStyle,
               seg -> createStyledTextNode(seg, StyledText.textOps(), applyStyle));
     }
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          EditableStyledDocument<PS, StyledText<S>, S> document) {
+    public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                          @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          @NamedArg("initialTextStyle")      S initialTextStyle,
+                          @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
+                          @NamedArg("document")              EditableStyledDocument<PS, StyledText<S>, S> document) {
         this(initialParagraphStyle, applyParagraphStyle,
              initialTextStyle, applyStyle, document, true);
     }
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle,
-                          boolean preserveStyle) {
+    public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                          @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          @NamedArg("initialTextStyle")      S initialTextStyle,
+                          @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
+                          @NamedArg("preserveStyle")         boolean preserveStyle) {
         this(
                 initialParagraphStyle,
                 applyParagraphStyle,
@@ -89,8 +97,10 @@ public class StyledTextArea<PS, S> extends GenericStyledArea<PS, StyledText<S>, 
                 preserveStyle);
     }
 
-    public StyledTextArea(PS initialParagraphStyle, BiConsumer<TextFlow, PS> applyParagraphStyle,
-                          S initialTextStyle, BiConsumer<? super TextExt, S> applyStyle) {
+    public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                          @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          @NamedArg("initialTextStyle")      S initialTextStyle,
+                          @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle) {
         this(initialParagraphStyle, applyParagraphStyle,
              initialTextStyle, applyStyle, true);
     }
