@@ -19,6 +19,18 @@ import java.util.function.IntFunction;
 
 public interface ViewActions {
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * Properties affect behavior and/or appearance of this control.          *
+     *                                                                        *
+     * They are readable and writable by the client code and never change by  *
+     * other means, i.e. they contain either the default value or the value   *
+     * set by the client code.                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
     public static enum CaretVisibility {
         /** Caret is displayed. */
         ON,
@@ -75,20 +87,6 @@ public interface ViewActions {
     void setContextMenuYOffset(double offset);
 
     /**
-     * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
-     * if caret is not visible in the viewport.
-     */
-    Optional<Bounds> getCaretBounds();
-    ObservableValue<Optional<Bounds>> caretBoundsProperty();
-
-    /**
-     * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
-     * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
-     */
-    Optional<Bounds> getSelectionBounds();
-    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
-
-    /**
      * Gets the <em>estimated</em> scrollX value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
@@ -105,6 +103,26 @@ public interface ViewActions {
     double getEstimatedScrollY();
     void setEstimatedScrollY(double value);
     Var<Double> estimatedScrollYProperty();
+
+    /* ************* *
+     *               *
+     * Observables   *
+     *               *
+     * ************* */
+
+    /**
+     * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
+     * if caret is not visible in the viewport.
+     */
+    Optional<Bounds> getCaretBounds();
+    ObservableValue<Optional<Bounds>> caretBoundsProperty();
+
+    /**
+     * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
+     * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
+     */
+    Optional<Bounds> getSelectionBounds();
+    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
 
     /**
      * Gets the <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
