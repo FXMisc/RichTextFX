@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 
+import javafx.beans.NamedArg;
 import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.model.Codec;
@@ -17,7 +18,7 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         this(new SimpleEditableStyledDocument<>("", ""));
     }
 
-    public InlineCssTextArea(EditableStyledDocument<String, StyledText<String>, String> document) {
+    public InlineCssTextArea(@NamedArg("document") EditableStyledDocument<String, StyledText<String>, String> document) {
         super(
                 "", TextFlow::setStyle,
                 "", TextExt::setStyle,
@@ -32,7 +33,7 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
      *
      * @param text Initial text content.
      */
-    public InlineCssTextArea(String text) {
+    public InlineCssTextArea(@NamedArg("text") String text) {
         this();
 
         replaceText(0, 0, text);

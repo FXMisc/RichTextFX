@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 
 import java.util.Collection;
 
+import javafx.beans.NamedArg;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 
@@ -23,7 +24,7 @@ public class CodeArea extends StyleClassedTextArea {
         setUseInitialStyleForInsertion(true);
     }
 
-    public CodeArea(EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document) {
+    public CodeArea(@NamedArg("document") EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document) {
         super(document, false);
     }
 
@@ -37,7 +38,7 @@ public class CodeArea extends StyleClassedTextArea {
      *
      * @param text Initial text content.
      */
-    public CodeArea(String text) {
+    public CodeArea(@NamedArg("text") String text) {
         this();
 
         appendText(text);
