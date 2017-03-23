@@ -16,8 +16,8 @@ public final class GenericEditableStyledDocument<PS, SEG, S> extends GenericEdit
     public GenericEditableStyledDocument(
             @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
             @NamedArg("initialTextStyle")      S initialTextStyle,
-            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps) {
-        super(initialParagraphStyle, initialTextStyle, segmentOps);
+            @NamedArg("textOps")               TextOps<SEG, S> textOps) {
+        super(initialParagraphStyle, initialTextStyle, textOps);
     }
 
 }

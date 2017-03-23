@@ -603,26 +603,26 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * used by the default skin to apply style to paragraph nodes.
      * @param initialTextStyle style to use in places where no other style is
      * specified (yet).
-     * @param segmentOps The operations which are defined on the text segment objects.
+     * @param textOps The operations which are defined on the text segment objects.
      * @param nodeFactory A function which is used to create the JavaFX scene nodes for a
      *        particular segment.
      */
     public GenericStyledArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
                              @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                              @NamedArg("initialTextStyle")      S initialTextStyle,
-                             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+                             @NamedArg("textOps")               TextOps<SEG, S> textOps,
                              @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, segmentOps, true, nodeFactory);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, textOps, true, nodeFactory);
     }
 
     public GenericStyledArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
                              @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                              @NamedArg("initialTextStyle")      S initialTextStyle,
-                             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+                             @NamedArg("textOps")               TextOps<SEG, S> textOps,
                              @NamedArg("preserveStyle")         boolean preserveStyle,
                              @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle,
-                new GenericEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps), segmentOps, preserveStyle, nodeFactory);
+                new GenericEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, textOps), textOps, preserveStyle, nodeFactory);
     }
 
     /**
@@ -635,9 +635,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
             @NamedArg("initialTextStyle")      S initialTextStyle,
             @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
-            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+            @NamedArg("textOps")               TextOps<SEG, S> textOps,
             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
-        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, document, segmentOps, true, nodeFactory);
+        this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, document, textOps, true, nodeFactory);
 
     }
 
@@ -646,7 +646,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
             @NamedArg("initialTextStyle")      S initialTextStyle,
             @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
-            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
+            @NamedArg("textOps")               TextOps<SEG, S> textOps,
             @NamedArg("preserveStyle")         boolean preserveStyle,
             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
         this.initialTextStyle = initialTextStyle;
@@ -654,7 +654,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         this.preserveStyle = preserveStyle;
         this.content = document;
         this.applyParagraphStyle = applyParagraphStyle;
-        this.segmentOps = segmentOps;
+        this.segmentOps = textOps;
 
         undoManager = preserveStyle
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
