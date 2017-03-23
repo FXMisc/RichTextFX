@@ -162,6 +162,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         StyleActions<PS, S>,
         UndoActions,
         ViewActions<PS, SEG, S>,
+        MouseBehaviorOverrides,
         TwoDimensional,
         Virtualized {
 
