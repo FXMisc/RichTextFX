@@ -1,9 +1,13 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
 
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.PlainTextChange;
+import org.fxmisc.richtext.model.RichTextChange;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.EventStream;
 
 /**

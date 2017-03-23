@@ -1,7 +1,8 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyleSpans;
 
 public interface StyleActions<PS, S> {
 
@@ -132,7 +133,8 @@ public interface StyleActions<PS, S> {
      *     from += span.getLength();
      * }
      * </pre>
-     * but the actual implementation in {@link SimpleEditableStyledDocument} is more efficient.
+     * but the actual implementation in {@link org.fxmisc.richtext.model.SimpleEditableStyledDocument}
+     * is more efficient.
      */
     void setStyleSpans(int from, StyleSpans<? extends S> styleSpans);
 
@@ -144,7 +146,8 @@ public interface StyleActions<PS, S> {
      *     from += span.getLength();
      * }
      * </pre>
-     * but the actual implementation in {@link SimpleEditableStyledDocument} is more efficient.
+     * but the actual implementation in {@link org.fxmisc.richtext.model.SimpleEditableStyledDocument}
+     * is more efficient.
      */
     void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans);
 
