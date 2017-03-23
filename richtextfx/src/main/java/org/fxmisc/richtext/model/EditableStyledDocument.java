@@ -10,8 +10,7 @@ import org.reactfx.value.Val;
 
 /**
  * Content model for {@link org.fxmisc.richtext.GenericStyledArea}. Implements edit operations
- * on styled text, but not worrying about additional aspects such as
- * caret or selection, which are handled by {@link StyledTextAreaModel}.
+ * on styled text, but not worrying about view aspects.
  */
 public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, SEG, S> {
 
