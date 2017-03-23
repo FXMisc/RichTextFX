@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 
-public interface ViewActions<PS, SEG, S> {
+public interface ViewActions {
 
     public static enum CaretVisibility {
         /** Caret is displayed. */
