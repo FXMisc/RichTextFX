@@ -1,20 +1,16 @@
 package org.fxmisc.richtext;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.text.TextFlow;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 
 public interface ViewActions {
