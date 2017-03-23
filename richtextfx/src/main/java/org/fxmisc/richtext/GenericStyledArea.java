@@ -102,10 +102,9 @@ import org.reactfx.value.Var;
  * provides API to assign style to text ranges. It is suitable for
  * syntax highlighting and rich-text editors.
  *
- * <p>Subclassing is allowed to define the type of style, e.g. inline
- * style or style classes.</p>
+ * <h3>Adding Scrollbars to the Area</h3>
  *
- * <p>Note: Scroll bars no longer appear when the content spans outside
+ * <p>The scroll bars no longer appear when the content spans outside
  * of the viewport. To add scroll bars, the area needs to be wrapped in
  * a {@link VirtualizedScrollPane}. For example, </p>
  * <pre>
@@ -135,7 +134,7 @@ import org.reactfx.value.Var;
  * <p>Additionally, when overriding the default user-interaction behavior, remember to include a call
  * to {@link #requestFollowCaret()}.</p>
  *
- * <h3>Overriding keyboard shortcuts</h3>
+ * <h3>Overriding default keyboard behavior</h3>
  *
  * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
  * character input and {@code KEY_PRESSED} handler to handle control key
@@ -157,7 +156,19 @@ import org.reactfx.value.Var;
  * }
  * </pre>
  *
- * @param <S> type of style that can be applied to text.
+ * <h3>Overriding default mouse behavior</h3>
+ *
+ * The area's default mouse behavior cannot be partially overridden without it affecting other behavior (to do so,
+ * one would need to re-implement the entire default behavior with one minor adjustment). Rather, one should
+ * override the default mouse behavior by changing what happens at various events.
+ * For example, {@link #getOnSelectionDrop()} overrides what happens when some portion of the area's content is
+ * selected, then the mouse is pressed on that selection, the mouse moves to a new location, and the mouse is released.
+ * At that point, {@link #onSelectionDrop} is used to determine what should happen.
+ *
+ * @param <PS> type of style that can be applied to paragraphs (e.g. {@link TextFlow}.
+ * @param <SEG> type of segment used in {@link Paragraph}. Can be only text (plain or styled) or
+ *             a type that combines text and other {@link Node}s.
+ * @param <S> type of style that can be applied to a segment.
  */
 public class GenericStyledArea<PS, SEG, S> extends Region
         implements
