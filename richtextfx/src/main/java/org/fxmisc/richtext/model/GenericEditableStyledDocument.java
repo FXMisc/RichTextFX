@@ -1,5 +1,7 @@
 package org.fxmisc.richtext.model;
 
+import javafx.beans.NamedArg;
+
 /**
  * Provides a basic implementation of {@link EditableStyledDocument}. See {@link SimpleEditableStyledDocument} for
  * a version that is specified for {@link StyledText}.
@@ -11,8 +13,11 @@ package org.fxmisc.richtext.model;
 public final class GenericEditableStyledDocument<PS, SEG, S> extends GenericEditableStyledDocumentBase<PS, SEG, S>
         implements EditableStyledDocument<PS, SEG, S> {
 
-    public GenericEditableStyledDocument(PS initialParagraphStyle, S initialStyle, TextOps<SEG, S> segmentOps) {
-        super(initialParagraphStyle, initialStyle, segmentOps);
+    public GenericEditableStyledDocument(
+            @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+            @NamedArg("initialTextStyle")      S initialTextStyle,
+            @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps) {
+        super(initialParagraphStyle, initialTextStyle, segmentOps);
     }
 
 }
