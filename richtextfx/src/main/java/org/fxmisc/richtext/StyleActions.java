@@ -2,7 +2,10 @@ package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.IndexRange;
+import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.model.StyleSpans;
+
+import java.util.function.BiConsumer;
 
 public interface StyleActions<PS, S> {
 
@@ -29,6 +32,11 @@ public interface StyleActions<PS, S> {
      * Indicates whether style should be preserved on undo/redo (and in the future copy/paste and text move).
      */
     boolean isPreserveStyle();
+
+    /**
+     * Gets the style applicator.
+     */
+    BiConsumer<TextFlow, PS> getApplyParagraphStyle();
 
     /**
      * Returns the style of the character with the given index.

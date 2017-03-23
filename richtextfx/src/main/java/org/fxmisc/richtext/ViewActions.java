@@ -139,11 +139,6 @@ public interface ViewActions<PS, SEG, S> {
     double getTotalHeightEstimate();
     Val<Double> totalHeightEstimateProperty();
 
-    /**
-     * Gets the style applicator.
-     */
-    BiConsumer<TextFlow, PS> getApplyParagraphStyle();
-
     /* ********************************************************************** *
      *                                                                        *
      * Queries                                                                *
