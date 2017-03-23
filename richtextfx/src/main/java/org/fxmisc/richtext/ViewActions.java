@@ -242,47 +242,4 @@ public interface ViewActions<PS, SEG, S> {
      */
     void requestFollowCaret();
 
-    /**
-     * Move the caret to the start of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired an
-     *               {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *               to the place to where the caret is moved is desired.
-     */
-    void lineStart(NavigationActions.SelectionPolicy policy);
-
-    /**
-     * Move the caret to the end of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired an
-     *               {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *               to the place to where the caret is moved is desired.
-     */
-    void lineEnd(NavigationActions.SelectionPolicy policy);
-
-    /**
-     * Selects the current line of a multi-line paragraph.
-     */
-    void selectLine();
-
-    /**
-     * Moves caret to the previous page (i.e. page up)
-     *
-     * @param selectionPolicy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
-    void prevPage(NavigationActions.SelectionPolicy selectionPolicy);
-
-    /**
-     * Moves caret to the next page (i.e. page down)
-     *
-     * @param selectionPolicy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
-    void nextPage(NavigationActions.SelectionPolicy selectionPolicy);
-
 }
