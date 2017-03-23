@@ -6,17 +6,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javafx.collections.ObservableList;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
+import org.reactfx.Suspendable;
+import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.LiveListBase;
 import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.collection.QuasiListModification;
+import org.reactfx.collection.SuspendableList;
 import org.reactfx.collection.UnmodifiableByDefaultLiveList;
 import org.reactfx.util.BiIndex;
 import org.reactfx.util.Lists;
+import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 
 /**
@@ -51,15 +56,18 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
     private ReadOnlyStyledDocument<PS, SEG, S> doc;
 
-    private final EventSource<RichTextChange<PS, SEG, S>> richChanges = new EventSource<>();
+    private final EventSource<RichTextChange<PS, SEG, S>> internalRichChanges = new EventSource<>();
+    private final SuspendableEventStream<RichTextChange<PS, SEG, S>> richChanges = internalRichChanges.pausable();
     @Override public EventStream<RichTextChange<PS, SEG, S>> richChanges() { return richChanges; }
 
-    private final Val<String> text = Val.create(() -> doc.getText(), richChanges);
+    private final Val<String> internalText = Val.create(() -> doc.getText(), internalRichChanges);
+    private final SuspendableVal<String> text = internalText.suspendable();
     @Override public String getText() { return text.getValue(); }
     @Override public Val<String> textProperty() { return text; }
 
 
-    private final Val<Integer> length = Val.create(() -> doc.length(), richChanges);
+    private final Val<Integer> internalLength = Val.create(() -> doc.length(), internalRichChanges);
+    private final SuspendableVal<Integer> length = internalLength.suspendable();
     @Override public int getLength() { return length.getValue(); }
     @Override public Val<Integer> lengthProperty() { return length; }
     @Override public int length() { return length.getValue(); }
@@ -67,8 +75,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     private final EventSource<MaterializedListModification<Paragraph<PS, SEG, S>>> parChanges =
             new EventSource<>();
 
-    private final LiveList<Paragraph<PS, SEG, S>> paragraphs = new ParagraphList();
-
+    private final SuspendableList<Paragraph<PS, SEG, S>> paragraphs = new ParagraphList().suspendable();
     @Override
     public LiveList<Paragraph<PS, SEG, S>> getParagraphs() {
         return paragraphs;
@@ -85,6 +92,17 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
     GenericEditableStyledDocumentBase(Paragraph<PS, SEG, S> initialParagraph/*, SegmentOps<SEG, S> segmentOps*/) {
         this.doc = new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph));
+
+        final Suspendable omniSuspendable = Suspendable.combine(
+                text,
+                length,
+
+                // add streams after properties, to be released before them
+                richChanges,
+
+                // paragraphs to be released first
+                paragraphs);
+        omniSuspendable.suspendWhen(beingUpdated);
     }
 
     /**
@@ -202,7 +220,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
             MaterializedListModification<Paragraph<PS, SEG, S>> parChange) {
         this.doc = newValue;
         beingUpdated.suspendWhile(() -> {
-            richChanges.push(change);
+            internalRichChanges.push(change);
             parChanges.push(parChange);
         });
     }

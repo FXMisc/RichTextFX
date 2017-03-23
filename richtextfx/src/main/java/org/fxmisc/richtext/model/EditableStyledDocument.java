@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 
 import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
+import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 
 /**
@@ -30,7 +31,7 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
     Val<Integer> lengthProperty();
 
     @Override
-    ObservableList<Paragraph<PS, SEG, S>> getParagraphs();
+    LiveList<Paragraph<PS, SEG, S>> getParagraphs();
 
     /**
      * Read-only snapshot of the current state of this document.

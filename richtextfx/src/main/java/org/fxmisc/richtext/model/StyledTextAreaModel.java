@@ -97,17 +97,15 @@ public class StyledTextAreaModel<PS, SEG, S>
      * ********************************************************************** */
 
     // text
-    private final SuspendableVal<String> text;
-    @Override public final String getText() { return text.getValue(); }
-    @Override public final ObservableValue<String> textProperty() { return text; }
+    @Override public final String getText() { return content.getText(); }
+    @Override public final ObservableValue<String> textProperty() { return content.textProperty(); }
 
     // rich text
     @Override public final StyledDocument<PS, SEG, S> getDocument() { return content.snapshot(); }
 
     // length
-    private final SuspendableVal<Integer> length;
-    @Override public final int getLength() { return length.getValue(); }
-    @Override public final ObservableValue<Integer> lengthProperty() { return length; }
+    @Override public final int getLength() { return content.getLength(); }
+    @Override public final ObservableValue<Integer> lengthProperty() { return content.lengthProperty(); }
 
     // caret position
     private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
@@ -142,8 +140,7 @@ public class StyledTextAreaModel<PS, SEG, S>
     @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
-    private final SuspendableList<Paragraph<PS, SEG, S>> paragraphs;
-    @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return paragraphs; }
+    @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return content.getParagraphs(); }
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
@@ -157,14 +154,12 @@ public class StyledTextAreaModel<PS, SEG, S>
      * ********************************************************************** */
 
     // text changes
-    private final SuspendableEventStream<PlainTextChange> plainTextChanges;
     @Override
-    public final EventStream<PlainTextChange> plainTextChanges() { return plainTextChanges; }
+    public final EventStream<PlainTextChange> plainTextChanges() { return content.plainChanges(); }
 
     // rich text changes
-    private final SuspendableEventStream<RichTextChange<PS, SEG, S>> richTextChanges;
     @Override
-    public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return richTextChanges; }
+    public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return content.richChanges(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -249,19 +244,12 @@ public class StyledTextAreaModel<PS, SEG, S>
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
-
-        content = document;
-        paragraphs = LiveList.suspendable(content.getParagraphs());
-
-        text = Val.suspendable(content.textProperty());
-        length = Val.suspendable(content.lengthProperty());
-        plainTextChanges = content.plainChanges().pausable();
-        richTextChanges = content.richChanges().pausable();
+        this.content = document;
 
         // when content is updated by an area, update the caret
         // and selection ranges of all the other
         // clones that also share this document
-        subscribeTo(content.plainChanges(), plainTextChange -> {
+        subscribeTo(plainTextChanges(), plainTextChange -> {
             int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
             if (changeLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
@@ -314,7 +302,7 @@ public class StyledTextAreaModel<PS, SEG, S>
 
         Val<Position> caretPosition2D = Val.create(
                 () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
-                internalCaretPosition, paragraphs);
+                internalCaretPosition, getParagraphs());
 
         currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
         caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
@@ -335,21 +323,13 @@ public class StyledTextAreaModel<PS, SEG, S>
 
         final Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
-                text,
-                length,
+
                 caretPosition,
                 anchor,
                 selection,
                 selectedText,
                 currentParagraph,
-                caretColumn,
-
-                // add streams after properties, to be released before them
-                plainTextChanges,
-                richTextChanges,
-
-                // paragraphs to be released first
-                paragraphs);
+                caretColumn);
         manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
     }
 
@@ -369,11 +349,15 @@ public class StyledTextAreaModel<PS, SEG, S>
 
     @Override
     public String getText(int paragraph) {
-        return paragraphs.get(paragraph).getText();
+        return content.getText(paragraph);
     }
 
     public Paragraph<PS, SEG, S> getParagraph(int index) {
-        return paragraphs.get(index);
+        return content.getParagraph(index);
+    }
+
+    public int getParagraphLenth(int index) {
+        return content.getParagraphLength(index);
     }
 
     @Override
@@ -398,7 +382,7 @@ public class StyledTextAreaModel<PS, SEG, S>
         }
 
         int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
-        int end = paragraph == endPar ? selectionEnd2D.getMinor() : paragraphs.get(paragraph).length();
+        int end = paragraph == endPar ? selectionEnd2D.getMinor() : getParagraphLenth(paragraph);
 
         // force selectionProperty() to be valid
         getSelection();
