@@ -39,7 +39,9 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<SEG> segments) {
-        assert !segments.isEmpty();
+        if (segments.isEmpty()) {
+            throw new IllegalArgumentException("Cannot construct a Paragraph with an empty list of segments");
+        }
 
         this.segmentOps = segmentOps;
         this.segments = segments;
