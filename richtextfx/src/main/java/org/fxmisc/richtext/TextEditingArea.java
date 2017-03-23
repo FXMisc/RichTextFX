@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.control.IndexRange;
@@ -19,6 +20,35 @@ import org.reactfx.EventStream;
  * @param <S> type of style that can be applied to text.
  */
 public interface TextEditingArea<PS, SEG, S> {
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * Properties affect behavior and/or appearance of this control.          *
+     *                                                                        *
+     * They are readable and writable by the client code and never change by  *
+     * other means, i.e. they contain either the default value or the value   *
+     * set by the client code.                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Indicates whether this text area can be edited by the user.
+     * Note that this property doesn't affect editing through the API.
+     */
+    boolean isEditable();
+    void setEditable(boolean value);
+    BooleanProperty editableProperty();
+
+    /**
+     * When a run of text exceeds the width of the text region,
+     * then this property indicates whether the text should wrap
+     * onto another line.
+     */
+    boolean isWrapText();
+    void setWrapText(boolean value);
+    BooleanProperty wrapTextProperty();
 
     /*******************
      *                 *

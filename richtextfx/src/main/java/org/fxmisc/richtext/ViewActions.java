@@ -19,23 +19,6 @@ import java.util.function.IntFunction;
 
 public interface ViewActions<PS, SEG, S> {
 
-    /**
-     * Indicates whether this text area can be edited by the user.
-     * Note that this property doesn't affect editing through the API.
-     */
-    boolean isEditable();
-    void setEditable(boolean value);
-    BooleanProperty editableProperty();
-
-    /**
-     * When a run of text exceeds the width of the text region,
-     * then this property indicates whether the text should wrap
-     * onto another line.
-     */
-    boolean isWrapText();
-    void setWrapText(boolean value);
-    BooleanProperty wrapTextProperty();
-
     public static enum CaretVisibility {
         /** Caret is displayed. */
         ON,
@@ -164,7 +147,7 @@ public interface ViewActions<PS, SEG, S> {
     CharacterHit hit(double x, double y);
 
     /**
-     * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
+     * Gets the number of lines a paragraph spans when {@link TextEditingArea#isWrapText()} is true, or otherwise returns 1.
      */
     int getParagraphLinesCount(int paragraphIndex);
 
