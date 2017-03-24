@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableBooleanValue;
 

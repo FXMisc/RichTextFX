@@ -1,43 +1,31 @@
 package org.fxmisc.richtext;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.text.TextFlow;
-import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.NavigationActions;
-import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 
-public interface ViewActions<PS, SEG, S> {
+public interface ViewActions {
 
-    /**
-     * Indicates whether this text area can be edited by the user.
-     * Note that this property doesn't affect editing through the API.
-     */
-    boolean isEditable();
-    void setEditable(boolean value);
-    BooleanProperty editableProperty();
-
-    /**
-     * When a run of text exceeds the width of the text region,
-     * then this property indicates whether the text should wrap
-     * onto another line.
-     */
-    boolean isWrapText();
-    void setWrapText(boolean value);
-    BooleanProperty wrapTextProperty();
+    /* ********************************************************************** *
+     *                                                                        *
+     * Properties                                                             *
+     *                                                                        *
+     * Properties affect behavior and/or appearance of this control.          *
+     *                                                                        *
+     * They are readable and writable by the client code and never change by  *
+     * other means, i.e. they contain either the default value or the value   *
+     * set by the client code.                                                *
+     *                                                                        *
+     * ********************************************************************** */
 
     public static enum CaretVisibility {
         /** Caret is displayed. */
@@ -68,17 +56,6 @@ public interface ViewActions<PS, SEG, S> {
     ObjectProperty<Duration> mouseOverTextDelayProperty();
 
     /**
-     * Defines how to handle an event in which the user has selected some text, dragged it to a
-     * new location within the area, and released the mouse at some character {@code index}
-     * within the area.
-     *
-     * <p>By default, this will relocate the selected text to the character index where the mouse
-     * was released. To override it, use {@link #setOnSelectionDrop(IntConsumer)}.
-     */
-    IntConsumer getOnSelectionDrop();
-    void setOnSelectionDrop(IntConsumer consumer);
-
-    /**
      * Gets the function that maps a line index to a node that is positioned to the left of the first character
      * in a paragraph's text. Useful for toggle points or indicating the line's number via {@link LineNumberFactory}.
      */
@@ -106,20 +83,6 @@ public interface ViewActions<PS, SEG, S> {
     void setContextMenuYOffset(double offset);
 
     /**
-     * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
-     * if caret is not visible in the viewport.
-     */
-    Optional<Bounds> getCaretBounds();
-    ObservableValue<Optional<Bounds>> caretBoundsProperty();
-
-    /**
-     * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
-     * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
-     */
-    Optional<Bounds> getSelectionBounds();
-    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
-
-    /**
      * Gets the <em>estimated</em> scrollX value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
@@ -137,6 +100,26 @@ public interface ViewActions<PS, SEG, S> {
     void setEstimatedScrollY(double value);
     Var<Double> estimatedScrollYProperty();
 
+    /* ************* *
+     *               *
+     * Observables   *
+     *               *
+     * ************* */
+
+    /**
+     * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
+     * if caret is not visible in the viewport.
+     */
+    Optional<Bounds> getCaretBounds();
+    ObservableValue<Optional<Bounds>> caretBoundsProperty();
+
+    /**
+     * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
+     * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
+     */
+    Optional<Bounds> getSelectionBounds();
+    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
+
     /**
      * Gets the <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
@@ -152,11 +135,6 @@ public interface ViewActions<PS, SEG, S> {
      */
     double getTotalHeightEstimate();
     Val<Double> totalHeightEstimateProperty();
-
-    /**
-     * Gets the style applicator.
-     */
-    BiConsumer<TextFlow, PS> getApplyParagraphStyle();
 
     /* ********************************************************************** *
      *                                                                        *
@@ -183,7 +161,7 @@ public interface ViewActions<PS, SEG, S> {
     CharacterHit hit(double x, double y);
 
     /**
-     * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
+     * Gets the number of lines a paragraph spans when {@link TextEditingArea#isWrapText()} is true, or otherwise returns 1.
      */
     int getParagraphLinesCount(int paragraphIndex);
 
@@ -244,48 +222,5 @@ public interface ViewActions<PS, SEG, S> {
      * (i.e. auto-scroll to caret) after making a change (add/remove/modify area's segments).
      */
     void requestFollowCaret();
-
-    /**
-     * Move the caret to the start of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired an
-     *               {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *               to the place to where the caret is moved is desired.
-     */
-    void lineStart(NavigationActions.SelectionPolicy policy);
-
-    /**
-     * Move the caret to the end of either the line in a multi-line wrapped paragraph or the paragraph
-     * in a single-line / non-wrapped paragraph
-     *
-     * @param policy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired an
-     *               {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *               to the place to where the caret is moved is desired.
-     */
-    void lineEnd(NavigationActions.SelectionPolicy policy);
-
-    /**
-     * Selects the current line of a multi-line paragraph.
-     */
-    void selectLine();
-
-    /**
-     * Moves caret to the previous page (i.e. page up)
-     *
-     * @param selectionPolicy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
-    void prevPage(NavigationActions.SelectionPolicy selectionPolicy);
-
-    /**
-     * Moves caret to the next page (i.e. page down)
-     *
-     * @param selectionPolicy use {@link NavigationActions.SelectionPolicy#CLEAR} when no selection is desired and
-     *                        {@link NavigationActions.SelectionPolicy#ADJUST} when a selection from starting point
-     *                        to the place to where the caret is moved is desired.
-     */
-    void nextPage(NavigationActions.SelectionPolicy selectionPolicy);
 
 }

@@ -63,23 +63,18 @@ import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.GenericEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.StyleActions;
-import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
-import org.fxmisc.richtext.model.UndoActions;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
@@ -91,7 +86,6 @@ import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
-import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.SuspendableVar;
@@ -179,7 +173,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         NavigationActions<PS, SEG, S>,
         StyleActions<PS, S>,
         UndoActions,
-        ViewActions<PS, SEG, S>,
+        ViewActions,
+        MouseBehaviorOverrides,
         TwoDimensional,
         Virtualized {
 

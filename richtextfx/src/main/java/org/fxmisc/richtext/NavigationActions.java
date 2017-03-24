@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import java.text.BreakIterator;
 
@@ -180,6 +180,52 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
         int newPos = getCaretPosition() - getCaretColumn() + lineLen;
         moveTo(newPos, selectionPolicy);
     }
+
+    /**
+     * Move the caret to the start of either the line in a multi-line wrapped paragraph or the paragraph
+     * in a single-line / non-wrapped paragraph
+     *
+     * @param policy use {@link SelectionPolicy#CLEAR} when no selection is desired an
+     *               {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *               to the place to where the caret is moved is desired.
+     */
+    void lineStart(SelectionPolicy policy);
+
+    /**
+     * Move the caret to the end of either the line in a multi-line wrapped paragraph or the paragraph
+     * in a single-line / non-wrapped paragraph
+     *
+     * @param policy use {@link SelectionPolicy#CLEAR} when no selection is desired an
+     *               {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *               to the place to where the caret is moved is desired.
+     */
+    void lineEnd(SelectionPolicy policy);
+
+    /**
+     * Selects the current line of a multi-line paragraph.
+     */
+    default void selectLine() {
+        lineStart(SelectionPolicy.CLEAR);
+        lineEnd(SelectionPolicy.ADJUST);
+    }
+
+    /**
+     * Moves caret to the previous page (i.e. page up)
+     *
+     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
+     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *                        to the place to where the caret is moved is desired.
+     */
+    void prevPage(SelectionPolicy selectionPolicy);
+
+    /**
+     * Moves caret to the next page (i.e. page down)
+     *
+     * @param selectionPolicy use {@link SelectionPolicy#CLEAR} when no selection is desired and
+     *                        {@link SelectionPolicy#ADJUST} when a selection from starting point
+     *                        to the place to where the caret is moved is desired.
+     */
+    void nextPage(SelectionPolicy selectionPolicy);
 
     /**
      * Moves the caret to the beginning of the text.
