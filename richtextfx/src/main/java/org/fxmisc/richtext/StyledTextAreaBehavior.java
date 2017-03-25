@@ -319,11 +319,6 @@ class StyledTextAreaBehavior {
         view.nextChar(SelectionPolicy.ADJUST);
     }
 
-    private void selectWord() {
-        view.wordBreaksBackwards(1, SelectionPolicy.CLEAR);
-        view.wordBreaksForwards(1, SelectionPolicy.ADJUST);
-    }
-
     private void deletePrevWord(KeyEvent ignore) {
         int end = view.getCaretPosition();
 
@@ -422,7 +417,7 @@ class StyledTextAreaBehavior {
             } else {
                 switch (e.getClickCount()) {
                     case 1: firstLeftPress(hit); break;
-                    case 2: selectWord(); break;
+                    case 2: view.selectWord(); break;
                     case 3: view.selectParagraph(); break;
                     default: // do nothing
                 }

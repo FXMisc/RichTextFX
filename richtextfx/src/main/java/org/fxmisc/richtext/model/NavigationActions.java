@@ -166,6 +166,14 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     }
 
     /**
+     * Selects the word closest to the caret
+     */
+    default void selectWord() {
+        wordBreaksBackwards(1, SelectionPolicy.CLEAR);
+        wordBreaksForwards(1, SelectionPolicy.ADJUST);
+    }
+
+    /**
      * Moves the caret to the beginning of the current paragraph.
      */
     default void paragraphStart(SelectionPolicy selectionPolicy) {
