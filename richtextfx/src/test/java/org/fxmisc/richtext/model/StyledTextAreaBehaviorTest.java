@@ -1,18 +1,16 @@
 package org.fxmisc.richtext.model;
 
 import com.nitorcreations.junit.runners.NestedRunner;
-import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.stage.Stage;
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.InlineCssTextArea;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.framework.junit.ApplicationTest;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 @RunWith(NestedRunner.class)
 public class StyledTextAreaBehaviorTest {
@@ -25,21 +23,7 @@ public class StyledTextAreaBehaviorTest {
 
     private static final boolean WINDOWS_OS;
 
-    public class ContextMenuTests extends ApplicationTest {
-
-        public InlineCssTextArea area = new InlineCssTextArea();
-
-        @Override
-        public void start(Stage stage) throws Exception {
-            area.setContextMenu(new ContextMenu(new MenuItem("A Menu Item")));
-            // offset needs to be 5 to prevent test failures
-            area.setContextMenuXOffset(5);
-            area.setContextMenuYOffset(5);
-
-            VirtualizedScrollPane<InlineCssTextArea> pane = new VirtualizedScrollPane<>(area);
-            stage.setScene(new Scene(pane, 500, 500));
-            stage.show();
-        }
+    public class ContextMenuTests extends InlineCssTextAreaAppTest {
 
         @Test
         public void clickingSecondaryShowsContextMenu() {
@@ -47,7 +31,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             // then
-            area.getContextMenu().isShowing();
+            assertTrue(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -57,7 +41,7 @@ public class StyledTextAreaBehaviorTest {
             press(MouseButton.SECONDARY);
 
             // then
-            area.getContextMenu().isShowing();
+            assertTrue(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -66,7 +50,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             press(MouseButton.PRIMARY);
-            assert !area.getContextMenu().isShowing();
+            assertFalse(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -75,7 +59,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             press(MouseButton.MIDDLE);
-            assert !area.getContextMenu().isShowing();
+            assertFalse(area.getContextMenu().isShowing());
         }
 
         @Ignore // push(CONTEXT_MENU) does not create a ContextMenuEvent properly, causing test to fail
@@ -87,6 +71,288 @@ public class StyledTextAreaBehaviorTest {
 
                 assert area.getContextMenu().isShowing();
             }
+        }
+
+    }
+
+    public class MouseBehaviorTests {
+
+        public class WhenAreaIsDisabled extends InlineCssTextAreaAppTest {
+
+            @Before
+            public void setup() {
+                interact(() -> {
+                    area.setDisable(true);
+                    area.replaceText("When Area Is Disabled Test: Some text goes here");
+                });
+            }
+
+            @Test
+            public void shiftClickingAreaDoesNothing() {
+                moveTo(firstLineOfArea())
+                        .moveBy(20, 0)
+                        .press(KeyCode.SHIFT)
+                        .press(MouseButton.PRIMARY)
+                        .release(KeyCode.SHIFT);
+
+                assertFalse(area.isFocused());
+
+                // cleanup
+                release(MouseButton.PRIMARY);
+            }
+
+            @Test
+            public void singleClickingAreaDoesNothing() {
+                clickOn(area);
+
+                assertFalse(area.isFocused());
+            }
+
+            @Test
+            public void doubleClickingAreaDoesNothing() {
+                doubleClickOn(area);
+
+                assertFalse(area.isFocused());
+            }
+
+            @Test
+            public void tripleClickingAreaDoesNothing() {
+                clickOn(area, MouseButton.PRIMARY).doubleClickOn(MouseButton.PRIMARY);
+
+                assertFalse(area.isFocused());
+            }
+
+            @Test
+            public void draggingTheMouseDoesNotSelectText() {
+                moveTo(firstLineOfArea())
+                        .press(MouseButton.PRIMARY)
+                        .moveBy(20, 0);
+
+                assertTrue(area.getSelectedText().isEmpty());
+
+                // cleanup
+                drop();
+            }
+
+            @Test
+            public void releasingTheMouseAfterDragDoesNothing() {
+                moveTo(firstLineOfArea())
+                        .press(MouseButton.PRIMARY)
+                        .dropBy(20, 0);
+
+                assertEquals(0, area.getCaretPosition());
+
+            }
+
+        }
+
+        public class WhenAreaIsEnabled {
+
+            public class AndTextIsNotSelected extends InlineCssTextAreaAppTest {
+
+                private String firstWord = "Some";
+                private String firstParagraph = firstWord + " text goes here";
+
+                @Before
+                public void setup() {
+                    interact(() -> area.replaceText(firstParagraph));
+                }
+
+                @Test
+                public void singleClickingAreaMovesCaretToThatPosition() {
+                    assertEquals(0, area.getCaretPosition());
+
+                    moveTo(firstLineOfArea())
+                            .moveBy(20, 0)
+                            .clickOn(MouseButton.PRIMARY);
+
+                    assertTrue(0 != area.getCaretPosition());
+                    // TODO: check that caret is moved exactly to where it should be
+                }
+
+                @Test
+                public void doubleClickingTextInAreaSelectsClosestWord() {
+                    moveTo(firstLineOfArea())
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstWord, area.getSelectedText());
+                }
+
+                @Test
+                public void tripleClickingLineInAreaSelectsParagraph() {
+                    moveTo(firstLineOfArea())
+                            .clickOn(MouseButton.PRIMARY)
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstParagraph, area.getSelectedText());
+                }
+
+                @Test
+                public void pressingMouseOverTextAndDraggingMouseSelectsText() {
+                    moveTo(firstLineOfArea())
+                            .press(MouseButton.PRIMARY)
+                            .moveBy(20, 0);
+
+                    assertFalse(area.getSelectedText().isEmpty());
+                }
+
+            }
+
+            public class AndTextIsSelected extends InlineCssTextAreaAppTest {
+
+                private String firstWord = "Some";
+                private String firstParagraph = firstWord + " text goes here";
+
+                @Test
+                public void singleClickingWithinSelectedTextMovesCaretToThatPosition() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph);
+                        area.selectAll();
+                    });
+
+                    moveTo(firstLineOfArea())
+                            .moveBy(20, 0)
+                            .clickOn(MouseButton.PRIMARY);
+
+                    assertTrue(0 != area.getCaretPosition());
+                }
+
+                @Test
+                public void doubleClickingWithinSelectedTextSelectsClosestWord() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph);
+                        area.selectAll();
+                    });
+
+                    moveTo(firstLineOfArea())
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstWord, area.getSelectedText());
+                }
+
+                @Test
+                public void tripleClickingWithinSelectedTextSelectsParagraph() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph);
+                        area.selectAll();
+                    });
+
+                    moveTo(firstLineOfArea())
+                            .clickOn(MouseButton.PRIMARY)
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstParagraph, area.getSelectedText());
+                }
+
+                @Test
+                public void singleClickingOutsideOfSelectedTextMovesCaretToThatPosition() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "this is the selected text");
+                        area.selectRange(1, 0, 2, -1);
+                    });
+
+                    int caretPos = area.getCaretPosition();
+
+                    moveTo(firstLineOfArea())
+                            .moveBy(20, 0)
+                            .clickOn(MouseButton.PRIMARY);
+
+                    assertTrue(caretPos != area.getCaretPosition());
+                    // TODO: check that caret is moved exactly to where it should be
+
+                }
+
+                @Test
+                public void doubleClickingOutsideOfSelectedTextSelectsClosestWord() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "this is the selected text");
+                        area.selectRange(1, 0, 2, -1);
+                    });
+
+                    moveTo(firstLineOfArea())
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstWord, area.getSelectedText());
+                }
+
+                @Test
+                public void tripleClickingOutsideOfSelectedTextSelectsParagraph() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "this is the selected text");
+                        area.selectRange(1, 0, 2, -1);
+                    });
+
+                    moveTo(firstLineOfArea())
+                            .clickOn(MouseButton.PRIMARY)
+                            .doubleClickOn(MouseButton.PRIMARY);
+
+                    assertEquals(firstParagraph, area.getSelectedText());
+                }
+
+                @Test
+                public void pressingMouseOnUnselectedTextAndDraggingMakesNewSelection() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "this is the selected text");
+                        area.selectRange(1, 0, 2, -1);
+                    });
+
+                    String originalSelection = area.getSelectedText();
+
+                    moveTo(firstLineOfArea())
+                            .press(MouseButton.PRIMARY)
+                            .moveBy(20, 0);
+
+                    assertFalse(originalSelection.equals(area.getSelectedText()));
+                }
+
+                @Test
+                public void pressingMouseOnSelectionAndDraggingDisplacesCaret() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "This is extra text");
+                        area.selectRange(0, firstWord.length());
+                    });
+
+                    String selText = area.getSelectedText();
+                    int caretPos = area.getCaretPosition();
+
+                    moveTo(firstLineOfArea())
+                            .press(MouseButton.PRIMARY)
+                            .moveBy(0, 14);
+
+                    assertTrue(caretPos != area.getCaretPosition());
+                    assertEquals(selText, area.getSelectedText());
+                }
+
+                @Test
+                public void pressingMouseOnSelectionAndDraggingAndReleasingMovesSelectedTextToThatPosition() {
+                    // setup
+                    interact(() -> {
+                        area.replaceText(firstParagraph + "\n" + "This is extra text");
+                        area.selectRange(0, firstWord.length());
+                    });
+
+                    String selText = area.getSelectedText();
+                    int caretPos = area.getCaretPosition();
+
+                    moveTo(firstLineOfArea())
+                            .press(MouseButton.PRIMARY)
+                            .dropBy(0, 14);
+
+                    assertTrue(caretPos != area.getCaretPosition());
+                    assertTrue(area.getSelectedText().isEmpty());
+                    // TODO: should check that move is exact
+                }
+
+            }
+
         }
 
     }

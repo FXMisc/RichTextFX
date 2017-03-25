@@ -15,7 +15,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
@@ -47,6 +46,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -159,12 +159,75 @@ import org.reactfx.value.Var;
  *
  * <h3>Overriding default mouse behavior</h3>
  *
- * The area's default mouse behavior cannot be partially overridden without it affecting other behavior (to do so,
- * one would need to re-implement the entire default behavior with one minor adjustment). Rather, one should
- * override the default mouse behavior by changing what happens at various events.
- * For example, {@link #getOnSelectionDrop()} overrides what happens when some portion of the area's content is
- * selected, then the mouse is pressed on that selection, the mouse moves to a new location, and the mouse is released.
- * At that point, {@link #onSelectionDrop} is used to determine what should happen.
+ * The area's default mouse behavior properly handles auto-scrolling and dragging the selected text to a new location.
+ * As such, some parts cannot be partially overridden without it affecting other behavior.
+ *
+ * <p>The following lists either {@link org.fxmisc.wellbehaved.event.EventPattern}s that cannot be overridden without
+ * negatively affecting the default mouse behavior or describe how to safely override things in a special way without
+ * disrupting the auto scroll behavior.</p>
+ * <ul>
+ *     <li>
+ *         <em>First (1 click count) Primary Button Mouse Pressed Events:</em>
+ *         (<code>EventPattern.mousePressed(MouseButton.PRIMARY).onlyIf(e -&gt; e.getClickCount() == 1)</code>).
+ *         Do not override. Instead, use {@link #onOutsideSelectionMousePress},
+ *         {@link #onInsideSelectionMousePressRelease}, or see next item.
+ *     </li>
+ *     <li>(
+ *         <em>All Other Mouse Pressed Events (e.g., Primary with 2+ click count):</em>
+ *         Aside from hiding the context menu if it is showing (use {@link #hideContextMenu()} some((where in your
+ *         overriding InputMap to maintain this behavior), these can be safely overridden via any of the
+ *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate InputMapTemplate's factory methods} or
+ *         {@link org.fxmisc.wellbehaved.event.InputMap InputMap's factory methods}.
+ *     </li>
+ *     <li>
+ *         <em>Primary-Button-only Mouse Drag Detection Events:</em>
+ *         (<code>EventPattern.eventType(MouseEvent.DRAG_DETECTED).onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>).
+ *         Do not override. Instead, use {@link #onNewSelectionDrag} or {@link #onSelectionDrag}.
+ *     </li>
+ *     <li>
+ *         <em>Primary-Button-only Mouse Drag Events:</em>
+ *         (<code>EventPattern.mouseDragged().onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>)
+ *         Do not override, but see next item.
+ *     </li>
+ *     <li>
+ *         <em>All Other Mouse Drag Events:</em>
+ *         You may safely override other Mouse Drag Events using different
+ *         {@link org.fxmisc.wellbehaved.event.EventPattern}s without affecting default behavior only if
+ *         process InputMaps (
+ *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(javafx.event.EventType, BiFunction)},
+ *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(org.fxmisc.wellbehaved.event.EventPattern, BiFunction)},
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}, or
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)}
+ *         ) are used and {@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED} is returned.
+ *         The area has a "catch all" Mouse Drag InputMap that will auto scroll towards the mouse drag event when it
+ *         occurs outside the bounds of the area and will stop auto scrolling when the mouse event occurs within the
+ *         area. However, this only works if the event is not consumed before the event reaches that InputMap.
+ *         To insure the auto scroll feature is enabled, set {@link #isAutoScrollOnDragDesired()} to true in your
+ *         process InputMap. If the feature is not desired for that specific drag event, set it to false in the
+ *         process InputMap.
+ *         <em>Note: Due to this "catch-all" nature, all Mouse Drag Events are consumed.</em>
+ *     </li>
+ *     <li>
+ *         <em>Primary-Button-only Mouse Released Events:</em>
+ *         (<code>EventPattern.mouseReleased().onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>).
+ *         Do not override. Instead, use {@link #onNewSelectionDragEnd}, {@link #onSelectionDrop}, or see next item.
+ *     </li>
+ *     <li>
+ *         <em>All other Mouse Released Events:</em>
+ *         You may override other Mouse Released Events using different
+ *         {@link org.fxmisc.wellbehaved.event.EventPattern}s without affecting default behavior only if
+ *         process InputMaps (
+ *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(javafx.event.EventType, BiFunction)},
+ *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(org.fxmisc.wellbehaved.event.EventPattern, BiFunction)},
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}, or
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)}
+ *         ) are used and {@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED} is returned.
+ *         The area has a "catch-all" InputMap that will consume all mouse released events and stop auto scroll if it
+ *         was scrolling. However, this only works if the event is not consumed before the event reaches that InputMap.
+ *         <em>Note: Due to this "catch-all" nature, all Mouse Released Events are consumed.</em>
+ *     </li>
+ * </ul>
+ *
  *
  * @param <PS> type of style that can be applied to paragraphs (e.g. {@link TextFlow}.
  * @param <SEG> type of segment used in {@link Paragraph}. Can be only text (plain or styled) or
@@ -266,9 +329,51 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
     @Override public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
-    private final Property<IntConsumer> onSelectionDrop = new SimpleObjectProperty<>(this::moveSelectedText);
-    @Override public final void setOnSelectionDrop(IntConsumer consumer) { onSelectionDrop.setValue(consumer); }
-    @Override public final IntConsumer getOnSelectionDrop() { return onSelectionDrop.getValue(); }
+    private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
+    public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
+    public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
+
+    private final Property<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
+
+    private final Property<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+    public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
+    public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+    public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
+
+    private final Property<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        displaceCaret(hit.getInsertionIndex());
+    });
+    public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
+    public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveSelectedText(hit.getInsertionIndex());
+    });
+    @Override public final void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDrop.setValue(consumer); }
+    @Override public final Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDrop.getValue(); }
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     @Override
@@ -603,7 +708,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 if (indexOfChange < caretPosition) {
                     // if caret is within the changed content, move it to indexOfChange
                     // otherwise offset it by changeLength
-                    positionCaret(
+                    displaceCaret(
                             caretPosition < endOfChange
                                     ? indexOfChange
                                     : caretPosition + changeLength
@@ -1134,6 +1239,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
+    /**
+     * Displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the selection's {@link #getAnchor() anchor} or the {@link #getSelection() selection}.
+     * Do not confuse this method with {@link #moveTo(int)}, which is the normal way of moving the caret.
+     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
+     * as opposed to always being at the boundary. Use with care.
+     */
+    public void displaceCaret(int pos) {
+        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
+            internalCaretPosition.setValue(pos);
+        }
+    }
+
+    /**
+     * Hides the area's context menu if it is not {@code null} and it is {@link ContextMenu#isShowing() showing}.
+     */
+    public final void hideContextMenu() {
+        ContextMenu menu = getContextMenu();
+        if (menu != null && menu.isShowing()) {
+            menu.hide();
+        }
+    }
+
     @Override
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
@@ -1446,18 +1574,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Guard suspend(Suspendable... suspendables) {
         return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
-    }
-
-    /**
-     * Positions only the caret. Doesn't move the anchor and doesn't change
-     * the selection. Can be used to achieve the special case of positioning
-     * the caret outside or inside the selection, as opposed to always being
-     * at the boundary. Use with care.
-     */
-    void positionCaret(int pos) {
-        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.setValue(pos);
-        }
     }
 
     void clearTargetCaretOffset() {
