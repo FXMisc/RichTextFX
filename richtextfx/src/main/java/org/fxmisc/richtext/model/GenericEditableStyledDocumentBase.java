@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javafx.collections.ObservableList;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;

@@ -91,7 +91,6 @@ import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
-import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.SuspendableVar;
