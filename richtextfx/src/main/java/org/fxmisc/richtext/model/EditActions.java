@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.model;
 
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.GenericStyledArea;
 
 /**
  * Extended edit actions for {@link TextEditingArea}.
@@ -176,7 +177,7 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
     default void moveSelectedText(int pos) {
         IndexRange sel = getSelection();
 
-        if(pos >= sel.getStart() && pos <= sel.getEnd()) {
+        if((pos >= sel.getStart() && pos <= sel.getEnd()) || sel.equals(GenericStyledArea.EMPTY_RANGE)) {
             // no move, just position the caret
             selectRange(pos, pos);
         } else {
