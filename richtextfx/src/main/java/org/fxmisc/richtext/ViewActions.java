@@ -7,6 +7,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.NavigationActions;
@@ -17,7 +18,7 @@ import org.reactfx.value.Var;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.IntConsumer;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public interface ViewActions<PS, SEG, S> {
@@ -68,15 +69,115 @@ public interface ViewActions<PS, SEG, S> {
     ObjectProperty<Duration> mouseOverTextDelayProperty();
 
     /**
-     * Defines how to handle an event in which the user has selected some text, dragged it to a
-     * new location within the area, and released the mouse at some character {@code index}
-     * within the area.
+     * Indicates whether area should auto scroll towards a {@link MouseEvent#MOUSE_DRAGGED} event. This can be
+     * used when additional drag behavior is added on top of the area's default drag behavior and one does not
+     * want this auto scroll feature to occur. This flag should be set to the correct value before the end of
+     * the process InputMap.
+     */
+    boolean isAutoScrollOnDragDesired();
+    void setAutoScrollOnDragDesired(boolean val);
+
+    /**
+     * Runs the consumer when the user pressed the mouse over unselected text within the area.
+     *
+     * <p>By default, this will {@link NavigationActions#moveTo(int) move the caret} to the position where
+     * the mouse was pressed and clear out any selection via the code:
+     * <pre><code>
+     *     e -&gt; {
+     *         CharacterHit hit = hit(e.getX(), e.getY());
+     *         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+     *     }
+     * </code></pre>.
+     */
+    void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer);
+    Consumer<MouseEvent> getOnOutsideSelectionMousePress();
+
+    /**
+     * Runs the consumer when the mouse is released in this scenario: the user has selected some text and then
+     * "clicked" the mouse somewhere in that selection (the use pressed the mouse, did not drag it,
+     * and released the mouse). <em>Note:</em> this consumer is run on {@link MouseEvent#MOUSE_RELEASED},
+     * not {@link MouseEvent#MOUSE_CLICKED}.
+     *
+     * <p>By default, this will {@link NavigationActions#moveTo(int) move the caret} to the position where
+     * the mouse was clicked and clear out any selection via the code:
+     * <pre><code>
+     *     e -&gt; {
+     *         CharacterHit hit = hit(e.getX(), e.getY());
+     *         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+     *     }
+     * </code></pre>.
+     */
+    Consumer<MouseEvent> getOnInsideSelectionMousePressRelease();
+    void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer);
+
+    /**
+     * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
+     * pressed the mouse on top of the selection, dragged it to a new location within the area,
+     * but has not yet released the mouse.
+     *
+     * <p>By default, this will create a new selection or
+     * {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
+     * smaller via the code:
+     * <pre><code>
+     *     e -&gt; {
+     *         CharacterHit hit = hit(e.getX(), e.getY());
+     *         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+     *     }
+     * </code></pre>.
+     */
+    Consumer<Point2D> getOnNewSelectionDrag();
+    void setOnNewSelectionDrag(Consumer<Point2D> consumer);
+
+    /**
+     * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
+     * pressed the mouse on top of the selection, dragged it to a new location within the area,
+     * and released the mouse.
+     *
+     * <p>By default, this will {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the
+     * current selection to be bigger or smaller via the code:
+     * <pre><code>
+     *     e -&gt; {
+     *         CharacterHit hit = hit(e.getX(), e.getY());
+     *         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+     *     }
+     * </code></pre>.
+     */
+    Consumer<MouseEvent> getOnNewSelectionDragEnd();
+    void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer);
+
+    /**
+     * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
+     * pressed the mouse on top of the selection, dragged it to a new location within the area,
+     * but has not yet released the mouse.
+     *
+     * <p>By default, this will {@link GenericStyledArea#displaceCaret(int) displace the caret} to that position
+     * within the area via the code:
+     * <pre><code>
+     *     p -&gt; {
+     *         CharacterHit hit = hit(p.getX(), p.getY());
+     *         displaceCaret(hit.getInsertionIndex());
+     *     }
+     * </code></pre>.
+     */
+    Consumer<Point2D> getOnSelectionDrag();
+    void setOnSelectionDrag(Consumer<Point2D> consumer);
+
+    /**
+     * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
+     * pressed the mouse on top of the selection, dragged it to a new location within the area,
+     * and released the mouse within the area.
      *
      * <p>By default, this will relocate the selected text to the character index where the mouse
-     * was released. To override it, use {@link #setOnSelectionDrop(IntConsumer)}.
+     * was released via the code:
+     * <pre><code>
+     *     e -&gt; {
+     *         CharacterHit hit = hit(e.getX(), e.getY());
+     *         moveSelectedText(hit.getInsertionIndex());
+     *     }
+     * </code></pre>.
      */
-    IntConsumer getOnSelectionDrop();
-    void setOnSelectionDrop(IntConsumer consumer);
+    Consumer<MouseEvent> getOnSelectionDrop();
+    void setOnSelectionDrop(Consumer<MouseEvent> consumer);
 
     /**
      * Gets the function that maps a line index to a node that is positioned to the left of the first character

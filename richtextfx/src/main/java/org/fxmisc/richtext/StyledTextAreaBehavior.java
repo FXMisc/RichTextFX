@@ -23,6 +23,7 @@ import javafx.scene.input.MouseEvent;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputHandler.Result;
 import org.fxmisc.wellbehaved.event.template.InputMapTemplate;
 import org.reactfx.EventStream;
 import org.reactfx.value.Val;
@@ -177,11 +178,66 @@ class StyledTextAreaBehavior {
         ).ifConsumed((b, e) -> b.view.requestFollowCaret());
         InputMapTemplate<StyledTextAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseEventTemplate = sequence(
-            consume(eventType(MouseEvent.MOUSE_PRESSED),  StyledTextAreaBehavior::mousePressed),
-            consume(eventType(MouseEvent.MOUSE_DRAGGED), StyledTextAreaBehavior::mouseDragged),
-            consume(eventType(MouseEvent.DRAG_DETECTED), StyledTextAreaBehavior::dragDetected),
-            consume(eventType(MouseEvent.MOUSE_RELEASED), StyledTextAreaBehavior::mouseReleased)
+        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mousePressedTemplate = sequence(
+                // ignore mouse pressed events if the view is disabled
+                process(mousePressed(MouseButton.PRIMARY), (b, e) -> b.view.isDisabled() ? Result.IGNORE : Result.PROCEED),
+
+                // hide context menu before any other handling
+                process(
+                        mousePressed(), (b, e) -> {
+                            b.view.hideContextMenu();
+                            return Result.PROCEED;
+                        }
+                ),
+                consume(
+                        mousePressed(MouseButton.PRIMARY).onlyIf(MouseEvent::isShiftDown),
+                        StyledTextAreaBehavior::handleShiftPress
+                ),
+                consume(
+                        mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 1),
+                        StyledTextAreaBehavior::handleFirstPrimaryPress
+                ),
+                consume(
+                        mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 2),
+                        StyledTextAreaBehavior::handleSecondPress
+                ),
+                consume(
+                        mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 3),
+                        StyledTextAreaBehavior::handleThirdPress
+                )
+        );
+
+        Predicate<MouseEvent> primaryOnlyButton = e -> e.getButton() == MouseButton.PRIMARY && !e.isMiddleButtonDown() && !e.isSecondaryButtonDown();
+
+        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseDragDetectedTemplate = consume(
+                eventType(MouseEvent.DRAG_DETECTED).onlyIf(primaryOnlyButton),
+                (b, e) -> b.handlePrimaryOnlyDragDetected()
+        );
+
+        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseDragTemplate = sequence(
+                process(
+                        mouseDragged().onlyIf(primaryOnlyButton),
+                        StyledTextAreaBehavior::processPrimaryOnlyMouseDragged
+                ),
+                consume(
+                        mouseDragged(),
+                        StyledTextAreaBehavior::continueOrStopAutoScroll
+                )
+        );
+
+        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseReleasedTemplate = sequence(
+                process(
+                        EventPattern.mouseReleased().onlyIf(primaryOnlyButton),
+                        StyledTextAreaBehavior::processMouseReleased
+                ),
+                consume(
+                        mouseReleased(),
+                        (b, e) -> b.autoscrollTo.setValue(null)  // stop auto scroll
+                )
+        );
+
+        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseTemplate = sequence(
+                mousePressedTemplate, mouseDragDetectedTemplate, mouseDragTemplate, mouseReleasedTemplate
         );
 
         InputMapTemplate<StyledTextAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
@@ -190,7 +246,7 @@ class StyledTextAreaBehavior {
                 StyledTextAreaBehavior::showContextMenu
         );
 
-        EVENT_TEMPLATE = sequence(mouseEventTemplate, keyPressedTemplate, keyTypedTemplate, contextMenuEventTemplate);
+        EVENT_TEMPLATE = sequence(mouseTemplate, keyPressedTemplate, keyTypedTemplate, contextMenuEventTemplate);
     }
 
     /**
@@ -200,7 +256,7 @@ class StyledTextAreaBehavior {
         /** No dragging is happening. */
         NO_DRAG,
 
-        /** Mouse has been pressed, but drag has not been detected yet. */
+        /** Mouse has been pressed inside of selected text, but drag has not been detected yet. */
         POTENTIAL_DRAG,
 
         /** Drag in progress. */
@@ -392,40 +448,23 @@ class StyledTextAreaBehavior {
         menu.show(view, e.getScreenX() + xOffset, e.getScreenY() + yOffset);
     }
 
-    private void mousePressed(MouseEvent e) {
-        // don't respond if disabled
-        if(view.isDisabled()) {
-            return;
-        }
+    private void handleShiftPress(MouseEvent e) {
+        // ensure focus
+        view.requestFocus();
 
-        view.hideContextMenu();
+        CharacterHit hit = view.hit(e.getX(), e.getY());
 
-        if(e.getButton() == MouseButton.PRIMARY) {
-            // ensure focus
-            view.requestFocus();
-
-            CharacterHit hit = view.hit(e.getX(), e.getY());
-
-            if(e.isShiftDown()) {
-                // On Mac always extend selection,
-                // switching anchor and caret if necessary.
-                view.moveTo(
-                        hit.getInsertionIndex(),
-                        isMac ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
-            } else {
-                switch (e.getClickCount()) {
-                    case 1: firstLeftPress(hit); break;
-                    case 2: view.selectWord(); break;
-                    case 3: view.selectParagraph(); break;
-                    default: // do nothing
-                }
-            }
-
-            e.consume();
-        }
+        // On Mac always extend selection,
+        // switching anchor and caret if necessary.
+        view.moveTo(hit.getInsertionIndex(), isMac ? SelectionPolicy.EXTEND : SelectionPolicy.ADJUST);
     }
 
-    private void firstLeftPress(CharacterHit hit) {
+    private void handleFirstPrimaryPress(MouseEvent e) {
+        // ensure focus
+        view.requestFocus();
+
+        CharacterHit hit = view.hit(e.getX(), e.getY());
+
         view.clearTargetCaretOffset();
         IndexRange selection = view.getSelection();
         if(view.isEditable() &&
@@ -437,78 +476,73 @@ class StyledTextAreaBehavior {
             dragSelection = DragState.POTENTIAL_DRAG;
         } else {
             dragSelection = DragState.NO_DRAG;
-            view.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            view.getOnOutsideSelectionMousePress().accept(e);
         }
     }
 
-    private void dragDetected(MouseEvent e) {
-        if(dragSelection == DragState.POTENTIAL_DRAG) {
+    private void handleSecondPress(MouseEvent e) {
+        view.selectWord();
+    }
+
+    private void handleThirdPress(MouseEvent e) {
+        view.selectParagraph();
+    }
+
+    private void handlePrimaryOnlyDragDetected() {
+        if (dragSelection == DragState.POTENTIAL_DRAG) {
             dragSelection = DragState.DRAG;
         }
-        e.consume();
     }
 
-    private void mouseDragged(MouseEvent e) {
-        // don't respond if disabled
-        if(view.isDisabled()) {
-            return;
+    private Result processPrimaryOnlyMouseDragged(MouseEvent e) {
+        Point2D p = new Point2D(e.getX(), e.getY());
+        if(view.getLayoutBounds().contains(p)) {
+            dragTo(p);
         }
+        view.setAutoScrollOnDragDesired(true);
+        // autoScrollTo will be set in "continueOrStopAutoScroll(MouseEvent)"
+        return Result.PROCEED;
+    }
 
-        // only respond to primary button alone
-        if(e.getButton() != MouseButton.PRIMARY || e.isMiddleButtonDown() || e.isSecondaryButtonDown()) {
-            return;
+    private void continueOrStopAutoScroll(MouseEvent e) {
+        if (!view.isAutoScrollOnDragDesired()) {
+            autoscrollTo.setValue(null); // stops auto-scroll
         }
 
         Point2D p = new Point2D(e.getX(), e.getY());
         if(view.getLayoutBounds().contains(p)) {
-            dragTo(p);
             autoscrollTo.setValue(null); // stops auto-scroll
         } else {
             autoscrollTo.setValue(p);    // starts auto-scroll
         }
-
-        e.consume();
     }
 
-    private void dragTo(Point2D p) {
-        CharacterHit hit = view.hit(p.getX(), p.getY());
-
+    private void dragTo(Point2D point) {
         if(dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
-            view.displaceCaret(hit.getInsertionIndex());
+            view.getOnSelectionDrag().accept(point);
         } else {
-            view.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+            view.getOnNewSelectionDrag().accept(point);
         }
     }
 
-    private void mouseReleased(MouseEvent e) {
-        // stop auto-scroll
-        autoscrollTo.setValue(null);
-
-        // don't respond if disabled
-        if(view.isDisabled()) {
-            return;
+    private Result processMouseReleased(MouseEvent e) {
+        if (view.isDisabled()) {
+            return Result.IGNORE;
         }
 
         switch(dragSelection) {
             case POTENTIAL_DRAG:
-                // drag didn't happen, position caret
-                CharacterHit hit = view.hit(e.getX(), e.getY());
-                view.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-                break;
+                // selection was not dragged, but clicked
+                view.getOnInsideSelectionMousePressRelease().accept(e);
             case DRAG:
-                // only handle drags if mouse was released inside of view
-                if (view.getLayoutBounds().contains(e.getX(), e.getY())) {
-                    // move selection to the target position
-                    CharacterHit h = view.hit(e.getX(), e.getY());
-                    view.getOnSelectionDrop().accept(h.getInsertionIndex());
-                    // do nothing, handled by mouseDragReleased
-                }
+                view.getOnSelectionDrop().accept(e);
             case NO_DRAG:
-                // do nothing, caret already repositioned in mousePressed
+                // do nothing, caret already repositioned in "handle[Number]Press(MouseEvent)"
         }
         dragSelection = DragState.NO_DRAG;
-        e.consume();
+
+        return Result.PROCEED;
     }
 
     private static Point2D project(Point2D p, Bounds bounds) {
