@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javafx.collections.ObservableList;
 import org.reactfx.EventSource;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
@@ -24,9 +23,6 @@ import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 
-/**
- * Provides an implementation of {@link EditableStyledDocument}
- */
 class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDocument<PS, SEG, S> {
 
     private class ParagraphList

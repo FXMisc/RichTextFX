@@ -9,9 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
-import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.NavigationActions;
-import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
