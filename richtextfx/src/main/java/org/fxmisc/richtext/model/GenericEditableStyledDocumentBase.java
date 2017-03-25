@@ -24,9 +24,6 @@ import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 
-/**
- * Provides an implementation of {@link EditableStyledDocument}
- */
 class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDocument<PS, SEG, S> {
 
     private class ParagraphList
