@@ -1,19 +1,12 @@
 package org.fxmisc.richtext.model;
 
 import com.nitorcreations.junit.runners.NestedRunner;
-import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.stage.Stage;
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.InlineCssTextArea;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.framework.junit.ApplicationTest;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -30,22 +23,7 @@ public class StyledTextAreaBehaviorTest {
 
     private static final boolean WINDOWS_OS;
 
-    public class ContextMenuTests extends ApplicationTest {
-
-        // TODO: move this inside start method to insure instantiation occurs on JavaFX App Thread
-        public InlineCssTextArea area = new InlineCssTextArea();
-
-        @Override
-        public void start(Stage stage) throws Exception {
-            area.setContextMenu(new ContextMenu(new MenuItem("A Menu Item")));
-            // offset needs to be 5 to prevent test failures
-            area.setContextMenuXOffset(5);
-            area.setContextMenuYOffset(5);
-
-            VirtualizedScrollPane<InlineCssTextArea> pane = new VirtualizedScrollPane<>(area);
-            stage.setScene(new Scene(pane, 500, 500));
-            stage.show();
-        }
+    public class ContextMenuTests extends InlineCssTextAreaAppTest {
 
         @Test
         public void clickingSecondaryShowsContextMenu() {
@@ -53,7 +31,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             // then
-            area.getContextMenu().isShowing();
+            assertTrue(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -63,7 +41,7 @@ public class StyledTextAreaBehaviorTest {
             press(MouseButton.SECONDARY);
 
             // then
-            area.getContextMenu().isShowing();
+            assertTrue(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -72,7 +50,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             press(MouseButton.PRIMARY);
-            assert !area.getContextMenu().isShowing();
+            assertFalse(area.getContextMenu().isShowing());
         }
 
         @Test
@@ -81,7 +59,7 @@ public class StyledTextAreaBehaviorTest {
             rightClickOn(area);
 
             press(MouseButton.MIDDLE);
-            assert !area.getContextMenu().isShowing();
+            assertFalse(area.getContextMenu().isShowing());
         }
 
         @Ignore // push(CONTEXT_MENU) does not create a ContextMenuEvent properly, causing test to fail
