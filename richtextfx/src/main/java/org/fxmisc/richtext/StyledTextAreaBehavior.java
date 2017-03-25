@@ -398,9 +398,7 @@ class StyledTextAreaBehavior {
             return;
         }
 
-        if (view.isContextMenuPresent() && view.getContextMenu().isShowing()) {
-            view.getContextMenu().hide();
-        }
+        view.hideContextMenu();
 
         if(e.getButton() == MouseButton.PRIMARY) {
             // ensure focus

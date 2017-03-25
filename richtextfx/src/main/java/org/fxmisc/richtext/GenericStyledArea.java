@@ -1147,6 +1147,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
+    /**
+     * Hides the area's context menu if it is not {@code null} and it is {@link ContextMenu#isShowing() showing}.
+     */
+    public final void hideContextMenu() {
+        ContextMenu menu = getContextMenu();
+        if (menu != null && menu.isShowing()) {
+            menu.hide();
+        }
+    }
+
     @Override
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
