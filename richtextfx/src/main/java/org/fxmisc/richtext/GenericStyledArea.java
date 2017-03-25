@@ -603,7 +603,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 if (indexOfChange < caretPosition) {
                     // if caret is within the changed content, move it to indexOfChange
                     // otherwise offset it by changeLength
-                    positionCaret(
+                    displaceCaret(
                             caretPosition < endOfChange
                                     ? indexOfChange
                                     : caretPosition + changeLength
@@ -1134,6 +1134,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
+    /**
+     * Displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the selection's {@link #getAnchor() anchor} or the {@link #getSelection() selection}.
+     * Do not confuse this method with {@link #moveTo(int)}, which is the normal way of moving the caret.
+     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
+     * as opposed to always being at the boundary. Use with care.
+     */
+    public void displaceCaret(int pos) {
+        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
+            internalCaretPosition.setValue(pos);
+        }
+    }
+
     @Override
     public void setStyle(int from, int to, S style) {
         content.setStyle(from, to, style);
@@ -1446,18 +1459,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Guard suspend(Suspendable... suspendables) {
         return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
-    }
-
-    /**
-     * Positions only the caret. Doesn't move the anchor and doesn't change
-     * the selection. Can be used to achieve the special case of positioning
-     * the caret outside or inside the selection, as opposed to always being
-     * at the boundary. Use with care.
-     */
-    void positionCaret(int pos) {
-        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.setValue(pos);
-        }
     }
 
     void clearTargetCaretOffset() {

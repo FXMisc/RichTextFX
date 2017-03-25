@@ -477,7 +477,7 @@ class StyledTextAreaBehavior {
 
         if(dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
-            view.positionCaret(hit.getInsertionIndex());
+            view.displaceCaret(hit.getInsertionIndex());
         } else {
             view.moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
         }
