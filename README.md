@@ -29,7 +29,7 @@ For a greater explanation of RichTextFX, its design principles, how it works, an
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
   - [0.6.10](http://fxmisc.github.io/richtext/javadoc/0.6.10/org/fxmisc/richtext/package-summary.html)
-  - [0.7-M3](http://fxmisc.github.io/richtext/javadoc/0.7-M3/org/fxmisc/richtext/package-summary.html)
+  - [0.7-M4](http://fxmisc.github.io/richtext/javadoc/0.7-M4/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -253,31 +253,31 @@ Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/downl
 
 ### Milestone release
 
-Milestone version of the upcoming release is 0.7-M3.
+Milestone version of the upcoming release is 0.7-M4.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.7-M3  |
+| org.fxmisc.richtext | richtextfx  | 0.7-M4  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M3'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M4'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M3"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M4"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M3/richtextfx-0.7-M3.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M3/richtextfx-fat-0.7-M3.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M4/richtextfx-0.7-M4.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M4/richtextfx-fat-0.7-M4.jar) and place it on your classpath.
 
 
 ### Snapshot releases
