@@ -122,6 +122,10 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     @Override
     public void replace(int start, int end, StyledDocument<PS, SEG, S> replacement) {
         ensureValidRange(start, end);
+        if (replacement.length() == 0 && start == end) {
+            // ignore a replacement that doesn't do anything
+            return;
+        }
         doc.replace(start, end, ReadOnlyStyledDocument.from(replacement)).exec(this::update);
     }
 
