@@ -357,4 +357,23 @@ public class StyledTextAreaBehaviorTest {
 
     }
 
+    public class KeyboardBehaviorTests extends InlineCssTextAreaAppTest {
+
+        @Test
+        public void typingALetterMovesTheCaretAfterThatInsertedLetter() {
+            interact(() -> {
+                area.moveTo(0);
+                area.clear();
+            });
+
+            String userInputtedText = "some user-inputted text";
+            clickOn(area).write(userInputtedText);
+
+            assertEquals(userInputtedText, area.getText());
+            assertEquals(userInputtedText.length(), area.getCaretPosition());
+            assertTrue(area.getSelectedText().isEmpty());
+        }
+
+    }
+
 }
