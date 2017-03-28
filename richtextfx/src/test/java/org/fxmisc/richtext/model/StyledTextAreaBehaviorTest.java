@@ -84,6 +84,7 @@ public class StyledTextAreaBehaviorTest {
                 interact(() -> {
                     area.setDisable(true);
                     area.replaceText("When Area Is Disabled Test: Some text goes here");
+                    area.moveTo(0);
                 });
             }
 
@@ -136,6 +137,8 @@ public class StyledTextAreaBehaviorTest {
 
             @Test
             public void releasingTheMouseAfterDragDoesNothing() {
+                assertEquals(0, area.getCaretPosition());
+
                 moveTo(firstLineOfArea())
                         .press(MouseButton.PRIMARY)
                         .dropBy(20, 0);
@@ -155,7 +158,10 @@ public class StyledTextAreaBehaviorTest {
 
                 @Before
                 public void setup() {
-                    interact(() -> area.replaceText(firstParagraph));
+                    interact(() -> {
+                        area.replaceText(firstParagraph);
+                        area.moveTo(0);
+                    });
                 }
 
                 @Test
@@ -353,6 +359,25 @@ public class StyledTextAreaBehaviorTest {
 
             }
 
+        }
+
+    }
+
+    public class KeyboardBehaviorTests extends InlineCssTextAreaAppTest {
+
+        @Test
+        public void typingALetterMovesTheCaretAfterThatInsertedLetter() {
+            interact(() -> {
+                area.moveTo(0);
+                area.clear();
+            });
+
+            String userInputtedText = "some user-inputted text";
+            clickOn(area).write(userInputtedText);
+
+            assertEquals(userInputtedText, area.getText());
+            assertEquals(userInputtedText.length(), area.getCaretPosition());
+            assertTrue(area.getSelectedText().isEmpty());
         }
 
     }
