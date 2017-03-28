@@ -1300,6 +1300,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public void replace(int start, int end, StyledDocument<PS, SEG, S> replacement) {
         content.replace(start, end, replacement);
+
+        int newCaretPos = start + replacement.length();
+        selectRange(newCaretPos, newCaretPos);
     }
 
     @Override
