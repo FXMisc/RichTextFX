@@ -10,12 +10,16 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
         INSERTION,
         /** Indicates that the change will delete something but not insert anything */
         DELETION,
-        /** Indicates that the change will remove something and insert something as its replacement */
-        REPLACEMENT
+        /** Indicates that the change will remove something and insert something as its replacement.
+         * For {@link PlainTextChange}s, the replacement will only be content.
+         * For {@link RichTextChange}s, the replacement may only be the style, only the content, or a mix of both.
+         * Style changes may change the style of the paragraph's content or a non-empty {@link Paragraph}
+         * ({@code p.length() > 0}) */
+        REPLACEMENT,
+        /** Indicates that the paragraph style of an empty {@link Paragraph} ({@code p.length() == 0}) was changed */
+        RESTYLED_PARAGRAPH
     }
 
-    private ChangeType type;
-    public final ChangeType getType() { return type; }
 
     protected final int position;
     protected final S removed;
@@ -25,18 +29,6 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
         this.position = position;
         this.removed = removed;
         this.inserted = inserted;
-
-        if (insertedLength() == 0) {
-            if (removedLength() == 0) {
-                throw new IllegalStateException("Cannot get the type of a change that neither inserts nor deletes anything.");
-            } else {
-                type = ChangeType.DELETION;
-            }
-        } else if (removedLength() == 0) {
-            type = ChangeType.INSERTION;
-        } else {
-            type = ChangeType.REPLACEMENT;
-        }
     }
 
     public int getPosition() { return position; };
@@ -46,6 +38,7 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     public int getRemovalEnd() { return position + removedLength(); }
     public int getInsertionEnd() { return position + insertedLength(); }
 
+    public abstract ChangeType getType();
     protected abstract int removedLength();
     protected abstract int insertedLength();
     protected abstract S concat(S a, S b);
@@ -61,7 +54,7 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
      * {@code null} otherwise.
      */
     public Optional<Self> mergeWith(Self latter) {
-        if(this.getType() != ChangeType.REPLACEMENT
+        if((this.getType() == ChangeType.INSERTION || this.getType() == ChangeType.DELETION)
                 && this.getType() == latter.getType()
                 && this.getInsertionEnd() == latter.position) {
             S removedText = concat(this.removed, latter.removed);
@@ -94,7 +87,7 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
         return
                 this.getClass().getSimpleName() + "{\n" +
                 "\tposition: "  + position  + "\n" +
-                "\ttype: "      + type      + "\n" +
+                "\ttype: "      + getType() + "\n" +
                 "\tremoved: "   + removed   + "\n" +
                 "\tinserted: "  + inserted  + "\n" +
                 "}";
