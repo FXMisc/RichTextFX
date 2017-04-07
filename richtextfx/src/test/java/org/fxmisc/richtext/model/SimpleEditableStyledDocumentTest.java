@@ -94,4 +94,21 @@ public class SimpleEditableStyledDocumentTest {
         replaceText(document, 0, 0, "X\r\nY");
         assertEquals(document.getText().length(), document.getLength());
     }
+
+    @Test
+    public void testSetEmptyParagraphStyle() {
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
+        String newParStyle = "new style";
+        document.setParagraphStyle(0, newParStyle);
+        assertEquals(newParStyle, document.getParagraphStyle(0));
+    }
+
+    @Test
+    public void testSetNonEmptyParagraphStyle() {
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
+        replaceText(document, 0, 0, "some text");
+        String newParStyle = "new style";
+        document.setParagraphStyle(0, newParStyle);
+        assertEquals(newParStyle, document.getParagraphStyle(0));
+    }
 }
