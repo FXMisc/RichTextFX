@@ -13,6 +13,30 @@ import javafx.scene.control.IndexRange;
 
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 
+/**
+ * This is one Paragraph of the document. Depending on whether the text is wrapped,
+ * it corresponds to a single line or it can also span multiple lines. A Paragraph
+ * contains of a list of SEG objects which make up the individual segments of the
+ * Paragraph. By providing a specific segment object and an associated segment
+ * operations object, all required data and the necessary operations on this data
+ * for a single segment can be provided. For example, {@link StyledText} is a segment
+ * type which is used in {@link org.fxmisc.richtext.StyledTextArea}, a text area which can render simple
+ * text only (which is already sufficient to implement all kinds of code editors).
+ *
+ * <p>For more complex requirements (for example, when images shall be part of the
+ * document) a different segment type must be provided (which can make use of
+ * {@code StyledText<S>} for the text part and add another segment type for images).
+ * <b>Note that Paragraph is an immutable class</b> - to modify a Paragraph, a new
+ * Paragraph object must be created. Paragraph itself contains some methods which
+ * take care of this, such as concat(), which appends some Paragraph to the current
+ * one and returns a new Paragraph.</p>
+ *
+ * @param <PS> The type of the paragraph style.
+ * @param <SEG> The type of the content segments in the paragraph (e.g. {@link StyledText}).
+ *              Every paragraph, even an empty paragraph, must have at least one SEG object
+ *             (even if that SEG object itself represents an empty segment).
+ * @param <S> The type of the style of individual segments.
+ */
 public final class Paragraph<PS, SEG, S> {
 
     @SafeVarargs
@@ -166,6 +190,15 @@ public final class Paragraph<PS, SEG, S> {
         return trim(start).concat(subSequence(end));
     }
 
+    /**
+     * Restyles every segment in the paragraph to have the given style.
+     *
+     * Note: because Paragraph is immutable, this method returns a new Paragraph.
+     * The current Paragraph is unchanged.
+     *
+     * @param style The new style for each segment in the paragraph.
+     * @return The new paragraph with the restyled segments.
+     */
     public Paragraph<PS, SEG, S> restyle(S style) {
         List<SEG> segs = new ArrayList<>();
         Iterator<SEG> it = segments.iterator();
@@ -218,6 +251,16 @@ public final class Paragraph<PS, SEG, S> {
         return left.concat(newMiddle).concat(right);
     }
 
+    /**
+     * Creates a new Paragraph which has the same contents as the current Paragraph,
+     * but the given paragraph style.
+     *
+     * Note that because Paragraph is immutable, a new Paragraph is returned.
+     * Despite the setX name, the current object is unchanged.
+     *
+     * @param paragraphStyle The new paragraph style
+     * @return A new paragraph with the same segment contents, but a new paragraph style.
+     */
     public Paragraph<PS, SEG, S> setParagraphStyle(PS paragraphStyle) {
         return new Paragraph<>(paragraphStyle, segmentOps, segments);
     }
@@ -333,6 +376,10 @@ public final class Paragraph<PS, SEG, S> {
                 "]";
     }
 
+    /**
+     * Two paragraphs are defined to be equal if they have the same style (as defined by
+     * PS.equals) and the same list of segments (as defined by SEG.equals).
+     */
     @Override
     public boolean equals(Object other) {
         if(other instanceof Paragraph) {

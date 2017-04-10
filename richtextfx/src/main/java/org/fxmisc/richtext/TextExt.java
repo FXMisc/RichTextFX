@@ -17,6 +17,18 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Text;
 
+/**
+ * A class which adds some more styleable properties to JavaFX's {@link Text} class.
+ *
+ * The extra items can be styled using the properties (and accessors/mutators) or via CSS.
+ * Each property is documented with its CSS property.  Each CSS property begins with the "-rtfx"
+ * prefix.
+ *
+ * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+ * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+ * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+ * the value of {@link #underlineProperty()}.</p>
+ */
 public class TextExt extends Text {
 	
     private final StyleableObjectProperty<Paint> backgroundColor = new StyleableObjectProperty<Paint>(null) {
@@ -133,6 +145,18 @@ public class TextExt extends Text {
         backgroundColor.set(fill);
     }
 
+    /**
+     * The background color of the section of text.  By default, JavaFX doesn't
+     * support a background for Text (as it is a Shape item), but RichTextFX
+     * does support drawing a different background for different sections of text.
+     *
+     * <p>Note that this is actually a Paint type, so you can specify gradient or image fills
+     * rather than a flat colour.  But due to line wrapping, it's possible that
+     * the fill may be used multiple times on separate lines even for the same
+     * segment of text.</p>
+     *
+     * Can be styled from CSS using the "-rtfx-background-color" property.
+     */
     public ObjectProperty<Paint> backgroundColorProperty() {
         return backgroundColor;
     }
@@ -140,21 +164,71 @@ public class TextExt extends Text {
     // Color of the text underline (-fx-underline is already defined by JavaFX)
     public Paint getUnderlineColor() { return underlineColor.get(); }
     public void setUnderlineColor(Paint fill) { underlineColor.set(fill); }
+
+    /**
+     * The underline color of the section of text.
+     *
+     * <p>Note that this is actually a Paint type, so you can specify gradient or image fills
+     * rather than a flat colour.  But due to line wrapping, it's possible that
+     * the fill may be used multiple times on separate lines even for the
+     * same segment of text.</p>
+     *
+     * Can be styled from CSS using the "-rtfx-underline-color" property
+     * (not to be confused with JavaFX's separate "-fx-underline" property).
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
     public ObjectProperty<Paint> underlineColorProperty() { return underlineColor; }
 
     // Width of the text underline
     public Number getUnderlineWidth() { return underlineWidth.get(); }
     public void setUnderlineWidth(Number width) { underlineWidth.set(width); }
+
+    /**
+     * The width of the underline for a section of text.  If null or zero,
+     * the underline will not be drawn.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-width" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
     public ObjectProperty<Number> underlineWidthProperty() { return underlineWidth; }
 
     // Dash array for the text underline 
     public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
     public void setUnderlineDashArray(Number[] dashArray) { underlineDashArray.set(dashArray); }
+
+    /**
+     * The dash array used for drawing the underline for a section of text.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-dash-array" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
     public ObjectProperty<Number[]> underlineDashArrayProperty() { return underlineDashArray; }
 
     // The end cap style of each dash in a dashed underline
     public StrokeLineCap getUnderlineCap() { return underlineCap.get(); }
     public void setUnderlineCap(StrokeLineCap cap) { underlineCap.set(cap); }
+    /**
+     * The end cap style used for drawing each dash in a dashed underline for a section of text.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-cap" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
     public ObjectProperty<StrokeLineCap> underlineCapProperty() { return underlineCap; }
 
     private static class StyleableProperties {
