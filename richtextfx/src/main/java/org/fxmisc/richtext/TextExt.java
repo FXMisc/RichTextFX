@@ -18,9 +18,16 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Text;
 
 /**
- * A class which adds some more styleable properties to JavaFX's Text class.
+ * A class which adds some more styleable properties to JavaFX's {@link Text} class.
  *
- * They can be styled using the properties (and accessors/mutators) or via CSS.
+ * The extra items can be styled using the properties (and accessors/mutators) or via CSS.
+ * Each property is documented with its CSS property.  Each CSS property begins with the "-rtfx"
+ * prefix.
+ *
+ * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+ * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+ * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+ * the value of {@link #underlineProperty()}.</p>
  */
 public class TextExt extends Text {
 	
@@ -168,6 +175,11 @@ public class TextExt extends Text {
      *
      * Can be styled from CSS using the "-rtfx-underline-color" property
      * (not to be confused with JavaFX's separate "-fx-underline" property).
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
      */
     public ObjectProperty<Paint> underlineColorProperty() { return underlineColor; }
 
@@ -179,7 +191,12 @@ public class TextExt extends Text {
      * The width of the underline for a section of text.  If null or zero,
      * the underline will not be drawn.
      *
-     * Can be styled from CSS using the "-rtfx-underline-width" property
+     * Can be styled from CSS using the "-rtfx-underline-width" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
      */
     public ObjectProperty<Number> underlineWidthProperty() { return underlineWidth; }
 
@@ -191,6 +208,11 @@ public class TextExt extends Text {
      * The dash array used for drawing the underline for a section of text.
      *
      * Can be styled from CSS using the "-rtfx-underline-dash-array" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
      */
     public ObjectProperty<Number[]> underlineDashArrayProperty() { return underlineDashArray; }
 
@@ -201,6 +223,11 @@ public class TextExt extends Text {
      * The end cap style used for drawing each dash in a dashed underline for a section of text.
      *
      * Can be styled from CSS using the "-rtfx-underline-cap" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
      */
     public ObjectProperty<StrokeLineCap> underlineCapProperty() { return underlineCap; }
 

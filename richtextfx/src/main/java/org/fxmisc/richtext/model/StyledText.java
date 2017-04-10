@@ -10,7 +10,7 @@ import java.util.Optional;
  * A String with a single style of type S.
  *
  * This is a simple class suitable for use as the SEG type in the other classes
- * such as Paragraph, GenericStyledArea, StyledDocument, etc.
+ * such as {@link Paragraph}, {@link org.fxmisc.richtext.GenericStyledArea}, {@link StyledDocument}, etc.
  *
  * This class is immutable.
  *
@@ -20,7 +20,7 @@ public class StyledText<S>  {
 
     /**
      * An implementation of TextOps for StyledText.  Useful for passing to the constructor
-     * of GenericStyledArea and similar classes if you are using this class as the SEG type.
+     * of {@link org.fxmisc.richtext.GenericStyledArea} and similar classes if you are using this class as the SEG type.
      */
     public static <S> TextOps<StyledText<S>, S> textOps() {
         return new TextOps<StyledText<S>, S>() {
@@ -85,7 +85,7 @@ public class StyledText<S>  {
      * A codec which allows serialisation of this class to/from a data stream.
      *
      * Because S may be any type, you must pass a codec for it.  If your style
-     * is String or Color, you can use Codec.STRING_CODEC/Codec.COLOR_CODEC respectively.
+     * is String or Color, you can use {@link Codec#STRING_CODEC}/{@link Codec#COLOR_CODEC} respectively.
      */
     public static <S> Codec<StyledText<S>> codec(Codec<S> styleCodec) {
         return new Codec<StyledText<S>>() {
@@ -128,8 +128,6 @@ public class StyledText<S>  {
 
     /**
      * Creates a new StyledText with the same content but the given style.
-     *
-     * <p>This class is unmodified.</p>
      */
     public StyledText<S> setStyle(S style) {
         return new StyledText<>(text, style);

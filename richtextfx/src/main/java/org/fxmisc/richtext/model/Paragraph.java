@@ -19,8 +19,8 @@ import org.fxmisc.richtext.model.TwoDimensional.Position;
  * contains of a list of SEG objects which make up the individual segments of the
  * Paragraph. By providing a specific segment object and an associated segment
  * operations object, all required data and the necessary operations on this data
- * for a single segment can be provided. For example, {@code StyledText<S>} is a segment
- * type which is used in the StyledTextArea, a text area which can render simple
+ * for a single segment can be provided. For example, {@link StyledText<S>} is a segment
+ * type which is used in the {@link org.fxmisc.richtext.StyledTextArea}, a text area which can render simple
  * text only (which is already sufficient to implement all kinds of code editors).
  *
  * <p>For more complex requirements (for example, when images shall be part of the
@@ -32,7 +32,9 @@ import org.fxmisc.richtext.model.TwoDimensional.Position;
  * one and returns a new Paragraph.</p>
  *
  * @param <PS> The type of the paragraph style.
- * @param <SEG> The type of the content segments in the paragraph (e.g. {@code StyledText<S>})
+ * @param <SEG> The type of the content segments in the paragraph (e.g. {@link StyledText<S>}).
+ *              Every paragraph, even an empty paragraph, must have at least one SEG object
+ *             (even if that SEG object itself represents an empty segment).
  * @param <S> The type of the style of individual segments.
  */
 public final class Paragraph<PS, SEG, S> {
