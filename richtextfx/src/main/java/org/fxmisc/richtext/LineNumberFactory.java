@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import java.util.function.IntFunction;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Background;
@@ -29,7 +30,7 @@ public class LineNumberFactory implements IntFunction<Node> {
             new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
     public static IntFunction<Node> get(GenericStyledArea<?, ?, ?> area) {
-        return get(area, digits -> "%0" + digits + "d");
+        return get(area, digits -> "%1$" + digits + "s");
     }
 
     public static IntFunction<Node> get(
@@ -57,6 +58,7 @@ public class LineNumberFactory implements IntFunction<Node> {
         lineNo.setBackground(DEFAULT_BACKGROUND);
         lineNo.setTextFill(DEFAULT_TEXT_FILL);
         lineNo.setPadding(DEFAULT_INSETS);
+        lineNo.setAlignment(Pos.TOP_RIGHT);
         lineNo.getStyleClass().add("lineno");
 
         // bind label's text to a Val that stops observing area's paragraphs
