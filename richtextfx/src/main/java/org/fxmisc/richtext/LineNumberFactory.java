@@ -30,7 +30,7 @@ public class LineNumberFactory implements IntFunction<Node> {
             new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
     public static IntFunction<Node> get(GenericStyledArea<?, ?, ?> area) {
-        return get(area, digits -> "%0" + digits + "d");
+        return get(area, digits -> "%1$" + digits + "s");
     }
 
     public static IntFunction<Node> get(
