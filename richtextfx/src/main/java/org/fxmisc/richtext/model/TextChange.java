@@ -55,6 +55,14 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     protected abstract Self create(int position, S removed, S inserted);
 
     /**
+     * Returns true if this change is an identity change: applying it does nothing as it removes what it inserts.
+     * See also {@link java.util.function.Function#identity()}
+     */
+    public final boolean isIdentity() {
+        return removed.equals(inserted);
+    }
+
+    /**
      * Merges this change with the given change only if the end of this change's inserted text equals the
      * latter's position and both are either {@link MergeType#INSERTION} or {@link MergeType#DELETION} changes.
      *
