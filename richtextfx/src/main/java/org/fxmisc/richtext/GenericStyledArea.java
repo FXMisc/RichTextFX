@@ -75,6 +75,7 @@ import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.TextChange;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
@@ -1565,13 +1566,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
         Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
         BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
-        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge);
+        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge, TextChange::isIdentity);
     }
 
     private UndoManager createRichUndoManager(UndoManagerFactory factory) {
         Consumer<RichTextChange<PS, SEG, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
         BiFunction<RichTextChange<PS, SEG, S>, RichTextChange<PS, SEG, S>, Optional<RichTextChange<PS, SEG, S>>> merge = RichTextChange<PS, SEG, S>::mergeWith;
-        return factory.create(richChanges(), RichTextChange::invert, apply, merge);
+        return factory.create(richChanges(), RichTextChange::invert, apply, merge, TextChange::isIdentity);
     }
 
     private Guard suspend(Suspendable... suspendables) {

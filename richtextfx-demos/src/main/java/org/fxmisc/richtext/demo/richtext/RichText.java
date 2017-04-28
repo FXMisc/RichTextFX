@@ -130,8 +130,8 @@ public class RichText extends Application {
         textColorPicker.valueProperty().addListener((o, old, color) -> updateTextColor(color));
         backgroundColorPicker.valueProperty().addListener((o, old, color) -> updateBackgroundColor(color));
 
-        undoBtn.disableProperty().bind(Bindings.not(area.undoAvailableProperty()));
-        redoBtn.disableProperty().bind(Bindings.not(area.redoAvailableProperty()));
+        undoBtn.disableProperty().bind(area.undoAvailableProperty().map(x -> !x));
+        redoBtn.disableProperty().bind(area.redoAvailableProperty().map(x -> !x));
 
         BooleanBinding selectionEmpty = new BooleanBinding() {
             { bind(area.selectionProperty()); }
