@@ -48,6 +48,40 @@ public class TextExt extends Text {
         }
     };
 
+    private final StyleableObjectProperty<Paint> backgroundStroke = new StyleableObjectProperty<Paint>(null) {
+        @Override
+        public Object getBean() {
+            return TextExt.this;
+        }
+
+        @Override
+        public String getName() {
+            return "backgroundStroke";
+        }
+
+        @Override
+        public CssMetaData<TextExt, Paint> getCssMetaData() {
+            return StyleableProperties.BACKGROUND_STROKE;
+        }
+    };
+
+    private final StyleableObjectProperty<Number> backgroundStrokeWidth = new StyleableObjectProperty<Number>(1.0) {
+        @Override
+        public Object getBean() {
+            return TextExt.this;
+        }
+
+        @Override
+        public String getName() {
+            return "backgroundStrokeWidth";
+        }
+
+        @Override
+        public CssMetaData<TextExt, Number> getCssMetaData() {
+            return StyleableProperties.BACKGROUND_STROKE_WIDTH;
+        }
+    };
+
     private final StyleableObjectProperty<Paint> underlineColor = new StyleableObjectProperty<Paint>(null) {
         @Override
         public Object getBean() {
@@ -128,6 +162,8 @@ public class TextExt extends Text {
 
         // Add new properties
         styleables.add(StyleableProperties.BACKGROUND_COLOR);
+        styleables.add(StyleableProperties.BACKGROUND_STROKE);
+        styleables.add(StyleableProperties.BACKGROUND_STROKE_WIDTH);
         styleables.add(StyleableProperties.UNDERLINE_COLOR);
         styleables.add(StyleableProperties.UNDERLINE_WIDTH);
         styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
@@ -160,6 +196,51 @@ public class TextExt extends Text {
     public ObjectProperty<Paint> backgroundColorProperty() {
         return backgroundColor;
     }
+
+    public Paint getBackgroundStroke() {
+        return backgroundStroke.get();
+    }
+
+    public void setBackgroundStroke(Paint fill) {
+        backgroundStroke.set(fill);
+    }
+
+    /**
+     * The background stroke color of the section of text.  By default, JavaFX doesn't
+     * support a background for Text (as it is a Shape item), but RichTextFX
+     * does support drawing a different background for different sections of text.
+     *
+     * <p>The background is drawn as a single cohesive shape for pieces of text
+     * with identical backgrounds (by comparing segment styles).  If you have
+     * adjacent pieces of text with different segment styles, the backgrounds will
+     * be drawn separately (even if they have the same resulting colours), so
+     * you will get the stroke drawn at the boundaries between the segments.</p>
+     *
+     * <p>Note that this is actually a Paint type, so you can specify gradient or image fills
+     * rather than a flat colour.  But due to line wrapping, it's possible that
+     * the fill may be used multiple times on separate lines even for the same
+     * segment of text.</p>
+     *
+     * Can be styled from CSS using the "-rtfx-background-stroke" property.
+     */
+    public ObjectProperty<Paint> backgroundStrokeProperty() {
+        return backgroundStroke;
+    }
+
+    // Width of the text underline
+    public Number getBackgroundStrokeWidth() { return backgroundStrokeWidth.get(); }
+    public void setBackgroundStrokeWidth(Number width) { backgroundStrokeWidth.set(width); }
+
+    /**
+     * The width of the background stroke.  The background stroke will only be drawn
+     * if backgroundStrokeProperty() (which determines the color) has a non-null value.
+     * See {@link #backgroundStrokeProperty()} for more details.
+     *
+     * Can be styled from CSS using the "-rtfx-background-stroke-width" property.
+     */
+    public ObjectProperty<Number> backgroundStrokeWidthProperty() { return backgroundStrokeWidth; }
+
+
 
     // Color of the text underline (-fx-underline is already defined by JavaFX)
     public Paint getUnderlineColor() { return underlineColor.get(); }
@@ -245,6 +326,37 @@ public class TextExt extends Text {
             @Override
             public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
                 return node.backgroundColor;
+            }
+        };
+
+        private static final CssMetaData<TextExt, Paint> BACKGROUND_STROKE = new CssMetaData<TextExt, Paint>(
+                "-rtfx-background-stroke",
+                StyleConverter.getPaintConverter(),
+                Color.TRANSPARENT) {
+            @Override
+            public boolean isSettable(TextExt node) {
+                return !node.backgroundStroke.isBound();
+            }
+
+            @Override
+            public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
+                return node.backgroundStroke;
+            }
+        };
+
+        private static final CssMetaData<TextExt, Number> BACKGROUND_STROKE_WIDTH = new CssMetaData<TextExt, Number>(
+                "-rtfx-background-stroke-width",
+                StyleConverter.getSizeConverter(),
+                0) {
+
+            @Override
+            public boolean isSettable(TextExt node) {
+                return !node.backgroundStrokeWidth.isBound();
+            }
+
+            @Override
+            public StyleableProperty<Number> getStyleableProperty(TextExt node) {
+                return node.backgroundStrokeWidth;
             }
         };
 
