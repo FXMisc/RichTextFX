@@ -1,0 +1,100 @@
+/**
+ * SyntaxHighlighter
+ * http://alexgorbatchev.com/SyntaxHighlighter
+ *
+ * SyntaxHighlighter is donationware. If you are using it, please donate.
+ * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
+ *
+ * @version
+ * 3.0.83 (July 02 2010)
+ * 
+ * @copyright
+ * Copyright (C) 2004-2010 Alex Gorbatchev.
+ *
+ * @license
+ * Dual licensed under the MIT and GPL licenses.
+ */
+.styled-text-area {
+  -fx-background-color: white ;
+}
+.styled-text-area .line.alt1 {
+  -fx-background-color: white ;
+}
+.styled-text-area .line.alt2 {
+  -fx-background-color: white ;
+}
+.styled-text-area .line.highlighted.alt1, .styled-text-area .line.highlighted.alt2 {
+  -fx-background-color: #c3defe ;
+}
+.styled-text-area .line.highlighted.number {
+  -fx-fill: white ;
+}
+.styled-text-area .gutter {
+  -fx-fill: #787878 ;
+}
+.styled-text-area .gutter .line.highlighted {
+  -fx-background-color: #d4d0c8 ;
+  -fx-fill: white ;
+}
+.styled-text-area.collapsed .toolbar {
+  -fx-fill: #3f5fbf ;
+  -fx-background-color: white ;
+}
+.styled-text-area .toolbar {
+  -fx-fill: #a0a0a0 ;
+  -fx-background-color: #d4d0c8 ;
+}
+.styled-text-area .plain {
+  -fx-fill: black ;
+}
+.styled-text-area .comments {
+  -fx-fill: #3f5fbf ;
+}
+.styled-text-area .string {
+  -fx-fill: #2a00ff ;
+}
+.styled-text-area .keyword {
+  -fx-font-weight: bold ;
+  -fx-fill: #7f0055 ;
+}
+.styled-text-area .preprocessor {
+  -fx-fill: #646464 ;
+}
+.styled-text-area .variable {
+  -fx-fill: #aa7700 ;
+}
+.styled-text-area .value {
+  -fx-fill: #009900 ;
+}
+.styled-text-area .functions {
+  -fx-fill: #ff1493 ;
+}
+.styled-text-area .constants {
+  -fx-fill: #0066cc ;
+}
+.styled-text-area .script {
+  -fx-font-weight: bold ;
+  -fx-fill: #7f0055 ;
+  -fx-background-color: none ;
+}
+.styled-text-area .color1 {
+  -fx-fill: gray ;
+}
+.styled-text-area .color2 {
+  -fx-fill: #ff1493 ;
+}
+.styled-text-area .color3 {
+  -fx-fill: red ;
+}
+
+.styled-text-area .xml .keyword {
+  -fx-fill: #3f7f7f ;
+  -fx-font-weight: normal ;
+}
+.styled-text-area .xml .color1 {
+  -fx-fill: #7f007f ;
+}
+.styled-text-area .xml .string {
+  -fx-font-style: italic ;
+  -fx-fill: #2a00ff ;
+}

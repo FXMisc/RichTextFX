@@ -1,0 +1,94 @@
+/**
+ * SyntaxHighlighter
+ * http://alexgorbatchev.com/SyntaxHighlighter
+ *
+ * SyntaxHighlighter is donationware. If you are using it, please donate.
+ * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
+ *
+ * @version
+ * 3.0.83 (July 02 2010)
+ * 
+ * @copyright
+ * Copyright (C) 2004-2010 Alex Gorbatchev.
+ *
+ * @license
+ * Dual licensed under the MIT and GPL licenses.
+ */
+.syntaxhighlighter {
+  -fx-background-color: #0a2b1d ;
+}
+.syntaxhighlighter .line.alt1 {
+  -fx-background-color: #0a2b1d ;
+}
+.syntaxhighlighter .line.alt2 {
+  -fx-background-color: #0a2b1d ;
+}
+.syntaxhighlighter .line.highlighted.alt1, .syntaxhighlighter .line.highlighted.alt2 {
+  -fx-background-color: #233729 ;
+}
+.syntaxhighlighter .line.highlighted.number {
+  -fx-fill: white ;
+}
+.syntaxhighlighter .gutter {
+  -fx-fill: #497958 ;
+}
+.syntaxhighlighter .gutter .line.highlighted {
+  -fx-background-color: #41a83e ;
+  -fx-fill: #0a2b1d ;
+}
+.syntaxhighlighter.collapsed .toolbar {
+  -fx-fill: #96dd3b ;
+  -fx-background-color: black ;
+}
+.syntaxhighlighter .toolbar {
+  -fx-fill: white ;
+  -fx-background-color: #41a83e ;
+}
+.syntaxhighlighter .plain {
+  -fx-fill: #f8f8f8 ;
+}
+.syntaxhighlighter .comments {
+  -fx-fill: #336442 ;
+}
+.syntaxhighlighter .string {
+  -fx-fill: #9df39f ;
+}
+.syntaxhighlighter .keyword {
+  -fx-fill: #96dd3b ;
+}
+.syntaxhighlighter .preprocessor {
+  -fx-fill: #91bb9e ;
+}
+.syntaxhighlighter .variable {
+  -fx-fill: #ffaa3e ;
+}
+.syntaxhighlighter .value {
+  -fx-fill: #f7e741 ;
+}
+.syntaxhighlighter .functions {
+  -fx-fill: #ffaa3e ;
+}
+.syntaxhighlighter .constants {
+  -fx-fill: #e0e8ff ;
+}
+.syntaxhighlighter .script {
+  -fx-font-weight: bold ;
+  -fx-fill: #96dd3b ;
+  -fx-background-color: none ;
+}
+.syntaxhighlighter .color1 {
+  -fx-fill: #eb939a ;
+}
+.syntaxhighlighter .color2 {
+  -fx-fill: #91bb9e ;
+}
+.syntaxhighlighter .color3 {
+  -fx-fill: #edef7d ;
+}
+
+.syntaxhighlighter .comments {
+  -fx-font-style: italic ;
+}
+.syntaxhighlighter .keyword {
+  -fx-font-weight: bold ;
+}
