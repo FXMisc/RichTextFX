@@ -156,7 +156,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         PathElement[] rangeShape = getRangeShape(from, to);
 
         // switch out shapes to calculate the bounds on screen
-        List<PathElement> selShape = selectionShape.getElements();
+        // Must take a copy of the list contents, not just a reference:
+        List<PathElement> selShape = new ArrayList<>(selectionShape.getElements());
         selectionShape.getElements().setAll(rangeShape);
         Bounds localBounds = selectionShape.getBoundsInLocal();
         Bounds rangeBoundsOnScreen = selectionShape.localToScreen(localBounds);
