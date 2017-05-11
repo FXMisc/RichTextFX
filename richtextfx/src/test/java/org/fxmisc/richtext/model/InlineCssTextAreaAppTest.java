@@ -5,8 +5,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextArea;
+import org.testfx.api.FxRobot;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.PointQuery;
 
@@ -36,5 +38,25 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
 
     public final PointQuery firstLineOfArea() {
         return point(area).atPosition(Pos.TOP_LEFT).atOffset(5, 5);
+    }
+
+    public final FxRobot clickOnFirstLine(MouseButton... buttons) {
+        return moveTo(firstLineOfArea()).clickOn(buttons);
+    }
+
+    public final FxRobot leftClickOnFirstLine() {
+        return clickOnFirstLine(MouseButton.PRIMARY);
+    }
+
+    public final FxRobot doubleClickOnFirstLine() {
+        return leftClickOnFirstLine().clickOn(MouseButton.PRIMARY);
+    }
+
+    public final FxRobot tripleClickOnFirstLine() {
+        return doubleClickOnFirstLine().clickOn(MouseButton.PRIMARY);
+    }
+
+    public final FxRobot rightClickOnFirstLine() {
+        return clickOnFirstLine(MouseButton.SECONDARY);
     }
 }
