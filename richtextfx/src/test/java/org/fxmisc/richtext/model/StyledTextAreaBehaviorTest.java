@@ -28,7 +28,7 @@ public class StyledTextAreaBehaviorTest {
         @Test
         public void clickingSecondaryShowsContextMenu() {
             // when
-            rightClickOn(area);
+            rightClickOnFirstLine();
 
             // then
             assertTrue(area.getContextMenu().isShowing());
@@ -37,8 +37,7 @@ public class StyledTextAreaBehaviorTest {
         @Test
         public void pressingSecondaryShowsContextMenu() {
             // when
-            moveTo(area);
-            press(MouseButton.SECONDARY);
+            rightClickOnFirstLine();
 
             // then
             assertTrue(area.getContextMenu().isShowing());
@@ -47,7 +46,7 @@ public class StyledTextAreaBehaviorTest {
         @Test
         public void pressingPrimaryMouseButtonHidesContextMenu() {
             // given menu is showing
-            rightClickOn(area);
+            rightClickOnFirstLine();
 
             press(MouseButton.PRIMARY);
             assertFalse(area.getContextMenu().isShowing());
@@ -56,7 +55,7 @@ public class StyledTextAreaBehaviorTest {
         @Test
         public void pressingMiddleMouseButtonHidesContextMenu() {
             // given menu is showing
-            rightClickOn(area);
+            rightClickOnFirstLine();
 
             press(MouseButton.MIDDLE);
             assertFalse(area.getContextMenu().isShowing());
@@ -66,7 +65,7 @@ public class StyledTextAreaBehaviorTest {
         @Test
         public void requestingContextMenuViaKeyboardWorksOnWindows() {
             if (WINDOWS_OS) {
-                clickOn(area);
+                leftClickOnFirstLine();
                 push(KeyCode.CONTEXT_MENU);
 
                 assert area.getContextMenu().isShowing();
@@ -104,21 +103,21 @@ public class StyledTextAreaBehaviorTest {
 
             @Test
             public void singleClickingAreaDoesNothing() {
-                clickOn(area);
+                leftClickOnFirstLine();
 
                 assertFalse(area.isFocused());
             }
 
             @Test
             public void doubleClickingAreaDoesNothing() {
-                doubleClickOn(area);
+                doubleClickOnFirstLine();
 
                 assertFalse(area.isFocused());
             }
 
             @Test
             public void tripleClickingAreaDoesNothing() {
-                clickOn(area, MouseButton.PRIMARY).doubleClickOn(MouseButton.PRIMARY);
+                tripleClickOnFirstLine();
 
                 assertFalse(area.isFocused());
             }
@@ -372,8 +371,8 @@ public class StyledTextAreaBehaviorTest {
                 area.clear();
             });
 
-            String userInputtedText = "some user-inputted text";
-            clickOn(area).write(userInputtedText);
+            String userInputtedText = "some text";
+            leftClickOnFirstLine().write(userInputtedText);
 
             assertEquals(userInputtedText, area.getText());
             assertEquals(userInputtedText.length(), area.getCaretPosition());
