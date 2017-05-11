@@ -68,7 +68,7 @@ public class StyledTextAreaBehaviorTest {
                 leftClickOnFirstLine();
                 push(KeyCode.CONTEXT_MENU);
 
-                assert area.getContextMenu().isShowing();
+                assertTrue(area.getContextMenu().isShowing());
             }
         }
 
