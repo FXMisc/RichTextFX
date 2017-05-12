@@ -2,6 +2,16 @@
     -fx-cursor: text;
 }
 
+/* Allow gravity to be set by a pseudo-class on the text area: */
+.styled-text-area .virtual-flow {
+    -fx-gravity: front;
+}
+.styled-text-area:gravity-rear .virtual-flow {
+    -fx-gravity: rear;
+}
+
+
+
 .styled-text-area .paragraph-box .paragraph-text {
     -fx-padding: 0 2px;
 }

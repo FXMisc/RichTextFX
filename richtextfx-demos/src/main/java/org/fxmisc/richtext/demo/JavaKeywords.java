@@ -6,7 +6,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.application.Application;
+import javafx.css.PseudoClass;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -15,6 +17,9 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 
 public class JavaKeywords extends Application {
 
@@ -77,6 +82,8 @@ public class JavaKeywords extends Application {
         launch(args);
     }
 
+    boolean gravityFront = true;
+
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
@@ -88,6 +95,13 @@ public class JavaKeywords extends Application {
                     codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
                 });
         codeArea.replaceText(0, 0, sampleCode);
+
+        // F8 dynamically toggles the gravity:
+        Nodes.addInputMap(codeArea, InputMap.consume(EventPattern.keyPressed(KeyCode.F8), e ->
+        {
+            gravityFront = !gravityFront;
+            codeArea.pseudoClassStateChanged(PseudoClass.getPseudoClass("gravity-rear"), !gravityFront);
+        }));
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
         scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("java-keywords.css").toExternalForm());

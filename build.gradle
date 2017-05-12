@@ -2,9 +2,10 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'eclipse'
 
-    version = '1.0.0-SNAPSHOT'
+    version = '0.7-M5n'
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven {
             url 'https://oss.sonatype.org/content/repositories/snapshots/'

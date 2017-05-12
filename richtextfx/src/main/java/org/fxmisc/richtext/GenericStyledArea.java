@@ -1747,4 +1747,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     @Deprecated
     public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
+
+    // Quick hack: implement new methods in Virtualized:
+    public void scrollXToPixel(double x)
+    {
+        virtualFlow.scrollXToPixel(x);
+    }
+
+    public void scrollYToPixel(double y)
+    {
+        virtualFlow.scrollYToPixel(y);
+    }
+
+    public void scrollXBy(double x)
+    {
+        virtualFlow.scrollXBy(x);
+    }
+
+    public void scrollYBy(double y)
+    {
+        virtualFlow.scrollYBy(y);
+    }
 }
