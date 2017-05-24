@@ -1,5 +1,4 @@
-package org.fxmisc.richtext.model;
-
+package org.fxmisc.richtext;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,7 +6,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
-import org.fxmisc.richtext.InlineCssTextArea;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.PointQuery;
@@ -18,6 +16,14 @@ import org.testfx.service.query.PointQuery;
  */
 public class InlineCssTextAreaAppTest extends ApplicationTest {
 
+    static {
+        String osName = System.getProperty("os.name").toLowerCase();
+
+        WINDOWS_OS = osName.contains("win");
+    }
+
+    private static final boolean WINDOWS_OS;
+    public static boolean isWindows() { return WINDOWS_OS; }
 
     public InlineCssTextArea area;
     public ContextMenu menu;
