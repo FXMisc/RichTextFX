@@ -1,5 +1,7 @@
 package org.fxmisc.richtext.mouse;
 
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
@@ -23,7 +25,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     @Test
     public void pressingSecondaryShowsContextMenu() {
         // when
-        rightClickOnFirstLine();
+        moveTo(firstLineOfArea()).press(MouseButton.SECONDARY);
 
         // then
         assertTrue(area.getContextMenu().isShowing());
@@ -32,18 +34,18 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     @Test
     public void pressingPrimaryMouseButtonHidesContextMenu() {
         // given menu is showing
-        rightClickOnFirstLine();
+        showContextMenuAt(Pos.TOP_LEFT, 30);
 
-        press(MouseButton.PRIMARY);
+        moveTo(firstLineOfArea()).press(MouseButton.PRIMARY);
         assertFalse(area.getContextMenu().isShowing());
     }
 
     @Test
     public void pressingMiddleMouseButtonHidesContextMenu() {
         // given menu is showing
-        rightClickOnFirstLine();
+        showContextMenuAt(Pos.TOP_LEFT, 30);
 
-        press(MouseButton.MIDDLE);
+        moveTo(firstLineOfArea()).press(MouseButton.MIDDLE);
         assertFalse(area.getContextMenu().isShowing());
     }
 
@@ -56,6 +58,11 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
 
             assertTrue(area.getContextMenu().isShowing());
         }
+    }
+
+    private void showContextMenuAt(Pos posInArea, double offset) {
+        Point2D screenPoint = point(area).atPosition(posInArea).atOffset(offset, offset).query();
+        interact(() -> area.getContextMenu().show(area, screenPoint.getX(), screenPoint.getY()));
     }
 
 }
