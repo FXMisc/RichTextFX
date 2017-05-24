@@ -25,21 +25,30 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
     private static final boolean WINDOWS_OS;
     public static boolean isWindows() { return WINDOWS_OS; }
 
+    public Stage stage;
+    public Scene scene;
     public InlineCssTextArea area;
     public ContextMenu menu;
 
     @Override
     public void start(Stage stage) throws Exception {
         area = new InlineCssTextArea();
+        scene = new Scene(area);
+        this.stage = stage;
+
+        stage.setScene(scene);
+        stage.setWidth(400);
+        stage.setHeight(400);
+        stage.show();
+
         menu = new ContextMenu(new MenuItem("A menu item"));
         area.setContextMenu(menu);
-
         // offset needs to be 5 to prevent test failures
         area.setContextMenuXOffset(5);
         area.setContextMenuYOffset(5);
 
-        stage.setScene(new Scene(area, 400, 400));
-        stage.show();
+        // so tests don't need to do this themselves
+        area.requestFocus();
     }
 
     public final PointQuery firstLineOfArea() {
