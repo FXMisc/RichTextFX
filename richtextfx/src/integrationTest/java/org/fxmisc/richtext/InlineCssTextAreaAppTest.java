@@ -6,7 +6,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
-import org.testfx.api.FxRobot;
+import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.PointQuery;
 
@@ -46,23 +46,23 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
         return point(area).atPosition(Pos.TOP_LEFT).atOffset(5, 5);
     }
 
-    public final FxRobot clickOnFirstLine(MouseButton... buttons) {
+    public final FxRobotInterface clickOnFirstLine(MouseButton... buttons) {
         return moveTo(firstLineOfArea()).clickOn(buttons);
     }
 
-    public final FxRobot leftClickOnFirstLine() {
+    public final FxRobotInterface leftClickOnFirstLine() {
         return clickOnFirstLine(MouseButton.PRIMARY);
     }
 
-    public final FxRobot doubleClickOnFirstLine() {
+    public final FxRobotInterface doubleClickOnFirstLine() {
         return leftClickOnFirstLine().clickOn(MouseButton.PRIMARY);
     }
 
-    public final FxRobot tripleClickOnFirstLine() {
+    public final FxRobotInterface tripleClickOnFirstLine() {
         return doubleClickOnFirstLine().clickOn(MouseButton.PRIMARY);
     }
 
-    public final FxRobot rightClickOnFirstLine() {
+    public final FxRobotInterface rightClickOnFirstLine() {
         return clickOnFirstLine(MouseButton.SECONDARY);
     }
 }
