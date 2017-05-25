@@ -1,6 +1,9 @@
 package org.fxmisc.richtext;
 
 
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+
 import java.util.Collection;
 
 import javafx.beans.NamedArg;
@@ -48,4 +51,47 @@ public class CodeArea extends StyleClassedTextArea {
         // position the caret at the beginning
         selectRange(0, 0);
     }
+
+    /**
+     * Override the default copy action.
+     * when copying without selecting a text, copy the whole line in the caret position.
+     */
+    @Override
+    public void copy() {
+        if (getSelectedText().length() == 0) {
+            ClipboardContent content = new ClipboardContent();
+            String selectingString = getText().substring(getStart(), getEnd());
+            content.putString(selectingString);
+            Clipboard.getSystemClipboard().setContent(content);
+        } else {
+            super.copy();
+        }
+    }
+
+    private int getStart() {
+        int caretPosition = getCaretPosition();
+        for (int i = caretPosition; i > -1; i--) {
+            if (isNL(getText().toCharArray(), i)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    private int getEnd() {
+        int caretPosition = getCaretPosition();
+
+        for (int i = caretPosition; i < getText().length(); i++) {
+            if (isNL(getText().toCharArray(), i)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    private boolean isNL(char[] charArray, int index) {
+        return !((charArray == null) || (charArray.length == 0) || (index < 0) || (index >= charArray.length)) && (((charArray[index] == '\n') || (charArray[index] == '\r')));
+    }
+
+
 }
