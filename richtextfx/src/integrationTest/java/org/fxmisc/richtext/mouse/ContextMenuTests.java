@@ -5,7 +5,6 @@ import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertFalse;
@@ -49,7 +48,6 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
         assertFalse(area.getContextMenu().isShowing());
     }
 
-    @Ignore // push(CONTEXT_MENU) does not create a ContextMenuEvent properly, causing test to fail
     @Test
     public void requestingContextMenuViaKeyboardWorksOnWindows() {
         run_only_on_windows();
