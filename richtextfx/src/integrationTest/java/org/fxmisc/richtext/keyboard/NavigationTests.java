@@ -262,17 +262,17 @@ public class NavigationTests {
             );
         }
 
-        @Before
-        public void setup() throws TimeoutException {
-            // When the stage's width changes, TextFlow does not properly handle API calls to a
-            //  multi-line paragraph immediately. So, wait until it correctly responds
-            //  to the stage width change
-            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
-                    () -> area.getParagraphLinesCount(0) == lines.length
-            );
-        }
-
         public class NoModifiers {
+
+            @Before
+            public void setup() throws TimeoutException {
+                // When the stage's width changes, TextFlow does not properly handle API calls to a
+                //  multi-line paragraph immediately. So, wait until it correctly responds
+                //  to the stage width change
+                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
+                        () -> area.getParagraphLinesCount(0) == lines.length
+                );
+            }
 
             @Test
             public void up() {
@@ -323,7 +323,14 @@ public class NavigationTests {
         public class ShortcutDown {
 
             @Before
-            public void setup() {
+            public void setup() throws TimeoutException {
+                // When the stage's width changes, TextFlow does not properly handle API calls to a
+                //  multi-line paragraph immediately. So, wait until it correctly responds
+                //  to the stage width change
+                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
+                        () -> area.getParagraphLinesCount(0) == lines.length
+                );
+
                 press(SHORTCUT);
             }
 
@@ -377,7 +384,14 @@ public class NavigationTests {
         public class ShiftDown {
 
             @Before
-            public void setup() {
+            public void setup() throws TimeoutException {
+                // When the stage's width changes, TextFlow does not properly handle API calls to a
+                //  multi-line paragraph immediately. So, wait until it correctly responds
+                //  to the stage width change
+                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
+                        () -> area.getParagraphLinesCount(0) == lines.length
+                );
+
                 press(SHIFT);
             }
 
@@ -430,7 +444,14 @@ public class NavigationTests {
         public class ShortcutShiftDown {
 
             @Before
-            public void setup() {
+            public void setup() throws TimeoutException {
+                // When the stage's width changes, TextFlow does not properly handle API calls to a
+                //  multi-line paragraph immediately. So, wait until it correctly responds
+                //  to the stage width change
+                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
+                        () -> area.getParagraphLinesCount(0) == lines.length
+                );
+
                 press(SHORTCUT, SHIFT);
             }
 
