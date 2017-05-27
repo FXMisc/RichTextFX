@@ -283,6 +283,11 @@ public interface ViewActions<PS, SEG, S> {
 
     /**
      * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
+     * CAUTION: the underlying TextFlow does not immediately account for changes in the stage's width when the
+     * paragraph in question is a multi-line paragraph and {@link #isWrapText() text wrap is on}. After calling
+     * {@link javafx.stage.Stage#setWidth(double)}, it may take anywhere between 150-300 milliseconds for TextFlow
+     * to account for this and return the correct line count for the given paragraph. Otherwise, it may return a
+     * skewed number, such as the total number of characters on the line.
      */
     int getParagraphLinesCount(int paragraphIndex);
 
