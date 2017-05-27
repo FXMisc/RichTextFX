@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 
-public class AreaTest {
+public class UndoManagerTest {
 
     private InlineCssTextArea area = new InlineCssTextArea();
 
