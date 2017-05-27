@@ -48,9 +48,9 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
 
         menu = new ContextMenu(new MenuItem("A menu item"));
         area.setContextMenu(menu);
-        // offset needs to be 5 to prevent test failures
-        area.setContextMenuXOffset(5);
-        area.setContextMenuYOffset(5);
+        // offset needs to be 5+ to prevent test failures
+        area.setContextMenuXOffset(30);
+        area.setContextMenuYOffset(30);
 
         // so tests don't need to do this themselves
         area.requestFocus();

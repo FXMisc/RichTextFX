@@ -1,13 +1,13 @@
 package org.fxmisc.richtext.mouse;
 
 import com.nitorcreations.junit.runners.NestedRunner;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
+import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static javafx.scene.input.KeyCode.*;
+import static javafx.scene.input.MouseButton.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -17,27 +17,22 @@ public class ClickAndDragTests {
 
     public class WhenAreaIsDisabled extends InlineCssTextAreaAppTest {
 
-        @Before
-        public void setup() {
-            interact(() -> {
-                area.setDisable(true);
-                area.replaceText("When Area Is Disabled Test: Some text goes here");
-                area.moveTo(0);
-            });
+        @Override
+        public void start(Stage stage) throws Exception {
+            super.start(stage);
+            area.setDisable(true);
+            area.replaceText("When Area Is Disabled Test: Some text goes here");
+            area.moveTo(0);
         }
 
         @Test
         public void shiftClickingAreaDoesNothing() {
             moveTo(firstLineOfArea())
                     .moveBy(20, 0)
-                    .press(KeyCode.SHIFT)
-                    .press(MouseButton.PRIMARY)
-                    .release(KeyCode.SHIFT);
+                    .press(SHIFT)
+                    .press(PRIMARY);
 
             assertFalse(area.isFocused());
-
-            // cleanup
-            release(MouseButton.PRIMARY);
         }
 
         @Test
@@ -64,13 +59,10 @@ public class ClickAndDragTests {
         @Test
         public void draggingTheMouseDoesNotSelectText() {
             moveTo(firstLineOfArea())
-                    .press(MouseButton.PRIMARY)
+                    .press(PRIMARY)
                     .moveBy(20, 0);
 
             assertTrue(area.getSelectedText().isEmpty());
-
-            // cleanup
-            drop();
         }
 
         @Test
@@ -78,11 +70,10 @@ public class ClickAndDragTests {
             assertEquals(0, area.getCaretPosition());
 
             moveTo(firstLineOfArea())
-                    .press(MouseButton.PRIMARY)
+                    .press(PRIMARY)
                     .dropBy(20, 0);
 
             assertEquals(0, area.getCaretPosition());
-
         }
 
     }
@@ -94,12 +85,11 @@ public class ClickAndDragTests {
             private String firstWord = "Some";
             private String firstParagraph = firstWord + " text goes here";
 
-            @Before
-            public void setup() {
-                interact(() -> {
-                    area.replaceText(firstParagraph);
-                    area.moveTo(0);
-                });
+            @Override
+            public void start(Stage stage) throws Exception {
+                super.start(stage);
+                area.replaceText(firstParagraph);
+                area.moveTo(0);
             }
 
             @Test
@@ -108,25 +98,21 @@ public class ClickAndDragTests {
 
                 moveTo(firstLineOfArea())
                         .moveBy(20, 0)
-                        .clickOn(MouseButton.PRIMARY);
+                        .clickOn(PRIMARY);
 
                 assertTrue(0 != area.getCaretPosition());
-                // TODO: check that caret is moved exactly to where it should be
             }
 
             @Test
             public void doubleClickingTextInAreaSelectsClosestWord() {
-                moveTo(firstLineOfArea())
-                        .doubleClickOn(MouseButton.PRIMARY);
+                doubleClickOnFirstLine();
 
                 assertEquals(firstWord, area.getSelectedText());
             }
 
             @Test
             public void tripleClickingLineInAreaSelectsParagraph() {
-                moveTo(firstLineOfArea())
-                        .clickOn(MouseButton.PRIMARY)
-                        .doubleClickOn(MouseButton.PRIMARY);
+                tripleClickOnFirstLine();
 
                 assertEquals(firstParagraph, area.getSelectedText());
             }
@@ -134,7 +120,7 @@ public class ClickAndDragTests {
             @Test
             public void pressingMouseOverTextAndDraggingMouseSelectsText() {
                 moveTo(firstLineOfArea())
-                        .press(MouseButton.PRIMARY)
+                        .press(PRIMARY)
                         .moveBy(20, 0);
 
                 assertFalse(area.getSelectedText().isEmpty());
@@ -157,7 +143,7 @@ public class ClickAndDragTests {
 
                 moveTo(firstLineOfArea())
                         .moveBy(20, 0)
-                        .clickOn(MouseButton.PRIMARY);
+                        .clickOn(PRIMARY);
 
                 assertTrue(0 != area.getCaretPosition());
             }
@@ -170,8 +156,7 @@ public class ClickAndDragTests {
                     area.selectAll();
                 });
 
-                moveTo(firstLineOfArea())
-                        .doubleClickOn(MouseButton.PRIMARY);
+                doubleClickOnFirstLine();
 
                 assertEquals(firstWord, area.getSelectedText());
             }
@@ -184,9 +169,7 @@ public class ClickAndDragTests {
                     area.selectAll();
                 });
 
-                moveTo(firstLineOfArea())
-                        .clickOn(MouseButton.PRIMARY)
-                        .doubleClickOn(MouseButton.PRIMARY);
+                tripleClickOnFirstLine();
 
                 assertEquals(firstParagraph, area.getSelectedText());
             }
@@ -203,11 +186,9 @@ public class ClickAndDragTests {
 
                 moveTo(firstLineOfArea())
                         .moveBy(20, 0)
-                        .clickOn(MouseButton.PRIMARY);
+                        .clickOn(PRIMARY);
 
                 assertTrue(caretPos != area.getCaretPosition());
-                // TODO: check that caret is moved exactly to where it should be
-
             }
 
             @Test
@@ -218,8 +199,7 @@ public class ClickAndDragTests {
                     area.selectRange(1, 0, 2, -1);
                 });
 
-                moveTo(firstLineOfArea())
-                        .doubleClickOn(MouseButton.PRIMARY);
+                doubleClickOnFirstLine();
 
                 assertEquals(firstWord, area.getSelectedText());
             }
@@ -232,9 +212,7 @@ public class ClickAndDragTests {
                     area.selectRange(1, 0, 2, -1);
                 });
 
-                moveTo(firstLineOfArea())
-                        .clickOn(MouseButton.PRIMARY)
-                        .doubleClickOn(MouseButton.PRIMARY);
+                tripleClickOnFirstLine();
 
                 assertEquals(firstParagraph, area.getSelectedText());
             }
@@ -250,7 +228,7 @@ public class ClickAndDragTests {
                 String originalSelection = area.getSelectedText();
 
                 moveTo(firstLineOfArea())
-                        .press(MouseButton.PRIMARY)
+                        .press(PRIMARY)
                         .moveBy(20, 0);
 
                 assertFalse(originalSelection.equals(area.getSelectedText()));
@@ -268,7 +246,7 @@ public class ClickAndDragTests {
                 int caretPos = area.getCaretPosition();
 
                 moveTo(firstLineOfArea())
-                        .press(MouseButton.PRIMARY)
+                        .press(PRIMARY)
                         .moveBy(0, 14);
 
                 assertTrue(caretPos != area.getCaretPosition());
@@ -283,20 +261,17 @@ public class ClickAndDragTests {
                     area.selectRange(0, firstWord.length());
                 });
 
-                String selText = area.getSelectedText();
                 int caretPos = area.getCaretPosition();
 
                 moveTo(firstLineOfArea())
-                        .press(MouseButton.PRIMARY)
+                        .press(PRIMARY)
                         .dropBy(0, 14);
 
                 assertTrue(caretPos != area.getCaretPosition());
                 assertTrue(area.getSelectedText().isEmpty());
-                // TODO: should check that move is exact
             }
 
         }
 
     }
-
 }
