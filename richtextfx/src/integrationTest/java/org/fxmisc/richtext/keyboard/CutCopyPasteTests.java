@@ -5,9 +5,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,41 +41,72 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         public class NothingIsStoredInClipboardWhenCopyVia {
 
+            private void runAssert() {
+                interact(() -> assertFalse(Clipboard.getSystemClipboard().hasString()));
+            }
+
             @Before
             public void insureClipboardHasNoContent() {
                 interact(() -> Clipboard.getSystemClipboard().clear());
             }
 
-            @After
-            public void assertAndCleanup() {
-                interact(() -> assertFalse(Clipboard.getSystemClipboard().hasString()));
+            @Test
+            public void copy() {
+                press(COPY);
 
-                // cleanup
-                release(COPY, SHORTCUT, C, INSERT);
+                runAssert();
             }
 
-            @Test public void copy()            { press(COPY); }
-            @Test public void shortcut_C()      { press(SHORTCUT, C); }
-            @Test public void shortcut_Insert() { press(SHORTCUT, INSERT); }
+            @Test
+            public void shortcut_C() {
+                press(SHORTCUT, C);
+
+                runAssert();
+            }
+
+            @Test
+            public void shortcut_Insert() {
+                press(SHORTCUT, INSERT);
+
+                runAssert();
+            }
 
         }
 
         public class NothingIsRemovedInAreaWhenCutVia {
 
-            @After
-            public void assertAndCleanup() {
+            private void runAssert() {
                 assertEquals(fullText, area.getText());
-
-                release(CUT, SHIFT, X, DELETE);
             }
 
-            @Test public void cut()          { press(CUT); }
-            @Test public void shortcut_X()   { press(SHORTCUT, X); }
-            @Test public void shift_Delete() { press(SHIFT, DELETE); }
+            @Test
+            public void cut() {
+                press(CUT);
+
+                runAssert();
+            }
+
+            @Test
+            public void shortcut_X() {
+                press(SHORTCUT, X);
+
+                runAssert();
+            }
+
+            @Test
+            public void shift_Delete() {
+                press(SHIFT, DELETE);
+
+                runAssert();
+            }
 
         }
 
         public class TextIsInsertedInAreaWhenPasteVia {
+
+            private void runAssert() {
+                assertEquals(beginning + text + middle + end, area.getText());
+            }
 
             @Before
             public void storeTextInClipboard() {
@@ -87,23 +116,32 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
                     Clipboard.getSystemClipboard().setContent(content);
                 });
             }
-            @After
-            public void assertAndCleanup() {
-                assertEquals(beginning + text + middle + end, area.getText());
 
-                release(PASTE, SHORTCUT, V, SHIFT, INSERT);
-            }
-
-            @Test public void paste() {
+            @Test
+            public void paste() {
                 // this test fails on Linux; Windows is untested
                 // so for now, only run on Mac
                 // TODO: update if test succeeds on Windows, too
                 run_only_on_mac();
 
                 press(PASTE);
+
+                runAssert();
             }
-            @Test public void shortcut_V()   { press(SHORTCUT, V); }
-            @Test public void shift_Insert() { press(SHIFT, INSERT); }
+
+            @Test
+            public void shortcut_V() {
+                press(SHORTCUT, V);
+
+                runAssert();
+            }
+
+            @Test
+            public void shift_Insert() {
+                press(SHIFT, INSERT);
+
+                runAssert();
+            }
         }
     }
 
@@ -120,45 +158,71 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         public class SelectionIsStoredInClipboardWhenCopyVia {
 
-            @After
-            public void assertAndCleanup() {
+            private void runAssert() {
                 interact(() -> {
                     assertTrue(Clipboard.getSystemClipboard().hasString());
                     assertEquals(middle, Clipboard.getSystemClipboard().getString());
                 });
-
-                // cleanup
-                release(SHORTCUT, COPY, C, INSERT);
             }
 
-            @Test public void copy()            { press(COPY); }
-            @Test public void shortcut_C()      { press(SHORTCUT, C); }
-            @Test public void shortcut_Insert() { press(SHORTCUT, INSERT); }
+            @Test
+            public void copy() {
+                press(COPY);
+
+                runAssert();
+            }
+
+            @Test
+            public void shortcut_C() {
+                press(SHORTCUT, C);
+
+                runAssert();
+            }
+
+            @Test
+            public void shortcut_Insert() {
+                press(SHORTCUT, INSERT);
+
+                runAssert();
+            }
 
         }
 
         public class SelectionIsRemovedAndStoredInClipboardWhenCutVia {
 
-            @After
-            public void assertAndCleanup() {
+            private void runAssert() {
                 assertEquals(beginning + end, area.getText());
                 interact(() -> {
                     assertTrue(Clipboard.getSystemClipboard().hasString());
                     assertEquals(middle, Clipboard.getSystemClipboard().getString());
                 });
-
-                release(CUT, SHIFT, X, DELETE);
             }
 
-            @Test public void cut()          {
+            @Test
+            public void cut()          {
                 // this test fails on Linux; Windows is untested
                 // so for now, only run on Mac
                 // TODO: update if test succeeds on Windows, too
                 run_only_on_mac();
+
                 press(CUT);
+
+                runAssert();
             }
-            @Test public void shortcut_X()   { press(SHORTCUT, X); }
-            @Test public void shift_Delete() { press(SHIFT, DELETE); }
+
+            @Test
+            public void shortcut_X() {
+                press(SHORTCUT, X);
+
+                runAssert();
+            }
+
+            @Test
+            public void shift_Delete() {
+                press(SHIFT, DELETE);
+
+                runAssert();
+            }
 
         }
 
@@ -172,22 +236,36 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
                     Clipboard.getSystemClipboard().setContent(content);
                 });
             }
-            @After
-            public void assertAndCleanup() {
-                assertEquals(beginning + text + end, area.getText());
 
-                release(PASTE, SHORTCUT, V, SHIFT, INSERT);
+            private void runAssert() {
+                assertEquals(beginning + text + end, area.getText());
             }
 
-            @Test public void paste()        {
+            @Test
+            public void paste()        {
                 // this test fails on Linux; Windows is untested
                 // so for now, only run on Mac
                 // TODO: update if test succeeds on Windows, too
                 run_only_on_mac();
+
                 press(PASTE);
+
+                runAssert();
             }
-            @Test public void shortcut_V()   { press(SHORTCUT, V); }
-            @Test public void shift_Insert() { press(SHIFT, INSERT); }
+
+            @Test
+            public void shortcut_V() {
+                press(SHORTCUT, V);
+
+                runAssert();
+            }
+
+            @Test
+            public void shift_Insert() {
+                press(SHIFT, INSERT);
+
+                runAssert();
+            }
 
         }
     }
