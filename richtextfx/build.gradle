@@ -34,6 +34,7 @@ dependencies {
     integrationTestCompile ("org.testfx:testfx-junit:4.0.6-alpha") {
         exclude(group: "junit", module: "junit")
     }
+    integrationTestCompile "org.testfx:openjfx-monocle:8u76-b04"
 }
 
 javadoc {
@@ -54,6 +55,39 @@ javadoc {
         // resolve links to Flowless
         'https://fxmisc.github.io/flowless/javadoc/0.5/'
     ]
+}
+
+// use test logging.
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+test {
+    testLogging {
+        // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
+        // set options for log level LIFECYCLE
+        events TestLogEvent.PASSED, TestLogEvent.SKIPPED,
+                TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT
+        showExceptions true
+        exceptionFormat TestExceptionFormat.FULL
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED, TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED, TestLogEvent.FAILED,
+                    TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR
+        }
+        info.events = debug.events
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
