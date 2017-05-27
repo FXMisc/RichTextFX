@@ -52,12 +52,12 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     @Ignore // push(CONTEXT_MENU) does not create a ContextMenuEvent properly, causing test to fail
     @Test
     public void requestingContextMenuViaKeyboardWorksOnWindows() {
-        if (isWindows()) {
-            leftClickOnFirstLine();
-            push(KeyCode.CONTEXT_MENU);
+        run_only_on_windows();
 
-            assertTrue(area.getContextMenu().isShowing());
-        }
+        leftClickOnFirstLine();
+        push(KeyCode.CONTEXT_MENU);
+
+        assertTrue(area.getContextMenu().isShowing());
     }
 
     private void showContextMenuAt(Pos posInArea, double offset) {

@@ -10,6 +10,8 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.PointQuery;
 
+import static org.junit.Assume.assumeTrue;
+
 /**
  * TestFX tests should subclass this if it needs to run tests on a simple area. Any view-related API needs to be
  * wrapped in a {@link #interact(Runnable)} call, but model API does not need to be wrapped in it.
@@ -19,11 +21,14 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
     static {
         String osName = System.getProperty("os.name").toLowerCase();
 
-        WINDOWS_OS = osName.contains("win");
+        isWindows = osName.startsWith("win");
+        isMac = osName.startsWith("mac");
+        isLinux = osName.startsWith("linux");
     }
 
-    private static final boolean WINDOWS_OS;
-    public static boolean isWindows() { return WINDOWS_OS; }
+    public static final boolean isWindows;
+    public static final boolean isMac;
+    public static final boolean isLinux;
 
     public Stage stage;
     public Scene scene;
@@ -73,5 +78,53 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
 
     public final FxRobotInterface rightClickOnFirstLine() {
         return clickOnFirstLine(MouseButton.SECONDARY);
+    }
+
+    /**
+     * If not on Windows environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void run_only_on_windows() {
+        assumeTrue(isWindows);
+    }
+
+    /**
+     * If not on Linux environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void run_only_on_linux() {
+        assumeTrue(isLinux);
+    }
+
+    /**
+     * If not on Mac environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void run_only_on_mac() {
+        assumeTrue(isMac);
+    }
+
+    /**
+     * If on Windows environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void skip_if_on_windows() {
+        assumeTrue(!isWindows);
+    }
+
+    /**
+     * If on Linux environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void skip_if_on_linux() {
+        assumeTrue(!isLinux);
+    }
+
+    /**
+     * If on Mac environment, calling this in @Before method will skip the entire test suite whereas calling
+     * this in @Test will skip just that test method
+     */
+    public final void skip_if_on_mac() {
+        assumeTrue(!isMac);
     }
 }
