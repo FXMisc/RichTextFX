@@ -58,14 +58,13 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
         assertFalse(endFired.get());
     }
 
-    @Ignore("END events are fired multiple times when BEGIN event hasn't yet fired")
     @Test
     public void eventsFireAfterDelayAndPostMove() {
         setDelay(100);
 
         moveTo(firstLineOfArea()).sleep(300);
         assertTrue(beginFired.get());
-        assertFalse(endFired.get());    // fails here
+        assertFalse(endFired.get());
 
         resetBegin();
 
@@ -74,27 +73,21 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
         assertTrue(endFired.get());
     }
 
-    @Ignore("setting delay while mouse is over text fires END event when BEGIN event hasn't yet fired")
     @Test
-    public void settingDelayWhileMouseOverTextDoesNotFireEvent() {
+    public void settingDelayWhileMouseAlreadyOverTextDoesNotFireEvent() {
         setDelay(null);
 
-        moveTo(firstLineOfArea()).sleep(300);
+        moveTo(firstLineOfArea());
         assertFalse(beginFired.get());
         assertFalse(endFired.get());
 
         setDelay(100);
         assertFalse(beginFired.get());
         assertFalse(endFired.get());
-
-        moveBy(20, 0);
-        assertTrue(beginFired.get());   // fails here
-        assertFalse(endFired.get());
     }
 
-    @Ignore("this test is only important when above two tests get fixed")
     @Test
-    public void settingDelayBeforeEndFiresPreventsEndFromFiring() {
+    public void settingDelayToNullValueBeforeEndFiresPreventsEndFromFiring() {
         setDelay(100);
 
         moveTo(firstLineOfArea()).sleep(200);
@@ -104,19 +97,21 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
         resetBegin();
         setDelay(null);
 
-        moveMouseOutsideOfArea();
+        moveBy(20, 0);
         assertFalse(beginFired.get());
         assertFalse(endFired.get());
+    }
 
+    @Test
+    public void settingDelayToNonNullValueBeforeEndFiresStillFiresEndEvent() {
         setDelay(100);
-        assertFalse(beginFired.get());
-        assertFalse(endFired.get());
 
-        moveTo(firstLineOfArea()).sleep(300);
+        moveTo(firstLineOfArea()).sleep(200);
         assertTrue(beginFired.get());
         assertFalse(endFired.get());
 
         resetBegin();
+        setDelay(200);
 
         moveBy(20, 0);
         assertFalse(beginFired.get());

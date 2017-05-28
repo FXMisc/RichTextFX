@@ -855,11 +855,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                         userOffset)
                         .orElseConst(UnaryOperator.identity());
 
+        SimpleBooleanProperty beginEventFired = new SimpleBooleanProperty(true);
         // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
         EventStreams.valuesOf(mouseOverTextDelayProperty())
-                .flatMap(delay -> delay != null
-                        ? mouseOverTextEvents(nonEmptyCells, delay)
-                        : EventStreams.never())
+                .flatMap(delay -> {
+                    if (delay != null) {
+                        return mouseOverTextEvents(nonEmptyCells, delay, beginEventFired);
+                    } else {
+                        return EventStreams.never();
+                    }
+                })
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new StyledTextAreaBehavior(this);
@@ -1445,10 +1450,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return virtualFlow.getCell(index).getNode();
     }
 
-    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<PS, SEG, S>> cells, Duration delay) {
-        return merge(cells, c -> c.stationaryIndices(delay).map(e -> e.unify(
-                l -> l.map((pos, charIdx) -> MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx)),
-                r -> MouseOverTextEvent.end())));
+    private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<PS, SEG, S>> cells,
+                                                                Duration delay,
+                                                                BooleanProperty beginEventFired) {
+        return merge(cells, c ->
+                c.stationaryIndices(delay, beginEventFired).map(e ->
+                        e.unify(
+                            l -> l.map((pos, charIdx) -> {
+                                beginEventFired.set(true);
+                                return MouseOverTextEvent.beginAt(c.localToScreen(pos), getParagraphOffset(c.getIndex()) + charIdx);
+                            }),
+                            r -> {
+                                beginEventFired.set(false);
+                                return MouseOverTextEvent.end();
+                            })));
     }
 
     private int getParagraphOffset(int parIdx) {

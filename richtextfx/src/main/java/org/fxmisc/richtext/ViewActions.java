@@ -58,7 +58,13 @@ public interface ViewActions<PS, SEG, S> {
      * Defines how long the mouse has to stay still over the text before a
      * {@link MouseOverTextEvent} of type {@code MOUSE_OVER_TEXT_BEGIN} is
      * fired on this text area. When set to {@code null}, no
-     * {@code MouseOverTextEvent}s are fired on this text area.
+     * {@code MouseOverTextEvent}s are fired on this text area. After the begin
+     * event has fired, the corresponding end event will fire immediately after a
+     * new {@link MouseEvent} is detected. If a delay is set, the begin event is fired,
+     * and the delay is set to {@code null}, no end event will fire. If a delay is set,
+     * the begin event is fired, and a new non-null delay is set, the end event will
+     * still fire under the same conditions as normal.
+     *
      *
      * <p>Default value is {@code null}.
      */

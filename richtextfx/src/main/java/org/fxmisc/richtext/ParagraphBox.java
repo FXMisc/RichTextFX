@@ -114,7 +114,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.getParagraph();
     }
 
-    public EventStream<Either<Tuple2<Point2D, Integer>, Object>> stationaryIndices(Duration delay) {
+    public EventStream<Either<Tuple2<Point2D, Integer>, Object>> stationaryIndices(Duration delay, BooleanProperty beginEventFired) {
         EventStream<Either<Point2D, Void>> stationaryEvents = new MouseStationaryHelper(this).events(delay);
         EventStream<Tuple2<Point2D, Integer>> hits = stationaryEvents.filterMap(Either::asLeft)
                 .filterMap(p -> {
@@ -125,7 +125,9 @@ class ParagraphBox<PS, SEG, S> extends Region {
                         return Optional.empty();
                     }
                 });
-        EventStream<?> stops = stationaryEvents.filter(Either::isRight).map(Either::getRight);
+        EventStream<?> stops = stationaryEvents.filter(Either::isRight).map(Either::getRight)
+                // only fire END event when a BEGIN event has already been fired
+                .conditionOn(beginEventFired);
         return hits.or(stops);
     }
 
