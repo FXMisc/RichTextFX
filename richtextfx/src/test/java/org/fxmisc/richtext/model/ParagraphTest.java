@@ -20,4 +20,19 @@ public class ParagraphTest {
         assertEquals(Boolean.TRUE, p.getStyleAtPosition(0));
     }
 
+    // Relates to #345 and #505: calling `EditableStyledDocument::setStyleSpans` when the style spans
+    //  would style an empty paragraph would throw an exception
+    @Test
+    public void restylingEmptyParagraphViaStyleSpansWorks() {
+        TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps();
+        Paragraph<Void, StyledText<Boolean>, Boolean> p = new Paragraph<>(null, segOps, segOps.createEmpty());
+
+        StyleSpansBuilder<Boolean> builder = new StyleSpansBuilder<>();
+        builder.add(true, 2);
+        StyleSpans<Boolean> spans = builder.create();
+        Paragraph<Void, StyledText<Boolean>, Boolean> restyledP = p.restyle(0, spans);
+
+        assertEquals(p, restyledP);
+    }
+
 }

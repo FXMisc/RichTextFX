@@ -40,6 +40,16 @@ public class StyleSpansBuilder<S> {
         public StyleSpan<S> getStyleSpan(int index) {
             return spans.get(index);
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("StyleSpans(length=").append(length())
+                    .append(" spanCount=").append(getSpanCount())
+                    .append(" spans=").append(spans)
+                    .append(")");
+            return sb.toString();
+        }
     }
 
     static <S> StyleSpans<S> overlay(
@@ -275,6 +285,20 @@ class SubSpans<S> extends StyleSpansBase<S> {
         } else {
             return original.getStyleSpan(firstIdxInOrig + index);
         }
+    }
+
+    @Override
+    public String toString() {
+        ArrayList<StyleSpan<S>> spans = new ArrayList<>(spanCount);
+        for (int i = 0; i < spanCount; i++) {
+            spans.add(getStyleSpan(i));
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("SubSpans(length=").append(length)
+                .append(" spanCount=").append(getSpanCount())
+                .append(" spans=").append(spans)
+                .append(")");
+        return sb.toString();
     }
 }
 
