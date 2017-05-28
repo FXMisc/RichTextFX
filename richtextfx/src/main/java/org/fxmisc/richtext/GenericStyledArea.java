@@ -1356,7 +1356,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     protected void layoutChildren() {
-        virtualFlow.resize(getWidth(), getHeight());
+        Insets ins = getInsets();
+        virtualFlow.resizeRelocate(
+                ins.getLeft(), ins.getTop(),
+                getWidth() - ins.getLeft() - ins.getRight(),
+                getHeight() - ins.getTop() - ins.getBottom());
         if(followCaretRequested) {
             followCaretRequested = false;
             try (Guard g = viewportDirty.suspend()) {
