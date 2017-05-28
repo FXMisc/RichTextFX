@@ -230,7 +230,7 @@ public final class Paragraph<PS, SEG, S> {
 
     public Paragraph<PS, SEG, S> restyle(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
-        if(styleSpans.equals(getStyleSpans(from, from + len))) {
+        if(styleSpans.equals(getStyleSpans(from, from + len)) || length() == 0) {
             return this;
         }
 
