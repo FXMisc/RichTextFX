@@ -295,6 +295,7 @@ class StyledTextAreaBehavior {
                 projection,
                 Point2D::subtract);
         EventStream<Point2D> deltas = nonNullValuesOf(distance)
+                .filter(dist -> dist.getX() >= 0 && dist.getY() >= 0)
                 .emitBothOnEach(animationFrames())
                 .map(t -> t.map((ds, nanos) -> ds.multiply(nanos / 100_000_000.0)));
         valuesOf(autoscrollTo).flatMap(p -> p == null
