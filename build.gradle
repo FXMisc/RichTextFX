@@ -15,4 +15,5 @@ subprojects {
     targetCompatibility = '1.8'
 
     compileJava.options.deprecation = true
+    compileJava.options.encoding = 'UTF-8'
 }
