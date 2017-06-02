@@ -1152,9 +1152,28 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     @Override
+    public void scrollXToPixel(double pixel) {
+        virtualFlow.scrollXToPixel(pixel);
+    }
+
+    @Override
+    public void scrollYToPixel(double pixel) {
+        virtualFlow.scrollYToPixel(pixel);
+    }
+
+    @Override
+    public void scrollXBy(double deltaX) {
+        virtualFlow.scrollXBy(deltaX);
+    }
+
+    @Override
+    public void scrollYBy(double deltaY) {
+        virtualFlow.scrollYBy(deltaY);
+    }
+
+    @Override
     public void scrollBy(Point2D deltas) {
-        virtualFlow.scrollXBy(deltas.getX());
-        virtualFlow.scrollYBy(deltas.getY());
+        virtualFlow.scrollBy(deltas);
     }
 
     void show(double y) {

@@ -310,13 +310,6 @@ public interface ViewActions<PS, SEG, S> {
      * ********************************************************************** */
 
     /**
-     * Scroll area horizontally by {@code deltas.getX()} and vertically by {@code deltas.getY()}
-     *
-     * @param deltas negative values scroll left/up, positive scroll right/down
-     */
-    void scrollBy(Point2D deltas);
-
-    /**
      * Shows the paragraph somewhere in the viewport. If the line is already visible, no noticeable change occurs.
      * If line is above the current view, it appears at the top of the viewport. If the line is below the current
      * view, it appears at the bottom of the viewport.
