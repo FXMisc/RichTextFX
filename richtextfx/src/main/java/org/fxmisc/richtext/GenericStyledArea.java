@@ -922,6 +922,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+        // don't account for padding here since height of virtualFlow is used, not area + potential padding
         VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(0.0, y);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
@@ -939,7 +940,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public CharacterHit hit(double x, double y) {
-        VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(x, y);
+        // mouse position used, so account for padding
+        double adjustedX = x - getInsets().getLeft();
+        double adjustedY = y - getInsets().getTop();
+        VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(adjustedX, adjustedY);
         if(hit.isBeforeCells()) {
             return CharacterHit.insertionAt(0);
         } else if(hit.isAfterCells()) {
