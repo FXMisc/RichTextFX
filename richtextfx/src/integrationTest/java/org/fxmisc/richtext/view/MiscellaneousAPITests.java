@@ -2,13 +2,20 @@ package org.fxmisc.richtext.view;
 
 import com.nitorcreations.junit.runners.NestedRunner;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.ViewActions.CaretVisibility;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.testfx.service.query.PointQuery;
 import org.testfx.util.WaitForAsyncUtils;
 
+import static javafx.scene.input.MouseButton.PRIMARY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -111,4 +118,117 @@ public class MiscellaneousAPITests {
             assertFalse(area.getCaretBounds().isPresent());
         }
     }
+
+    public class HitTests extends InlineCssTextAreaAppTest {
+
+        private PointQuery position(Pos position, double offsetX, double offsetY) {
+            return point(area).atPosition(position).atOffset(offsetX, offsetY);
+        }
+
+        private void moveCaretToAreaEnd() {
+            area.moveTo(area.getLength());
+        }
+
+        public class WhenAreaIsPadded {
+
+            double paddingAmount = 20;
+
+            public class AndHitsOccurOutsideArea {
+
+                String text = "text";
+                String fullText = text + "\n" + text;
+
+                @Before
+                public void setup() {
+                    interact(() -> area.replaceText(fullText));
+                }
+
+                @Test
+                public void clickingInTopPaddingMovesCaretToTopLine() {
+                    interact(() -> area.setPadding(new Insets(paddingAmount, 0, 0, 0)));
+
+                    moveCaretToAreaEnd();
+                    moveTo(position(Pos.TOP_LEFT, 1, 2)).clickOn(PRIMARY);
+                    assertEquals(0, area.getCurrentParagraph());
+
+                    moveCaretToAreaEnd();
+                    moveTo(position(Pos.TOP_CENTER, 0, 0)).clickOn(PRIMARY);
+                    assertEquals(0, area.getCurrentParagraph());
+                }
+
+                @Test
+                public void clickingInLeftPaddingMovesCaretToBeginningOfLineOnSingleLineParagraph() {
+                    interact(() -> area.setPadding(new Insets(0, 0, 0, paddingAmount)));
+
+                    moveCaretToAreaEnd();
+                    moveTo(position(Pos.TOP_LEFT, 1, 1)).clickOn(PRIMARY);
+                    assertEquals(0, area.getCaretColumn());
+                }
+
+                @Test
+                public void clickingInRightPaddingMovesCaretToEndOfLineOnSingleLineParagraph() {
+                    interact(() -> {
+                        area.setPadding(new Insets(0, paddingAmount, 0, 0));
+                        area.moveTo(0);
+
+                        // insure we're scrolled all the way to the right
+                        area.scrollBy(new Point2D(100, 0));
+                    });
+
+                    moveTo(position(Pos.TOP_RIGHT, -1, 1)).clickOn(PRIMARY);
+                    assertEquals(area.getParagraphLenth(0), area.getCaretColumn());
+                }
+
+                @Test
+                public void clickingInBottomPaddingMovesCaretToBottomLine() {
+                    interact(() -> {
+                        area.setPadding(new Insets(0, 0, paddingAmount, 0));
+                        area.moveTo(0);
+
+                        // insure we're scrolled all the way to the right
+                        area.scrollBy(new Point2D(0, 100));
+                    });
+
+                    moveTo(position(Pos.BOTTOM_CENTER, 0, -2)).clickOn(PRIMARY);
+                    assertEquals(1, area.getCurrentParagraph());
+                }
+
+            }
+
+            public class AndHitsOccurInsideArea {
+
+                String text = "abcdefghijklmnopqrstuvwxyz";
+                String fullText;
+
+                {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < 19; i++) {
+                        sb.append(text).append("\n");
+                    }
+                    sb.append(text);
+                    fullText = sb.toString();
+                }
+
+                @Before
+                public void setup() {
+                    interact(() -> {
+                        area.replaceText(fullText);
+                        area.setPadding(new Insets(paddingAmount));
+                        area.setStyle("-fx-font-family: monospace; -fx-font-size: 12pt;");
+                    });
+                }
+
+                @Test
+                public void clickingCharacterShouldMoveCaretToThatPosition() {
+                    int start = area.getAbsolutePosition(3, 8);
+                    Bounds b = area.getCharacterBoundsOnScreen(start, start + 1).get();
+                    moveTo(b).clickOn(PRIMARY);
+                    assertEquals(start, area.getCaretPosition());
+                }
+            }
+
+        }
+
+    }
+
 }
