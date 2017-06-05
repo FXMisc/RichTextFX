@@ -8,12 +8,14 @@ import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.ViewActions.CaretVisibility;
+import org.fxmisc.richtext.model.NavigationActions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.PointQuery;
 import org.testfx.util.WaitForAsyncUtils;
+
+import java.util.function.Consumer;
 
 import static javafx.scene.input.MouseButton.PRIMARY;
 import static org.junit.Assert.assertEquals;
@@ -201,11 +203,15 @@ public class MiscellaneousAPITests {
                 String fullText;
 
                 {
+                    int totalPars = 50;
+                    int indexLimit = totalPars - 1;
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < 19; i++) {
-                        sb.append(text).append("\n");
+                    Consumer<Integer> appendParagraph = i -> sb.append("Par #").append(i).append(" ").append(text);
+                    for (int i = 0; i < indexLimit; i++) {
+                        appendParagraph.accept(i);
+                        sb.append("\n");
                     }
-                    sb.append(text);
+                    appendParagraph.accept(indexLimit);
                     fullText = sb.toString();
                 }
 
@@ -225,6 +231,36 @@ public class MiscellaneousAPITests {
                     moveTo(b).clickOn(PRIMARY);
                     assertEquals(start, area.getCaretPosition());
                 }
+
+                @Test
+                public void prevPageMovesCaretToTopOfPage() {
+                    area.showParagraphAtBottom(area.getParagraphs().size() - 1);
+                    // move to last line, column 0
+                    area.moveTo(area.getParagraphs().size() - 1, 0);
+
+                    interact(() -> {
+                        // hit is called here
+                        area.prevPage(NavigationActions.SelectionPolicy.CLEAR);
+                    });
+
+                    assertEquals(0, area.getCaretColumn());
+                    assertEquals(32, area.getCurrentParagraph());
+                }
+
+                @Test
+                public void nextPageMovesCaretToBottomOfPage() {
+                    area.showParagraphAtTop(0);
+                    area.moveTo(0);
+
+                    interact(() -> {
+                        // hit is called here
+                        area.nextPage(NavigationActions.SelectionPolicy.CLEAR);
+                    });
+
+                    assertEquals(0, area.getCaretColumn());
+                    assertEquals(17, area.getCurrentParagraph());
+                }
+
             }
 
         }
