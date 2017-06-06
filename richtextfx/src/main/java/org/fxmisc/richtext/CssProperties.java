@@ -7,8 +7,12 @@ import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
+import javafx.util.Duration;
+
+import java.util.function.Supplier;
 
 
 /**
@@ -29,45 +33,25 @@ class CssProperties {
         }
     }
 
-    static class FontProperty<S extends Styleable> extends StyleableObjectProperty<Font> {
-        private final S textArea;
-        private final CssMetaData<S, Font> cssMetaData;
+    private static class CustomStyleablePropertyBase<T> extends StyleableObjectProperty<T> {
 
-        public FontProperty(S textArea) {
-            this.textArea = textArea;
-            this.cssMetaData = new PropertyCssMetaData<S, Font>(
-                    this, "-fx-font", StyleConverter.getFontConverter(),
-                    Font.getDefault());
-        }
+        private final GenericStyledArea<?, ?, ?> area;
+        private final String name;
+        private final Supplier<CssMetaData<? extends Styleable, T>> cssMetaDataSupplier;
 
-        @Override
-        public Object getBean() { return textArea; }
-
-        @Override
-        public String getName() { return "font"; }
-
-        @Override
-        public CssMetaData<S, Font> getCssMetaData() {
-            return cssMetaData;
-        }
-    }
-
-    static class HighlightFillProperty extends StyleableObjectProperty<Paint> {
-        private final Object bean;
-
-        private final CssMetaData<? extends Styleable, Paint> cssMetaData;
-
-        public HighlightFillProperty(Object bean, Paint initialValue) {
+        public CustomStyleablePropertyBase(T initialValue,
+                                           String name,
+                                           GenericStyledArea<?, ?, ?> area,
+                                           Supplier<CssMetaData<? extends Styleable, T>> cssMetaDataSupplier) {
             super(initialValue);
-            this.bean = bean;
-            cssMetaData = new PropertyCssMetaData<>(
-                    this, "-fx-highlight-fill",
-                    StyleConverter.getPaintConverter(), initialValue);
+            this.area = area;
+            this.name = name;
+            this.cssMetaDataSupplier = cssMetaDataSupplier;
         }
 
         @Override
         public Object getBean() {
-            return bean;
+            return area;
         }
 
         @Override
@@ -76,66 +60,36 @@ class CssProperties {
         }
 
         @Override
-        public CssMetaData<? extends Styleable, Paint> getCssMetaData() {
-            return cssMetaData;
+        public CssMetaData<? extends Styleable, T> getCssMetaData() {
+            return cssMetaDataSupplier.get();
         }
+
     }
 
-    static class HighlightTextFillProperty extends StyleableObjectProperty<Paint> {
-        private final Object bean;
+    static class HighlightFillProperty extends CustomStyleablePropertyBase<Paint> {
 
-        private final CssMetaData<? extends Styleable, Paint> cssMetaData;
-
-        public HighlightTextFillProperty(Object bean, Paint initialValue) {
-            super(initialValue);
-            this.bean = bean;
-            cssMetaData = new PropertyCssMetaData<>(
-                    this, "-fx-highlight-text-fill",
-                    StyleConverter.getPaintConverter(), initialValue);
+        public HighlightFillProperty(GenericStyledArea<?, ?, ?> area,
+                                     Supplier<CssMetaData<? extends Styleable, Paint>> cssMetaDataSupplier) {
+            super(Color.DODGERBLUE, "highlightFill", area, cssMetaDataSupplier);
         }
 
-        @Override
-        public Object getBean() {
-            return bean;
-        }
-
-        @Override
-        public String getName() {
-            return "highlightTextFill";
-        }
-
-        @Override
-        public CssMetaData<? extends Styleable, Paint> getCssMetaData() {
-            return cssMetaData;
-        }
     }
 
-    static class CaretBlinkRateProperty extends StyleableObjectProperty<javafx.util.Duration> {
-        private final Object bean;
+    static class HighlightTextFillProperty extends CustomStyleablePropertyBase<Paint> {
 
-        private final CssMetaData<? extends Styleable, javafx.util.Duration> cssMetaData;
-
-        public CaretBlinkRateProperty(Object bean, javafx.util.Duration initialValue) {
-            super(initialValue);
-            this.bean = bean;
-            cssMetaData = new PropertyCssMetaData<>(
-                    this, "-fx-caret-blink-rate",
-                    StyleConverter.getDurationConverter(), initialValue);
+        public HighlightTextFillProperty(GenericStyledArea<?, ?, ?> area,
+                                         Supplier<CssMetaData<? extends Styleable, Paint>> cssMetaDataSupplier) {
+            super(Color.WHITE, "highlightTextFill", area, cssMetaDataSupplier);
         }
 
-        @Override
-        public Object getBean() {
-            return bean;
+    }
+
+    static class CaretBlinkRateProperty extends CustomStyleablePropertyBase<Duration> {
+
+        public CaretBlinkRateProperty(GenericStyledArea<?, ?, ?> area,
+                                      Supplier<CssMetaData<? extends Styleable, Duration>> cssMetaDataSupplier) {
+            super(Duration.millis(500), "caretBlinkRate", area, cssMetaDataSupplier);
         }
 
-        @Override
-        public String getName() {
-            return "caretBlinkRate";
-        }
-
-        @Override
-        public CssMetaData<? extends Styleable, javafx.util.Duration> getCssMetaData() {
-            return cssMetaData;
-        }
     }
 }

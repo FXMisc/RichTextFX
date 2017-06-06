@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.sun.javafx.css.converters.EnumConverter;
@@ -30,6 +31,21 @@ import javafx.scene.text.Text;
  * the value of {@link #underlineProperty()}.</p>
  */
 public class TextExt extends Text {
+
+    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
+    static {
+        // Get list value and make it modifiable
+        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Text.getClassCssMetaData());
+
+        // Add new properties
+        styleables.add(StyleableProperties.BACKGROUND_COLOR);
+        styleables.add(StyleableProperties.UNDERLINE_COLOR);
+        styleables.add(StyleableProperties.UNDERLINE_WIDTH);
+        styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
+        styleables.add(StyleableProperties.UNDERLINE_CAP);
+
+        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
+    }
 	
     private final StyleableObjectProperty<Paint> backgroundColor = new StyleableObjectProperty<Paint>(null) {
         @Override
@@ -123,18 +139,7 @@ public class TextExt extends Text {
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        // Get list value and make it modifiable
-        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(super.getCssMetaData());
-
-        // Add new properties
-        styleables.add(StyleableProperties.BACKGROUND_COLOR);
-        styleables.add(StyleableProperties.UNDERLINE_COLOR);
-        styleables.add(StyleableProperties.UNDERLINE_WIDTH);
-        styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
-        styleables.add(StyleableProperties.UNDERLINE_CAP);
-
-        // Return list value
-        return styleables;
+        return CSS_META_DATA_LIST;
     }
 
     public Paint getBackgroundColor() {

@@ -9,6 +9,7 @@ import static org.reactfx.util.Tuples.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -36,8 +37,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
+import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
+import javafx.css.StyleableProperty;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -61,7 +64,6 @@ import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
 import org.fxmisc.flowless.Virtualized;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CssProperties.EditableProperty;
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.EditableStyledDocument;
@@ -264,7 +266,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
     private static final PseudoClass LAST_PAR  = PseudoClass.getPseudoClass("last-paragraph");
 
-
     /* ********************************************************************** *
      *                                                                        *
      * Properties                                                             *
@@ -281,23 +282,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Background fill for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightFill
-            = new CssProperties.HighlightFillProperty(this, Color.DODGERBLUE);
+            = new CssProperties.HighlightFillProperty(this, () -> HIGHLIGHT_FILL);
 
     /**
      * Text color for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CssProperties.HighlightTextFillProperty(this, Color.WHITE);
+            = new CssProperties.HighlightTextFillProperty(this, () -> HIGHLIGHT_TEXT_FILL);
 
     /**
      * Controls the blink rate of the caret, when one is displayed. Setting
      * the duration to zero disables blinking.
      */
     private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
-            = new CssProperties.CaretBlinkRateProperty(this, javafx.util.Duration.millis(500));
+            = new CssProperties.CaretBlinkRateProperty(this, () -> CARET_BLINK_RATE);
 
     // editable property
-    private final BooleanProperty editable = new EditableProperty<>(this);
+    private final BooleanProperty editable = new CssProperties.EditableProperty<>(this);
     @Override public final boolean isEditable() { return editable.get(); }
     @Override public final void setEditable(boolean value) { editable.set(value); }
     @Override public final BooleanProperty editableProperty() { return editable; }
@@ -863,24 +864,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         new StyledTextAreaBehavior(this);
     }
-
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * CSS                                                                    *
-     *                                                                        *
-     * ********************************************************************** */
-
-    @Override
-    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        List<CssMetaData<? extends Styleable, ?>> styleables =
-                new ArrayList<>(Region.getClassCssMetaData());
-        styleables.add(highlightFill.getCssMetaData());
-        styleables.add(highlightTextFill.getCssMetaData());
-        styleables.add(caretBlinkRate.getCssMetaData());
-        return styleables;
-    }
-
 
     /* ********************************************************************** *
      *                                                                        *
@@ -1623,6 +1606,75 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * CSS                                                                    *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_FILL
+            = new CssMetaData<GenericStyledArea<?, ?, ?>, Paint>("-fx-highlight-fill", StyleConverter.getPaintConverter(), Color.DODGERBLUE
+    ) {
+        @Override
+        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
+            return !styleable.highlightFill.isBound();
+        }
+
+        @Override
+        public StyleableProperty<Paint> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
+            return styleable.highlightFill;
+        }
+    };
+
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL
+            = new CssMetaData<GenericStyledArea<?, ?, ?>, Paint>("-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE
+    ) {
+        @Override
+        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
+            return !styleable.highlightTextFill.isBound();
+        }
+
+        @Override
+        public StyleableProperty<Paint> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
+            return styleable.highlightTextFill;
+        }
+    };
+
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, javafx.util.Duration> CARET_BLINK_RATE
+            = new CssMetaData<GenericStyledArea<?, ?, ?>, javafx.util.Duration>("-fx-caret-blink-rate", StyleConverter.getDurationConverter(), javafx.util.Duration.millis(500)
+    ) {
+        @Override
+        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
+            return !styleable.caretBlinkRate.isBound();
+        }
+
+        @Override
+        public StyleableProperty<javafx.util.Duration> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
+            return styleable.caretBlinkRate;
+        }
+    };
+
+    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
+
+    static {
+        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
+
+        styleables.add(HIGHLIGHT_FILL);
+        styleables.add(HIGHLIGHT_TEXT_FILL);
+        styleables.add(CARET_BLINK_RATE);
+
+        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
+    }
+
+    @Override
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+        return CSS_META_DATA_LIST;
+    }
+
+    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
+        return CSS_META_DATA_LIST;
     }
 
     /* ********************************************************************** *
