@@ -1,11 +1,13 @@
 package org.fxmisc.richtext;
 
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.PointQuery;
@@ -56,8 +58,24 @@ public class InlineCssTextAreaAppTest extends ApplicationTest {
         area.requestFocus();
     }
 
+    public final PointQuery position(Scene scene, Pos pos, double xOffset, double yOffset) {
+        return point(scene).atPosition(pos).atOffset(xOffset, yOffset);
+    }
+
+    public final PointQuery position(Window window, Pos pos, double xOffset, double yOffset) {
+        return point(window).atPosition(pos).atOffset(xOffset, yOffset);
+    }
+
+    public final PointQuery position(Node node, Pos pos, double xOffset, double yOffset) {
+        return point(node).atPosition(pos).atOffset(xOffset, yOffset);
+    }
+
+    public final PointQuery position(Pos pos, double xOffset, double yOffset) {
+        return position(area, pos, xOffset, yOffset);
+    }
+
     public final PointQuery firstLineOfArea() {
-        return point(area).atPosition(Pos.TOP_LEFT).atOffset(5, 5);
+        return position(Pos.TOP_LEFT, 5, 5);
     }
 
     public final FxRobotInterface clickOnFirstLine(MouseButton... buttons) {
