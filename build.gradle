@@ -2,7 +2,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'eclipse'
 
-    version = '0.7.0-M6'
+    version = '1.0.0-SNAPSHOT'
     ext.specificationVersion = '0.7.0'
 
     repositories {
