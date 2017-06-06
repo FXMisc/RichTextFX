@@ -94,6 +94,7 @@ import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
+import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.SuspendableVar;
@@ -497,6 +498,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // paragraphs
     @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return content.getParagraphs(); }
 
+    private final SuspendableList<Paragraph<PS, SEG, S>> visibleParagraphs;
+    @Override public final LiveList<Paragraph<PS, SEG, S>> getVisibleParagraphs() { return visibleParagraphs; }
+
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
     public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
@@ -683,17 +687,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 () -> content.getText(internalSelection.getValue()),
                 internalSelection, content.getParagraphs()).suspendable();
 
-        final Suspendable omniSuspendable = Suspendable.combine(
-                beingUpdated, // must be first, to be the last one to release
-
-                caretPosition,
-                anchor,
-                selection,
-                selectedText,
-                currentParagraph,
-                caretColumn);
-        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
-
         // when content is updated by an area, update the caret
         // and selection ranges of all the other
         // clones that also share this document
@@ -768,6 +761,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                             .afterUpdateItem(p -> nonEmptyCells.add(cell.getNode()));
                 });
         getChildren().add(virtualFlow);
+
+        visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
+
+        final Suspendable omniSuspendable = Suspendable.combine(
+                beingUpdated, // must be first, to be the last one to release
+
+                visibleParagraphs,
+                caretPosition,
+                anchor,
+                selection,
+                selectedText,
+                currentParagraph,
+                caretColumn);
+        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
 
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
@@ -1140,46 +1147,46 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void scrollXToPixel(double pixel) {
-        virtualFlow.scrollXToPixel(pixel);
+        suspendVisibleParsWhile(() -> virtualFlow.scrollXToPixel(pixel));
     }
 
     @Override
     public void scrollYToPixel(double pixel) {
-        virtualFlow.scrollYToPixel(pixel);
+        suspendVisibleParsWhile(() -> virtualFlow.scrollYToPixel(pixel));
     }
 
     @Override
     public void scrollXBy(double deltaX) {
-        virtualFlow.scrollXBy(deltaX);
+        suspendVisibleParsWhile(() -> virtualFlow.scrollXBy(deltaX));
     }
 
     @Override
     public void scrollYBy(double deltaY) {
-        virtualFlow.scrollYBy(deltaY);
+        suspendVisibleParsWhile(() -> virtualFlow.scrollYBy(deltaY));
     }
 
     @Override
     public void scrollBy(Point2D deltas) {
-        virtualFlow.scrollBy(deltas);
+        suspendVisibleParsWhile(() -> virtualFlow.scrollBy(deltas));
     }
 
     void show(double y) {
-        virtualFlow.show(y);
+        suspendVisibleParsWhile(() -> virtualFlow.show(y));
     }
 
     @Override
     public void showParagraphInViewport(int paragraphIndex) {
-        virtualFlow.show(paragraphIndex);
+        suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex));
     }
 
     @Override
     public void showParagraphAtTop(int paragraphIndex) {
-        virtualFlow.showAsFirst(paragraphIndex);
+        suspendVisibleParsWhile(() -> virtualFlow.showAsFirst(paragraphIndex));
     }
 
     @Override
     public void showParagraphAtBottom(int paragraphIndex) {
-        virtualFlow.showAsLast(paragraphIndex);
+        suspendVisibleParsWhile(() -> virtualFlow.showAsLast(paragraphIndex));
     }
 
     void showCaretAtBottom() {
@@ -1187,7 +1194,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMaxY();
-        virtualFlow.showAtOffset(parIdx, getViewportHeight() - y);
+        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, getViewportHeight() - y));
     }
 
     void showCaretAtTop() {
@@ -1195,7 +1202,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds();
         double y = caretBounds.getMinY();
-        virtualFlow.showAtOffset(parIdx, -y);
+        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, -y));
     }
 
     @Override
@@ -1204,6 +1211,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         requestLayout();
     }
 
+    /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
     private void followCaret() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
@@ -1344,16 +1352,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     protected void layoutChildren() {
         Insets ins = getInsets();
-        virtualFlow.resizeRelocate(
-                ins.getLeft(), ins.getTop(),
-                getWidth() - ins.getLeft() - ins.getRight(),
-                getHeight() - ins.getTop() - ins.getBottom());
-        if(followCaretRequested) {
-            followCaretRequested = false;
-            try (Guard g = viewportDirty.suspend()) {
-                followCaret();
+        visibleParagraphs.suspendWhile(() -> {
+            virtualFlow.resizeRelocate(
+                    ins.getLeft(), ins.getTop(),
+                    getWidth() - ins.getLeft() - ins.getRight(),
+                    getHeight() - ins.getTop() - ins.getBottom());
+
+            if(followCaretRequested) {
+                followCaretRequested = false;
+                try (Guard g = viewportDirty.suspend()) {
+                    followCaret();
+                }
             }
-        }
+        });
 
         // position popup
         layoutPopup();
@@ -1587,6 +1598,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Guard suspend(Suspendable... suspendables) {
         return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
+    }
+
+    private void suspendVisibleParsWhile(Runnable runnable) {
+        Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
     }
 
     void clearTargetCaretOffset() {
