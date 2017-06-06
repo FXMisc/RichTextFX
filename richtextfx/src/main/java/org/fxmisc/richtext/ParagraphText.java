@@ -18,6 +18,7 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
+import javafx.scene.shape.StrokeType;
 import org.fxmisc.richtext.model.Paragraph;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -227,11 +228,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
      * @param index The index of the background shape
      */
     private void updateBackground(TextExt text, int start, int end, int index) {
-        // Set fill
-        Paint paint = text.backgroundColorProperty().get();
-        if (paint != null) {
+        Paint fill = text.backgroundColorProperty().get();
+        Paint stroke = text.backgroundStrokeProperty().get();
+        // Only need to draw background if fill or stroke (or both) is set:
+        if (fill != null || stroke != null) {
             Path backgroundShape = backgroundShapes.get(index);
-            backgroundShape.setFill(paint);
+            backgroundShape.setFill(fill);
+            backgroundShape.setStroke(stroke);
+            // Prevent adjacent shapes overlapping:
+            backgroundShape.setStrokeType(StrokeType.INSIDE);
+            Number strokeWidth = text.backgroundStrokeWidthProperty().get();
+            if (stroke != null && strokeWidth != null)
+            {
+                backgroundShape.setStrokeWidth(strokeWidth.doubleValue());
+            }
 
             // Set path elements
             PathElement[] shape = getRangeShape(start, end);
