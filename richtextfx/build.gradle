@@ -37,6 +37,17 @@ dependencies {
     integrationTestCompile "org.testfx:openjfx-monocle:8u76-b04"
 }
 
+
+jar {
+    manifest {
+        attributes(
+            'Specification-Title': 'RichTextFX',
+            'Specification-Version': project.specificationVersion,
+            'Implementation-Title': 'RichTextFX',
+            'Implementation-Version': project.version)
+    }
+}
+
 javadoc {
     // ignore missing Javadoc comments or tags
     options.addStringOption('Xdoclint:all,-missing', '-quiet')

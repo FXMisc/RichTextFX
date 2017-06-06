@@ -3,6 +3,7 @@ subprojects {
     apply plugin: 'eclipse'
 
     version = '1.0.0-SNAPSHOT'
+    ext.specificationVersion = '0.7.0'
 
     repositories {
         mavenCentral()

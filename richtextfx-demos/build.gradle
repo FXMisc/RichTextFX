@@ -2,6 +2,16 @@ dependencies {
     compile project(":richtextfx")
 }
 
+jar {
+    manifest {
+        attributes(
+            'Specification-Title': 'RichTextFX Demos',
+            'Specification-Version': project.specificationVersion,
+            'Implementation-Title': 'RichTextFX Demos',
+            'Implementation-Version': project.version)
+    }
+}
+
 task fatJar(type: Jar, dependsOn: classes) {
     appendix = 'fat'
     from sourceSets.main.output
