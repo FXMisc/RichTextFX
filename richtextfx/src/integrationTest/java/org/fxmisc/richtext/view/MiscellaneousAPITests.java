@@ -187,7 +187,7 @@ public class MiscellaneousAPITests {
                         area.setPadding(new Insets(0, 0, paddingAmount, 0));
                         area.moveTo(0);
 
-                        // insure we're scrolled all the way to the right
+                        // insure we're scrolled all the way to the bottom
                         area.scrollBy(new Point2D(0, 100));
                     });
 
