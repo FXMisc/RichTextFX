@@ -1234,12 +1234,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override
-    public void selectLine() {
-        lineStart(SelectionPolicy.CLEAR);
-        lineEnd(SelectionPolicy.ADJUST);
-    }
-
-    @Override
     public void prevPage(SelectionPolicy selectionPolicy) {
         showCaretAtBottom();
         CharacterHit hit = hit(getTargetCaretOffset(), 1.0);
