@@ -51,6 +51,7 @@ jar {
 javadoc {
     // ignore missing Javadoc comments or tags
     options.addStringOption('Xdoclint:all,-missing', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
 
     // support for JavaFX properties
     options.addBooleanOption('javafx', true);
