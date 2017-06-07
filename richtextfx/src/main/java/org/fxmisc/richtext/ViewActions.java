@@ -10,6 +10,8 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.model.NavigationActions;
+import org.fxmisc.richtext.model.Paragraph;
+import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -251,6 +253,11 @@ public interface ViewActions<PS, SEG, S> {
      */
     double getTotalHeightEstimate();
     Val<Double> totalHeightEstimateProperty();
+
+    /**
+     * Gets the visible paragraphs, even the ones that are barely displayed.
+     */
+    LiveList<Paragraph<PS, SEG, S>> getVisibleParagraphs();
 
     /**
      * Gets the style applicator.
