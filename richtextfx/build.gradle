@@ -19,7 +19,10 @@ testSets {
 
 check.dependsOn integrationTest
 integrationTest.mustRunAfter test
-
+if (gradle.gradleVersion.substring(0, 1) >= "4") {
+    // required for Gradle 4 to see custom integrationTest test suite
+    integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
+}
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     compile (group: 'org.fxmisc.undo', name: 'undofx', version: '1.3.1')
