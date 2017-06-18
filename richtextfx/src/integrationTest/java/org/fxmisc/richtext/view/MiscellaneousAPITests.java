@@ -123,10 +123,6 @@ public class MiscellaneousAPITests {
 
     public class HitTests extends InlineCssTextAreaAppTest {
 
-        private PointQuery position(Pos position, double offsetX, double offsetY) {
-            return point(area).atPosition(position).atOffset(offsetX, offsetY);
-        }
-
         private void moveCaretToAreaEnd() {
             area.moveTo(area.getLength());
         }

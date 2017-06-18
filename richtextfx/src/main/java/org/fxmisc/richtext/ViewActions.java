@@ -372,7 +372,10 @@ public interface ViewActions<PS, SEG, S> {
     /**
      * Selects the current line of a multi-line paragraph.
      */
-    void selectLine();
+    default void selectLine() {
+        lineStart(NavigationActions.SelectionPolicy.CLEAR);
+        lineEnd(NavigationActions.SelectionPolicy.ADJUST);
+    };
 
     /**
      * Moves caret to the previous page (i.e. page up)

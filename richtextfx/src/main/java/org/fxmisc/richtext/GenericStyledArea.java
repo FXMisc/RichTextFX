@@ -283,20 +283,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Background fill for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightFill
-            = new CssProperties.HighlightFillProperty(this, () -> HIGHLIGHT_FILL);
+            = new CssProperties.HighlightFillProperty(this, HIGHLIGHT_FILL);
 
     /**
      * Text color for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CssProperties.HighlightTextFillProperty(this, () -> HIGHLIGHT_TEXT_FILL);
+            = new CssProperties.HighlightTextFillProperty(this, HIGHLIGHT_TEXT_FILL);
 
     /**
      * Controls the blink rate of the caret, when one is displayed. Setting
      * the duration to zero disables blinking.
      */
     private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
-            = new CssProperties.CaretBlinkRateProperty(this, () -> CARET_BLINK_RATE);
+            = new CssProperties.CaretBlinkRateProperty(this, CARET_BLINK_RATE);
 
     // editable property
     private final BooleanProperty editable = new CssProperties.EditableProperty<>(this);
@@ -1231,12 +1231,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public void lineEnd(SelectionPolicy policy) {
         int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition();
         moveTo(getCurrentParagraph(), columnPos, policy);
-    }
-
-    @Override
-    public void selectLine() {
-        lineStart(SelectionPolicy.CLEAR);
-        lineEnd(SelectionPolicy.ADJUST);
     }
 
     @Override

@@ -3,13 +3,11 @@ package org.fxmisc.richtext;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
-import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
 import javafx.util.Duration;
 
 import java.util.function.Supplier;
@@ -37,16 +35,16 @@ class CssProperties {
 
         private final GenericStyledArea<?, ?, ?> area;
         private final String name;
-        private final Supplier<CssMetaData<? extends Styleable, T>> cssMetaDataSupplier;
+        private final CssMetaData<? extends Styleable, T> cssMetaData;
 
         public CustomStyleablePropertyBase(T initialValue,
                                            String name,
                                            GenericStyledArea<?, ?, ?> area,
-                                           Supplier<CssMetaData<? extends Styleable, T>> cssMetaDataSupplier) {
+                                           CssMetaData<? extends Styleable, T> cssMetaData) {
             super(initialValue);
             this.area = area;
             this.name = name;
-            this.cssMetaDataSupplier = cssMetaDataSupplier;
+            this.cssMetaData = cssMetaData;
         }
 
         @Override
@@ -61,7 +59,7 @@ class CssProperties {
 
         @Override
         public CssMetaData<? extends Styleable, T> getCssMetaData() {
-            return cssMetaDataSupplier.get();
+            return cssMetaData;
         }
 
     }
@@ -69,7 +67,7 @@ class CssProperties {
     static class HighlightFillProperty extends CustomStyleablePropertyBase<Paint> {
 
         public HighlightFillProperty(GenericStyledArea<?, ?, ?> area,
-                                     Supplier<CssMetaData<? extends Styleable, Paint>> cssMetaDataSupplier) {
+                                     CssMetaData<? extends Styleable, Paint> cssMetaDataSupplier) {
             super(Color.DODGERBLUE, "highlightFill", area, cssMetaDataSupplier);
         }
 
@@ -78,8 +76,8 @@ class CssProperties {
     static class HighlightTextFillProperty extends CustomStyleablePropertyBase<Paint> {
 
         public HighlightTextFillProperty(GenericStyledArea<?, ?, ?> area,
-                                         Supplier<CssMetaData<? extends Styleable, Paint>> cssMetaDataSupplier) {
-            super(Color.WHITE, "highlightTextFill", area, cssMetaDataSupplier);
+                                         CssMetaData<? extends Styleable, Paint> cssMetaData) {
+            super(Color.WHITE, "highlightTextFill", area, cssMetaData);
         }
 
     }
@@ -87,8 +85,8 @@ class CssProperties {
     static class CaretBlinkRateProperty extends CustomStyleablePropertyBase<Duration> {
 
         public CaretBlinkRateProperty(GenericStyledArea<?, ?, ?> area,
-                                      Supplier<CssMetaData<? extends Styleable, Duration>> cssMetaDataSupplier) {
-            super(Duration.millis(500), "caretBlinkRate", area, cssMetaDataSupplier);
+                                      CssMetaData<? extends Styleable, Duration> cssMetaData) {
+            super(Duration.millis(500), "caretBlinkRate", area, cssMetaData);
         }
 
     }
