@@ -165,6 +165,11 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.currentLineIndex();
     }
 
+    public int getCurrentLineIndex(int position) {
+        layout(); // ensure layout, is a no-op if not dirty
+        return text.currentLineIndex(position);
+    }
+
     public Bounds getCaretBounds() {
         layout(); // ensure layout, is a no-op if not dirty
         Bounds b = text.getCaretBounds();

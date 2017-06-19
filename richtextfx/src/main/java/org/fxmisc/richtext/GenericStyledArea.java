@@ -503,8 +503,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
-    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
-    public boolean isBeingUpdated() { return beingUpdated.get(); }
+    public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     @Override
@@ -592,6 +592,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final TextOps<SEG, S> segmentOps;
     @Override public final SegmentOps<SEG, S> getSegOps() { return segmentOps; }
+
+    private final EventStream<Boolean> autoCaretBlinksSteam;
+    final EventStream<Boolean> autoCaretBlink() { return autoCaretBlinksSteam; }
+
+    private final EventStream<javafx.util.Duration> caretBlinkRateStream;
+    final EventStream<javafx.util.Duration> caretBlinkRateEvents() { return caretBlinkRateStream; }
+
+    final EventStream<?> boundsDirtyFor(EventStream<?> dirtyStream) {
+        return EventStreams.merge(viewportDirty, dirtyStream).suppressWhen(beingUpdatedProperty());
+    }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -842,6 +852,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 invalidationsOf(estimatedScrollXProperty()),
                 invalidationsOf(estimatedScrollYProperty())
         ).suppressible();
+
+        autoCaretBlinksSteam = EventStreams.valuesOf(focusedProperty()
+                .and(editableProperty())
+                .and(disabledProperty().not())
+        );
+        caretBlinkRateStream = EventStreams.valuesOf(caretBlinkRate);
+
         EventStream<?> caretBoundsDirty = merge(viewportDirty, caretDirty)
                 .suppressWhen(beingUpdatedProperty());
         EventStream<?> selectionBoundsDirty = merge(viewportDirty, invalidationsOf(selectionProperty()))
@@ -892,12 +909,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 });
     }
 
-    /**
-     * Returns x coordinate of the caret in the current paragraph.
-     */
     ParagraphBox.CaretOffsetX getCaretOffsetX() {
         int idx = getCurrentParagraph();
         return getCell(idx).getCaretOffsetX();
+    }
+
+    /**
+     * Returns x coordinate of the caret in the current paragraph.
+     */
+    final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
+        return getCell(paragraphIndex).getCaretOffsetX();
     }
 
     double getViewportHeight() {
@@ -961,6 +982,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return _position(parIdx, lineIdx);
+    }
+
+    public final int lineIndex(int paragraphIndex, int column) {
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
+        return cell.getNode().getCurrentLineIndex(column);
     }
 
     TwoDimensional.Position _position(int par, int line) {
@@ -1503,6 +1529,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Optional<Bounds> getCaretBoundsOnScreen() {
         return virtualFlow.getCellIfVisible(getCurrentParagraph())
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
+    }
+
+    public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
