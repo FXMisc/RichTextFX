@@ -20,7 +20,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Binding;
@@ -31,7 +31,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -1063,6 +1062,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.getText(paragraph);
     }
 
+    @Override
+    public String getText(IndexRange range) {
+        return content.getText(range);
+    }
+
     public Paragraph<PS, SEG, S> getParagraph(int index) {
         return content.getParagraph(index);
     }
@@ -1097,6 +1101,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         // force selectionProperty() to be valid
         getSelection();
+
+        return new IndexRange(start, end);
+    }
+
+    public IndexRange getParagraphSelection(UnboundedSelection selection, int paragraph) {
+        int startPar = selection.getStartParagraphIndex();
+        int endPar = selection.getEndPararagraphIndex();
+
+        if(paragraph < startPar || paragraph > endPar) {
+            return EMPTY_RANGE;
+        }
+
+        int start = paragraph == startPar ? selection.getStartColumnPosition() : 0;
+        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLenth(paragraph);
+
+        // force rangeProperty() to be valid
+        selection.getRange();
 
         return new IndexRange(start, end);
     }
@@ -1554,20 +1575,49 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return impl_getSelectionBoundsOnScreen();
     }
 
+    final Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+        return impl_getSelectionBoundsOnScreen(selection);
+    }
+
+    private Optional<Bounds> impl_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+
+        List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
+        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndPararagraphIndex(); i++) {
+            final int i0 = i;
+            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
+                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
+                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
+                bounds.add(b);
+            });
+        }
+
+        return reduceBoundsList(bounds);
+    }
+
     private Optional<Bounds> impl_getSelectionBoundsOnScreen() {
-        Bounds[] bounds = virtualFlow.visibleCells().stream()
+        List<Bounds> bounds = virtualFlow.visibleCells().stream()
                 .map(c -> c.getNode().getSelectionBoundsOnScreen())
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .toArray(Bounds[]::new);
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        if(bounds.length == 0) {
+        return reduceBoundsList(bounds);
+    }
+
+    private Optional<Bounds> reduceBoundsList(List<Bounds> bounds) {
+        if(bounds.size() == 0) {
             return Optional.empty();
         }
-        double minX = Stream.of(bounds).mapToDouble(Bounds::getMinX).min().getAsDouble();
-        double maxX = Stream.of(bounds).mapToDouble(Bounds::getMaxX).max().getAsDouble();
-        double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
-        double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
+        double minX = bounds.stream().mapToDouble(Bounds::getMinX).min().getAsDouble();
+        double maxX = bounds.stream().mapToDouble(Bounds::getMaxX).max().getAsDouble();
+        double minY = bounds.stream().mapToDouble(Bounds::getMinY).min().getAsDouble();
+        double maxY = bounds.stream().mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
     }
 

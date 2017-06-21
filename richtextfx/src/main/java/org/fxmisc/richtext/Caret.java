@@ -13,21 +13,20 @@ import java.util.OptionalInt;
  *
  * <p>
  *     <b>"Position"</b> refers to the place in-between characters. In other words, every {@code "|"} in
- *     {@code "|t|e|x|t|"} is a valid position. There are two kinds of positions used here:
+ *     {@code "|t|e|x|t|"} is a valid position. There are two kinds of positions used here:</p>
  *     <ol>
  *         <li>
  *             {@link #getPosition()}, which refers to a position somewhere in the entire area's content.
- *             It's bounds are {@code 0 < x < area.getLength()}.
+ *             It's bounds are {@code 0 <= x < area.getLength()}.
  *         </li>
  *         <li>
- *             {@link #getColumnPosition()}, which refers to a position somewhere in the current paragraph. It's
- *             bounds are {@code 0 < x < area.getParagraphLength(index)}.
+ *             {@link #getColumnPosition()}, which refers to a position somewhere in the current paragraph.
+ *             It's bounds are {@code 0 <= x < area.getParagraphLength(index)}.
  *         </li>
  *     </ol>
- *     <br>
- *         Note: when parameter names are "position" without the "column" prefix, they refer to
- *         the position in the entire area.
- * </p>
+ *
+ * Note: when parameter names are "position" without the "column" prefix, they refer to the position in the entire area.
+ *
  * <p>
  *     <b>"Line"</b> refers either to a single paragraph when {@link GenericStyledArea#isWrapText() the area does not wrap
  *     its text} or to a line on a multi-line paragraph when the area does wrap its text.
@@ -88,7 +87,13 @@ public interface Caret {
     ObservableValue<Boolean> beingUpdatedProperty();
 
     /**
-     * Moves the caret to the given position in the area.
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * it displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link BoundedSelection#getRange()} selection}.
+     * <br>
+     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
+     * as opposed to always being at the boundary. Use with care.
      *
      * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)} to
      * know how the column index argument can affect the returned position.</p>
@@ -96,7 +101,13 @@ public interface Caret {
     public void moveTo(int paragraphIndex, int columnPosition);
 
     /**
-     * Moves the caret to the given position in the area.
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * it displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link BoundedSelection#getRange()} selection}.
+     * <br>
+     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
+     * as opposed to always being at the boundary. Use with care.
      */
     public void moveTo(int position);
 

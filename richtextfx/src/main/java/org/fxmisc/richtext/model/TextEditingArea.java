@@ -128,6 +128,11 @@ public interface TextEditingArea<PS, SEG, S> {
 
     /**
      * Returns text content of the given character range.
+     */
+    String getText(IndexRange range);
+
+    /**
+     * Returns text content of the given character range.
      *
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
