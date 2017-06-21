@@ -44,10 +44,10 @@ final class CaretImpl implements Caret {
     @Override public final int getColumnPosition() { return columnPosition.getValue(); }
     @Override public final ObservableValue<Integer> columnPositionProperty() { return columnPosition; }
 
-    private final Var<GenericStyledArea.CaretVisibility> showCaret = Var.newSimpleVar(GenericStyledArea.CaretVisibility.AUTO);
-    @Override public final GenericStyledArea.CaretVisibility getShowCaret() { return showCaret.getValue(); }
-    @Override public final void setShowCaret(GenericStyledArea.CaretVisibility value) { showCaret.setValue(value); }
-    @Override public final Var<GenericStyledArea.CaretVisibility> showCaretProperty() { return showCaret; }
+    private final Var<CaretVisibility> showCaret = Var.newSimpleVar(CaretVisibility.AUTO);
+    @Override public final CaretVisibility getShowCaret() { return showCaret.getValue(); }
+    @Override public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
+    @Override public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
 
     private final Binding<Boolean> visible;
     @Override public final boolean isVisible() { return visible.getValue(); }

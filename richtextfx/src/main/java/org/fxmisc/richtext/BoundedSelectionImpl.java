@@ -81,6 +81,10 @@ public class BoundedSelectionImpl implements BoundedSelection {
 
     private Subscription subscription = () -> {};
 
+    BoundedSelectionImpl(GenericStyledArea<?, ?, ?> area) {
+        this(area, area.getMainCaret());
+    }
+
     BoundedSelectionImpl(GenericStyledArea<?, ?, ?> area, Caret caret) {
         this(area, caret, new IndexRange(0, 0));
     }

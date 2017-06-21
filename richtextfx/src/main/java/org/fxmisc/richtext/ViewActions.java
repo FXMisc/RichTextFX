@@ -2,7 +2,6 @@ package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -39,22 +38,6 @@ public interface ViewActions<PS, SEG, S> {
     boolean isWrapText();
     void setWrapText(boolean value);
     BooleanProperty wrapTextProperty();
-
-    public static enum CaretVisibility {
-        /** Caret is displayed. */
-        ON,
-        /** Caret is displayed when area is focused, enabled, and editable. */
-        AUTO,
-        /** Caret is not displayed. */
-        OFF
-    }
-
-    /**
-     * Indicates when this text area should display a caret.
-     */
-    CaretVisibility getShowCaret();
-    void setShowCaret(CaretVisibility value);
-    Var<CaretVisibility> showCaretProperty();
 
     /**
      * Defines how long the mouse has to stay still over the text before a
@@ -205,20 +188,6 @@ public interface ViewActions<PS, SEG, S> {
      */
     double getContextMenuYOffset();
     void setContextMenuYOffset(double offset);
-
-    /**
-     * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
-     * if caret is not visible in the viewport.
-     */
-    Optional<Bounds> getCaretBounds();
-    ObservableValue<Optional<Bounds>> caretBoundsProperty();
-
-    /**
-     * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
-     * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
-     */
-    Optional<Bounds> getSelectionBounds();
-    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
 
     /**
      * Gets the <em>estimated</em> scrollX value. This can be set in order to scroll the content.

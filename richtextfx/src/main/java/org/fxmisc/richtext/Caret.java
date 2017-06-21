@@ -34,6 +34,15 @@ import java.util.OptionalInt;
  */
 public interface Caret {
 
+    public static enum CaretVisibility {
+        /** Caret is displayed. */
+        ON,
+        /** Caret is displayed when area is focused, enabled, and editable. */
+        AUTO,
+        /** Caret is not displayed. */
+        OFF
+    }
+
     /** The position of the caret within the text */
     public ObservableValue<Integer> positionProperty();
     public int getPosition();
@@ -52,11 +61,11 @@ public interface Caret {
 
     /**
      * Whether to display the caret or not. Default value is
-     * {@link org.fxmisc.richtext.ViewActions.CaretVisibility#AUTO}.
+     * {@link CaretVisibility#AUTO}.
      */
-    public Var<GenericStyledArea.CaretVisibility> showCaretProperty();
-    public GenericStyledArea.CaretVisibility getShowCaret();
-    public void setShowCaret(GenericStyledArea.CaretVisibility value);
+    public Var<CaretVisibility> showCaretProperty();
+    public CaretVisibility getShowCaret();
+    public void setShowCaret(CaretVisibility value);
 
     /** Whether the caret is being shown in the viewport */
     public ObservableValue<Boolean> visibleProperty();
