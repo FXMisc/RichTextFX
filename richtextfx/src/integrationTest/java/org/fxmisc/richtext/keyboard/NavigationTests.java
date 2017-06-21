@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.Arrays;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -248,6 +249,18 @@ public class NavigationTests {
             area.moveTo(position);
         }
 
+        private void waitForMultiLineRegistration() throws TimeoutException {
+            // When the stage's width changes, TextFlow does not properly handle API calls to a
+            //  multi-line paragraph immediately. So, wait until it correctly responds
+            //  to the stage width change
+            Future<Void> textFlowIsReady = WaitForAsyncUtils.asyncFx(() -> {
+                while (area.getParagraphLinesCount(0) != lines.length) {
+                    sleep(10);
+                }
+            });
+            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, textFlowIsReady);
+        }
+
         @Override
         public void start(Stage stage) throws Exception {
             super.start(stage);
@@ -266,12 +279,7 @@ public class NavigationTests {
 
             @Before
             public void setup() throws TimeoutException {
-                // When the stage's width changes, TextFlow does not properly handle API calls to a
-                //  multi-line paragraph immediately. So, wait until it correctly responds
-                //  to the stage width change
-                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
-                        () -> area.getParagraphLinesCount(0) == lines.length
-                );
+                waitForMultiLineRegistration();
             }
 
             @Test
@@ -324,12 +332,7 @@ public class NavigationTests {
 
             @Before
             public void setup() throws TimeoutException {
-                // When the stage's width changes, TextFlow does not properly handle API calls to a
-                //  multi-line paragraph immediately. So, wait until it correctly responds
-                //  to the stage width change
-                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
-                        () -> area.getParagraphLinesCount(0) == lines.length
-                );
+                waitForMultiLineRegistration();
 
                 press(SHORTCUT);
             }
@@ -385,12 +388,7 @@ public class NavigationTests {
 
             @Before
             public void setup() throws TimeoutException {
-                // When the stage's width changes, TextFlow does not properly handle API calls to a
-                //  multi-line paragraph immediately. So, wait until it correctly responds
-                //  to the stage width change
-                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
-                        () -> area.getParagraphLinesCount(0) == lines.length
-                );
+                waitForMultiLineRegistration();
 
                 press(SHIFT);
             }
@@ -445,12 +443,7 @@ public class NavigationTests {
 
             @Before
             public void setup() throws TimeoutException {
-                // When the stage's width changes, TextFlow does not properly handle API calls to a
-                //  multi-line paragraph immediately. So, wait until it correctly responds
-                //  to the stage width change
-                WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS,
-                        () -> area.getParagraphLinesCount(0) == lines.length
-                );
+                waitForMultiLineRegistration();
 
                 press(SHORTCUT, SHIFT);
             }
