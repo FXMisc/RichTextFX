@@ -13,7 +13,7 @@ public interface UndoActions {
      * Undo manager of this text area.
      */
     UndoManager getUndoManager();
-    void setUndoManager(UndoManagerFactory undoManagerFactory);
+    void setUndoManager(UndoManager undoManager);
 
     default void undo() { getUndoManager().undo(); }
 
