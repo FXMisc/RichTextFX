@@ -25,7 +25,7 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-public final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
+final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
 
     private final SuspendableVal<IndexRange> range;
     @Override public final IndexRange getRange() { return range.getValue(); }

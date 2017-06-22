@@ -44,6 +44,9 @@ import org.fxmisc.richtext.model.StyledDocument;
  *     then just write the much simpler {@code BoundedSelection<?, ?, ?> selection}</b>.
  * </p>
  *
+ * @see Caret
+ * @see UnboundedSelection
+ *
  * @param <PS> type for {@link StyledDocument}'s paragraph style; only necessary when using the "selectedDocument"
  *            getter or property
  * @param <SEG> type for {@link StyledDocument}'s segment type; only necessary when using the "selectedDocument"
