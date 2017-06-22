@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import org.fxmisc.richtext.Caret;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.model.NavigationActions;
+import org.fxmisc.richtext.util.UndoUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
