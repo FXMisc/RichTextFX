@@ -315,52 +315,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
     @Override public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
-    private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
-    public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
-    public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
-
-    private final Property<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
-    public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
-
-    private final Property<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
-    public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
-
-    private final Property<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
-        CharacterHit hit = hit(p.getX(), p.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
-    });
-    public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
-    public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
-
-    private final Property<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
-    });
-    public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
-
-    private final Property<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
-        CharacterHit hit = hit(p.getX(), p.getY());
-        displaceCaret(hit.getInsertionIndex());
-    });
-    public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
-    public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
-
-    private final Property<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveSelectedText(hit.getInsertionIndex());
-    });
-    @Override public final void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDrop.setValue(consumer); }
-    @Override public final Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDrop.getValue(); }
-
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     @Override
     public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
@@ -415,6 +369,60 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Mouse Behavior Hooks                                                   *
+     *                                                                        *
+     * Hooks for overriding some of the default mouse behavior                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private final Property<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
+
+    private final Property<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+    public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
+    public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+    public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
+    public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
+
+    private final Property<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        displaceCaret(hit.getInsertionIndex());
+    });
+    public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
+    public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
+
+    private final Property<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveSelectedText(hit.getInsertionIndex());
+    });
+    @Override public final void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDrop.setValue(consumer); }
+    @Override public final Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDrop.getValue(); }
+
+    // not a hook, but still plays a part in the default mouse behavior
+    private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
+    public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
+    public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
