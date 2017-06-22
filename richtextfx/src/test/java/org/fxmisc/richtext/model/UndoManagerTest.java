@@ -13,13 +13,6 @@ public class UndoManagerTest {
     private InlineCssTextArea area = new InlineCssTextArea();
 
     @Test
-    public void deletingTextThatWasJustInsertedShouldNotMergeTheTwoChanges() {
-        area.replaceText(0, 0, "text");
-        area.replaceText(0, area.getLength(), "");
-        area.undo();
-    }
-
-    @Test
     public void testUndoWithWinNewlines() {
         final TextOps<StyledText<Collection<String>>, Collection<String>> segOps = StyledText.textOps();
 
