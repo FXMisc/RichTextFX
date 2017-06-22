@@ -15,11 +15,19 @@ public final class UndoUtils {
         throw new IllegalStateException("UndoUtils cannot be instantiated");
     }
 
-    public static <PS, SEG, S> UndoManager createUndoManager(GenericStyledArea<PS, SEG, S> area) {
+    public static <PS, SEG, S> UndoManager defaultUndoManager(GenericStyledArea<PS, SEG, S> area) {
         return area.isPreserveStyle()
                 ? richTextUndoManager(area)
                 : plainTextUndoManager(area);
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * UndoManager Factory Methods                                            *
+     *                                                                        *
+     * Code that constructs different kinds of UndoManagers for an area       *
+     *                                                                        *
+     * ********************************************************************** */
 
     public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area) {
         return richTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory());
@@ -27,8 +35,7 @@ public final class UndoUtils {
 
     public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area,
                                                                UndoManagerFactory factory) {
-        Consumer<RichTextChange<PS, SEG, S>> apply = change -> area.replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        return factory.create(area.richChanges(), RichTextChange::invert, apply, TextChange::mergeWith, TextChange::isIdentity);
+        return factory.create(area.richChanges(), RichTextChange::invert, applyRichTextChange(area), TextChange::mergeWith, TextChange::isIdentity);
     };
 
     public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area) {
@@ -37,7 +44,22 @@ public final class UndoUtils {
 
     public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area,
                                                                 UndoManagerFactory factory) {
-        Consumer<PlainTextChange> apply = change -> area.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        return factory.create(area.plainTextChanges(), PlainTextChange::invert, apply, TextChange::mergeWith, TextChange::isIdentity);
+        return factory.create(area.plainTextChanges(), PlainTextChange::invert, applyPlainTextChange(area), TextChange::mergeWith, TextChange::isIdentity);
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Change Appliers                                                        *
+     *                                                                        *
+     * Code that handles how a change should be applied to the area           *
+     *                                                                        *
+     * ********************************************************************** */
+
+    public static <PS, SEG, S> Consumer<PlainTextChange> applyPlainTextChange(GenericStyledArea<PS, SEG, S> area) {
+        return change -> area.replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
+    }
+
+    public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(GenericStyledArea<PS, SEG, S> area) {
+        return change -> area.replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
     }
 }

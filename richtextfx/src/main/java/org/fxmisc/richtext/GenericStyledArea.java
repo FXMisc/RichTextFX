@@ -623,7 +623,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         this.applyParagraphStyle = applyParagraphStyle;
         this.segmentOps = segmentOps;
 
-        undoManager = UndoUtils.createUndoManager(this);
+        undoManager = UndoUtils.defaultUndoManager(this);
 
         // allow tab traversal into area
         setFocusTraversable(true);
