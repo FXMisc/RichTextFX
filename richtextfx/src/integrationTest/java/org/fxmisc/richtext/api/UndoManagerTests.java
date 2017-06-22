@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.view;
+package org.fxmisc.richtext.api;
 
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.util.UndoUtils;
