@@ -655,13 +655,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
         navigator = new TwoLevelNavigator(cellCount, cellLength);
 
-        // relayout the popup when any of its settings values change (besides the caret being dirty)
-        EventStream<?> popupAlignmentDirty = invalidationsOf(popupAlignmentProperty());
-        EventStream<?> popupAnchorAdjustmentDirty = invalidationsOf(popupAnchorAdjustmentProperty());
-        EventStream<?> popupAnchorOffsetDirty = invalidationsOf(popupAnchorOffsetProperty());
-        EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
-        subscribeTo(popupDirty, x -> layoutPopup());
-
         viewportDirty = merge(
                 // no need to check for width & height invalidations as scroll values update when these do
 
@@ -685,17 +678,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
-        // Adjust popup anchor by either a user-provided function,
-        // or user-provided offset, or don't adjust at all.
-        Val<UnaryOperator<Point2D>> userOffset = Val.map(
-                popupAnchorOffsetProperty(),
-                offset -> anchor -> anchor.add(offset));
-        _popupAnchorAdjustment =
-                Val.orElse(
-                        popupAnchorAdjustmentProperty(),
-                        userOffset)
-                        .orElseConst(UnaryOperator.identity());
-
         final Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
 
@@ -711,6 +693,26 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new StyledTextAreaBehavior(this);
+
+        // Code below this point is deprecated Popup API. It will be removed in the future
+
+        // relayout the popup when any of its settings values change (besides the caret being dirty)
+        EventStream<?> popupAlignmentDirty = invalidationsOf(popupAlignmentProperty());
+        EventStream<?> popupAnchorAdjustmentDirty = invalidationsOf(popupAnchorAdjustmentProperty());
+        EventStream<?> popupAnchorOffsetDirty = invalidationsOf(popupAnchorOffsetProperty());
+        EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
+        subscribeTo(popupDirty, x -> layoutPopup());
+
+        // Adjust popup anchor by either a user-provided function,
+        // or user-provided offset, or don't adjust at all.
+        Val<UnaryOperator<Point2D>> userOffset = Val.map(
+                popupAnchorOffsetProperty(),
+                offset -> anchor -> anchor.add(offset));
+        _popupAnchorAdjustment =
+                Val.orElse(
+                        popupAnchorAdjustmentProperty(),
+                        userOffset)
+                        .orElseConst(UnaryOperator.identity());
     }
 
     /* ********************************************************************** *
