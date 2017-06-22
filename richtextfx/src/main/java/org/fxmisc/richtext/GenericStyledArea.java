@@ -1,9 +1,6 @@
 package org.fxmisc.richtext;
 
-import static javafx.util.Duration.*;
 import static org.fxmisc.richtext.PopupAlignment.*;
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
@@ -20,7 +17,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Binding;
@@ -31,7 +28,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -88,7 +84,6 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
-import org.reactfx.StateMachine;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
@@ -96,8 +91,6 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
-import org.reactfx.value.SuspendableVal;
-import org.reactfx.value.SuspendableVar;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -310,12 +303,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setWrapText(boolean value) { wrapText.set(value); }
     @Override public final BooleanProperty wrapTextProperty() { return wrapText; }
 
-    // showCaret property
-    private final Var<CaretVisibility> showCaret = Var.newSimpleVar(CaretVisibility.AUTO);
-    @Override public final CaretVisibility getShowCaret() { return showCaret.getValue(); }
-    @Override public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
-    @Override public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
-
     // undo manager
     private UndoManager undoManager;
     @Override public UndoManager getUndoManager() { return undoManager; }
@@ -449,51 +436,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // rich text
     @Override public final StyledDocument<PS, SEG, S> getDocument() { return content; }
 
+    private final Caret mainCaret;
+    @Override public final Caret getMainCaret() { return mainCaret; }
+
+    private final BoundedSelection<PS, SEG, S> mainSelection;
+    @Override public final BoundedSelection<PS, SEG, S> getMainSelection() { return mainSelection; }
+
     // length
     @Override public final int getLength() { return content.getLength(); }
     @Override public final ObservableValue<Integer> lengthProperty() { return content.lengthProperty(); }
-
-    // caret position
-    private final Var<Integer> internalCaretPosition = Var.newSimpleVar(0);
-    private final SuspendableVal<Integer> caretPosition = internalCaretPosition.suspendable();
-    @Override public final int getCaretPosition() { return caretPosition.getValue(); }
-    @Override public final ObservableValue<Integer> caretPositionProperty() { return caretPosition; }
-
-    // caret bounds
-    private final Val<Optional<Bounds>> caretBounds;
-    @Override public final Optional<Bounds> getCaretBounds() { return caretBounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return caretBounds; }
-
-    // selection anchor
-    private final SuspendableVar<Integer> anchor = Var.newSimpleVar(0).suspendable();
-    @Override public final int getAnchor() { return anchor.getValue(); }
-    @Override public final ObservableValue<Integer> anchorProperty() { return anchor; }
-
-    // selection
-    private final Var<IndexRange> internalSelection = Var.newSimpleVar(EMPTY_RANGE);
-    private final SuspendableVal<IndexRange> selection = internalSelection.suspendable();
-    @Override public final IndexRange getSelection() { return selection.getValue(); }
-    @Override public final ObservableValue<IndexRange> selectionProperty() { return selection; }
-
-    // selected text
-    private final SuspendableVal<String> selectedText;
-    @Override public final String getSelectedText() { return selectedText.getValue(); }
-    @Override public final ObservableValue<String> selectedTextProperty() { return selectedText; }
-
-    // selection bounds
-    private final Val<Optional<Bounds>> selectionBounds;
-    @Override public final Optional<Bounds> getSelectionBounds() { return selectionBounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return selectionBounds; }
-
-    // current paragraph index
-    private final SuspendableVal<Integer> currentParagraph;
-    @Override public final int getCurrentParagraph() { return currentParagraph.getValue(); }
-    @Override public final ObservableValue<Integer> currentParagraphProperty() { return currentParagraph; }
-
-    // caret column
-    private final SuspendableVal<Integer> caretColumn;
-    @Override public final int getCaretColumn() { return caretColumn.getValue(); }
-    @Override public final ObservableValue<Integer> caretColumnProperty() { return caretColumn; }
 
     // paragraphs
     @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return content.getParagraphs(); }
@@ -503,8 +454,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
-    public ObservableBooleanValue beingUpdatedProperty() { return beingUpdated; }
-    public boolean isBeingUpdated() { return beingUpdated.get(); }
+    public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     @Override
@@ -536,15 +487,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private Position selectionStart2D;
-    private Position selectionEnd2D;
-
     private Subscription subscriptions = () -> {};
 
     // Remembers horizontal position when traversing up / down.
     private Optional<ParagraphBox.CaretOffsetX> targetCaretOffset = Optional.empty();
-
-    private final Binding<Boolean> caretVisible;
 
     private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
 
@@ -592,6 +538,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final TextOps<SEG, S> segmentOps;
     @Override public final SegmentOps<SEG, S> getSegOps() { return segmentOps; }
+
+    private final EventStream<Boolean> autoCaretBlinksSteam;
+    final EventStream<Boolean> autoCaretBlink() { return autoCaretBlinksSteam; }
+
+    private final EventStream<javafx.util.Duration> caretBlinkRateStream;
+    final EventStream<javafx.util.Duration> caretBlinkRateEvents() { return caretBlinkRateStream; }
+
+    final EventStream<?> boundsDirtyFor(EventStream<?> dirtyStream) {
+        return EventStreams.merge(viewportDirty, dirtyStream).suppressWhen(beingUpdatedProperty());
+    }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -666,77 +622,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
                 : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
 
-        Val<Position> caretPosition2D = Val.create(
-                () -> content.offsetToPosition(internalCaretPosition.getValue(), Forward),
-                internalCaretPosition, getParagraphs());
-
-        currentParagraph = caretPosition2D.map(Position::getMajor).suspendable();
-        caretColumn = caretPosition2D.map(Position::getMinor).suspendable();
-
-        selectionStart2D = position(0, 0);
-        selectionEnd2D = position(0, 0);
-        internalSelection.addListener(obs -> {
-            IndexRange sel = internalSelection.getValue();
-            selectionStart2D = offsetToPosition(sel.getStart(), Forward);
-            selectionEnd2D = sel.getLength() == 0
-                    ? selectionStart2D
-                    : selectionStart2D.offsetBy(sel.getLength(), Backward);
-        });
-
-        selectedText = Val.create(
-                () -> content.getText(internalSelection.getValue()),
-                internalSelection, content.getParagraphs()).suspendable();
-
-        // when content is updated by an area, update the caret
-        // and selection ranges of all the other
-        // clones that also share this document
-        subscribeTo(plainTextChanges(), plainTextChange -> {
-            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
-            if (changeLength != 0) {
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(changeLength);
-
-                // update caret
-                int caretPosition = getCaretPosition();
-                if (indexOfChange < caretPosition) {
-                    // if caret is within the changed content, move it to indexOfChange
-                    // otherwise offset it by changeLength
-                    displaceCaret(
-                            caretPosition < endOfChange
-                                    ? indexOfChange
-                                    : caretPosition + changeLength
-                    );
-                }
-                // update selection
-                int selectionStart = getSelection().getStart();
-                int selectionEnd = getSelection().getEnd();
-                if (selectionStart != selectionEnd) {
-                    // if start/end is within the changed content, move it to indexOfChange
-                    // otherwise, offset it by changeLength
-                    // Note: if both are moved to indexOfChange, selection is empty.
-                    if (indexOfChange < selectionStart) {
-                        selectionStart = selectionStart < endOfChange
-                                ? indexOfChange
-                                : selectionStart + changeLength;
-                    }
-                    if (indexOfChange < selectionEnd) {
-                        selectionEnd = selectionEnd < endOfChange
-                                ? indexOfChange
-                                : selectionEnd + changeLength;
-                    }
-                    selectRange(selectionStart, selectionEnd);
-                } else {
-                    // force-update internalSelection in case caret is
-                    // at the end of area and a character was deleted
-                    // (prevents a StringIndexOutOfBoundsException because
-                    // selection's end is one char farther than area's length).
-                    int internalCaretPos = internalCaretPosition.getValue();
-                    selectRange(internalCaretPos, internalCaretPos);
-                }
-            }
-        });
-
         // allow tab traversal into area
         setFocusTraversable(true);
 
@@ -762,20 +647,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 });
         getChildren().add(virtualFlow);
 
-        visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
-
-        final Suspendable omniSuspendable = Suspendable.combine(
-                beingUpdated, // must be first, to be the last one to release
-
-                visibleParagraphs,
-                caretPosition,
-                anchor,
-                selection,
-                selectedText,
-                currentParagraph,
-                caretColumn);
-        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
-
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
@@ -788,49 +659,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
         subscribeTo(popupDirty, x -> layoutPopup());
 
-        // follow the caret every time the caret position or paragraphs change
-        EventStream<?> caretPosDirty = invalidationsOf(caretPositionProperty());
-        EventStream<?> paragraphsDirty = invalidationsOf(getParagraphs());
-        EventStream<?> selectionDirty = invalidationsOf(selectionProperty());
-        // need to reposition popup even when caret hasn't moved, but selection has changed (been deselected)
-        EventStream<?> caretDirty = merge(caretPosDirty, paragraphsDirty, selectionDirty);
-
-        // whether or not to display the caret
-        EventStream<Boolean> blinkCaret = EventStreams.valuesOf(showCaretProperty())
-                .flatMap(mode -> {
-                    switch (mode) {
-                        case ON:
-                            return EventStreams.valuesOf(Val.constant(true));
-                        case OFF:
-                            return EventStreams.valuesOf(Val.constant(false));
-                        default:
-                        case AUTO:
-                            return EventStreams.valuesOf(focusedProperty()
-                                    .and(editableProperty())
-                                    .and(disabledProperty().not()));
-                        }
-                });
-
-        // the rate at which to display the caret
-        EventStream<javafx.util.Duration> blinkRate = EventStreams.valuesOf(caretBlinkRate);
-
-        // The caret is visible in periodic intervals,
-        // but only when blinkCaret is true.
-        caretVisible = EventStreams.combine(blinkCaret, blinkRate)
-                .flatMap(tuple -> {
-                    Boolean blink = tuple.get1();
-                    javafx.util.Duration rate = tuple.get2();
-                    if(blink) {
-                        return rate.lessThanOrEqualTo(ZERO)
-                            ? EventStreams.valuesOf(Val.constant(true))
-                            : booleanPulse(rate, caretDirty);
-                    } else {
-                        return EventStreams.valuesOf(Val.constant(false));
-                    }
-                })
-                .toBinding(false);
-        manageBinding(caretVisible);
-
         viewportDirty = merge(
                 // no need to check for width & height invalidations as scroll values update when these do
 
@@ -842,14 +670,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 invalidationsOf(estimatedScrollXProperty()),
                 invalidationsOf(estimatedScrollYProperty())
         ).suppressible();
-        EventStream<?> caretBoundsDirty = merge(viewportDirty, caretDirty)
-                .suppressWhen(beingUpdatedProperty());
-        EventStream<?> selectionBoundsDirty = merge(viewportDirty, invalidationsOf(selectionProperty()))
-                .suppressWhen(beingUpdatedProperty());
 
-        // updates the bounds of the caret/selection
-        caretBounds = Val.create(this::getCaretBoundsOnScreen, caretBoundsDirty);
-        selectionBounds = Val.create(this::impl_bounds_getSelectionBoundsOnScreen, selectionBoundsDirty);
+        autoCaretBlinksSteam = EventStreams.valuesOf(focusedProperty()
+                .and(editableProperty())
+                .and(disabledProperty().not())
+        );
+        caretBlinkRateStream = EventStreams.valuesOf(caretBlinkRate);
+
+        mainCaret = new CaretImpl(this);
+        mainSelection = new BoundedSelectionImpl<>(this);
+
+        visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
         // Adjust popup anchor by either a user-provided function,
         // or user-provided offset, or don't adjust at all.
@@ -861,6 +692,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                         popupAnchorAdjustmentProperty(),
                         userOffset)
                         .orElseConst(UnaryOperator.identity());
+
+        final Suspendable omniSuspendable = Suspendable.combine(
+                beingUpdated, // must be first, to be the last one to release
+
+                visibleParagraphs
+        );
+        manageSubscription(omniSuspendable.suspendWhen(content.beingUpdatedProperty()));
 
         // dispatch MouseOverTextEvents when mouseOverTextDelay is not null
         EventStreams.valuesOf(mouseOverTextDelayProperty())
@@ -895,9 +733,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     /**
      * Returns x coordinate of the caret in the current paragraph.
      */
-    ParagraphBox.CaretOffsetX getCaretOffsetX() {
-        int idx = getCurrentParagraph();
-        return getCell(idx).getCaretOffsetX();
+    final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
+        return getCell(paragraphIndex).getCaretOffsetX();
     }
 
     double getViewportHeight() {
@@ -961,6 +798,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
         return _position(parIdx, lineIdx);
+    }
+
+    public final int lineIndex(int paragraphIndex, int column) {
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
+        return cell.getNode().getCurrentLineIndex(column);
     }
 
     TwoDimensional.Position _position(int par, int line) {
@@ -1037,6 +879,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.getText(paragraph);
     }
 
+    @Override
+    public String getText(IndexRange range) {
+        return content.getText(range);
+    }
+
     public Paragraph<PS, SEG, S> getParagraph(int index) {
         return content.getParagraph(index);
     }
@@ -1059,18 +906,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
-        int startPar = selectionStart2D.getMajor();
-        int endPar = selectionEnd2D.getMajor();
+        return getParagraphSelection(mainSelection, paragraph);
+    }
+
+    public IndexRange getParagraphSelection(UnboundedSelection selection, int paragraph) {
+        int startPar = selection.getStartParagraphIndex();
+        int endPar = selection.getEndPararagraphIndex();
 
         if(paragraph < startPar || paragraph > endPar) {
             return EMPTY_RANGE;
         }
 
-        int start = paragraph == startPar ? selectionStart2D.getMinor() : 0;
-        int end = paragraph == endPar ? selectionEnd2D.getMinor() : getParagraphLenth(paragraph);
+        int start = paragraph == startPar ? selection.getStartColumnPosition() : 0;
+        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLenth(paragraph);
 
-        // force selectionProperty() to be valid
-        getSelection();
+        // force rangeProperty() to be valid
+        selection.getRange();
 
         return new IndexRange(start, end);
     }
@@ -1255,9 +1106,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * as opposed to always being at the boundary. Use with care.
      */
     public void displaceCaret(int pos) {
-        try(Guard g = suspend(caretPosition, currentParagraph, caretColumn)) {
-            internalCaretPosition.setValue(pos);
-        }
+        mainCaret.moveTo(pos);
     }
 
     /**
@@ -1312,18 +1161,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         int newCaretPos = start + replacement.length();
         selectRange(newCaretPos, newCaretPos);
-    }
-
-    @Override
-    public void selectRange(int anchor, int caretPosition) {
-        try(Guard g = suspend(
-                this.caretPosition, currentParagraph,
-                caretColumn, this.anchor,
-                selection, selectedText)) {
-            this.internalCaretPosition.setValue(clamp(0, caretPosition, getLength()));
-            this.anchor.setValue(clamp(0, anchor, getLength()));
-            this.internalSelection.setValue(IndexRange.normalize(getAnchor(), getCaretPosition()));
-        }
     }
 
     /* ********************************************************************** *
@@ -1396,7 +1233,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         ).subscribe(in -> in.exec((i, n) -> box.pseudoClassStateChanged(LAST_PAR, i == n-1)));
 
         // caret is visible only in the paragraph with the caret
-        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? caretVisible : Val.constant(false));
+        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? mainCaret.visibleProperty() : Val.constant(false));
         box.caretVisibleProperty().bind(cellCaretVisible);
 
         // bind cell's caret position to area's caret column,
@@ -1506,6 +1343,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
+    public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex)
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
+    }
+
     private Optional<Bounds> impl_popup_getSelectionBoundsOnScreen() {
         IndexRange selection = getSelection();
         if(selection.getLength() == 0) {
@@ -1523,20 +1365,49 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return impl_getSelectionBoundsOnScreen();
     }
 
+    final Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+        return impl_getSelectionBoundsOnScreen(selection);
+    }
+
+    private Optional<Bounds> impl_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+
+        List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
+        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndPararagraphIndex(); i++) {
+            final int i0 = i;
+            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
+                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
+                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
+                bounds.add(b);
+            });
+        }
+
+        return reduceBoundsList(bounds);
+    }
+
     private Optional<Bounds> impl_getSelectionBoundsOnScreen() {
-        Bounds[] bounds = virtualFlow.visibleCells().stream()
+        List<Bounds> bounds = virtualFlow.visibleCells().stream()
                 .map(c -> c.getNode().getSelectionBoundsOnScreen())
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .toArray(Bounds[]::new);
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        if(bounds.length == 0) {
+        return reduceBoundsList(bounds);
+    }
+
+    private Optional<Bounds> reduceBoundsList(List<Bounds> bounds) {
+        if(bounds.size() == 0) {
             return Optional.empty();
         }
-        double minX = Stream.of(bounds).mapToDouble(Bounds::getMinX).min().getAsDouble();
-        double maxX = Stream.of(bounds).mapToDouble(Bounds::getMaxX).max().getAsDouble();
-        double minY = Stream.of(bounds).mapToDouble(Bounds::getMinY).min().getAsDouble();
-        double maxY = Stream.of(bounds).mapToDouble(Bounds::getMaxY).max().getAsDouble();
+        double minX = bounds.stream().mapToDouble(Bounds::getMinX).min().getAsDouble();
+        double maxX = bounds.stream().mapToDouble(Bounds::getMaxX).max().getAsDouble();
+        double minY = bounds.stream().mapToDouble(Bounds::getMinY).min().getAsDouble();
+        double maxY = bounds.stream().mapToDouble(Bounds::getMaxY).max().getAsDouble();
         return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
     }
 
@@ -1590,10 +1461,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return factory.create(richChanges(), RichTextChange::invert, apply, merge, TextChange::isIdentity);
     }
 
-    private Guard suspend(Suspendable... suspendables) {
-        return Suspendable.combine(beingUpdated, Suspendable.combine(suspendables)).suspend();
-    }
-
     private void suspendVisibleParsWhile(Runnable runnable) {
         Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
     }
@@ -1603,18 +1470,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     ParagraphBox.CaretOffsetX getTargetCaretOffset() {
-        if(!targetCaretOffset.isPresent())
-            targetCaretOffset = Optional.of(getCaretOffsetX());
-        return targetCaretOffset.get();
-    }
-
-    private static EventStream<Boolean> booleanPulse(javafx.util.Duration javafxDuration, EventStream<?> restartImpulse) {
-        Duration duration = Duration.ofMillis(Math.round(javafxDuration.toMillis()));
-        EventStream<?> ticks = EventStreams.restartableTicks(duration, restartImpulse);
-        return StateMachine.init(false)
-                .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
-                .on(ticks).transition((state, tick) -> !state)
-                .toStateStream();
+        return mainCaret.getTargetOffset();
     }
 
     /* ********************************************************************** *

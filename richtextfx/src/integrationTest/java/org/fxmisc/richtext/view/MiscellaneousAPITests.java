@@ -6,8 +6,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.stage.Stage;
+import org.fxmisc.richtext.Caret;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.fxmisc.richtext.ViewActions.CaretVisibility;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class MiscellaneousAPITests {
             super.start(stage);
 
             // insure caret is always visible
-            area.setShowCaret(CaretVisibility.ON);
+            area.setShowCaret(Caret.CaretVisibility.ON);
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 50; i++) {

@@ -188,6 +188,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return getLineOfCharacter(clampedCaretPosition.getValue());
     }
 
+    public int currentLineIndex(int position) {
+        return getLineOfCharacter(position);
+    }
+
     private void updateCaretShape() {
         PathElement[] shape = getCaretShape(clampedCaretPosition.getValue(), true);
         caretShape.getElements().setAll(shape);
