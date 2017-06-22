@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
@@ -24,7 +25,7 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-public final class UnboundedSelectionImpl implements UnboundedSelection {
+public final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
 
     private final SuspendableVal<IndexRange> range;
     @Override public final IndexRange getRange() { return range.getValue(); }
@@ -37,6 +38,10 @@ public final class UnboundedSelectionImpl implements UnboundedSelection {
     private final SuspendableVal<Integer> paragraphSpan;
     @Override public final int getParagraphSpan() { return paragraphSpan.getValue(); }
     @Override public final ObservableValue<Integer> paragraphSpanProperty() { return paragraphSpan; }
+
+    private final SuspendableVal<StyledDocument<PS, SEG, S>> selectedDocument;
+    @Override public final ObservableValue<StyledDocument<PS, SEG, S>> selectedDocumentProperty() { return selectedDocument; }
+    @Override public final StyledDocument<PS, SEG, S> getSelectedDocument() { return selectedDocument.getValue(); }
 
     private final SuspendableVal<String> selectedText;
     @Override public final String getSelectedText() { return selectedText.getValue(); }
@@ -80,25 +85,25 @@ public final class UnboundedSelectionImpl implements UnboundedSelection {
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
     @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
-    private final GenericStyledArea<?, ?, ?> area;
+    private final GenericStyledArea<PS, SEG, S> area;
     private final SuspendableNo dependentBeingUpdated;
     private final Var<IndexRange> internalRange;
 
     private Subscription subscription = () -> {};
 
-    public UnboundedSelectionImpl(GenericStyledArea<?, ?, ?> area) {
+    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area) {
         this(area, 0, 0);
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<?, ?, ?> area, int startPosition, int endPosition) {
+    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
         this(area, area.beingUpdatedProperty(), new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<?, ?, ?> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
+    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
         this(area, dependentBeingUpdated, new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<?, ?, ?> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
+    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
         internalRange = Var.newSimpleVar(range);
@@ -107,6 +112,10 @@ public final class UnboundedSelectionImpl implements UnboundedSelection {
         length = internalRange.map(IndexRange::getLength).suspendable();
 
         selectedText = Val.create(() -> area.getText(internalRange.getValue()),
+                internalRange, area.getParagraphs()
+        ).suspendable();
+
+        selectedDocument = Val.create(() -> area.subDocument(internalRange.getValue()),
                 internalRange, area.getParagraphs()
         ).suspendable();
 
@@ -200,6 +209,7 @@ public final class UnboundedSelectionImpl implements UnboundedSelection {
                 startPosition,
 
                 selectedText,
+                selectedDocument,
                 length,
                 this.range
         );

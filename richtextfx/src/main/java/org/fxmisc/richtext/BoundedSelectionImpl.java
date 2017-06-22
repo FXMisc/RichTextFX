@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
@@ -15,9 +16,9 @@ import org.reactfx.value.Var;
 
 import java.util.Optional;
 
-public class BoundedSelectionImpl implements BoundedSelection {
+public class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG, S> {
 
-    private final UnboundedSelection delegate;
+    private final UnboundedSelection<PS, SEG, S> delegate;
     @Override public ObservableValue<IndexRange> rangeProperty() { return delegate.rangeProperty(); }
     @Override public IndexRange getRange() { return delegate.getRange(); }
 
@@ -26,6 +27,9 @@ public class BoundedSelectionImpl implements BoundedSelection {
 
     @Override public ObservableValue<Integer> paragraphSpanProperty() { return delegate.paragraphSpanProperty(); }
     @Override public int getParagraphSpan() { return delegate.getParagraphSpan(); }
+
+    @Override public final ObservableValue<StyledDocument<PS, SEG, S>> selectedDocumentProperty() { return delegate.selectedDocumentProperty(); }
+    @Override public final StyledDocument<PS, SEG, S> getSelectedDocument() { return delegate.getSelectedDocument(); }
 
     @Override public ObservableValue<String> selectedTextProperty() { return delegate.selectedTextProperty(); }
     @Override public String getSelectedText() { return delegate.getSelectedText(); }
@@ -76,25 +80,25 @@ public class BoundedSelectionImpl implements BoundedSelection {
     private final SuspendableVal<Boolean> startedByAnchor = internalStartedByAnchor.suspendable();
     private boolean anchorIsStart() { return startedByAnchor.getValue(); }
 
-    private final GenericStyledArea<?, ?, ?> area;
+    private final GenericStyledArea<PS, SEG, S> area;
     private final Caret caret;
 
     private Subscription subscription = () -> {};
 
-    BoundedSelectionImpl(GenericStyledArea<?, ?, ?> area) {
+    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area) {
         this(area, area.getMainCaret());
     }
 
-    BoundedSelectionImpl(GenericStyledArea<?, ?, ?> area, Caret caret) {
+    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, Caret caret) {
         this(area, caret, new IndexRange(0, 0));
     }
 
-    BoundedSelectionImpl(GenericStyledArea<?, ?, ?> area, Caret caret, IndexRange startingRange) {
+    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, Caret caret, IndexRange startingRange) {
         this.area = area;
         this.caret = caret;
 
         SuspendableNo delegateUpdater = new SuspendableNo();
-        delegate = new UnboundedSelectionImpl(area, delegateUpdater, startingRange);
+        delegate = new UnboundedSelectionImpl<>(area, delegateUpdater, startingRange);
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
                 b

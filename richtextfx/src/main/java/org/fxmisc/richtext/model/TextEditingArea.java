@@ -93,7 +93,7 @@ public interface TextEditingArea<PS, SEG, S> {
     /**
      * Gets the area's main selection
      */
-    BoundedSelection getMainSelection();
+    BoundedSelection<PS, SEG, S> getMainSelection();
 
     /**
      * The anchor of the selection.
@@ -184,6 +184,13 @@ public interface TextEditingArea<PS, SEG, S> {
      * Returns rich-text content of the given paragraph.
      */
     StyledDocument<PS, SEG, S> subDocument(int paragraphIndex);
+
+    /**
+     * Returns rich-text content of the given character range.
+     */
+    default StyledDocument<PS, SEG, S> subDocument(IndexRange range) {
+        return subDocument(range.getStart(), range.getEnd());
+    };
 
     /**
      * Returns rich-text content of the given character range.

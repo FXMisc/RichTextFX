@@ -439,8 +439,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final Caret mainCaret;
     @Override public final Caret getMainCaret() { return mainCaret; }
 
-    private final BoundedSelection mainSelection;
-    @Override public final BoundedSelection getMainSelection() { return mainSelection; }
+    private final BoundedSelection<PS, SEG, S> mainSelection;
+    @Override public final BoundedSelection<PS, SEG, S> getMainSelection() { return mainSelection; }
 
     // length
     @Override public final int getLength() { return content.getLength(); }
@@ -678,7 +678,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         caretBlinkRateStream = EventStreams.valuesOf(caretBlinkRate);
 
         mainCaret = new CaretImpl(this);
-        mainSelection = new BoundedSelectionImpl(this);
+        mainSelection = new BoundedSelectionImpl<>(this);
 
         visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 

@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
+import org.fxmisc.richtext.model.StyledDocument;
 
 /**
  * An object for encapsulating a selection in a given area that is bound to an underlying caret. In other words,
@@ -33,8 +34,24 @@ import javafx.beans.value.ObservableValue;
  *     {@link #selectRange(int, int)} call will reposition the caret, so that it is either the start or end
  *     bound of this selection.
  * </p>
+ *
+ * <p>
+ *     For type safety, {@link #getSelectedDocument()} requires the same generic types from {@link StyledDocument}.
+ *     This means that one must write a lot of boilerplate for the generics:
+ *     {@code BoundedSelection<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
+ *     However, this is only necessary if one is using {@link #getSelectedDocument()} or
+ *     {@link #selectedDocumentProperty()}. <b>If you are not going to use the "selectedDocument" getter or property,
+ *     then just write the much simpler {@code BoundedSelection<?, ?, ?> selection}</b>.
+ * </p>
+ *
+ * @param <PS> type for {@link StyledDocument}'s paragraph style; only necessary when using the "selectedDocument"
+ *            getter or property
+ * @param <SEG> type for {@link StyledDocument}'s segment type; only necessary when using the "selectedDocument"
+ *            getter or property
+ * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
+ *            getter or property
  */
-public interface BoundedSelection extends UnboundedSelection {
+public interface BoundedSelection<PS, SEG, S> extends UnboundedSelection<PS, SEG, S> {
 
     @Override
     default boolean isBoundToCaret() {

@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.EventStream;
 
 import java.util.Optional;
@@ -27,10 +28,26 @@ import java.util.Optional;
  *
  * Note: when parameter names are "position" without the "column" prefix, they refer to the position in the entire area.
  *
+ * <p>
+ *     For type safety, {@link #getSelectedDocument()} requires the same generic types from {@link StyledDocument}.
+ *     This means that one must write a lot of boilerplate for the generics:
+ *     {@code UnboundedSelection<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
+ *     However, this is only necessary if one is using {@link #getSelectedDocument()} or
+ *     {@link #selectedDocumentProperty()}. <b>If you are not going to use the "selectedDocument" getter or property,
+ *     then just write the much simpler {@code UnboundedSelection<?, ?, ?> selection}</b>.
+ * </p>
+ *
  * @see BoundedSelection
  * @see Caret
+ *
+ * @param <PS> type for {@link StyledDocument}'s paragraph style; only necessary when using the "selectedDocument"
+ *            getter or property
+ * @param <SEG> type for {@link StyledDocument}'s segment type; only necessary when using the "selectedDocument"
+ *            getter or property
+ * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
+ *            getter or property
  */
-public interface UnboundedSelection {
+public interface UnboundedSelection<PS, SEG, S> {
 
     public static enum Direction {
         LEFT,
@@ -69,6 +86,9 @@ public interface UnboundedSelection {
      */
     ObservableValue<Integer> paragraphSpanProperty();
     int getParagraphSpan();
+
+    ObservableValue<StyledDocument<PS, SEG, S>> selectedDocumentProperty();
+    StyledDocument<PS, SEG, S> getSelectedDocument();
 
     ObservableValue<String> selectedTextProperty();
     String getSelectedText();
