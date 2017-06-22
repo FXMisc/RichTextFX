@@ -16,7 +16,7 @@ import org.reactfx.value.Var;
 
 import java.util.Optional;
 
-public class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG, S> {
+final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG, S> {
 
     private final UnboundedSelection<PS, SEG, S> delegate;
     @Override public ObservableValue<IndexRange> rangeProperty() { return delegate.rangeProperty(); }
