@@ -72,9 +72,9 @@ public class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SE
 
     @Override public EventStream<?> dirtyEvents() { return delegate.dirtyEvents(); }
 
-    private final SuspendableNo beingupdated = new SuspendableNo();
-    public final boolean isBeingUpdated() { return beingupdated.get(); }
-    public final ObservableValue<Boolean> beingUpdatedProperty() { return beingupdated; }
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+    public final boolean isBeingUpdated() { return beingUpdated.get(); }
+    public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
     private final Var<Boolean> internalStartedByAnchor = Var.newSimpleVar(true);
     private final SuspendableVal<Boolean> startedByAnchor = internalStartedByAnchor.suspendable();
@@ -112,7 +112,7 @@ public class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SE
 
         Suspendable omniSuspendable = Suspendable.combine(
                 // first, so it's released last
-                beingupdated,
+                beingUpdated,
 
                 startedByAnchor,
 
