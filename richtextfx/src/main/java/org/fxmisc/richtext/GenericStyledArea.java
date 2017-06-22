@@ -73,14 +73,13 @@ import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.TextChange;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 import org.fxmisc.richtext.model.UndoActions;
+import org.fxmisc.richtext.util.UndoUtils;
 import org.fxmisc.undo.UndoManager;
-import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.Guard;
@@ -306,11 +305,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // undo manager
     private UndoManager undoManager;
     @Override public UndoManager getUndoManager() { return undoManager; }
-    @Override public void setUndoManager(UndoManagerFactory undoManagerFactory) {
-        undoManager.close();
-        undoManager = preserveStyle
-                ? createRichUndoManager(undoManagerFactory)
-                : createPlainUndoManager(undoManagerFactory);
+    @Override public void setUndoManager(UndoManager undoManager) {
+        this.undoManager.close();
+        this.undoManager = undoManager;
     }
 
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
@@ -618,9 +615,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         this.applyParagraphStyle = applyParagraphStyle;
         this.segmentOps = segmentOps;
 
-        undoManager = preserveStyle
-                ? createRichUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-                : createPlainUndoManager(UndoManagerFactory.unlimitedHistoryFactory());
+        undoManager = UndoUtils.createUndoManager(this);
 
         // allow tab traversal into area
         setFocusTraversable(true);
@@ -1447,18 +1442,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         } else {
             return content.getParagraphStyleAtPosition(pos);
         }
-    }
-
-    private UndoManager createPlainUndoManager(UndoManagerFactory factory) {
-        Consumer<PlainTextChange> apply = change -> replaceText(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<PlainTextChange, PlainTextChange, Optional<PlainTextChange>> merge = PlainTextChange::mergeWith;
-        return factory.create(plainTextChanges(), PlainTextChange::invert, apply, merge, TextChange::isIdentity);
-    }
-
-    private UndoManager createRichUndoManager(UndoManagerFactory factory) {
-        Consumer<RichTextChange<PS, SEG, S>> apply = change -> replace(change.getPosition(), change.getPosition() + change.getRemoved().length(), change.getInserted());
-        BiFunction<RichTextChange<PS, SEG, S>, RichTextChange<PS, SEG, S>, Optional<RichTextChange<PS, SEG, S>>> merge = RichTextChange<PS, SEG, S>::mergeWith;
-        return factory.create(richChanges(), RichTextChange::invert, apply, merge, TextChange::isIdentity);
     }
 
     private void suspendVisibleParsWhile(Runnable runnable) {
