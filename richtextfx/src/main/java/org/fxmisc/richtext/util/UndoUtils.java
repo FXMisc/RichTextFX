@@ -13,6 +13,12 @@ import java.util.function.Consumer;
 
 /**
  * A class filled with factory methods to help easily construct an {@link UndoManager} for a {@link GenericStyledArea}.
+ *
+ * <p>
+ *     To create an UndoManager that will prevent incoming changes from merging with the previous one after a period
+ *     of user inactivity (via {@link UndoManager#preventMerge()}),
+ *     use {@link #wrap(UndoManager, EventStream, Duration)}.
+ * </p>
  */
 public final class UndoUtils {
 
