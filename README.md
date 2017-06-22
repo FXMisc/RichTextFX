@@ -3,7 +3,7 @@ RichTextFX
 
 RichTextFX provides a memory-efficient text area for JavaFX that allows the developer to style ranges of text, display custom objects in-line (no more HTMLEditor), and override the default behavior only where necessary without overriding any other part of the behavior.
 
-It does not follow the MVC paradigm as this prevented access to view-specific API (e.g., getting the bounds of the caret/selection/characters, scrolling by some amount, .
+It does not follow the MVC paradigm as this prevented access to view-specific API (e.g., getting the bounds of the caret/selection/characters, scrolling by some amount, etc.).
 
 It is intended as a base for rich-text editors and code editors with syntax highlighting. Since it is a base, a number of suggested features (specific syntax highlighters, search-and-replace, specific support for hyperlinks, etc.) will not be implemented directly in this project. Rather, developers can implement these on top of RichTextFX and submit their work as a PR to the `richtextfx-demos` package.
 
