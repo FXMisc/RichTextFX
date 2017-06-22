@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.view;
+package org.fxmisc.richtext.api;
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;

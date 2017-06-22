@@ -13,6 +13,11 @@ public interface UndoActions {
      * Undo manager of this text area.
      */
     UndoManager getUndoManager();
+
+    /**
+     * Closes the current area's undo manager before setting it to the given one. <b>Note:</b> to create your
+     * own {@link UndoManager}, see the convenient factory methods in {@link org.fxmisc.richtext.util.UndoUtils}.
+     */
     void setUndoManager(UndoManager undoManager);
 
     default void undo() { getUndoManager().undo(); }

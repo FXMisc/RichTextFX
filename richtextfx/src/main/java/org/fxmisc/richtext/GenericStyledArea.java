@@ -130,6 +130,14 @@ import org.reactfx.value.Var;
  * <p>Additionally, when overriding the default user-interaction behavior, remember to include a call
  * to {@link #requestFollowCaret()}.</p>
  *
+ * <h3>Setting the area's {@link UndoManager}</h3>
+ *
+ * <p>
+ *     The default UndoManager can undo/redo either {@link PlainTextChange}s or {@link RichTextChange}s. To create
+ *     your own specialized version that may use changes different than these (or a combination of these changes
+ *     with others), create them using the convenient factory methods in {@link UndoUtils}.
+ * </p>
+ *
  * <h3>Overriding default keyboard behavior</h3>
  *
  * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
