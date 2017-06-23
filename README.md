@@ -38,15 +38,15 @@ For a greater explanation of RichTextFX, its design principles, how it works, an
 Who uses RichTextFX?
 --------------------
 
-[Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)
-[Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)
-[mqtt-spy](http://kamilfb.github.io/mqtt-spy/)
-[Alt.Text](http://alttexting.com/)
-[Xanthic](https://github.com/jrguenther/Xanthic)
-[Arduino Harp](https://www.youtube.com/watch?v=rv5raLcsPNs)
-[Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)
-[OmniEditor](https://github.com/giancosta86/OmniEditor), which is then used by [Chronos IDE](https://github.com/giancosta86/Chronos-IDE)
-[JuliarFuture](https://juliar.org)
+- [Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)
+- [Squirrel SQL client](http://www.squirrelsql.org/) (its JavaFX version)
+- [mqtt-spy](http://kamilfb.github.io/mqtt-spy/)
+- [Alt.Text](http://alttexting.com/)
+- [Xanthic](https://github.com/jrguenther/Xanthic)
+- [Arduino Harp](https://www.youtube.com/watch?v=rv5raLcsPNs)
+- [Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)
+- [OmniEditor](https://github.com/giancosta86/OmniEditor), which is then used by [Chronos IDE](https://github.com/giancosta86/Chronos-IDE)
+- [JuliarFuture](https://juliar.org)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
