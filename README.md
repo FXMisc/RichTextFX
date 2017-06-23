@@ -316,7 +316,7 @@ libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
 
 ### Custom Via Jitpack
 
-In the following examples, the version is either a commit (via its short hash) or a tag.
+In the following examples, the version is either a commit (via its short hash) or a tag. See [Jitpack's documentation](https://jitpack.io/docs/) for more options and further instructions.
 
 #### Maven
 
