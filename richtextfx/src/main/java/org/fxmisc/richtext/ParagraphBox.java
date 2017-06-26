@@ -218,14 +218,14 @@ class ParagraphBox<PS, SEG, S> extends Region {
     @Override
     protected
     void layoutChildren() {
-        Bounds bounds = getLayoutBounds();
-        double w = bounds.getWidth();
-        double h = bounds.getHeight();
+        Insets ins = getInsets();
+        double w = getWidth() - ins.getLeft() - ins.getRight();
+        double h = getHeight() - ins.getTop() - ins.getBottom();
         double graphicWidth = getGraphicPrefWidth();
 
-        text.resizeRelocate(graphicWidth, 0, w - graphicWidth, h);
+        text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop(), w - graphicWidth, h);
 
-        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get(), 0, graphicWidth, h));
+        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h));
     }
 
     double getGraphicPrefWidth() {
