@@ -165,4 +165,61 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
     }
 
+    public class WhenParagraphBoxIsPadded {
+
+        double paddingAmount = 20;
+
+        String text = "abcdefghijklmnopqrstuvwxyz";
+        String fullText;
+
+        {
+            int totalPars = 50;
+            int indexLimit = totalPars - 1;
+            StringBuilder sb = new StringBuilder();
+            Consumer<Integer> appendParagraph = i -> sb.append("Par #").append(i).append(" ").append(text);
+            for (int i = 0; i < indexLimit; i++) {
+                appendParagraph.accept(i);
+                sb.append("\n");
+            }
+            appendParagraph.accept(indexLimit);
+            fullText = sb.toString();
+        }
+
+        @Before
+        public void setup() {
+            interact(() -> {
+                area.replaceText(fullText);
+                area.setStyle("-fx-font-family: monospace; -fx-font-size: 12pt;");
+                scene.getStylesheets().add(HitTests.class.getResource("padded-paragraph-box.css").toExternalForm());
+            });
+        }
+
+        private void runTest() {
+            int start = area.getAbsolutePosition(3, 8);
+            Bounds b = area.getCharacterBoundsOnScreen(start, start + 1).get();
+            moveTo(b).clickOn(PRIMARY);
+            assertEquals(start, area.getCaretPosition());
+        }
+
+        public class AndAreaIsPadded {
+
+            @Test
+            public void clickingCharacterShouldMoveCaretToThatPosition() {
+                interact(() -> area.setPadding(new Insets(paddingAmount)));
+
+                runTest();
+            }
+        }
+
+        public class AndAreaIsNotPadded {
+
+            @Test
+            public void clickingCharacterShouldMoveCaretToThatPosition() {
+                runTest();
+            }
+
+        }
+
+    }
+
 }
