@@ -993,10 +993,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.scrollBy(deltas));
     }
 
-    void show(double y) {
-        suspendVisibleParsWhile(() -> virtualFlow.show(y));
-    }
-
     @Override
     public void showParagraphInViewport(int paragraphIndex) {
         suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex));
