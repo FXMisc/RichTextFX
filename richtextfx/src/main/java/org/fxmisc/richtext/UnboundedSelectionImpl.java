@@ -152,7 +152,7 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         );
 
         bounds = Val.create(
-                () -> area.impl_bounds_getSelectionBoundsOnScreen(this),
+                () -> area.getSelectionBoundsOnScreen(this),
                 area.boundsDirtyFor(dirty)
         );
 

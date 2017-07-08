@@ -1298,31 +1298,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
-    private Optional<Bounds> impl_popup_getSelectionBoundsOnScreen() {
-        IndexRange selection = getSelection();
-        if(selection.getLength() == 0) {
-            return getCaretBoundsOnScreen();
-        }
-
-        return impl_getSelectionBoundsOnScreen();
-    }
-
-    private Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen() {
-        IndexRange selection = getSelection();
-        if (selection.getLength() == 0) {
-            return Optional.empty();
-        }
-        return impl_getSelectionBoundsOnScreen();
-    }
-
-    final Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen(UnboundedSelection selection) {
-        if (selection.getLength() == 0) {
-            return Optional.empty();
-        }
-        return impl_getSelectionBoundsOnScreen(selection);
-    }
-
-    private Optional<Bounds> impl_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+    final Optional<Bounds> getSelectionBoundsOnScreen(UnboundedSelection selection) {
         if (selection.getLength() == 0) {
             return Optional.empty();
         }
@@ -1337,20 +1313,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             });
         }
 
-        return reduceBoundsList(bounds);
-    }
-
-    private Optional<Bounds> impl_getSelectionBoundsOnScreen() {
-        List<Bounds> bounds = virtualFlow.visibleCells().stream()
-                .map(c -> c.getNode().getSelectionBoundsOnScreen())
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        return reduceBoundsList(bounds);
-    }
-
-    private Optional<Bounds> reduceBoundsList(List<Bounds> bounds) {
         if(bounds.size() == 0) {
             return Optional.empty();
         }
