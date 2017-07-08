@@ -1,6 +1,5 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.PopupAlignment.*;
 import static org.reactfx.EventStreams.*;
 import static org.reactfx.util.Tuples.*;
 
@@ -53,7 +52,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
-import javafx.stage.PopupWindow;
 
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
@@ -505,8 +503,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // Remembers horizontal position when traversing up / down.
     private Optional<ParagraphBox.CaretOffsetX> targetCaretOffset = Optional.empty();
 
-    private final Val<UnaryOperator<Point2D>> _popupAnchorAdjustment;
-
     private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
@@ -701,26 +697,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new StyledTextAreaBehavior(this);
-
-        // Code below this point is deprecated Popup API. It will be removed in the future
-
-        // relayout the popup when any of its settings values change (besides the caret being dirty)
-        EventStream<?> popupAlignmentDirty = invalidationsOf(popupAlignmentProperty());
-        EventStream<?> popupAnchorAdjustmentDirty = invalidationsOf(popupAnchorAdjustmentProperty());
-        EventStream<?> popupAnchorOffsetDirty = invalidationsOf(popupAnchorOffsetProperty());
-        EventStream<?> popupDirty = merge(popupAlignmentDirty, popupAnchorAdjustmentDirty, popupAnchorOffsetDirty);
-        subscribeTo(popupDirty, x -> layoutPopup());
-
-        // Adjust popup anchor by either a user-provided function,
-        // or user-provided offset, or don't adjust at all.
-        Val<UnaryOperator<Point2D>> userOffset = Val.map(
-                popupAnchorOffsetProperty(),
-                offset -> anchor -> anchor.add(offset));
-        _popupAnchorAdjustment =
-                Val.orElse(
-                        popupAnchorAdjustmentProperty(),
-                        userOffset)
-                        .orElseConst(UnaryOperator.identity());
     }
 
     /* ********************************************************************** *
@@ -1209,9 +1185,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 }
             }
         });
-
-        // position popup
-        layoutPopup();
     }
 
     /* ********************************************************************** *
@@ -1310,42 +1283,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return position(parIdx, 0).toOffset();
     }
 
-    private void layoutPopup() {
-        PopupWindow popup = getPopupWindow();
-        PopupAlignment alignment = getPopupAlignment();
-        UnaryOperator<Point2D> adjustment = _popupAnchorAdjustment.getValue();
-        if(popup != null) {
-            positionPopup(popup, alignment, adjustment);
-        }
-    }
-
-    private void positionPopup(
-            PopupWindow popup,
-            PopupAlignment alignment,
-            UnaryOperator<Point2D> adjustment) {
-        Optional<Bounds> bounds = null;
-        switch(alignment.getAnchorObject()) {
-            case CARET: bounds = getCaretBoundsOnScreen(); break;
-            case SELECTION: bounds = impl_popup_getSelectionBoundsOnScreen(); break;
-        }
-        bounds.ifPresent(b -> {
-            double x = 0, y = 0;
-            switch(alignment.getHorizontalAlignment()) {
-                case LEFT: x = b.getMinX(); break;
-                case H_CENTER: x = (b.getMinX() + b.getMaxX()) / 2; break;
-                case RIGHT: x = b.getMaxX(); break;
-            }
-            switch(alignment.getVerticalAlignment()) {
-                case TOP: y = b.getMinY();
-                case V_CENTER: y = (b.getMinY() + b.getMaxY()) / 2; break;
-                case BOTTOM: y = b.getMaxY(); break;
-            }
-            Point2D anchor = adjustment.apply(new Point2D(x, y));
-            popup.setAnchorX(anchor.getX());
-            popup.setAnchorY(anchor.getY());
-        });
-    }
-
     private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
@@ -1361,31 +1298,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
-    private Optional<Bounds> impl_popup_getSelectionBoundsOnScreen() {
-        IndexRange selection = getSelection();
-        if(selection.getLength() == 0) {
-            return getCaretBoundsOnScreen();
-        }
-
-        return impl_getSelectionBoundsOnScreen();
-    }
-
-    private Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen() {
-        IndexRange selection = getSelection();
-        if (selection.getLength() == 0) {
-            return Optional.empty();
-        }
-        return impl_getSelectionBoundsOnScreen();
-    }
-
-    final Optional<Bounds> impl_bounds_getSelectionBoundsOnScreen(UnboundedSelection selection) {
-        if (selection.getLength() == 0) {
-            return Optional.empty();
-        }
-        return impl_getSelectionBoundsOnScreen(selection);
-    }
-
-    private Optional<Bounds> impl_getSelectionBoundsOnScreen(UnboundedSelection selection) {
+    final Optional<Bounds> getSelectionBoundsOnScreen(UnboundedSelection selection) {
         if (selection.getLength() == 0) {
             return Optional.empty();
         }
@@ -1400,20 +1313,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             });
         }
 
-        return reduceBoundsList(bounds);
-    }
-
-    private Optional<Bounds> impl_getSelectionBoundsOnScreen() {
-        List<Bounds> bounds = virtualFlow.visibleCells().stream()
-                .map(c -> c.getNode().getSelectionBoundsOnScreen())
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        return reduceBoundsList(bounds);
-    }
-
-    private Optional<Bounds> reduceBoundsList(List<Bounds> bounds) {
         if(bounds.size() == 0) {
             return Optional.empty();
         }
@@ -1543,153 +1442,4 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return CSS_META_DATA_LIST;
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Deprecated Popup API  (Originally a part of "Properties" section       *
-     *                                                                        *
-     * Code was moved to bottom of this file to make it easier to stay        *
-     * focused on code still in use. This whole section should be deleted     *
-     * at a later time.                                                       *
-     *                                                                        *
-     * ********************************************************************** */
-
-    /**
-     * Popup window that will be positioned by this text area relative to the
-     * caret or selection. Use {@link #popupAlignmentProperty()} to specify
-     * how the popup should be positioned relative to the caret or selection.
-     * Use {@link #popupAnchorOffsetProperty()} or
-     * {@link #popupAnchorAdjustmentProperty()} to further adjust the position.
-     *
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    private final ObjectProperty<PopupWindow> popupWindow = new SimpleObjectProperty<>();
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public void setPopupWindow(PopupWindow popup) { popupWindow.set(popup); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public PopupWindow getPopupWindow() { return popupWindow.get(); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public ObjectProperty<PopupWindow> popupWindowProperty() { return popupWindow; }
-
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public void setPopupAtCaret(PopupWindow popup) { popupWindow.set(popup); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public PopupWindow getPopupAtCaret() { return popupWindow.get(); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public ObjectProperty<PopupWindow> popupAtCaretProperty() { return popupWindow; }
-
-    /**
-     * Specifies further offset (in pixels) of the popup window from the
-     * position specified by {@link #popupAlignmentProperty()}.
-     *
-     * <p>If {@link #popupAnchorAdjustmentProperty()} is also specified, then
-     * it overrides the offset set by this property.
-     *
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    private final ObjectProperty<Point2D> popupAnchorOffset = new SimpleObjectProperty<>();
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public void setPopupAnchorOffset(Point2D offset) { popupAnchorOffset.set(offset); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public Point2D getPopupAnchorOffset() { return popupAnchorOffset.get(); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public ObjectProperty<Point2D> popupAnchorOffsetProperty() { return popupAnchorOffset; }
-
-    /**
-     * Specifies how to adjust the popup window's anchor point. The given
-     * operator is invoked with the screen position calculated according to
-     * {@link #popupAlignmentProperty()} and should return a new screen
-     * position. This position will be used as the popup window's anchor point.
-     *
-     * <p>Setting this property overrides {@link #popupAnchorOffsetProperty()}.
-     */
-    @Deprecated
-    private final ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustment = new SimpleObjectProperty<>();
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public void setPopupAnchorAdjustment(UnaryOperator<Point2D> f) { popupAnchorAdjustment.set(f); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public UnaryOperator<Point2D> getPopupAnchorAdjustment() { return popupAnchorAdjustment.get(); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public ObjectProperty<UnaryOperator<Point2D>> popupAnchorAdjustmentProperty() { return popupAnchorAdjustment; }
-
-    /**
-     * Defines where the popup window given in {@link #popupWindowProperty()}
-     * is anchored, i.e. where its anchor point is positioned. This position
-     * can further be adjusted by {@link #popupAnchorOffsetProperty()} or
-     * {@link #popupAnchorAdjustmentProperty()}.
-     *
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    private final ObjectProperty<PopupAlignment> popupAlignment = new SimpleObjectProperty<>(CARET_TOP);
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public void setPopupAlignment(PopupAlignment pos) { popupAlignment.set(pos); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public PopupAlignment getPopupAlignment() { return popupAlignment.get(); }
-    /**
-     * @deprecated Use {@link #getCaretBounds()}/{@link #caretBoundsProperty()} or {@link #getSelectionBounds()}/
-     * {@link #selectionBoundsProperty()} instead.
-     */
-    @Deprecated
-    public ObjectProperty<PopupAlignment> popupAlignmentProperty() { return popupAlignment; }
 }
