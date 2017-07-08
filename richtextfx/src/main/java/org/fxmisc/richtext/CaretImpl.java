@@ -83,7 +83,7 @@ final class CaretImpl implements Caret {
     }
 
     CaretImpl(GenericStyledArea<?, ?, ?> area, int startingPosition) {
-        this(area, area.beingUpdatedProperty(), 0);
+        this(area, area.beingUpdatedProperty(), startingPosition);
     }
 
     CaretImpl(GenericStyledArea<?, ?, ?> area, SuspendableNo dependentBeingUpdated, int startingPosition) {
