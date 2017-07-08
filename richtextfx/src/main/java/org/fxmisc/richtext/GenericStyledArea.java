@@ -15,8 +15,6 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Binding;
@@ -500,9 +498,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Subscription subscriptions = () -> {};
 
-    // Remembers horizontal position when traversing up / down.
-    private Optional<ParagraphBox.CaretOffsetX> targetCaretOffset = Optional.empty();
-
     private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
@@ -706,18 +701,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Queries are parameterized observables.                                 *
      *                                                                        *
      * ********************************************************************** */
-
-    /**
-     * Returns caret bounds relative to the viewport, i.e. the visual bounds
-     * of the embedded VirtualFlow.
-     */
-    Optional<Bounds> getCaretBoundsInViewport() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
-                .map(c -> {
-                    Bounds cellBounds = c.getNode().getCaretBounds();
-                    return virtualFlow.cellToViewport(c, cellBounds);
-                });
-    }
 
     /**
      * Returns x coordinate of the caret in the current paragraph.
@@ -1010,10 +993,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.scrollBy(deltas));
     }
 
-    void show(double y) {
-        suspendVisibleParsWhile(() -> virtualFlow.show(y));
-    }
-
     @Override
     public void showParagraphInViewport(int paragraphIndex) {
         suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex));
@@ -1288,11 +1267,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 
-    private Optional<Bounds> getCaretBoundsOnScreen() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
-                .map(c -> c.getNode().getCaretBoundsOnScreen());
-    }
-
     public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
@@ -1366,7 +1340,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     void clearTargetCaretOffset() {
-        targetCaretOffset = Optional.empty();
+        mainCaret.clearTargetOffset();
     }
 
     ParagraphBox.CaretOffsetX getTargetCaretOffset() {
