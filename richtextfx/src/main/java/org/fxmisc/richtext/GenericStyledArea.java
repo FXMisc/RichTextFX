@@ -703,18 +703,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     /**
-     * Returns caret bounds relative to the viewport, i.e. the visual bounds
-     * of the embedded VirtualFlow.
-     */
-    Optional<Bounds> getCaretBoundsInViewport() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
-                .map(c -> {
-                    Bounds cellBounds = c.getNode().getCaretBounds();
-                    return virtualFlow.cellToViewport(c, cellBounds);
-                });
-    }
-
-    /**
      * Returns x coordinate of the caret in the current paragraph.
      */
     final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
