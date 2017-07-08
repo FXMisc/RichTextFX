@@ -15,8 +15,6 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Binding;
