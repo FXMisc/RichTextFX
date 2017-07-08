@@ -22,6 +22,11 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     public int getRemovalEnd() { return position + removedLength(); }
     public int getInsertionEnd() { return position + insertedLength(); }
 
+    /**
+     * Gets the net length of this change (i.e., {@code insertedLength() - removedLength()})
+     */
+    public int getNetLength() { return insertedLength() - removedLength(); }
+
     protected abstract int removedLength();
     protected abstract int insertedLength();
     protected abstract S concat(S a, S b);

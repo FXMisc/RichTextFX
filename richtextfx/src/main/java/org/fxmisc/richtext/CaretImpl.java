@@ -102,20 +102,20 @@ final class CaretImpl implements Caret {
         // when content is updated by an area, update the caret of all the other
         // clones that also display the same document
         manageSubscription(area.plainTextChanges(), (plainTextChange -> {
-            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
-            if (changeLength != 0) {
+            int netLength = plainTextChange.getNetLength();
+            if (netLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
                 // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(changeLength);
+                int endOfChange = indexOfChange + Math.abs(netLength);
 
                 int caretPosition = getPosition();
                 if (indexOfChange < caretPosition) {
                     // if caret is within the changed content, move it to indexOfChange
-                    // otherwise offset it by changeLength
+                    // otherwise offset it by netLength
                     moveTo(
                             caretPosition < endOfChange
                                     ? indexOfChange
-                                    : caretPosition + changeLength
+                                    : caretPosition + netLength
                     );
                 }
             }
