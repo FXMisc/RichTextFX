@@ -1267,11 +1267,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 
-    private Optional<Bounds> getCaretBoundsOnScreen() {
-        return virtualFlow.getCellIfVisible(getCurrentParagraph())
-                .map(c -> c.getNode().getCaretBoundsOnScreen());
-    }
-
     public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
