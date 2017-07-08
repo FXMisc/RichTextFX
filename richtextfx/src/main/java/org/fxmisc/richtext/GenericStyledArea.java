@@ -498,9 +498,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private Subscription subscriptions = () -> {};
 
-    // Remembers horizontal position when traversing up / down.
-    private Optional<ParagraphBox.CaretOffsetX> targetCaretOffset = Optional.empty();
-
     private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
 
     // used for two-level navigation, where on the higher level are
@@ -1364,7 +1361,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     void clearTargetCaretOffset() {
-        targetCaretOffset = Optional.empty();
+        mainCaret.clearTargetOffset();
     }
 
     ParagraphBox.CaretOffsetX getTargetCaretOffset() {
