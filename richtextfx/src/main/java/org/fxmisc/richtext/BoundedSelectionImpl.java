@@ -124,12 +124,12 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
     }
 
     @Override
-    public void selectRange(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {
-        selectRange(textPosition(anchorParagraph, anchorColumn), textPosition(caretParagraph, caretColumn));
+    public void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {
+        selectRangeExpl(textPosition(anchorParagraph, anchorColumn), textPosition(caretParagraph, caretColumn));
     }
 
     @Override
-    public void selectRange(int anchorPosition, int caretPosition) {
+    public void selectRangeExpl(int anchorPosition, int caretPosition) {
         if (anchorPosition <= caretPosition) {
             doSelect(anchorPosition, caretPosition, true);
         } else {
@@ -138,13 +138,13 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
     }
 
     @Override
-    public void selectRange0(int startPosition, int endPosition) {
+    public void selectRange(int startPosition, int endPosition) {
         doSelect(startPosition, endPosition, anchorIsStart());
     }
 
     @Override
-    public void selectRange0(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
-        selectRange0(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
+    public void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
+        selectRange(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
     }
 
     @Override
@@ -152,7 +152,7 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
         int updatedStart = direction == Direction.LEFT
                 ? getStartPosition() - amount
                 : getStartPosition() + amount;
-        selectRange0(updatedStart, getEndPosition());
+        selectRange(updatedStart, getEndPosition());
     }
 
     @Override
@@ -160,12 +160,12 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
         int updatedEnd = direction == Direction.LEFT
                 ? getEndPosition() - amount
                 : getEndPosition() + amount;
-        selectRange0(getStartPosition(), updatedEnd);
+        selectRange(getStartPosition(), updatedEnd);
     }
 
     @Override
     public void moveStartTo(int position) {
-        selectRange0(position, getEndPosition());
+        selectRange(position, getEndPosition());
     }
 
     @Override
@@ -175,7 +175,7 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
 
     @Override
     public void moveEndTo(int position) {
-        selectRange0(getStartPosition(), position);
+        selectRange(getStartPosition(), position);
     }
 
     @Override
@@ -190,7 +190,7 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
 
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
         Runnable updateRange = () -> {
-            delegate.selectRange0(startPosition, endPosition);
+            delegate.selectRange(startPosition, endPosition);
             internalStartedByAnchor.setValue(anchorIsStart);
 
             caret.moveTo(anchorIsStart ? endPosition : startPosition);
