@@ -37,7 +37,7 @@ import java.util.Optional;
  *     then just write the much simpler {@code Selection<?, ?, ?> selection}</b>.
  * </p>
  *
- * @see BoundedSelection
+ * @see CaretSelectionBind
  * @see Caret
  *
  * @param <PS> type for {@link StyledDocument}'s paragraph style; only necessary when using the "selectedDocument"
@@ -55,18 +55,18 @@ public interface Selection<PS, SEG, S> {
     }
 
     /**
-     * Returns true if this is an {@link Selection} and true if this is an {@link BoundedSelection}.
+     * Returns true if this is an {@link Selection} and true if this is an {@link CaretSelectionBind}.
      */
     default boolean isBoundToCaret() {
         return false;
     }
 
     /**
-     * If {@link #isBoundToCaret()} returns true, then casts this object to a {@link BoundedSelection}. Otherwise,
+     * If {@link #isBoundToCaret()} returns true, then casts this object to a {@link CaretSelectionBind}. Otherwise,
      * throws an {@link IllegalStateException}.
      */
-    default BoundedSelection asBoundedSelection() {
-        throw new IllegalStateException("An Selection cannot be cast to a BoundedSelection");
+    default CaretSelectionBind asBoundedSelection() {
+        throw new IllegalStateException("An Selection cannot be cast to a CaretSelectionBind");
     }
 
     /* ********************************************************************** *

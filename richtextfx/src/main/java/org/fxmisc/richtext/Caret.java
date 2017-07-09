@@ -116,10 +116,10 @@ public interface Caret {
      * ********************************************************************** */
 
     /**
-     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link CaretSelectionBind},
      * it displaces the caret from the selection by positioning only the caret to the new location without
-     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
-     * {@link BoundedSelection#getRange()} selection}.
+     * also affecting the {@link CaretSelectionBind#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link CaretSelectionBind#getRange()} selection}.
      * <br>
      * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
      * as opposed to always being at the boundary. Use with care.
@@ -130,10 +130,10 @@ public interface Caret {
     public void moveTo(int paragraphIndex, int columnPosition);
 
     /**
-     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link CaretSelectionBind},
      * it displaces the caret from the selection by positioning only the caret to the new location without
-     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
-     * {@link BoundedSelection#getRange()} selection}.
+     * also affecting the {@link CaretSelectionBind#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link CaretSelectionBind#getRange()} selection}.
      * <br>
      * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
      * as opposed to always being at the boundary. Use with care.

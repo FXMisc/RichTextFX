@@ -16,7 +16,7 @@ import org.reactfx.value.Var;
 
 import java.util.Optional;
 
-final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG, S> {
+final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS, SEG, S> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -95,15 +95,15 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
 
     private Subscription subscription = () -> {};
 
-    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area) {
+    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area) {
         this(area, area.getMainCaret());
     }
 
-    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, Caret caret) {
+    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, Caret caret) {
         this(area, caret, new IndexRange(0, 0));
     }
 
-    BoundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, Caret caret, IndexRange startingRange) {
+    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, Caret caret, IndexRange startingRange) {
         this.area = area;
         this.caret = caret;
 

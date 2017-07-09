@@ -5,7 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 
-import org.fxmisc.richtext.BoundedSelection;
+import org.fxmisc.richtext.CaretSelectionBind;
 import org.fxmisc.richtext.Caret;
 import org.reactfx.EventStream;
 import org.reactfx.value.Var;
@@ -93,7 +93,7 @@ public interface TextEditingArea<PS, SEG, S> {
     /**
      * Gets the area's main selection
      */
-    BoundedSelection<PS, SEG, S> getMainSelection();
+    CaretSelectionBind<PS, SEG, S> getMainSelection();
 
     /**
      * The anchor of the selection.

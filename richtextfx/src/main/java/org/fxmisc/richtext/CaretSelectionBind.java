@@ -38,10 +38,10 @@ import org.fxmisc.richtext.model.StyledDocument;
  * <p>
  *     For type safety, {@link #getSelectedDocument()} requires the same generic types from {@link StyledDocument}.
  *     This means that one must write a lot of boilerplate for the generics:
- *     {@code BoundedSelection<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
+ *     {@code CaretSelectionBind<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
  *     However, this is only necessary if one is using {@link #getSelectedDocument()} or
  *     {@link #selectedDocumentProperty()}. <b>If you are not going to use the "selectedDocument" getter or property,
- *     then just write the much simpler {@code BoundedSelection<?, ?, ?> selection}</b>.
+ *     then just write the much simpler {@code CaretSelectionBind<?, ?, ?> selection}</b>.
  * </p>
  *
  * @see Caret
@@ -54,7 +54,7 @@ import org.fxmisc.richtext.model.StyledDocument;
  * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
  *            getter or property
  */
-public interface BoundedSelection<PS, SEG, S> extends Selection<PS, SEG, S> {
+public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S> {
 
     @Override
     default boolean isBoundToCaret() {
@@ -62,7 +62,7 @@ public interface BoundedSelection<PS, SEG, S> extends Selection<PS, SEG, S> {
     }
 
     @Override
-    default BoundedSelection asBoundedSelection() {
+    default CaretSelectionBind asBoundedSelection() {
         return this;
     }
 
