@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import org.reactfx.EventStream;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -119,6 +120,64 @@ public interface Caret {
      * as opposed to always being at the boundary. Use with care.
      */
     public void moveTo(int position);
+
+    /**
+     * Moves the caret to the beginning of the current paragraph.
+     */
+    void moveToParStart();
+
+    /**
+     * Moves the caret to the end of the current paragraph.
+     */
+    void moveToParEnd();
+
+    /**
+     * Moves the caret to the beginning of the area.
+     */
+    default void moveToAreaStart() {
+        moveTo(0);
+    }
+
+    /**
+     * Moves the caret to the end of the area.
+     */
+    void moveToAreaEnd();
+
+    /**
+     * Moves the caret backward one char in the text.
+     */
+    void moveToPrevChar();
+
+    /**
+     * Moves the caret forward one char in the text.
+     */
+    void moveToNextChar();
+
+    /**
+     * Moves the caret forwards by the number of breaks.
+     */
+    void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator);
+
+    default void moveWordBreaksForwards(int numOfWordBreaks) {
+        moveBreaksForwards(numOfWordBreaks, BreakIterator.getWordInstance());
+    }
+
+    default void moveSentenceBreaksForwards(int numOfSentenceBreaks) {
+        moveBreaksForwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
+    }
+
+    /**
+     * Moves the caret backwards by the number of breaks.
+     */
+    void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator);
+
+    default void moveWordBreaksBackwards(int numOfWordBreaks) {
+        moveBreaksBackwards(numOfWordBreaks, BreakIterator.getWordInstance());
+    }
+
+    default void moveSentenceBreaksBackwards(int numOfSentenceBreaks) {
+        moveBreaksBackwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
+    }
 
     /**
      * Disposes the caret and prevents memory leaks

@@ -14,6 +14,7 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -181,6 +182,40 @@ final class CaretImpl implements Caret {
     public void moveTo(int position) {
         dependentBeingUpdated.suspendWhile(() -> internalTextPosition.setValue(position));
     }
+    @Override
+    public void moveToParStart() {
+        moveTo(getPosition() - getColumnPosition());
+    }
+
+    @Override
+    public void moveToParEnd() {
+        moveTo(area.getParagraphLenth(getParagraphIndex()));
+    }
+
+    @Override
+    public void moveToAreaEnd() {
+        moveTo(area.getLength());
+    }
+
+    @Override
+    public void moveToNextChar() {
+        moveTo(getPosition() + 1);
+    }
+
+    @Override
+    public void moveToPrevChar() {
+        moveTo(getPosition() - 1);
+    }
+
+    @Override
+    public void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator) {
+        moveContentBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
+    public void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator) {
+        moveContentBreaks(numOfBreaks, breakIterator, true);
+    }
 
     public void dispose() {
         subscriptions.unsubscribe();
@@ -209,6 +244,30 @@ final class CaretImpl implements Caret {
                 .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
+    }
+
+    /**
+     * Helper method for reducing duplicate code
+     * @param numOfBreaks the number of breaks
+     * @param breakIterator the type of iterator to use
+     * @param followingNotPreceding if true, use {@link BreakIterator#following(int)}.
+     *                              Otherwise, use {@link BreakIterator#preceding(int)}.
+     */
+    private void moveContentBreaks(int numOfBreaks, BreakIterator breakIterator, boolean followingNotPreceding) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        if (followingNotPreceding) {
+            breakIterator.following(getPosition());
+        } else {
+            breakIterator.preceding(getPosition());
+        }
+        for (int i = 1; i < numOfBreaks; i++) {
+            breakIterator.next();
+        }
+        moveTo(breakIterator.current());
     }
 
 }
