@@ -45,9 +45,9 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
 
     default EventStream<PlainTextChange> plainChanges() {
         return richChanges()
-                .map(c -> new PlainTextChange(c.position, c.removed.getText(), c.inserted.getText()))
+                .map(RichTextChange::toPlainTextChange)
                 // filter out rich changes where the style was changed but text wasn't added/removed
-                .filter(pc -> !pc.removed.equals(pc.inserted));
+                .filter(pc -> !pc.isIdentity());
     }
 
     EventStream<RichTextChange<PS, SEG, S>> richChanges();
