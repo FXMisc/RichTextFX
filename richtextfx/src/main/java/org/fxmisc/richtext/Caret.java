@@ -17,11 +17,11 @@ import java.util.OptionalInt;
  *     <ol>
  *         <li>
  *             {@link #getPosition()}, which refers to a position somewhere in the entire area's content.
- *             It's bounds are {@code 0 <= x < area.getLength()}.
+ *             It's bounds are {@code 0 <= x <= area.getLength()}.
  *         </li>
  *         <li>
  *             {@link #getColumnPosition()}, which refers to a position somewhere in the current paragraph.
- *             It's bounds are {@code 0 <= x < area.getParagraphLength(index)}.
+ *             It's bounds are {@code 0 <= x <= area.getParagraphLength(index)}.
  *         </li>
  *     </ol>
  *

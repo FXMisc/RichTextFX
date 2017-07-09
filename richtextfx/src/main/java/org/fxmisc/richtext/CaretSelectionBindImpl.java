@@ -305,6 +305,11 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         selectRange(start, end);
     }
 
+    @Override
+    public void deselect() {
+        selectRangeExpl(getPosition(), getPosition());
+    }
+
     // caret selection bind
     @Override
     public void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {

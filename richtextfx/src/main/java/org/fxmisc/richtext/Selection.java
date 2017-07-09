@@ -9,8 +9,7 @@ import java.text.BreakIterator;
 import java.util.Optional;
 
 /**
- * An object for encapsulating a selection in a given area that is not bound to any caret. In other words,
- * {@link #selectRange(int, int) selecting some range in the area} will not also move a caret in the same call.
+ * An object for encapsulating a selection in a given area.
  *
  * <p>
  *     <b>"Position"</b> refers to the place in-between characters. In other words, every {@code "|"} in
@@ -18,11 +17,11 @@ import java.util.Optional;
  *     <ol>
  *         <li>
  *             {@link #getStartPosition()}/{@link #getEndPosition()}, which refers to a position somewhere in the
- *             entire area's content. It's bounds are {@code 0 <= x < area.getLength()}.
+ *             entire area's content. It's bounds are {@code 0 <= x <= area.getLength()}.
  *         </li>
  *         <li>
  *             {@link #getStartColumnPosition()}/{@link #getEndColumnPosition()}, which refers to a position
- *             somewhere in the current paragraph. It's bounds are {@code 0 <= x < area.getParagraphLength(index)}.
+ *             somewhere in the current paragraph. It's bounds are {@code 0 <= x <= area.getParagraphLength(index)}.
  *         </li>
  *     </ol>
  *

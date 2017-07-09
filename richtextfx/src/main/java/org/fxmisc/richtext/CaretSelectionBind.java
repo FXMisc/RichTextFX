@@ -8,8 +8,17 @@ import org.fxmisc.richtext.model.StyledDocument;
 import java.text.BreakIterator;
 
 /**
- * An object for encapsulating a selection in a given area that is bound to an underlying caret. In other words,
- * {@link #selectRangeExpl(int, int) selecting some range in the area} will move a caret in the same call.
+ * An object for encapsulating a caret and a selection in a given area where the caret and selection are bound
+ * to one another.
+ *
+ * In other words, selecting some range in the area (via {@link #selectRangeExpl(int, int)},
+ * {@link #selectRange(int, int, int, int)}) will move the caret in the same call, except if one uses
+ * {@link #displaceSelection(int, int)}. Updating the selection via any method with an "update" prefix from
+ * {@link Selection} will also move the caret if it has been {@link #displaceCaret(int) displaced} or the anchor is
+ * not the boundary (i.e. the selection's the start or end position) that is being updated.
+ *
+ * Likewise, moving the caret via the "move" prefix methods from {@link Caret}
+ * will clear the selection in the same call, except if one uses {@link #displaceCaret(int)}.
  *
  * <p>
  *     <b>"Position"</b> refers to the place in-between characters. In other words, every {@code "|"} in
@@ -17,11 +26,11 @@ import java.text.BreakIterator;
  *     <ol>
  *         <li>
  *             {@link #getStartPosition()}/{@link #getEndPosition()}, which refers to a position somewhere in the
- *             entire area's content. It's bounds are {@code 0 <= x < area.getLength()}.
+ *             entire area's content. It's bounds are {@code 0 <= x <= area.getLength()}.
  *         </li>
  *         <li>
  *             {@link #getStartColumnPosition()}/{@link #getEndColumnPosition()}, which refers to a position
- *             somewhere in the current paragraph. It's bounds are {@code 0 <= x < area.getParagraphLength(index)}.
+ *             somewhere in the current paragraph. It's bounds are {@code 0 <= x <= area.getParagraphLength(index)}.
  *         </li>
  *     </ol>
  *
@@ -31,12 +40,6 @@ import java.text.BreakIterator;
  *     The selection is typically made using the {@link #getAnchorPosition() anchor's position} and
  *     the underlying {@link Caret#getPosition() caret's position}. Hence, {@link #selectRangeExpl(int, int)}
  *     is the typical method to use, although {@link #selectRange(int, int)} can also be used.
- * </p>
- * <p>
- *     Be careful about calling the underlying {@link Caret#moveTo(int)} method. This will displace the caret
- *     from the selection bounds and may lead to undesirable/unexpected behavior. If this is done, a
- *     {@link #selectRangeExpl(int, int)} call will reposition the caret, so that it is either the start or end
- *     bound of this selection.
  * </p>
  *
  * <p>
@@ -91,8 +94,7 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
     // caret
 
     /**
-     * Moves the caret to the given position in the text
-     * and clears any selection.
+     * Moves the caret to the given position in the text and clears any selection.
      */
     @Override
     default void moveTo(int position) {
@@ -160,14 +162,89 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
     /**
      * Moves the caret forwards by the number of breaks and clears any selection
      */
+    @Override
     void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator);
 
     /**
      * Moves the caret backwards by the number of breaks and clears any selection
      */
+    @Override
     void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator);
 
     // selection
+    /**
+     * Selects the given range and moves the caret to either the start of the new selection if the anchor was equal to
+     * the original start or the end if the anchor was equal to the original end
+     *
+     * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)} to
+     * know how the column index argument can affect the returned position.</p>
+     */
+    @Override
+    void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition);
+
+    /**
+     * Selects the given range and moves the caret to either the start of the new selection if the anchor was equal to
+     * the original start or the end if the anchor was equal to the original end
+     */
+    @Override
+    void selectRange(int startPosition, int endPosition);
+
+    @Override
+    void updateStartBy(int amount, Direction direction);
+
+    @Override
+    void updateEndBy(int amount, Direction direction);
+
+    @Override
+    void updateStartTo(int position);
+
+    @Override
+    void updateStartTo(int paragraphIndex, int columnPosition);
+
+    @Override
+    void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator);
+
+    @Override
+    void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator);
+
+    @Override
+    void updateEndTo(int position);
+
+    @Override
+    void updateEndTo(int paragraphIndex, int columnPosition);
+
+    @Override
+    void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator);
+
+    @Override
+    void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator);
+
+    /**
+     * Selects everything in the area and moves the caret to either the start of the new selection if the anchor was
+     * equal to the original start or the end if the anchor was equal to the original end
+     */
+    @Override
+    void selectAll();
+
+    /**
+     * Selects the given paragraph and moves the caret to either the start of the new selection if the anchor was
+     * equal to the original start or the end if the anchor was equal to the original end
+     */
+    @Override
+    void selectParagraph(int paragraphIndex);
+
+    /**
+     * Selects the closest word to the given position in the area and moves the caret to either the start of the new
+     * selection if the anchor was equal to the original start or the end if the anchor was equal to the original end
+     */
+    @Override
+    void selectWord(int wordPositionInArea);
+
+    /**
+     * Clears the selection while keeping the caret position the same.
+     */
+    @Override
+    void deselect();
 
     // caret selection bind
     /**
