@@ -387,6 +387,16 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     }
 
     @Override
+    public void displaceCaret(int position) {
+        Runnable displaceC = () -> delegateCaret.moveTo(position);
+        if (area.isBeingUpdated()) {
+            displaceC.run();
+        } else {
+            area.beingUpdatedProperty().suspendWhile(displaceC);
+        }
+    }
+
+    @Override
     public void dispose() {
         subscription.unsubscribe();
     }
@@ -419,17 +429,18 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
     private int calculatePositionViaBreakingForwards(int numOfBreaks, BreakIterator breakIterator, int position) {
         breakIterator.following(position);
-        return calculateNextBreak(numOfBreaks, breakIterator);
+        for (int i = 1; i < numOfBreaks; i++) {
+            breakIterator.next(numOfBreaks);
+        }
+        return breakIterator.current();
     }
 
     /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
     private int calculatePositionViaBreakingBackwards(int numOfBreaks, BreakIterator breakIterator, int position) {
         breakIterator.preceding(position);
-        return calculateNextBreak(numOfBreaks, breakIterator);
-    }
-
-    private int calculateNextBreak(int numOfBreaks, BreakIterator breakIterator) {
-        breakIterator.next(numOfBreaks);
+        for (int i = 1; i < numOfBreaks; i++) {
+            breakIterator.previous();
+        }
         return breakIterator.current();
     }
 
