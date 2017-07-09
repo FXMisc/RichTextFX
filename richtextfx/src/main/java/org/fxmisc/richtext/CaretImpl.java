@@ -27,8 +27,6 @@ import static org.reactfx.EventStreams.merge;
 
 final class CaretImpl implements Caret {
 
-    private final Var<Integer> internalTextPosition;
-
     /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *
@@ -84,6 +82,7 @@ final class CaretImpl implements Caret {
     private final EventStream<?> dirty;
     private final GenericStyledArea<?, ?, ?> area;
     private final SuspendableNo dependentBeingUpdated;
+    private final Var<Integer> internalTextPosition;
 
     private Subscription subscriptions = () -> {};
 
