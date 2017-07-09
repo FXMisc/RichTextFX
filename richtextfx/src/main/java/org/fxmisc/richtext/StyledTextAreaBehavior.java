@@ -151,9 +151,9 @@ class StyledTextAreaBehavior {
 
         Predicate<KeyEvent> noControlKeys = e ->
                 // filter out control keys
-                (!e.isControlDown() && !e.isMetaDown())
+                (!e.isControlDown() && !e.isMetaDown() && !e.isAltDown())
                 // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
-                || (isWindows && !e.isMetaDown() && (!e.isControlDown() || e.isAltDown()));
+                || (isWindows && !e.isMetaDown() && e.isControlDown() == e.isAltDown());
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
