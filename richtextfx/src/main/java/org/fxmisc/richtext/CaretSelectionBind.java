@@ -1,7 +1,11 @@
 package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
+import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.StyledDocument;
+
+import java.text.BreakIterator;
 
 /**
  * An object for encapsulating a selection in a given area that is bound to an underlying caret. In other words,
@@ -54,7 +58,7 @@ import org.fxmisc.richtext.model.StyledDocument;
  * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
  *            getter or property
  */
-public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S> {
+public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, Caret {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -84,6 +88,88 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S> {
      *                                                                        *
      * ********************************************************************** */
 
+    // caret
+
+    /**
+     * Moves the caret to the given position in the text
+     * and clears any selection.
+     */
+    @Override
+    default void moveTo(int position) {
+        moveTo(position, NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret to the position returned from
+     * {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)}
+     * and clears any selection.
+     */
+    @Override
+    default void moveTo(int paragraphIndex, int columnPosition) {
+        moveTo(paragraphIndex, columnPosition, NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret to the beginning of the current paragraph and clears any selection
+     */
+    @Override
+    default void moveToParStart() {
+        moveToParStart(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret to the end of the current paragraph and clears any selection
+     */
+    @Override
+    default void moveToParEnd() {
+        moveToParEnd(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret to the beginning of the area and clears any selection
+     */
+    @Override
+    default void moveToAreaStart() {
+        moveToAreaStart(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret to the end of the area and clears any selection
+     */
+    @Override
+    default void moveToAreaEnd() {
+        moveToAreaEnd(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret backward one char in the text and clears any selection
+     */
+    @Override
+    default void moveToPrevChar() {
+        moveToPrevChar(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret forward one char in the text and clears any selection
+     */
+    @Override
+    default void moveToNextChar() {
+        moveToNextChar(NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    /**
+     * Moves the caret forwards by the number of breaks and clears any selection
+     */
+    void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator);
+
+    /**
+     * Moves the caret backwards by the number of breaks and clears any selection
+     */
+    void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator);
+
+    // selection
+
+    // caret selection bind
     /**
      * Positions the anchor and caretPosition explicitly,
      * effectively creating a selection.
@@ -95,5 +181,76 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S> {
      * effectively creating a selection.
      */
     void selectRangeExpl(int anchorPosition, int caretPosition);
+
+    /**
+     * Moves the caret to the position indicated by {@code pos}.
+     * Based on the selection policy, the selection is either <em>cleared</em>
+     * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
+     * (i.e. anchor is not moved at all), or <em>extended</em>
+     * (i.e. {@code pos} becomes the new caret and, if {@code pos} points
+     * outside the current selection, the far end of the current selection
+     * becomes the anchor.
+     */
+    default void moveTo(int pos, NavigationActions.SelectionPolicy selectionPolicy) {
+        switch(selectionPolicy) {
+            case CLEAR:
+                selectRange(pos, pos);
+                break;
+            case ADJUST:
+                selectRange(getAnchorPosition(), pos);
+                break;
+            case EXTEND:
+                IndexRange sel = getRange();
+                int anchor;
+                if(pos <= sel.getStart())
+                    anchor = sel.getEnd();
+                else if(pos >= sel.getEnd())
+                    anchor = sel.getStart();
+                else
+                    anchor = getAnchorPosition();
+                selectRangeExpl(anchor, pos);
+                break;
+        }
+    }
+
+    /**
+     * Moves the caret to the position returned from
+     * {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)}.
+     */
+    void moveTo(int paragraphIndex, int columnIndex, NavigationActions.SelectionPolicy selectionPolicy);
+
+    /**
+     * Moves the caret backward one char in the text.
+     * Based on the given selection policy, anchor either moves with
+     * the caret, stays put, or moves to the former caret position.
+     */
+    void moveToPrevChar(NavigationActions.SelectionPolicy selectionPolicy);
+
+    /**
+     * Moves the caret forward one char in the text.
+     * Based on the given selection policy, anchor either moves with
+     * the caret, stays put, or moves to the former caret position.
+     */
+    void moveToNextChar(NavigationActions.SelectionPolicy selectionPolicy);
+
+    void moveToParStart(NavigationActions.SelectionPolicy selectionPolicy);
+
+    void moveToParEnd(NavigationActions.SelectionPolicy selectionPolicy);
+
+    void moveToAreaStart(NavigationActions.SelectionPolicy selectionPolicy);
+
+    void moveToAreaEnd(NavigationActions.SelectionPolicy selectionPolicy);
+
+    default void selectParagraph() {
+        moveToParStart(NavigationActions.SelectionPolicy.CLEAR);
+        moveToParEnd(NavigationActions.SelectionPolicy.ADJUST);
+    }
+
+    /**
+     * Selects the word closest to the caret
+     */
+    default void selectWord() {
+        selectWord(getPosition());
+    };
 
 }

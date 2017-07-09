@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
@@ -13,9 +14,16 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS, SEG, S> {
+
+    // caret
+    @Override public Var<CaretVisibility> showCaretProperty() { return delegateCaret.showCaretProperty(); }
+    @Override public CaretVisibility getShowCaret() { return delegateCaret.getShowCaret(); }
+    @Override public void setShowCaret(CaretVisibility value) { delegateCaret.setShowCaret(value); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -27,43 +35,68 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
      *                                                                        *
      * ********************************************************************** */
 
-    private final Selection<PS, SEG, S> delegate;
-    @Override public ObservableValue<IndexRange> rangeProperty() { return delegate.rangeProperty(); }
-    @Override public IndexRange getRange() { return delegate.getRange(); }
+    // caret
+    @Override public ObservableValue<Integer> positionProperty() { return delegateCaret.positionProperty(); }
+    @Override public int getPosition() { return delegateCaret.getPosition(); }
 
-    @Override public ObservableValue<Integer> lengthProperty() { return delegate.lengthProperty(); }
-    @Override public int getLength() { return delegate.getLength(); }
+    @Override public ObservableValue<Integer> paragraphIndexProperty() { return delegateCaret.paragraphIndexProperty(); }
+    @Override public int getParagraphIndex() { return delegateCaret.getParagraphIndex(); }
 
-    @Override public ObservableValue<Integer> paragraphSpanProperty() { return delegate.paragraphSpanProperty(); }
-    @Override public int getParagraphSpan() { return delegate.getParagraphSpan(); }
+    @Override public ObservableValue<OptionalInt> lineIndexProperty() { return delegateCaret.lineIndexProperty(); }
+    @Override public OptionalInt getLineIndex() { return delegateCaret.getLineIndex(); }
 
-    @Override public final ObservableValue<StyledDocument<PS, SEG, S>> selectedDocumentProperty() { return delegate.selectedDocumentProperty(); }
-    @Override public final StyledDocument<PS, SEG, S> getSelectedDocument() { return delegate.getSelectedDocument(); }
+    @Override public ObservableValue<Integer> columnPositionProperty() { return delegateCaret.columnPositionProperty(); }
+    @Override public int getColumnPosition() { return delegateCaret.getColumnPosition(); }
 
-    @Override public ObservableValue<String> selectedTextProperty() { return delegate.selectedTextProperty(); }
-    @Override public String getSelectedText() { return delegate.getSelectedText(); }
+    @Override public ObservableValue<Boolean> visibleProperty() { return delegateCaret.visibleProperty(); }
+    @Override public boolean isVisible() { return delegateCaret.isVisible(); }
+
+    @Override public ObservableValue<Optional<Bounds>> caretBoundsProperty() { return delegateCaret.caretBoundsProperty(); }
+    @Override public Optional<Bounds> getCaretBounds() { return delegateCaret.getCaretBounds(); }
+
+    @Override public void clearTargetOffset() { delegateCaret.clearTargetOffset(); }
+    @Override public ParagraphBox.CaretOffsetX getTargetOffset() { return delegateCaret.getTargetOffset(); }
+
+    // selection
+    @Override public ObservableValue<IndexRange> rangeProperty() { return delegateSelection.rangeProperty(); }
+    @Override public IndexRange getRange() { return delegateSelection.getRange(); }
+
+    @Override public ObservableValue<Integer> lengthProperty() { return delegateSelection.lengthProperty(); }
+    @Override public int getLength() { return delegateSelection.getLength(); }
+
+    @Override public ObservableValue<Integer> paragraphSpanProperty() { return delegateSelection.paragraphSpanProperty(); }
+    @Override public int getParagraphSpan() { return delegateSelection.getParagraphSpan(); }
+
+    @Override public final ObservableValue<StyledDocument<PS, SEG, S>> selectedDocumentProperty() { return delegateSelection.selectedDocumentProperty(); }
+    @Override public final StyledDocument<PS, SEG, S> getSelectedDocument() { return delegateSelection.getSelectedDocument(); }
+
+    @Override public ObservableValue<String> selectedTextProperty() { return delegateSelection.selectedTextProperty(); }
+    @Override public String getSelectedText() { return delegateSelection.getSelectedText(); }
 
 
-    @Override public ObservableValue<Integer> startPositionProperty() { return delegate.startPositionProperty(); }
-    @Override public int getStartPosition() { return delegate.getStartPosition(); }
+    @Override public ObservableValue<Integer> startPositionProperty() { return delegateSelection.startPositionProperty(); }
+    @Override public int getStartPosition() { return delegateSelection.getStartPosition(); }
 
-    @Override public ObservableValue<Integer> startParagraphIndexProperty() { return delegate.startParagraphIndexProperty(); }
-    @Override public int getStartParagraphIndex() { return delegate.getStartParagraphIndex(); }
+    @Override public ObservableValue<Integer> startParagraphIndexProperty() { return delegateSelection.startParagraphIndexProperty(); }
+    @Override public int getStartParagraphIndex() { return delegateSelection.getStartParagraphIndex(); }
 
-    @Override public ObservableValue<Integer> startColumnPositionProperty() { return delegate.startColumnPositionProperty(); }
-    @Override public int getStartColumnPosition() { return delegate.getStartColumnPosition(); }
-
-
-    @Override public ObservableValue<Integer> endPositionProperty() { return delegate.endPositionProperty(); }
-    @Override public int getEndPosition() { return delegate.getEndPosition(); }
-
-    @Override public ObservableValue<Integer> endParagraphIndexProperty() { return delegate.endParagraphIndexProperty(); }
-    @Override public int getEndParagraphIndex() { return delegate.getEndParagraphIndex(); }
-
-    @Override public ObservableValue<Integer> endColumnPositionProperty() { return delegate.endColumnPositionProperty(); }
-    @Override public int getEndColumnPosition() { return delegate.getEndColumnPosition(); }
+    @Override public ObservableValue<Integer> startColumnPositionProperty() { return delegateSelection.startColumnPositionProperty(); }
+    @Override public int getStartColumnPosition() { return delegateSelection.getStartColumnPosition(); }
 
 
+    @Override public ObservableValue<Integer> endPositionProperty() { return delegateSelection.endPositionProperty(); }
+    @Override public int getEndPosition() { return delegateSelection.getEndPosition(); }
+
+    @Override public ObservableValue<Integer> endParagraphIndexProperty() { return delegateSelection.endParagraphIndexProperty(); }
+    @Override public int getEndParagraphIndex() { return delegateSelection.getEndParagraphIndex(); }
+
+    @Override public ObservableValue<Integer> endColumnPositionProperty() { return delegateSelection.endColumnPositionProperty(); }
+    @Override public int getEndColumnPosition() { return delegateSelection.getEndColumnPosition(); }
+
+    @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegateSelection.selectionBoundsProperty(); }
+    @Override public Optional<Bounds> getSelectionBounds() { return delegateSelection.getSelectionBounds(); }
+
+    // caret selection bind
     private final Val<Integer> anchorPosition;
     @Override public int getAnchorPosition() { return anchorPosition.getValue(); }
     @Override public ObservableValue<Integer> anchorPositionProperty() { return anchorPosition; }
@@ -76,9 +109,6 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public int getAnchorColPosition() { return anchorColPosition.getValue(); }
     @Override public ObservableValue<Integer> anchorColPositionProperty() { return anchorColPosition; }
 
-    @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegate.selectionBoundsProperty(); }
-    @Override public Optional<Bounds> getSelectionBounds() { return delegate.getSelectionBounds(); }
-
     private final SuspendableNo beingUpdated = new SuspendableNo();
     public final boolean isBeingUpdated() { return beingUpdated.get(); }
     public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
@@ -88,24 +118,20 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private boolean anchorIsStart() { return startedByAnchor.getValue(); }
 
     private final GenericStyledArea<PS, SEG, S> area;
-    private final Caret caret;
+    private final Caret delegateCaret;
+    private final Selection<PS, SEG, S> delegateSelection;
 
     private Subscription subscription = () -> {};
 
     CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area) {
-        this(area, area.getMainCaret());
+        this(area, new IndexRange(0, 0));
     }
 
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, Caret caret) {
-        this(area, caret, new IndexRange(0, 0));
-    }
-
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, Caret caret, IndexRange startingRange) {
+    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, IndexRange startingRange) {
         this.area = area;
-        this.caret = caret;
-
         SuspendableNo delegateUpdater = new SuspendableNo();
-        delegate = new SelectionImpl<>(area, delegateUpdater, startingRange);
+        this.delegateCaret = new CaretImpl(area, delegateUpdater, startingRange.getStart());
+        delegateSelection = new SelectionImpl<>(area, delegateUpdater, startingRange);
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
                 b
@@ -139,20 +165,30 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
      *                                                                        *
      * ********************************************************************** */
 
+    // caret
     @Override
-    public void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {
-        selectRangeExpl(textPosition(anchorParagraph, anchorColumn), textPosition(caretParagraph, caretColumn));
-    }
-
-    @Override
-    public void selectRangeExpl(int anchorPosition, int caretPosition) {
-        if (anchorPosition <= caretPosition) {
-            doSelect(anchorPosition, caretPosition, true);
-        } else {
-            doSelect(caretPosition, anchorPosition, false);
+    public void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
         }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getPosition());
+        moveTo(position, NavigationActions.SelectionPolicy.CLEAR);
     }
 
+    @Override
+    public void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getPosition());
+        moveTo(position, NavigationActions.SelectionPolicy.CLEAR);
+    }
+
+    // selection
     @Override
     public void selectRange(int startPosition, int endPosition) {
         doSelect(startPosition, endPosition, anchorIsStart());
@@ -190,6 +226,28 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     }
 
     @Override
+    public void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getStartPosition());
+        updateStartTo(position);
+    }
+
+    @Override
+    public void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getStartPosition());
+        updateStartTo(position);
+    }
+
+    @Override
     public void updateEndTo(int position) {
         selectRange(getStartPosition(), position);
     }
@@ -197,6 +255,135 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override
     public void updateEndTo(int paragraphIndex, int columnPosition) {
         updateEndTo(textPosition(paragraphIndex, columnPosition));
+    }
+
+    @Override
+    public void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getStartPosition());
+        updateEndTo(position);
+    }
+
+    @Override
+    public void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getStartPosition());
+        updateEndTo(position);
+    }
+
+    @Override
+    public void selectAll() {
+        selectRange(0, area.getLength());
+    }
+
+    @Override
+    public void selectParagraph(int paragraphIndex) {
+        int start = textPosition(paragraphIndex, 0);
+        int end = area.getParagraphLenth(paragraphIndex);
+        selectRange(start, end);
+    }
+
+    @Override
+    public void selectWord(int wordPositionInArea) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        breakIterator.setText(area.getText());
+
+        int start = calculatePositionViaBreakingBackwards(1, breakIterator, wordPositionInArea);
+        int end = calculatePositionViaBreakingForwards(1, breakIterator, wordPositionInArea);
+        selectRange(start, end);
+    }
+
+    // caret selection bind
+    @Override
+    public void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {
+        selectRangeExpl(textPosition(anchorParagraph, anchorColumn), textPosition(caretParagraph, caretColumn));
+    }
+
+    @Override
+    public void selectRangeExpl(int anchorPosition, int caretPosition) {
+        if (anchorPosition <= caretPosition) {
+            doSelect(anchorPosition, caretPosition, true);
+        } else {
+            doSelect(caretPosition, anchorPosition, false);
+        }
+    }
+
+    @Override
+    public void moveTo(int pos, NavigationActions.SelectionPolicy selectionPolicy) {
+        switch(selectionPolicy) {
+            case CLEAR:
+                selectRangeExpl(pos, pos);
+                break;
+            case ADJUST:
+                selectRangeExpl(getAnchorPosition(), pos);
+                break;
+            case EXTEND:
+                IndexRange sel = getRange();
+                int anchor;
+                if (pos <= sel.getStart()) {
+                    anchor = sel.getEnd();
+                } else if(pos >= sel.getEnd()) {
+                    anchor = sel.getStart();
+                } else {
+                    anchor = getAnchorPosition();
+                }
+                selectRangeExpl(anchor, pos);
+                break;
+        }
+    }
+
+    @Override
+    public void moveTo(int paragraphIndex, int columnIndex, NavigationActions.SelectionPolicy selectionPolicy) {
+        moveTo(textPosition(paragraphIndex, columnIndex), selectionPolicy);
+    }
+
+    @Override
+    public void moveToPrevChar(NavigationActions.SelectionPolicy selectionPolicy) {
+        if (getPosition() > 0) {
+            int newCaretPos = Character.offsetByCodePoints(area.getText(), getPosition(), -1);
+            moveTo(newCaretPos, selectionPolicy);
+        }
+    }
+
+    @Override
+    public void moveToNextChar(NavigationActions.SelectionPolicy selectionPolicy) {
+        if (getPosition() < getLength()) {
+            int newCaretPos = Character.offsetByCodePoints(area.getText(), getPosition(), 1);
+            moveTo(newCaretPos, selectionPolicy);
+        }
+    }
+
+    @Override
+    public void moveToParStart(NavigationActions.SelectionPolicy selectionPolicy) {
+        moveTo(getPosition() - getColumnPosition(), selectionPolicy);
+    }
+
+    @Override
+    public void moveToParEnd(NavigationActions.SelectionPolicy selectionPolicy) {
+        int newPos = area.getParagraphLenth(getParagraphIndex());
+        moveTo(newPos, selectionPolicy);
+    }
+
+    @Override
+    public void moveToAreaStart(NavigationActions.SelectionPolicy selectionPolicy) {
+        moveTo(0, selectionPolicy);
+    }
+
+    @Override
+    public void moveToAreaEnd(NavigationActions.SelectionPolicy selectionPolicy) {
+        moveTo(area.getLength(), selectionPolicy);
     }
 
     @Override
@@ -212,10 +399,10 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
         Runnable updateRange = () -> {
-            delegate.selectRange(startPosition, endPosition);
+            delegateSelection.selectRange(startPosition, endPosition);
             internalStartedByAnchor.setValue(anchorIsStart);
 
-            caret.moveTo(anchorIsStart ? endPosition : startPosition);
+            delegateCaret.moveTo(anchorIsStart ? endPosition : startPosition);
         };
 
         if (area.isBeingUpdated()) {
@@ -227,6 +414,23 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     private int textPosition(int paragraphIndex, int columnPosition) {
         return area.position(paragraphIndex, columnPosition).toOffset();
+    }
+
+    /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
+    private int calculatePositionViaBreakingForwards(int numOfBreaks, BreakIterator breakIterator, int position) {
+        breakIterator.following(position);
+        return calculateNextBreak(numOfBreaks, breakIterator);
+    }
+
+    /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
+    private int calculatePositionViaBreakingBackwards(int numOfBreaks, BreakIterator breakIterator, int position) {
+        breakIterator.preceding(position);
+        return calculateNextBreak(numOfBreaks, breakIterator);
+    }
+
+    private int calculateNextBreak(int numOfBreaks, BreakIterator breakIterator) {
+        breakIterator.next(numOfBreaks);
+        return breakIterator.current();
     }
 
 }
