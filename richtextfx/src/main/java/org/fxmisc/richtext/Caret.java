@@ -2,7 +2,6 @@ package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
-import org.reactfx.EventStream;
 import org.reactfx.value.Var;
 
 import java.text.BreakIterator;
@@ -99,9 +98,6 @@ public interface Caret {
      * original offset in a line.
      */
     ParagraphBox.CaretOffsetX getTargetOffset();
-
-    /** Emit an event whenever the caret's position becomes dirty */
-    public EventStream<?> dirtyEvents();
 
     boolean isBeingUpdated();
     ObservableValue<Boolean> beingUpdatedProperty();

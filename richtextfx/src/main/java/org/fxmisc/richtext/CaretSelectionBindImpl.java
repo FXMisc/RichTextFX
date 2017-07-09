@@ -80,8 +80,6 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegate.selectionBoundsProperty(); }
     @Override public Optional<Bounds> getSelectionBounds() { return delegate.getSelectionBounds(); }
 
-    @Override public EventStream<?> dirtyEvents() { return delegate.dirtyEvents(); }
-
     private final SuspendableNo beingUpdated = new SuspendableNo();
     public final boolean isBeingUpdated() { return beingUpdated.get(); }
     public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }

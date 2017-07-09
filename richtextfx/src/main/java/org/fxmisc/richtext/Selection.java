@@ -4,7 +4,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.reactfx.EventStream;
 
 import java.util.Optional;
 
@@ -115,12 +114,6 @@ public interface Selection<PS, SEG, S> {
      */
     ObservableValue<Optional<Bounds>> selectionBoundsProperty();
     Optional<Bounds> getSelectionBounds();
-
-    /**
-     * Emits an event every time the selection becomes dirty: the start/end positions change or the area's paragraphs
-     * change.
-     */
-    EventStream<?> dirtyEvents();
 
     boolean isBeingUpdated();
     ObservableValue<Boolean> beingUpdatedProperty();

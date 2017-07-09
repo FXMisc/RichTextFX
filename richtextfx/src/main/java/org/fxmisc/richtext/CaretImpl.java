@@ -77,13 +77,11 @@ final class CaretImpl implements Caret {
         return targetOffset.get();
     }
 
-    private final EventStream<?> dirty;
-    @Override public final EventStream<?> dirtyEvents() { return dirty; }
-
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
     @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
+    private final EventStream<?> dirty;
     private final GenericStyledArea<?, ?, ?> area;
     private final SuspendableNo dependentBeingUpdated;
 

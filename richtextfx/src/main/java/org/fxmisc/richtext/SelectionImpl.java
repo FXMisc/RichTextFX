@@ -88,9 +88,6 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final Optional<Bounds> getSelectionBounds() { return bounds.getValue(); }
     @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return bounds; }
 
-    private final EventStream<?> dirty;
-    @Override public final EventStream<?> dirtyEvents() { return dirty; }
-
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
     @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
@@ -98,6 +95,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     private final GenericStyledArea<PS, SEG, S> area;
     private final SuspendableNo dependentBeingUpdated;
     private final Var<IndexRange> internalRange;
+    private final EventStream<?> dirty;
 
     private Subscription subscription = () -> {};
 
