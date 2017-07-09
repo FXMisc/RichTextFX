@@ -314,7 +314,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override
     public void selectParagraph(int paragraphIndex) {
         int start = textPosition(paragraphIndex, 0);
-        int end = start + area.getParagraphLenth(paragraphIndex);
+        int end = start + area.getParagraphLength(paragraphIndex);
         selectRange(start, end);
     }
 

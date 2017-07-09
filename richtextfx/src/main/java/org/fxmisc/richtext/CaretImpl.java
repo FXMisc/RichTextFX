@@ -211,7 +211,7 @@ final class CaretImpl implements Caret {
 
     @Override
     public void moveToParEnd() {
-        moveTo(area.getParagraphLenth(getParagraphIndex()));
+        moveTo(area.getParagraphLength(getParagraphIndex()));
     }
 
     @Override

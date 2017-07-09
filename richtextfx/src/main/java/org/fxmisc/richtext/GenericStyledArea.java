@@ -857,7 +857,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.getParagraph(index);
     }
 
-    public int getParagraphLenth(int index) {
+    public int getParagraphLength(int index) {
         return content.getParagraphLength(index);
     }
 
@@ -887,7 +887,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
 
         int start = paragraph == startPar ? selection.getStartColumnPosition() : 0;
-        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLenth(paragraph);
+        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLength(paragraph);
 
         // force rangeProperty() to be valid
         selection.getRange();

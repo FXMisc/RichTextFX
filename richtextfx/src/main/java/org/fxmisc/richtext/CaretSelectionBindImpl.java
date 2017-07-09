@@ -287,7 +287,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override
     public void selectParagraph(int paragraphIndex) {
         int start = textPosition(paragraphIndex, 0);
-        int end = area.getParagraphLenth(paragraphIndex);
+        int end = area.getParagraphLength(paragraphIndex);
         selectRange(start, end);
     }
 
@@ -377,7 +377,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveToParEnd(NavigationActions.SelectionPolicy selectionPolicy) {
-        int newPos = area.getParagraphLenth(getParagraphIndex());
+        int newPos = area.getParagraphLength(getParagraphIndex());
         moveTo(newPos, selectionPolicy);
     }
 
