@@ -29,6 +29,16 @@ final class CaretImpl implements Caret {
 
     private final Var<Integer> internalTextPosition;
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     private final SuspendableVal<Integer> position;
     @Override public final int getPosition() { return position.getValue(); }
     @Override public final ObservableValue<Integer> positionProperty() { return position; }
@@ -175,6 +185,15 @@ final class CaretImpl implements Caret {
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     public void moveTo(int paragraphIndex, int columnPosition) {
         moveTo(textPosition(paragraphIndex, columnPosition));
     }
@@ -182,6 +201,7 @@ final class CaretImpl implements Caret {
     public void moveTo(int position) {
         dependentBeingUpdated.suspendWhile(() -> internalTextPosition.setValue(position));
     }
+
     @Override
     public void moveToParStart() {
         moveTo(getPosition() - getColumnPosition());
@@ -220,6 +240,12 @@ final class CaretImpl implements Caret {
     public void dispose() {
         subscriptions.unsubscribe();
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     * ********************************************************************** */
 
     private int textPosition(int row, int col) {
         return area.position(row, col).toOffset();

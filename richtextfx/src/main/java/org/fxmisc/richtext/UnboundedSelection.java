@@ -69,6 +69,16 @@ public interface UnboundedSelection<PS, SEG, S> {
         throw new IllegalStateException("An UnboundedSelection cannot be cast to a BoundedSelection");
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     /**
      * The start and end positions in the area as an {@link IndexRange}.
      */
@@ -130,6 +140,14 @@ public interface UnboundedSelection<PS, SEG, S> {
     boolean isBeingUpdated();
     ObservableValue<Boolean> beingUpdatedProperty();
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
 
     /**
      * Selects the given range.

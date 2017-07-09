@@ -27,6 +27,16 @@ import static org.reactfx.EventStreams.merge;
 
 final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     private final SuspendableVal<IndexRange> range;
     @Override public final IndexRange getRange() { return range.getValue(); }
     @Override public final ObservableValue<IndexRange> rangeProperty() { return range; }
@@ -216,6 +226,15 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     @Override
     public void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
         selectRange(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
@@ -274,6 +293,12 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     public void dispose() {
         subscription.unsubscribe();
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     * ********************************************************************** */
 
     private <T> void manageSubscription(EventStream<T> stream, Consumer<T> consumer) {
         manageSubscription(stream.subscribe(consumer));

@@ -18,6 +18,16 @@ import java.util.Optional;
 
 final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG, S> {
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     private final UnboundedSelection<PS, SEG, S> delegate;
     @Override public ObservableValue<IndexRange> rangeProperty() { return delegate.rangeProperty(); }
     @Override public IndexRange getRange() { return delegate.getRange(); }
@@ -123,6 +133,15 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
         subscription = omniSuspendable.suspendWhen(area.beingUpdatedProperty());
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     @Override
     public void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn) {
         selectRangeExpl(textPosition(anchorParagraph, anchorColumn), textPosition(caretParagraph, caretColumn));
@@ -187,6 +206,12 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
     public void dispose() {
         subscription.unsubscribe();
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     * ********************************************************************** */
 
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
         Runnable updateRange = () -> {

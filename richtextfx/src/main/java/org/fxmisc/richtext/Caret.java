@@ -44,6 +44,16 @@ public interface Caret {
         OFF
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     /** The position of the caret within the text */
     public ObservableValue<Integer> positionProperty();
     public int getPosition();
@@ -95,6 +105,15 @@ public interface Caret {
 
     boolean isBeingUpdated();
     ObservableValue<Boolean> beingUpdatedProperty();
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
 
     /**
      * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},

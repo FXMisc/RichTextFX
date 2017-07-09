@@ -66,6 +66,16 @@ public interface BoundedSelection<PS, SEG, S> extends UnboundedSelection<PS, SEG
         return this;
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
+
     int getAnchorPosition();
     ObservableValue<Integer> anchorPositionProperty();
 
@@ -74,6 +84,15 @@ public interface BoundedSelection<PS, SEG, S> extends UnboundedSelection<PS, SEG
 
     int getAnchorColPosition();
     ObservableValue<Integer> anchorColPositionProperty();
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
 
     /**
      * Positions the anchor and caretPosition explicitly,
