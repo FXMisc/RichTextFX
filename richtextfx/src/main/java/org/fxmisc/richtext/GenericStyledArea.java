@@ -883,7 +883,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     public IndexRange getParagraphSelection(Selection selection, int paragraph) {
         int startPar = selection.getStartParagraphIndex();
-        int endPar = selection.getEndPararagraphIndex();
+        int endPar = selection.getEndParagraphIndex();
 
         if(paragraph < startPar || paragraph > endPar) {
             return EMPTY_RANGE;
@@ -1278,7 +1278,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
 
         List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
-        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndPararagraphIndex(); i++) {
+        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
             final int i0 = i;
             virtualFlow.getCellIfVisible(i).ifPresent(c -> {
                 IndexRange rangeWithinPar = getParagraphSelection(selection, i0);

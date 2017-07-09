@@ -102,8 +102,8 @@ public interface Selection<PS, SEG, S> {
     ObservableValue<Integer> endPositionProperty();
     int getEndPosition();
 
-    ObservableValue<Integer> endPararagraphIndexProperty();
-    int getEndPararagraphIndex();
+    ObservableValue<Integer> endParagraphIndexProperty();
+    int getEndParagraphIndex();
 
     ObservableValue<Integer> endColumnPositionProperty();
     int getEndColumnPosition();

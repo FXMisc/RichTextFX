@@ -58,8 +58,8 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public ObservableValue<Integer> endPositionProperty() { return delegate.endPositionProperty(); }
     @Override public int getEndPosition() { return delegate.getEndPosition(); }
 
-    @Override public ObservableValue<Integer> endPararagraphIndexProperty() { return delegate.endPararagraphIndexProperty(); }
-    @Override public int getEndPararagraphIndex() { return delegate.getEndPararagraphIndex(); }
+    @Override public ObservableValue<Integer> endParagraphIndexProperty() { return delegate.endParagraphIndexProperty(); }
+    @Override public int getEndParagraphIndex() { return delegate.getEndParagraphIndex(); }
 
     @Override public ObservableValue<Integer> endColumnPositionProperty() { return delegate.endColumnPositionProperty(); }
     @Override public int getEndColumnPosition() { return delegate.getEndColumnPosition(); }
@@ -113,7 +113,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
                 b
                     ? Val.constant(Tuples.t(getStartPosition(), getStartParagraphIndex(), getStartColumnPosition()))
-                    : Val.constant(Tuples.t(getEndPosition(), getEndPararagraphIndex(), getEndColumnPosition()))
+                    : Val.constant(Tuples.t(getEndPosition(), getEndParagraphIndex(), getEndColumnPosition()))
         );
 
         anchorPosition = anchorPositions.map(Tuple3::get1);

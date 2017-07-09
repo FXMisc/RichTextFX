@@ -76,8 +76,8 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final ObservableValue<Integer> endPositionProperty() { return endPosition; }
 
     private final SuspendableVal<Integer> endPararagraphIndex;
-    @Override public final int getEndPararagraphIndex() { return endPararagraphIndex.getValue(); }
-    @Override public final ObservableValue<Integer> endPararagraphIndexProperty() { return endPararagraphIndex; }
+    @Override public final int getEndParagraphIndex() { return endPararagraphIndex.getValue(); }
+    @Override public final ObservableValue<Integer> endParagraphIndexProperty() { return endPararagraphIndex; }
 
     private final SuspendableVal<Integer> endColumnPosition;
     @Override public final int getEndColumnPosition() { return endColumnPosition.getValue(); }
@@ -152,7 +152,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
         endColumnPosition = end2D.map(Position::getMinor).suspendable();
 
         paragraphSpan = Val.create(
-                () -> getEndPararagraphIndex() - getStartParagraphIndex() + 1,
+                () -> getEndParagraphIndex() - getStartParagraphIndex() + 1,
                 startPar, endPar
         ).suspendable();
 
