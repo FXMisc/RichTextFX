@@ -32,7 +32,7 @@ import org.reactfx.value.Var;
 /**
  * Controller for GenericStyledArea.
  */
-class StyledTextAreaBehavior {
+class GenericStyledAreaBehavior {
 
     private static final boolean isMac;
     private static final boolean isWindows;
@@ -42,19 +42,19 @@ class StyledTextAreaBehavior {
         isWindows = os.startsWith("Windows");
     }
 
-    private static final InputMapTemplate<StyledTextAreaBehavior, ? super Event> EVENT_TEMPLATE;
+    private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
 
     static {
         SelectionPolicy selPolicy = isMac
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> editsBase = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
-                consume(keyPressed(DELETE),                     StyledTextAreaBehavior::deleteForward),
-                consume(keyPressed(BACK_SPACE),                 StyledTextAreaBehavior::deleteBackward),
-                consume(keyPressed(DELETE,     SHORTCUT_DOWN),  StyledTextAreaBehavior::deleteNextWord),
-                consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN),  StyledTextAreaBehavior::deletePrevWord),
+                consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
+                consume(keyPressed(BACK_SPACE),                 GenericStyledAreaBehavior::deleteBackward),
+                consume(keyPressed(DELETE,     SHORTCUT_DOWN),  GenericStyledAreaBehavior::deleteNextWord),
+                consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN),  GenericStyledAreaBehavior::deletePrevWord),
                 // cut
                 consume(
                         anyOf(keyPressed(CUT),   keyPressed(X, SHORTCUT_DOWN), keyPressed(DELETE, SHIFT_DOWN)),
@@ -72,9 +72,9 @@ class StyledTextAreaBehavior {
                         anyOf(keyPressed(Y, SHORTCUT_DOWN), keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)),
                         (b, e) -> b.view.redo())
         );
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> edits = when(b -> b.view.isEditable(), editsBase);
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> edits = when(b -> b.view.isEditable(), editsBase);
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> verticalNavigation = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> verticalNavigation = sequence(
                 // vertical caret movement
                 consume(
                         anyOf(keyPressed(UP), keyPressed(KP_UP)),
@@ -95,10 +95,10 @@ class StyledTextAreaBehavior {
                 consume(keyPressed(PAGE_DOWN, SHIFT_DOWN),  (b, e) -> b.view.nextPage(SelectionPolicy.ADJUST))
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> otherNavigation = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> otherNavigation = sequence(
                 // caret movement
-                consume(anyOf(keyPressed(RIGHT), keyPressed(KP_RIGHT)), StyledTextAreaBehavior::right),
-                consume(anyOf(keyPressed(LEFT),  keyPressed(KP_LEFT)),  StyledTextAreaBehavior::left),
+                consume(anyOf(keyPressed(RIGHT), keyPressed(KP_RIGHT)), GenericStyledAreaBehavior::right),
+                consume(anyOf(keyPressed(LEFT),  keyPressed(KP_LEFT)),  GenericStyledAreaBehavior::left),
                 consume(keyPressed(HOME), (b, e) -> b.view.lineStart(SelectionPolicy.CLEAR)),
                 consume(keyPressed(END),  (b, e) -> b.view.lineEnd(SelectionPolicy.CLEAR)),
                 consume(
@@ -118,12 +118,12 @@ class StyledTextAreaBehavior {
                         anyOf(
                                 keyPressed(RIGHT,    SHIFT_DOWN),
                                 keyPressed(KP_RIGHT, SHIFT_DOWN)
-                        ), StyledTextAreaBehavior::selectRight),
+                        ), GenericStyledAreaBehavior::selectRight),
                 consume(
                         anyOf(
                                 keyPressed(LEFT,     SHIFT_DOWN),
                                 keyPressed(KP_LEFT,  SHIFT_DOWN)
-                        ), StyledTextAreaBehavior::selectLeft),
+                        ), GenericStyledAreaBehavior::selectLeft),
                 consume(keyPressed(HOME, SHIFT_DOWN),                (b, e) -> b.view.lineStart(selPolicy)),
                 consume(keyPressed(END,  SHIFT_DOWN),                (b, e) -> b.view.lineEnd(selPolicy)),
                 consume(keyPressed(HOME, SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.view.start(selPolicy)),
@@ -141,7 +141,7 @@ class StyledTextAreaBehavior {
                 consume(keyPressed(A, SHORTCUT_DOWN), (b, e) -> b.view.selectAll())
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> copyAction = consume(
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> copyAction = consume(
                 anyOf(
                         keyPressed(COPY),
                         keyPressed(C, SHORTCUT_DOWN),
@@ -160,9 +160,9 @@ class StyledTextAreaBehavior {
                 e.getCode().isDigitKey() ||
                 e.getCode().isWhitespaceKey();
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(noControlKeys)));
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(noControlKeys)));
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super KeyEvent> keyPressedTemplate = edits
+        InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyPressedTemplate = edits
                 .orElse(otherNavigation).ifConsumed((b, e) -> b.view.clearTargetCaretOffset())
                 .orElse(verticalNavigation)
                 .orElse(copyAction)
@@ -171,14 +171,14 @@ class StyledTextAreaBehavior {
                 // requestFollowCaret is called in keyTypedTemplate
                 .orElse(charPressConsumer);
 
-        InputMapTemplate<StyledTextAreaBehavior, KeyEvent> keyTypedBase = consume(
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> keyTypedBase = consume(
                 // character input
                 EventPattern.keyTyped().onlyIf(noControlKeys.and(e -> isLegal(e.getCharacter()))),
-                StyledTextAreaBehavior::keyTyped
+                GenericStyledAreaBehavior::keyTyped
         ).ifConsumed((b, e) -> b.view.requestFollowCaret());
-        InputMapTemplate<StyledTextAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
+        InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mousePressedTemplate = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super MouseEvent> mousePressedTemplate = sequence(
                 // ignore mouse pressed events if the view is disabled
                 process(mousePressed(MouseButton.PRIMARY), (b, e) -> b.view.isDisabled() ? Result.IGNORE : Result.PROCEED),
 
@@ -191,44 +191,44 @@ class StyledTextAreaBehavior {
                 ),
                 consume(
                         mousePressed(MouseButton.PRIMARY).onlyIf(MouseEvent::isShiftDown),
-                        StyledTextAreaBehavior::handleShiftPress
+                        GenericStyledAreaBehavior::handleShiftPress
                 ),
                 consume(
                         mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 1),
-                        StyledTextAreaBehavior::handleFirstPrimaryPress
+                        GenericStyledAreaBehavior::handleFirstPrimaryPress
                 ),
                 consume(
                         mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 2),
-                        StyledTextAreaBehavior::handleSecondPress
+                        GenericStyledAreaBehavior::handleSecondPress
                 ),
                 consume(
                         mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 3),
-                        StyledTextAreaBehavior::handleThirdPress
+                        GenericStyledAreaBehavior::handleThirdPress
                 )
         );
 
         Predicate<MouseEvent> primaryOnlyButton = e -> e.getButton() == MouseButton.PRIMARY && !e.isMiddleButtonDown() && !e.isSecondaryButtonDown();
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseDragDetectedTemplate = consume(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super MouseEvent> mouseDragDetectedTemplate = consume(
                 eventType(MouseEvent.DRAG_DETECTED).onlyIf(primaryOnlyButton),
                 (b, e) -> b.handlePrimaryOnlyDragDetected()
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseDragTemplate = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super MouseEvent> mouseDragTemplate = sequence(
                 process(
                         mouseDragged().onlyIf(primaryOnlyButton),
-                        StyledTextAreaBehavior::processPrimaryOnlyMouseDragged
+                        GenericStyledAreaBehavior::processPrimaryOnlyMouseDragged
                 ),
                 consume(
                         mouseDragged(),
-                        StyledTextAreaBehavior::continueOrStopAutoScroll
+                        GenericStyledAreaBehavior::continueOrStopAutoScroll
                 )
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseReleasedTemplate = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super MouseEvent> mouseReleasedTemplate = sequence(
                 process(
                         EventPattern.mouseReleased().onlyIf(primaryOnlyButton),
-                        StyledTextAreaBehavior::processMouseReleased
+                        GenericStyledAreaBehavior::processMouseReleased
                 ),
                 consume(
                         mouseReleased(),
@@ -236,14 +236,14 @@ class StyledTextAreaBehavior {
                 )
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super MouseEvent> mouseTemplate = sequence(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super MouseEvent> mouseTemplate = sequence(
                 mousePressedTemplate, mouseDragDetectedTemplate, mouseDragTemplate, mouseReleasedTemplate
         );
 
-        InputMapTemplate<StyledTextAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
+        InputMapTemplate<GenericStyledAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
                 EventPattern.eventType(ContextMenuEvent.CONTEXT_MENU_REQUESTED),
                 b -> !b.view.isDisabled() && b.view.isContextMenuPresent(),
-                StyledTextAreaBehavior::showContextMenu
+                GenericStyledAreaBehavior::showContextMenu
         );
 
         EVENT_TEMPLATE = sequence(mouseTemplate, keyPressedTemplate, keyTypedTemplate, contextMenuEventTemplate);
@@ -280,7 +280,7 @@ class StyledTextAreaBehavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    StyledTextAreaBehavior(GenericStyledArea<?, ?, ?> area) {
+    GenericStyledAreaBehavior(GenericStyledArea<?, ?, ?> area) {
         this.view = area;
 
         InputMapTemplate.installFallback(EVENT_TEMPLATE, this, b -> b.view);
@@ -289,7 +289,7 @@ class StyledTextAreaBehavior {
         Val<Point2D> projection = Val.combine(
                 autoscrollTo,
                 area.layoutBoundsProperty(),
-                StyledTextAreaBehavior::project);
+                GenericStyledAreaBehavior::project);
         Val<Point2D> distance = Val.combine(
                 autoscrollTo,
                 projection,
