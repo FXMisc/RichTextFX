@@ -196,7 +196,12 @@ final class CaretImpl implements Caret {
     }
 
     public void moveTo(int position) {
-        dependentBeingUpdated.suspendWhile(() -> internalTextPosition.setValue(position));
+        Runnable updatePos = () -> internalTextPosition.setValue(position);
+        if (isBeingUpdated()) {
+            updatePos.run();
+        } else {
+            dependentBeingUpdated.suspendWhile(updatePos);
+        }
     }
 
     @Override
