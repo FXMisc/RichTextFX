@@ -157,30 +157,30 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         );
 
         manageSubscription(area.plainTextChanges(), plainTextChange -> {
-            int changeLength = plainTextChange.getInserted().length() - plainTextChange.getRemoved().length();
-            if (changeLength != 0) {
+            int netLength = plainTextChange.getNetLength();
+            if (netLength != 0) {
                 int indexOfChange = plainTextChange.getPosition();
                 // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(changeLength);
+                int endOfChange = indexOfChange + Math.abs(netLength);
 
                 if (getLength() != 0) {
                     int selectionStart = getStartPosition();
                     int selectionEnd = getEndPosition();
 
                     // if start/end is within the changed content, move it to indexOfChange
-                    // otherwise, offset it by changeLength
+                    // otherwise, offset it by netLength
                     // Note: if both are moved to indexOfChange, selection is empty.
                     if (indexOfChange < selectionStart) {
                         selectionStart = selectionStart < endOfChange
                                 ? indexOfChange
-                                : selectionStart + changeLength;
+                                : selectionStart + netLength;
                     }
                     if (indexOfChange < selectionEnd) {
                         selectionEnd = selectionEnd < endOfChange
                                 ? indexOfChange
-                                : selectionEnd + changeLength;
+                                : selectionEnd + netLength;
                     }
-                    selectRange0(selectionStart, selectionEnd);
+                    selectRange(selectionStart, selectionEnd);
                 } else {
                     // force-update internalSelection in case empty selection is
                     // at the end of area and a character was deleted
@@ -188,7 +188,7 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
                     // end is one char farther than area's length).
 
                     if (getLength() < getEndPosition()) {
-                        selectRange0(getLength(), getLength());
+                        selectRange(getLength(), getLength());
                     }
                 }
             }
@@ -217,12 +217,12 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     }
 
     @Override
-    public void selectRange0(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
-        selectRange0(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
+    public void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
+        selectRange(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
     }
 
     @Override
-    public void selectRange0(int startPosition, int endPosition) {
+    public void selectRange(int startPosition, int endPosition) {
         selectRange(new IndexRange(startPosition, endPosition));
     }
 
@@ -252,22 +252,22 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
 
     @Override
     public void moveStartTo(int position) {
-        selectRange0(position, getEndPosition());
+        selectRange(position, getEndPosition());
     }
 
     @Override
     public void moveStartTo(int paragraphIndex, int columnPosition) {
-        selectRange0(textPosition(paragraphIndex, columnPosition), getEndPosition());
+        selectRange(textPosition(paragraphIndex, columnPosition), getEndPosition());
     }
 
     @Override
     public void moveEndTo(int position) {
-        selectRange0(getStartPosition(), position);
+        selectRange(getStartPosition(), position);
     }
 
     @Override
     public void moveEndTo(int paragraphIndex, int columnPosition) {
-        selectRange0(getStartPosition(), textPosition(paragraphIndex, columnPosition));
+        selectRange(getStartPosition(), textPosition(paragraphIndex, columnPosition));
     }
 
     @Override

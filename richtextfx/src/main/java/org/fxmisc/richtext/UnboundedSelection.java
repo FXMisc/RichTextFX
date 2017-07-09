@@ -10,7 +10,7 @@ import java.util.Optional;
 
 /**
  * An object for encapsulating a selection in a given area that is not bound to any caret. In other words,
- * {@link #selectRange0(int, int) selecting some range in the area} will not also move a caret in the same call.
+ * {@link #selectRange(int, int) selecting some range in the area} will not also move a caret in the same call.
  *
  * <p>
  *     <b>"Position"</b> refers to the place in-between characters. In other words, every {@code "|"} in
@@ -132,19 +132,17 @@ public interface UnboundedSelection<PS, SEG, S> {
 
 
     /**
-     * Selects the given range. Note: this method's "0" suffix distinguishes it's signature from
-     * {@link BoundedSelection#selectRange(int, int, int, int)}.
+     * Selects the given range.
      *
      * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)} to
      * know how the column index argument can affect the returned position.</p>
      */
-    void selectRange0(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition);
+    void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition);
 
     /**
-     * Selects the given range. Note: this method's "0" suffix distinguishes it's signature from
-     * {@link BoundedSelection#selectRange(int, int)}.
+     * Selects the given range.
      */
-    void selectRange0(int startPosition, int endPosition);
+    void selectRange(int startPosition, int endPosition);
 
     void moveStartBy(int amount, Direction direction);
 

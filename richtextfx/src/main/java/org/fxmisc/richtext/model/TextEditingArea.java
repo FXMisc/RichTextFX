@@ -220,7 +220,7 @@ public interface TextEditingArea<PS, SEG, S> {
      * effectively creating a selection.
      */
     default void selectRange(int anchor, int caretPosition) {
-        getMainSelection().selectRange(anchor, caretPosition);
+        getMainSelection().selectRangeExpl(anchor, caretPosition);
     }
 
     /**

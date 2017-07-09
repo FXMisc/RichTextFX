@@ -5,7 +5,7 @@ import org.fxmisc.richtext.model.StyledDocument;
 
 /**
  * An object for encapsulating a selection in a given area that is bound to an underlying caret. In other words,
- * {@link #selectRange(int, int) selecting some range in the area} will move a caret in the same call.
+ * {@link #selectRangeExpl(int, int) selecting some range in the area} will move a caret in the same call.
  *
  * <p>
  *     <b>"Position"</b> refers to the place in-between characters. In other words, every {@code "|"} in
@@ -25,13 +25,13 @@ import org.fxmisc.richtext.model.StyledDocument;
  *
  * <p>
  *     The selection is typically made using the {@link #getAnchorPosition() anchor's position} and
- *     the underlying {@link Caret#getPosition() caret's position}. Hence, {@link #selectRange(int, int)}
- *     is the typical method to use, although {@link #selectRange0(int, int)} can also be used.
+ *     the underlying {@link Caret#getPosition() caret's position}. Hence, {@link #selectRangeExpl(int, int)}
+ *     is the typical method to use, although {@link #selectRange(int, int)} can also be used.
  * </p>
  * <p>
  *     Be careful about calling the underlying {@link Caret#moveTo(int)} method. This will displace the caret
  *     from the selection bounds and may lead to undesirable/unexpected behavior. If this is done, a
- *     {@link #selectRange(int, int)} call will reposition the caret, so that it is either the start or end
+ *     {@link #selectRangeExpl(int, int)} call will reposition the caret, so that it is either the start or end
  *     bound of this selection.
  * </p>
  *
@@ -78,16 +78,13 @@ public interface BoundedSelection<PS, SEG, S> extends UnboundedSelection<PS, SEG
     /**
      * Positions the anchor and caretPosition explicitly,
      * effectively creating a selection.
-     *
-     * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)}
-     * to know how the column index argument can affect the returned position.</p>
      */
-    void selectRange(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn);
+    void selectRangeExpl(int anchorParagraph, int anchorColumn, int caretParagraph, int caretColumn);
 
     /**
      * Positions the anchor and caretPosition explicitly,
      * effectively creating a selection.
      */
-    void selectRange(int anchorPosition, int caretPosition);
+    void selectRangeExpl(int anchorPosition, int caretPosition);
 
 }
