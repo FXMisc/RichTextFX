@@ -881,7 +881,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return getParagraphSelection(mainSelection, paragraph);
     }
 
-    public IndexRange getParagraphSelection(UnboundedSelection selection, int paragraph) {
+    public IndexRange getParagraphSelection(Selection selection, int paragraph) {
         int startPar = selection.getStartParagraphIndex();
         int endPar = selection.getEndPararagraphIndex();
 
@@ -1272,7 +1272,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
     }
 
-    final Optional<Bounds> getSelectionBoundsOnScreen(UnboundedSelection selection) {
+    final Optional<Bounds> getSelectionBoundsOnScreen(Selection selection) {
         if (selection.getLength() == 0) {
             return Optional.empty();
         }

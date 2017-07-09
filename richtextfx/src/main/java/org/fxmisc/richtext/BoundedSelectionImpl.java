@@ -28,7 +28,7 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
      *                                                                        *
      * ********************************************************************** */
 
-    private final UnboundedSelection<PS, SEG, S> delegate;
+    private final Selection<PS, SEG, S> delegate;
     @Override public ObservableValue<IndexRange> rangeProperty() { return delegate.rangeProperty(); }
     @Override public IndexRange getRange() { return delegate.getRange(); }
 
@@ -108,7 +108,7 @@ final class BoundedSelectionImpl<PS, SEG, S> implements BoundedSelection<PS, SEG
         this.caret = caret;
 
         SuspendableNo delegateUpdater = new SuspendableNo();
-        delegate = new UnboundedSelectionImpl<>(area, delegateUpdater, startingRange);
+        delegate = new SelectionImpl<>(area, delegateUpdater, startingRange);
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
                 b

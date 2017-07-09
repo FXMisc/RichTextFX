@@ -45,7 +45,7 @@ import org.fxmisc.richtext.model.StyledDocument;
  * </p>
  *
  * @see Caret
- * @see UnboundedSelection
+ * @see Selection
  *
  * @param <PS> type for {@link StyledDocument}'s paragraph style; only necessary when using the "selectedDocument"
  *            getter or property
@@ -54,7 +54,7 @@ import org.fxmisc.richtext.model.StyledDocument;
  * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
  *            getter or property
  */
-public interface BoundedSelection<PS, SEG, S> extends UnboundedSelection<PS, SEG, S> {
+public interface BoundedSelection<PS, SEG, S> extends Selection<PS, SEG, S> {
 
     @Override
     default boolean isBoundToCaret() {

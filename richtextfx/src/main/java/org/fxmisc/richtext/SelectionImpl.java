@@ -25,7 +25,7 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
+final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -101,19 +101,19 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
 
     private Subscription subscription = () -> {};
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area) {
         this(area, 0, 0);
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
         this(area, area.beingUpdatedProperty(), new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
         this(area, dependentBeingUpdated, new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
         internalRange = Var.newSimpleVar(range);

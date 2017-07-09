@@ -31,10 +31,10 @@ import java.util.Optional;
  * <p>
  *     For type safety, {@link #getSelectedDocument()} requires the same generic types from {@link StyledDocument}.
  *     This means that one must write a lot of boilerplate for the generics:
- *     {@code UnboundedSelection<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
+ *     {@code Selection<Collection<String>, StyledText<Collection<String>>, Collection<String>> selection}.
  *     However, this is only necessary if one is using {@link #getSelectedDocument()} or
  *     {@link #selectedDocumentProperty()}. <b>If you are not going to use the "selectedDocument" getter or property,
- *     then just write the much simpler {@code UnboundedSelection<?, ?, ?> selection}</b>.
+ *     then just write the much simpler {@code Selection<?, ?, ?> selection}</b>.
  * </p>
  *
  * @see BoundedSelection
@@ -47,7 +47,7 @@ import java.util.Optional;
  * @param <S> type for {@link StyledDocument}'s segment style; only necessary when using the "selectedDocument"
  *            getter or property
  */
-public interface UnboundedSelection<PS, SEG, S> {
+public interface Selection<PS, SEG, S> {
 
     public static enum Direction {
         LEFT,
@@ -55,7 +55,7 @@ public interface UnboundedSelection<PS, SEG, S> {
     }
 
     /**
-     * Returns true if this is an {@link UnboundedSelection} and true if this is an {@link BoundedSelection}.
+     * Returns true if this is an {@link Selection} and true if this is an {@link BoundedSelection}.
      */
     default boolean isBoundToCaret() {
         return false;
@@ -66,7 +66,7 @@ public interface UnboundedSelection<PS, SEG, S> {
      * throws an {@link IllegalStateException}.
      */
     default BoundedSelection asBoundedSelection() {
-        throw new IllegalStateException("An UnboundedSelection cannot be cast to a BoundedSelection");
+        throw new IllegalStateException("An Selection cannot be cast to a BoundedSelection");
     }
 
     /* ********************************************************************** *
