@@ -15,6 +15,7 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -278,6 +279,16 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     }
 
     @Override
+    public void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        updateStartByBreaks(numOfBreaks, breakIterator, true);
+    }
+
+    @Override
+    public void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        updateStartByBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
     public void updateEndTo(int position) {
         selectRange(getStartPosition(), position);
     }
@@ -285,6 +296,47 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override
     public void updateEndTo(int paragraphIndex, int columnPosition) {
         selectRange(getStartPosition(), textPosition(paragraphIndex, columnPosition));
+    }
+
+    @Override
+    public void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        updateEndByBreaks(numOfBreaks, breakIterator, true);
+    }
+
+    @Override
+    public void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        updateEndByBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
+    public void selectAll() {
+        selectRange(0, area.getLength());
+    }
+
+    @Override
+    public void selectParagraph(int paragraphIndex) {
+        int start = textPosition(paragraphIndex, 0);
+        int end = start + area.getParagraphLenth(paragraphIndex);
+        selectRange(start, end);
+    }
+
+    @Override
+    public void selectWord(int wordPositionInArea) {
+        if(area.getLength() == 0) {
+            return;
+        }
+
+        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        breakIterator.setText(area.getText());
+        breakIterator.preceding(wordPositionInArea);
+        breakIterator.next();
+        int wordStart = breakIterator.current();
+
+        breakIterator.following(wordPositionInArea);
+        breakIterator.next();
+        int wordEnd = breakIterator.current();
+
+        selectRange(wordStart, wordEnd);
     }
 
     @Override
@@ -339,6 +391,42 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
         if (boundsCheckPasses.apply(newTextPosition)) {
             selectRange(updatedRange.apply(newTextPosition));
         }
+    }
+
+    private void updateStartByBreaks(int numOfBreaks, BreakIterator breakIterator, boolean forwardsNotBackwards) {
+        updateSelectionByBreaks(numOfBreaks, breakIterator, forwardsNotBackwards, true);
+    }
+
+    private void updateEndByBreaks(int numOfBreaks, BreakIterator breakIterator, boolean forwardsNotBackwards) {
+        updateSelectionByBreaks(numOfBreaks, breakIterator, forwardsNotBackwards, false);
+    }
+
+    private void updateSelectionByBreaks(int numOfBreaks, BreakIterator breakIterator,
+                                         boolean followingNotPreceding, boolean updateStartNotEnd) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+
+        int pos;
+        Runnable updateSelection;
+        if (updateStartNotEnd) {
+            pos = getStartPosition();
+            updateSelection = () -> selectRange(breakIterator.current(), getEndPosition());
+        } else {
+            pos = getEndPosition();
+            updateSelection = () -> selectRange(getStartPosition(), breakIterator.current());
+        }
+
+        if (followingNotPreceding) {
+            breakIterator.following(pos);
+        } else {
+            breakIterator.preceding(pos);
+        }
+        breakIterator.next(numOfBreaks);
+
+        updateSelection.run();
     }
 
 }

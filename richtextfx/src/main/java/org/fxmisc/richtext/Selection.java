@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.StyledDocument;
 
+import java.text.BreakIterator;
 import java.util.Optional;
 
 /**
@@ -148,9 +149,30 @@ public interface Selection<PS, SEG, S> {
 
     void updateStartTo(int paragraphIndex, int columnPosition);
 
+    void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator);
+
+    void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator);
+
     void updateEndTo(int position);
 
     void updateEndTo(int paragraphIndex, int columnPosition);
+
+    void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator);
+
+    void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator);
+
+    void selectAll();
+
+    void selectParagraph(int paragraphIndex);
+
+    void selectWord(int wordPositionInArea);
+
+    /**
+     * Clears the selection via {@code selectRange(getStartPosition(), getStartPosition())}.
+     */
+    default void deselect() {
+        selectRange(getStartPosition(), getStartPosition());
+    }
 
     /**
      * Disposes the selection and prevents memory leaks
