@@ -253,14 +253,14 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     }
 
     @Override
-    public void moveStartBy(int amount, Direction direction) {
+    public void updateStartBy(int amount, Direction direction) {
         moveBoundary(direction, amount, getStartPosition(),
                 newStartTextPos -> IndexRange.normalize(newStartTextPos, getEndPosition())
         );
     }
 
     @Override
-    public void moveEndBy(int amount, Direction direction) {
+    public void updateEndBy(int amount, Direction direction) {
         moveBoundary(
                 direction, amount, getEndPosition(),
                 newEndTextPos -> IndexRange.normalize(getStartPosition(), newEndTextPos)
@@ -268,22 +268,22 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     }
 
     @Override
-    public void moveStartTo(int position) {
+    public void updateStartTo(int position) {
         selectRange(position, getEndPosition());
     }
 
     @Override
-    public void moveStartTo(int paragraphIndex, int columnPosition) {
+    public void updateStartTo(int paragraphIndex, int columnPosition) {
         selectRange(textPosition(paragraphIndex, columnPosition), getEndPosition());
     }
 
     @Override
-    public void moveEndTo(int position) {
+    public void updateEndTo(int position) {
         selectRange(getStartPosition(), position);
     }
 
     @Override
-    public void moveEndTo(int paragraphIndex, int columnPosition) {
+    public void updateEndTo(int paragraphIndex, int columnPosition) {
         selectRange(getStartPosition(), textPosition(paragraphIndex, columnPosition));
     }
 

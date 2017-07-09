@@ -4,7 +4,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.StyledDocument;
-import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableNo;
@@ -165,7 +164,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     }
 
     @Override
-    public void moveStartBy(int amount, Direction direction) {
+    public void updateStartBy(int amount, Direction direction) {
         int updatedStart = direction == Direction.LEFT
                 ? getStartPosition() - amount
                 : getStartPosition() + amount;
@@ -173,7 +172,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     }
 
     @Override
-    public void moveEndBy(int amount, Direction direction) {
+    public void updateEndBy(int amount, Direction direction) {
         int updatedEnd = direction == Direction.LEFT
                 ? getEndPosition() - amount
                 : getEndPosition() + amount;
@@ -181,23 +180,23 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     }
 
     @Override
-    public void moveStartTo(int position) {
+    public void updateStartTo(int position) {
         selectRange(position, getEndPosition());
     }
 
     @Override
-    public void moveStartTo(int paragraphIndex, int columnPosition) {
-        moveStartTo(textPosition(paragraphIndex, columnPosition));
+    public void updateStartTo(int paragraphIndex, int columnPosition) {
+        updateStartTo(textPosition(paragraphIndex, columnPosition));
     }
 
     @Override
-    public void moveEndTo(int position) {
+    public void updateEndTo(int position) {
         selectRange(getStartPosition(), position);
     }
 
     @Override
-    public void moveEndTo(int paragraphIndex, int columnPosition) {
-        moveEndTo(textPosition(paragraphIndex, columnPosition));
+    public void updateEndTo(int paragraphIndex, int columnPosition) {
+        updateEndTo(textPosition(paragraphIndex, columnPosition));
     }
 
     @Override

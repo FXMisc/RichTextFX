@@ -140,17 +140,17 @@ public interface Selection<PS, SEG, S> {
      */
     void selectRange(int startPosition, int endPosition);
 
-    void moveStartBy(int amount, Direction direction);
+    void updateStartBy(int amount, Direction direction);
 
-    void moveEndBy(int amount, Direction direction);
+    void updateEndBy(int amount, Direction direction);
 
-    void moveStartTo(int position);
+    void updateStartTo(int position);
 
-    void moveStartTo(int paragraphIndex, int columnPosition);
+    void updateStartTo(int paragraphIndex, int columnPosition);
 
-    void moveEndTo(int position);
+    void updateEndTo(int position);
 
-    void moveEndTo(int paragraphIndex, int columnPosition);
+    void updateEndTo(int paragraphIndex, int columnPosition);
 
     /**
      * Disposes the selection and prevents memory leaks
