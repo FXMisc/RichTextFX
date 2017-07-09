@@ -85,8 +85,8 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
 
 
     private final Val<Optional<Bounds>> bounds;
-    @Override public final Optional<Bounds> getBounds() { return bounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> boundsProperty() { return bounds; }
+    @Override public final Optional<Bounds> getSelectionBounds() { return bounds.getValue(); }
+    @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return bounds; }
 
     private final EventStream<?> dirty;
     @Override public final EventStream<?> dirtyEvents() { return dirty; }

@@ -65,8 +65,8 @@ final class CaretImpl implements Caret {
     @Override public final ObservableValue<Boolean> visibleProperty() { return visible; }
 
     private final Val<Optional<Bounds>> bounds;
-    @Override public final Optional<Bounds> getBounds() { return bounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> boundsProperty() { return bounds; }
+    @Override public final Optional<Bounds> getCaretBounds() { return bounds.getValue(); }
+    @Override public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return bounds; }
 
     private Optional<ParagraphBox.CaretOffsetX> targetOffset = Optional.empty();
     @Override public final void clearTargetOffset() { targetOffset = Optional.empty(); }

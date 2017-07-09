@@ -83,11 +83,11 @@ public interface Caret {
     public boolean isVisible();
 
     /**
-     * The boundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
+     * The selectionBoundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
      * in the viewport.
      */
-    public ObservableValue<Optional<Bounds>> boundsProperty();
-    public Optional<Bounds> getBounds();
+    public ObservableValue<Optional<Bounds>> caretBoundsProperty();
+    public Optional<Bounds> getCaretBounds();
 
     /**
      * Clears the caret's x offset

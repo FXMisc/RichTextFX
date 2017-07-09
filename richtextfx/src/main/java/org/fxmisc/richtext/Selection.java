@@ -110,11 +110,11 @@ public interface Selection<PS, SEG, S> {
 
 
     /**
-     * The boundsProperty of the selection in the Screen's coordinate system if something is selected and visible in the
+     * The selectionBoundsProperty of the selection in the Screen's coordinate system if something is selected and visible in the
      * viewport, or {@link Optional#empty()} if selection is not visible in the viewport.
      */
-    ObservableValue<Optional<Bounds>> boundsProperty();
-    Optional<Bounds> getBounds();
+    ObservableValue<Optional<Bounds>> selectionBoundsProperty();
+    Optional<Bounds> getSelectionBounds();
 
     /**
      * Emits an event every time the selection becomes dirty: the start/end positions change or the area's paragraphs

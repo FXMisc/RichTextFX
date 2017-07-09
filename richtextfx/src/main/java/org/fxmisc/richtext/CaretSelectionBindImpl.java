@@ -77,8 +77,8 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public int getAnchorColPosition() { return anchorColPosition.getValue(); }
     @Override public ObservableValue<Integer> anchorColPositionProperty() { return anchorColPosition; }
 
-    @Override public ObservableValue<Optional<Bounds>> boundsProperty() { return delegate.boundsProperty(); }
-    @Override public Optional<Bounds> getBounds() { return delegate.getBounds(); }
+    @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegate.selectionBoundsProperty(); }
+    @Override public Optional<Bounds> getSelectionBounds() { return delegate.getSelectionBounds(); }
 
     @Override public EventStream<?> dirtyEvents() { return delegate.dirtyEvents(); }
 

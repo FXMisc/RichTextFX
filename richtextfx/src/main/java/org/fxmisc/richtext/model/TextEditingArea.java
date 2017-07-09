@@ -80,8 +80,8 @@ public interface TextEditingArea<PS, SEG, S> {
      * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
      * if caret is not visible in the viewport.
      */
-    default Optional<Bounds> getCaretBounds() { return getMainCaret().getBounds(); }
-    default ObservableValue<Optional<Bounds>> caretBoundsProperty() { return getMainCaret().boundsProperty(); }
+    default Optional<Bounds> getCaretBounds() { return getMainCaret().getCaretBounds(); }
+    default ObservableValue<Optional<Bounds>> caretBoundsProperty() { return getMainCaret().caretBoundsProperty(); }
 
     /**
      * Indicates when this text area should display a caret.
@@ -121,8 +121,8 @@ public interface TextEditingArea<PS, SEG, S> {
      * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
      * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
      */
-    default Optional<Bounds> getSelectionBounds() { return getMainSelection().getBounds(); }
-    default ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return getMainSelection().boundsProperty(); }
+    default Optional<Bounds> getSelectionBounds() { return getMainSelection().getSelectionBounds(); }
+    default ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return getMainSelection().selectionBoundsProperty(); }
 
     /**
      * Unmodifiable observable list of paragraphs in this text area.
