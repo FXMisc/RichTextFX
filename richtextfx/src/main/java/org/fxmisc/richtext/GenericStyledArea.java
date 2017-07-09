@@ -445,11 +445,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // rich text
     @Override public final StyledDocument<PS, SEG, S> getDocument() { return content; }
 
-    private final Caret mainCaret;
-    @Override public final Caret getMainCaret() { return mainCaret; }
-
-    private final CaretSelectionBind<PS, SEG, S> mainSelection;
-    @Override public final CaretSelectionBind<PS, SEG, S> getMainSelection() { return mainSelection; }
+    private final CaretSelectionBind<PS, SEG, S> caretSelectionBind;
+    @Override public final CaretSelectionBind<PS, SEG, S> getCaretSelectionBind() { return caretSelectionBind; }
 
     // length
     @Override public final int getLength() { return content.getLength(); }
@@ -672,8 +669,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         );
         caretBlinkRateStream = EventStreams.valuesOf(caretBlinkRate);
 
-        mainCaret = new CaretImpl(this);
-        mainSelection = new CaretSelectionBindImpl<>(this);
+        caretSelectionBind = new CaretSelectionBindImpl<>(this);
+        manageSubscription(caretSelectionBind::dispose);
 
         visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
@@ -878,7 +875,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Returns the selection range in the given paragraph.
      */
     public IndexRange getParagraphSelection(int paragraph) {
-        return getParagraphSelection(mainSelection, paragraph);
+        return getParagraphSelection(caretSelectionBind, paragraph);
     }
 
     public IndexRange getParagraphSelection(Selection selection, int paragraph) {
@@ -1074,7 +1071,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * as opposed to always being at the boundary. Use with care.
      */
     public void displaceCaret(int pos) {
-        mainCaret.moveTo(pos);
+        caretSelectionBind.displaceCaret(pos);
     }
 
     /**
@@ -1198,7 +1195,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         ).subscribe(in -> in.exec((i, n) -> box.pseudoClassStateChanged(LAST_PAR, i == n-1)));
 
         // caret is visible only in the paragraph with the caret
-        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? mainCaret.visibleProperty() : Val.constant(false));
+        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? caretSelectionBind.visibleProperty() : Val.constant(false));
         box.caretVisibleProperty().bind(cellCaretVisible);
 
         // bind cell's caret position to area's caret column,
@@ -1340,11 +1337,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     void clearTargetCaretOffset() {
-        mainCaret.clearTargetOffset();
+        caretSelectionBind.clearTargetOffset();
     }
 
     ParagraphBox.CaretOffsetX getTargetCaretOffset() {
-        return mainCaret.getTargetOffset();
+        return caretSelectionBind.getTargetOffset();
     }
 
     /* ********************************************************************** *

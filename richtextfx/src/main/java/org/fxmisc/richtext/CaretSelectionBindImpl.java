@@ -168,7 +168,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     // caret
     @Override
     public void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -179,7 +179,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -227,7 +227,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -238,7 +238,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -259,7 +259,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -270,7 +270,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -281,7 +281,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void selectAll() {
-        selectRange(0, area.getLength());
+        selectRange(0, getAreaLength());
     }
 
     @Override
@@ -293,7 +293,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void selectWord(int wordPositionInArea) {
-        if (area.getLength() == 0) {
+        if (getAreaLength() == 0) {
             return;
         }
 
@@ -359,7 +359,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveToNextChar(NavigationActions.SelectionPolicy selectionPolicy) {
-        if (getPosition() < getLength()) {
+        if (getPosition() < getAreaLength()) {
             int newCaretPos = Character.offsetByCodePoints(area.getText(), getPosition(), 1);
             moveTo(newCaretPos, selectionPolicy);
         }
@@ -430,6 +430,8 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private int textPosition(int paragraphIndex, int columnPosition) {
         return area.position(paragraphIndex, columnPosition).toOffset();
     }
+
+    private int getAreaLength() { return area.getLength(); }
 
     /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
     private int calculatePositionViaBreakingForwards(int numOfBreaks, BreakIterator breakIterator, int position) {

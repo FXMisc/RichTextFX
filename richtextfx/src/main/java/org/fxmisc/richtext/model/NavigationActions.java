@@ -23,7 +23,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * and clears any selection.
      */
     default void moveTo(int pos) {
-        selectRange(pos, pos);
+        getCaretSelectionBind().moveTo(pos);
     }
 
     /**
@@ -47,8 +47,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * @param columnIndex the index to the left of which to move the caret
      */
     default void moveTo(int paragraphIndex, int columnIndex) {
-        int pos = getAbsolutePosition(paragraphIndex, columnIndex);
-        selectRange(pos, pos);
+        getCaretSelectionBind().moveTo(paragraphIndex, columnIndex);
     }
 
     /**
@@ -61,25 +60,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * becomes the anchor.
      */
     default void moveTo(int pos, SelectionPolicy selectionPolicy) {
-        switch(selectionPolicy) {
-            case CLEAR:
-                selectRange(pos, pos);
-                break;
-            case ADJUST:
-                selectRange(getAnchor(), pos);
-                break;
-            case EXTEND:
-                IndexRange sel = getSelection();
-                int anchor;
-                if(pos <= sel.getStart())
-                    anchor = sel.getEnd();
-                else if(pos >= sel.getEnd())
-                    anchor = sel.getStart();
-                else
-                    anchor = getAnchor();
-                selectRange(anchor, pos);
-                break;
-        }
+        getCaretSelectionBind().moveTo(pos, selectionPolicy);
     }
 
     /**
@@ -97,8 +78,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * can affect the returned position.</p>
      */
     default void moveTo(int paragraphIndex, int columnIndex, SelectionPolicy selectionPolicy) {
-        int pos = getAbsolutePosition(paragraphIndex, columnIndex);
-        moveTo(pos, selectionPolicy);
+        getCaretSelectionBind().moveTo(paragraphIndex, columnIndex, selectionPolicy);
     }
 
     /**
@@ -107,10 +87,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * the caret, stays put, or moves to the former caret position.
      */
     default void previousChar(SelectionPolicy selectionPolicy) {
-        if (getCaretPosition() > 0) {
-            int newCaretPos = Character.offsetByCodePoints(getText(), getCaretPosition(), -1);
-            moveTo(newCaretPos, selectionPolicy);
-        }
+        getCaretSelectionBind().moveToPrevChar(selectionPolicy);
     }
 
     /**
@@ -119,10 +96,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * the caret, stays put, or moves to the former caret position.
      */
     default void nextChar(SelectionPolicy selectionPolicy) {
-        if (getCaretPosition() < getLength()) {
-            int newCaretPos = Character.offsetByCodePoints(getText(), getCaretPosition(), 1);
-            moveTo(newCaretPos, selectionPolicy);
-        }
+        getCaretSelectionBind().moveToNextChar(selectionPolicy);
     }
 
     /**
@@ -169,61 +143,56 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * Selects the word closest to the caret
      */
     default void selectWord() {
-        wordBreaksBackwards(1, SelectionPolicy.CLEAR);
-        wordBreaksForwards(1, SelectionPolicy.ADJUST);
+        getCaretSelectionBind().selectWord();
     }
 
     /**
      * Moves the caret to the beginning of the current paragraph.
      */
     default void paragraphStart(SelectionPolicy selectionPolicy) {
-        moveTo(getCaretPosition() - getCaretColumn(), selectionPolicy);
+        getCaretSelectionBind().moveToParStart(selectionPolicy);
     }
 
     /**
      * Moves the caret to the end of the current paragraph.
      */
     default void paragraphEnd(SelectionPolicy selectionPolicy) {
-        int lineLen = getText(getCurrentParagraph()).length();
-        int newPos = getCaretPosition() - getCaretColumn() + lineLen;
-        moveTo(newPos, selectionPolicy);
+        getCaretSelectionBind().moveToParEnd(selectionPolicy);
     }
 
     /**
      * Moves the caret to the beginning of the text.
      */
     default void start(SelectionPolicy selectionPolicy) {
-        moveTo(0, selectionPolicy);
+        getCaretSelectionBind().moveToAreaStart(selectionPolicy);
     }
 
     /**
      * Moves the caret to the end of the text.
      */
     default void end(SelectionPolicy selectionPolicy) {
-        moveTo(getLength(), selectionPolicy);
+        getCaretSelectionBind().moveToAreaEnd(selectionPolicy);
     }
 
     /**
      * Selects the current paragraph.
      */
     default void selectParagraph() {
-        paragraphStart(SelectionPolicy.CLEAR);
-        paragraphEnd(SelectionPolicy.ADJUST);
+        getCaretSelectionBind().selectParagraph();
     }
 
     /**
      * Selects all text in the text input.
      */
     default void selectAll() {
-        selectRange(0, getLength());
+        getCaretSelectionBind().selectAll();
     }
 
     /**
      * Clears the selection while keeping the caret position.
      */
     default void deselect() {
-        int p = getCaretPosition();
-        selectRange(p, p);
+        getCaretSelectionBind().deselect();
     }
 
 }

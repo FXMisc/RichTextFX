@@ -48,11 +48,6 @@ public interface TextEditingArea<PS, SEG, S> {
     StyledDocument<PS, SEG, S> getDocument();
 
     /**
-     * Gets the area's main caret
-     */
-    Caret getMainCaret();
-
-    /**
      * The current position of the caret, as a character offset in the text.
      *
      * Most of the time, caret is at the boundary of the selection (if there
@@ -61,46 +56,46 @@ public interface TextEditingArea<PS, SEG, S> {
      * user is dragging the selected text, the caret moves with the cursor
      * to point at the position where the selected text moves upon release.
      */
-    default int getCaretPosition() { return getMainCaret().getPosition(); }
-    default ObservableValue<Integer> caretPositionProperty() { return getMainCaret().positionProperty(); }
+    default int getCaretPosition() { return getCaretSelectionBind().getPosition(); }
+    default ObservableValue<Integer> caretPositionProperty() { return getCaretSelectionBind().positionProperty(); }
 
     /**
      * Index of the current paragraph, i.e. the paragraph with the caret.
      */
-    default int getCurrentParagraph() { return getMainCaret().getParagraphIndex(); }
-    default ObservableValue<Integer> currentParagraphProperty() { return getMainCaret().paragraphIndexProperty(); }
+    default int getCurrentParagraph() { return getCaretSelectionBind().getParagraphIndex(); }
+    default ObservableValue<Integer> currentParagraphProperty() { return getCaretSelectionBind().paragraphIndexProperty(); }
 
     /**
      * The caret position within the current paragraph.
      */
-    default int getCaretColumn() { return getMainCaret().getColumnPosition(); }
-    default ObservableValue<Integer> caretColumnProperty() { return getMainCaret().columnPositionProperty(); }
+    default int getCaretColumn() { return getCaretSelectionBind().getColumnPosition(); }
+    default ObservableValue<Integer> caretColumnProperty() { return getCaretSelectionBind().columnPositionProperty(); }
 
     /**
      * Gets the bounds of the caret in the Screen's coordinate system or {@link Optional#empty()}
      * if caret is not visible in the viewport.
      */
-    default Optional<Bounds> getCaretBounds() { return getMainCaret().getCaretBounds(); }
-    default ObservableValue<Optional<Bounds>> caretBoundsProperty() { return getMainCaret().caretBoundsProperty(); }
+    default Optional<Bounds> getCaretBounds() { return getCaretSelectionBind().getCaretBounds(); }
+    default ObservableValue<Optional<Bounds>> caretBoundsProperty() { return getCaretSelectionBind().caretBoundsProperty(); }
 
     /**
      * Indicates when this text area should display a caret.
      */
-    default Caret.CaretVisibility getShowCaret() { return getMainCaret().getShowCaret(); }
-    default void setShowCaret(Caret.CaretVisibility value) { getMainCaret().setShowCaret(value); }
-    default Var<Caret.CaretVisibility> showCaretProperty() { return getMainCaret().showCaretProperty(); }
+    default Caret.CaretVisibility getShowCaret() { return getCaretSelectionBind().getShowCaret(); }
+    default void setShowCaret(Caret.CaretVisibility value) { getCaretSelectionBind().setShowCaret(value); }
+    default Var<Caret.CaretVisibility> showCaretProperty() { return getCaretSelectionBind().showCaretProperty(); }
 
     /**
      * Gets the area's main selection
      */
-    CaretSelectionBind<PS, SEG, S> getMainSelection();
+    CaretSelectionBind<PS, SEG, S> getCaretSelectionBind();
 
     /**
      * The anchor of the selection.
      * If there is no selection, this is the same as caret position.
      */
-    default int getAnchor() { return getMainSelection().getAnchorPosition(); }
-    default ObservableValue<Integer> anchorProperty() { return getMainSelection().anchorPositionProperty(); }
+    default int getAnchor() { return getCaretSelectionBind().getAnchorPosition(); }
+    default ObservableValue<Integer> anchorProperty() { return getCaretSelectionBind().anchorPositionProperty(); }
 
     /**
      * The selection range.
@@ -108,21 +103,21 @@ public interface TextEditingArea<PS, SEG, S> {
      * One boundary is always equal to anchor, and the other one is most
      * of the time equal to caret position.
      */
-    default IndexRange getSelection() { return getMainSelection().getRange(); }
-    default ObservableValue<IndexRange> selectionProperty() { return getMainSelection().rangeProperty(); }
+    default IndexRange getSelection() { return getCaretSelectionBind().getRange(); }
+    default ObservableValue<IndexRange> selectionProperty() { return getCaretSelectionBind().rangeProperty(); }
 
     /**
      * The selected text.
      */
-    default String getSelectedText() { return getMainSelection().getSelectedText(); }
-    default ObservableValue<String> selectedTextProperty() { return getMainSelection().selectedTextProperty(); }
+    default String getSelectedText() { return getCaretSelectionBind().getSelectedText(); }
+    default ObservableValue<String> selectedTextProperty() { return getCaretSelectionBind().selectedTextProperty(); }
 
     /**
      * Gets the bounds of the selection in the Screen's coordinate system if something is selected and visible in the
      * viewport or {@link Optional#empty()} if selection is not visible in the viewport.
      */
-    default Optional<Bounds> getSelectionBounds() { return getMainSelection().getSelectionBounds(); }
-    default ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return getMainSelection().selectionBoundsProperty(); }
+    default Optional<Bounds> getSelectionBounds() { return getCaretSelectionBind().getSelectionBounds(); }
+    default ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return getCaretSelectionBind().selectionBoundsProperty(); }
 
     /**
      * Unmodifiable observable list of paragraphs in this text area.
@@ -220,7 +215,7 @@ public interface TextEditingArea<PS, SEG, S> {
      * effectively creating a selection.
      */
     default void selectRange(int anchor, int caretPosition) {
-        getMainSelection().selectRangeExpl(anchor, caretPosition);
+        getCaretSelectionBind().selectRangeExpl(anchor, caretPosition);
     }
 
     /**
