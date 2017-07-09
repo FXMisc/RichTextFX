@@ -253,4 +253,21 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
         selectWord(getPosition());
     };
 
+    /**
+     * Displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the selection's {@link #getAnchorPosition()} anchor} or the {@link #getRange()}  selection}.
+     * Do not confuse this method with {@link #moveTo(int)}, which is the normal way of moving the caret.
+     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
+     * as opposed to always being at the boundary. Use with care.
+     */
+    void displaceCaret(int position);
+
+    /**
+     * Displaces the caret from the selection by positioning only the selection to the new location without
+     * also affecting the {@link #getPosition() caret's position}.
+     * This method can be used to achieve the special case of selecting some range in the area without affecting the
+     * caret's position. Use with care.
+     */
+    void displaceSelection(int startPosition, int endPosition);
+
 }

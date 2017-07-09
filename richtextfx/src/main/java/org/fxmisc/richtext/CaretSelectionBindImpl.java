@@ -388,12 +388,15 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void displaceCaret(int position) {
-        Runnable displaceC = () -> delegateCaret.moveTo(position);
-        if (area.isBeingUpdated()) {
-            displaceC.run();
-        } else {
-            area.beingUpdatedProperty().suspendWhile(displaceC);
-        }
+        doUpdate(() -> delegateCaret.moveTo(position));
+    }
+
+    @Override
+    public void displaceSelection(int startPosition, int endPosition) {
+        doUpdate(() -> {
+            delegateSelection.selectRange(startPosition, endPosition);
+            internalStartedByAnchor.setValue(startPosition < endPosition);
+        });
     }
 
     @Override
@@ -408,17 +411,19 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
      * ********************************************************************** */
 
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
-        Runnable updateRange = () -> {
+        doUpdate(() -> {
             delegateSelection.selectRange(startPosition, endPosition);
             internalStartedByAnchor.setValue(anchorIsStart);
 
             delegateCaret.moveTo(anchorIsStart ? endPosition : startPosition);
-        };
+        });
+    }
 
-        if (area.isBeingUpdated()) {
-            updateRange.run();
+    private void doUpdate(Runnable updater) {
+        if (isBeingUpdated()) {
+            updater.run();
         } else {
-            area.beingUpdatedProperty().suspendWhile(updateRange);
+            area.beingUpdatedProperty().suspendWhile(updater);
         }
     }
 
