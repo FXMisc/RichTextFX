@@ -70,7 +70,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
                 });
 
                 moveTo(position(Pos.TOP_RIGHT, -1, 1)).clickOn(PRIMARY);
-                assertEquals(area.getParagraphLenth(0), area.getCaretColumn());
+                assertEquals(area.getParagraphLength(0), area.getCaretColumn());
             }
 
             @Test

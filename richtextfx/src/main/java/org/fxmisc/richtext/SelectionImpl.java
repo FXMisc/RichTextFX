@@ -15,6 +15,7 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,7 +26,17 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS, SEG, S> {
+final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
 
     private final SuspendableVal<IndexRange> range;
     @Override public final IndexRange getRange() { return range.getValue(); }
@@ -66,8 +77,8 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     @Override public final ObservableValue<Integer> endPositionProperty() { return endPosition; }
 
     private final SuspendableVal<Integer> endPararagraphIndex;
-    @Override public final int getEndPararagraphIndex() { return endPararagraphIndex.getValue(); }
-    @Override public final ObservableValue<Integer> endPararagraphIndexProperty() { return endPararagraphIndex; }
+    @Override public final int getEndParagraphIndex() { return endPararagraphIndex.getValue(); }
+    @Override public final ObservableValue<Integer> endParagraphIndexProperty() { return endPararagraphIndex; }
 
     private final SuspendableVal<Integer> endColumnPosition;
     @Override public final int getEndColumnPosition() { return endColumnPosition.getValue(); }
@@ -75,11 +86,8 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
 
 
     private final Val<Optional<Bounds>> bounds;
-    @Override public final Optional<Bounds> getBounds() { return bounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> boundsProperty() { return bounds; }
-
-    private final EventStream<?> dirty;
-    @Override public final EventStream<?> dirtyEvents() { return dirty; }
+    @Override public final Optional<Bounds> getSelectionBounds() { return bounds.getValue(); }
+    @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return bounds; }
 
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
@@ -88,22 +96,23 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     private final GenericStyledArea<PS, SEG, S> area;
     private final SuspendableNo dependentBeingUpdated;
     private final Var<IndexRange> internalRange;
+    private final EventStream<?> dirty;
 
     private Subscription subscription = () -> {};
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area) {
         this(area, 0, 0);
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
         this(area, area.beingUpdatedProperty(), new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
         this(area, dependentBeingUpdated, new IndexRange(startPosition, endPosition));
     }
 
-    public UnboundedSelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
+    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
         internalRange = Var.newSimpleVar(range);
@@ -111,13 +120,11 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         this.range = internalRange.suspendable();
         length = internalRange.map(IndexRange::getLength).suspendable();
 
-        selectedText = Val.create(() -> area.getText(internalRange.getValue()),
+        Val<StyledDocument<PS, SEG, S>> documentVal = Val.create(() -> area.subDocument(internalRange.getValue()),
                 internalRange, area.getParagraphs()
-        ).suspendable();
-
-        selectedDocument = Val.create(() -> area.subDocument(internalRange.getValue()),
-                internalRange, area.getParagraphs()
-        ).suspendable();
+        );
+        selectedDocument = documentVal.suspendable();
+        selectedText = documentVal.map(StyledDocument::getText).suspendable();
 
         Val<Tuple2<Position, Position>> positions = internalRange.map(sel -> {
             Position start2D = area.offsetToPosition(sel.getStart(), Forward);
@@ -142,7 +149,7 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         endColumnPosition = end2D.map(Position::getMinor).suspendable();
 
         paragraphSpan = Val.create(
-                () -> getEndPararagraphIndex() - getStartParagraphIndex() + 1,
+                () -> getEndParagraphIndex() - getStartParagraphIndex() + 1,
                 startPar, endPar
         ).suspendable();
 
@@ -216,6 +223,15 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     @Override
     public void selectRange(int startParagraphIndex, int startColPosition, int endParagraphIndex, int endColPosition) {
         selectRange(textPosition(startParagraphIndex, startColPosition), textPosition(endParagraphIndex, endColPosition));
@@ -236,14 +252,14 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     }
 
     @Override
-    public void moveStartBy(int amount, Direction direction) {
+    public void updateStartBy(int amount, Direction direction) {
         moveBoundary(direction, amount, getStartPosition(),
                 newStartTextPos -> IndexRange.normalize(newStartTextPos, getEndPosition())
         );
     }
 
     @Override
-    public void moveEndBy(int amount, Direction direction) {
+    public void updateEndBy(int amount, Direction direction) {
         moveBoundary(
                 direction, amount, getEndPosition(),
                 newEndTextPos -> IndexRange.normalize(getStartPosition(), newEndTextPos)
@@ -251,29 +267,86 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
     }
 
     @Override
-    public void moveStartTo(int position) {
+    public void updateStartTo(int position) {
         selectRange(position, getEndPosition());
     }
 
     @Override
-    public void moveStartTo(int paragraphIndex, int columnPosition) {
+    public void updateStartTo(int paragraphIndex, int columnPosition) {
         selectRange(textPosition(paragraphIndex, columnPosition), getEndPosition());
     }
 
     @Override
-    public void moveEndTo(int position) {
+    public void updateStartByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        updateStartByBreaks(numOfBreaks, breakIterator, true);
+    }
+
+    @Override
+    public void updateStartByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        updateStartByBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
+    public void updateEndTo(int position) {
         selectRange(getStartPosition(), position);
     }
 
     @Override
-    public void moveEndTo(int paragraphIndex, int columnPosition) {
+    public void updateEndTo(int paragraphIndex, int columnPosition) {
         selectRange(getStartPosition(), textPosition(paragraphIndex, columnPosition));
+    }
+
+    @Override
+    public void updateEndByBreaksForward(int numOfBreaks, BreakIterator breakIterator) {
+        updateEndByBreaks(numOfBreaks, breakIterator, true);
+    }
+
+    @Override
+    public void updateEndByBreaksBackward(int numOfBreaks, BreakIterator breakIterator) {
+        updateEndByBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
+    public void selectAll() {
+        selectRange(0, area.getLength());
+    }
+
+    @Override
+    public void selectParagraph(int paragraphIndex) {
+        int start = textPosition(paragraphIndex, 0);
+        int end = start + area.getParagraphLength(paragraphIndex);
+        selectRange(start, end);
+    }
+
+    @Override
+    public void selectWord(int wordPositionInArea) {
+        if(area.getLength() == 0) {
+            return;
+        }
+
+        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        breakIterator.setText(area.getText());
+        breakIterator.preceding(wordPositionInArea);
+        breakIterator.next();
+        int wordStart = breakIterator.current();
+
+        breakIterator.following(wordPositionInArea);
+        breakIterator.next();
+        int wordEnd = breakIterator.current();
+
+        selectRange(wordStart, wordEnd);
     }
 
     @Override
     public void dispose() {
         subscription.unsubscribe();
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     * ********************************************************************** */
 
     private <T> void manageSubscription(EventStream<T> stream, Consumer<T> consumer) {
         manageSubscription(stream.subscribe(consumer));
@@ -316,6 +389,42 @@ final class UnboundedSelectionImpl<PS, SEG, S> implements UnboundedSelection<PS,
         if (boundsCheckPasses.apply(newTextPosition)) {
             selectRange(updatedRange.apply(newTextPosition));
         }
+    }
+
+    private void updateStartByBreaks(int numOfBreaks, BreakIterator breakIterator, boolean forwardsNotBackwards) {
+        updateSelectionByBreaks(numOfBreaks, breakIterator, forwardsNotBackwards, true);
+    }
+
+    private void updateEndByBreaks(int numOfBreaks, BreakIterator breakIterator, boolean forwardsNotBackwards) {
+        updateSelectionByBreaks(numOfBreaks, breakIterator, forwardsNotBackwards, false);
+    }
+
+    private void updateSelectionByBreaks(int numOfBreaks, BreakIterator breakIterator,
+                                         boolean followingNotPreceding, boolean updateStartNotEnd) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+
+        int pos;
+        Runnable updateSelection;
+        if (updateStartNotEnd) {
+            pos = getStartPosition();
+            updateSelection = () -> selectRange(breakIterator.current(), getEndPosition());
+        } else {
+            pos = getEndPosition();
+            updateSelection = () -> selectRange(getStartPosition(), breakIterator.current());
+        }
+
+        if (followingNotPreceding) {
+            breakIterator.following(pos);
+        } else {
+            breakIterator.preceding(pos);
+        }
+        breakIterator.next(numOfBreaks);
+
+        updateSelection.run();
     }
 
 }

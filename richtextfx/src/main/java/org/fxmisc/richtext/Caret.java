@@ -2,9 +2,9 @@ package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
-import org.reactfx.EventStream;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -17,11 +17,11 @@ import java.util.OptionalInt;
  *     <ol>
  *         <li>
  *             {@link #getPosition()}, which refers to a position somewhere in the entire area's content.
- *             It's bounds are {@code 0 <= x < area.getLength()}.
+ *             It's bounds are {@code 0 <= x <= area.getLength()}.
  *         </li>
  *         <li>
  *             {@link #getColumnPosition()}, which refers to a position somewhere in the current paragraph.
- *             It's bounds are {@code 0 <= x < area.getParagraphLength(index)}.
+ *             It's bounds are {@code 0 <= x <= area.getParagraphLength(index)}.
  *         </li>
  *     </ol>
  *
@@ -42,6 +42,16 @@ public interface Caret {
         /** Caret is not displayed. */
         OFF
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
 
     /** The position of the caret within the text */
     public ObservableValue<Integer> positionProperty();
@@ -72,11 +82,11 @@ public interface Caret {
     public boolean isVisible();
 
     /**
-     * The boundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
+     * The selectionBoundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
      * in the viewport.
      */
-    public ObservableValue<Optional<Bounds>> boundsProperty();
-    public Optional<Bounds> getBounds();
+    public ObservableValue<Optional<Bounds>> caretBoundsProperty();
+    public Optional<Bounds> getCaretBounds();
 
     /**
      * Clears the caret's x offset
@@ -89,17 +99,23 @@ public interface Caret {
      */
     ParagraphBox.CaretOffsetX getTargetOffset();
 
-    /** Emit an event whenever the caret's position becomes dirty */
-    public EventStream<?> dirtyEvents();
-
     boolean isBeingUpdated();
     ObservableValue<Boolean> beingUpdatedProperty();
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     /**
-     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link CaretSelectionBind},
      * it displaces the caret from the selection by positioning only the caret to the new location without
-     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
-     * {@link BoundedSelection#getRange()} selection}.
+     * also affecting the {@link CaretSelectionBind#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link CaretSelectionBind#getRange()} selection}.
      * <br>
      * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
      * as opposed to always being at the boundary. Use with care.
@@ -110,15 +126,73 @@ public interface Caret {
     public void moveTo(int paragraphIndex, int columnPosition);
 
     /**
-     * Moves the caret to the given position in the area. If this caret is bound to a {@link BoundedSelection},
+     * Moves the caret to the given position in the area. If this caret is bound to a {@link CaretSelectionBind},
      * it displaces the caret from the selection by positioning only the caret to the new location without
-     * also affecting the {@link BoundedSelection#getAnchorPosition()} bounded selection's anchor} or the
-     * {@link BoundedSelection#getRange()} selection}.
+     * also affecting the {@link CaretSelectionBind#getAnchorPosition()} bounded selection's anchor} or the
+     * {@link CaretSelectionBind#getRange()} selection}.
      * <br>
      * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
      * as opposed to always being at the boundary. Use with care.
      */
     public void moveTo(int position);
+
+    /**
+     * Moves the caret to the beginning of the current paragraph.
+     */
+    void moveToParStart();
+
+    /**
+     * Moves the caret to the end of the current paragraph.
+     */
+    void moveToParEnd();
+
+    /**
+     * Moves the caret to the beginning of the area.
+     */
+    default void moveToAreaStart() {
+        moveTo(0);
+    }
+
+    /**
+     * Moves the caret to the end of the area.
+     */
+    void moveToAreaEnd();
+
+    /**
+     * Moves the caret backward one char in the text.
+     */
+    void moveToPrevChar();
+
+    /**
+     * Moves the caret forward one char in the text.
+     */
+    void moveToNextChar();
+
+    /**
+     * Moves the caret forwards by the number of breaks.
+     */
+    void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator);
+
+    default void moveWordBreaksForwards(int numOfWordBreaks) {
+        moveBreaksForwards(numOfWordBreaks, BreakIterator.getWordInstance());
+    }
+
+    default void moveSentenceBreaksForwards(int numOfSentenceBreaks) {
+        moveBreaksForwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
+    }
+
+    /**
+     * Moves the caret backwards by the number of breaks.
+     */
+    void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator);
+
+    default void moveWordBreaksBackwards(int numOfWordBreaks) {
+        moveBreaksBackwards(numOfWordBreaks, BreakIterator.getWordInstance());
+    }
+
+    default void moveSentenceBreaksBackwards(int numOfSentenceBreaks) {
+        moveBreaksBackwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
+    }
 
     /**
      * Disposes the caret and prevents memory leaks

@@ -14,6 +14,7 @@ import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.text.BreakIterator;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -26,7 +27,15 @@ import static org.reactfx.EventStreams.merge;
 
 final class CaretImpl implements Caret {
 
-    private final Var<Integer> internalTextPosition;
+    /* ********************************************************************** *
+     *                                                                        *
+     * Observables                                                            *
+     *                                                                        *
+     * Observables are "dynamic" (i.e. changing) characteristics of this      *
+     * control. They are not directly settable by the client code, but change *
+     * in response to user input and/or API actions.                          *
+     *                                                                        *
+     * ********************************************************************** */
 
     private final SuspendableVal<Integer> position;
     @Override public final int getPosition() { return position.getValue(); }
@@ -54,8 +63,8 @@ final class CaretImpl implements Caret {
     @Override public final ObservableValue<Boolean> visibleProperty() { return visible; }
 
     private final Val<Optional<Bounds>> bounds;
-    @Override public final Optional<Bounds> getBounds() { return bounds.getValue(); }
-    @Override public final ObservableValue<Optional<Bounds>> boundsProperty() { return bounds; }
+    @Override public final Optional<Bounds> getCaretBounds() { return bounds.getValue(); }
+    @Override public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return bounds; }
 
     private Optional<ParagraphBox.CaretOffsetX> targetOffset = Optional.empty();
     @Override public final void clearTargetOffset() { targetOffset = Optional.empty(); }
@@ -66,15 +75,14 @@ final class CaretImpl implements Caret {
         return targetOffset.get();
     }
 
-    private final EventStream<?> dirty;
-    @Override public final EventStream<?> dirtyEvents() { return dirty; }
-
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
     @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
+    private final EventStream<?> dirty;
     private final GenericStyledArea<?, ?, ?> area;
     private final SuspendableNo dependentBeingUpdated;
+    private final Var<Integer> internalTextPosition;
 
     private Subscription subscriptions = () -> {};
 
@@ -174,17 +182,72 @@ final class CaretImpl implements Caret {
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
     }
 
+    /* ********************************************************************** *
+     *                                                                        *
+     * Actions                                                                *
+     *                                                                        *
+     * Actions change the state of this control. They typically cause a       *
+     * change of one or more observables and/or produce an event.             *
+     *                                                                        *
+     * ********************************************************************** */
+
     public void moveTo(int paragraphIndex, int columnPosition) {
         moveTo(textPosition(paragraphIndex, columnPosition));
     }
 
     public void moveTo(int position) {
-        dependentBeingUpdated.suspendWhile(() -> internalTextPosition.setValue(position));
+        Runnable updatePos = () -> internalTextPosition.setValue(position);
+        if (isBeingUpdated()) {
+            updatePos.run();
+        } else {
+            dependentBeingUpdated.suspendWhile(updatePos);
+        }
+    }
+
+    @Override
+    public void moveToParStart() {
+        moveTo(getPosition() - getColumnPosition());
+    }
+
+    @Override
+    public void moveToParEnd() {
+        moveTo(area.getParagraphLength(getParagraphIndex()));
+    }
+
+    @Override
+    public void moveToAreaEnd() {
+        moveTo(area.getLength());
+    }
+
+    @Override
+    public void moveToNextChar() {
+        moveTo(getPosition() + 1);
+    }
+
+    @Override
+    public void moveToPrevChar() {
+        moveTo(getPosition() - 1);
+    }
+
+    @Override
+    public void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator) {
+        moveContentBreaks(numOfBreaks, breakIterator, false);
+    }
+
+    @Override
+    public void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator) {
+        moveContentBreaks(numOfBreaks, breakIterator, true);
     }
 
     public void dispose() {
         subscriptions.unsubscribe();
     }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Private methods                                                        *
+     *                                                                        *
+     * ********************************************************************** */
 
     private int textPosition(int row, int col) {
         return area.position(row, col).toOffset();
@@ -209,6 +272,30 @@ final class CaretImpl implements Caret {
                 .on(restartImpulse.withDefaultEvent(null)).transition((state, impulse) -> true)
                 .on(ticks).transition((state, tick) -> !state)
                 .toStateStream();
+    }
+
+    /**
+     * Helper method for reducing duplicate code
+     * @param numOfBreaks the number of breaks
+     * @param breakIterator the type of iterator to use
+     * @param followingNotPreceding if true, use {@link BreakIterator#following(int)}.
+     *                              Otherwise, use {@link BreakIterator#preceding(int)}.
+     */
+    private void moveContentBreaks(int numOfBreaks, BreakIterator breakIterator, boolean followingNotPreceding) {
+        if (area.getLength() == 0) {
+            return;
+        }
+
+        breakIterator.setText(area.getText());
+        if (followingNotPreceding) {
+            breakIterator.following(getPosition());
+        } else {
+            breakIterator.preceding(getPosition());
+        }
+        for (int i = 1; i < numOfBreaks; i++) {
+            breakIterator.next();
+        }
+        moveTo(breakIterator.current());
     }
 
 }
