@@ -688,7 +688,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        new StyledTextAreaBehavior(this);
+        new GenericStyledAreaBehavior(this);
     }
 
     /* ********************************************************************** *

@@ -30,4 +30,8 @@ public class RichTextChange<PS, SEG, S> extends TextChange<StyledDocument<PS, SE
     protected final RichTextChange<PS, SEG, S> create(int position, StyledDocument<PS, SEG, S> removed, StyledDocument<PS, SEG, S> inserted) {
         return new RichTextChange<>(position, removed, inserted);
     }
+
+    public final PlainTextChange toPlainTextChange() {
+        return new PlainTextChange(position, removed.getText(), inserted.getText());
+    }
 }
