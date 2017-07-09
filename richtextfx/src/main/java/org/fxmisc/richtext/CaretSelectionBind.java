@@ -56,16 +56,6 @@ import org.fxmisc.richtext.model.StyledDocument;
  */
 public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S> {
 
-    @Override
-    default boolean isBoundToCaret() {
-        return true;
-    }
-
-    @Override
-    default CaretSelectionBind asBoundedSelection() {
-        return this;
-    }
-
     /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *

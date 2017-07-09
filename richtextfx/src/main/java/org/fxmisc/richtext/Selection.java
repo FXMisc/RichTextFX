@@ -54,21 +54,6 @@ public interface Selection<PS, SEG, S> {
         RIGHT
     }
 
-    /**
-     * Returns true if this is an {@link Selection} and true if this is an {@link CaretSelectionBind}.
-     */
-    default boolean isBoundToCaret() {
-        return false;
-    }
-
-    /**
-     * If {@link #isBoundToCaret()} returns true, then casts this object to a {@link CaretSelectionBind}. Otherwise,
-     * throws an {@link IllegalStateException}.
-     */
-    default CaretSelectionBind asBoundedSelection() {
-        throw new IllegalStateException("An Selection cannot be cast to a CaretSelectionBind");
-    }
-
     /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *
