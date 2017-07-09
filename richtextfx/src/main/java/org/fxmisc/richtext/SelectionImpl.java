@@ -120,13 +120,11 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
         this.range = internalRange.suspendable();
         length = internalRange.map(IndexRange::getLength).suspendable();
 
-        selectedText = Val.create(() -> area.getText(internalRange.getValue()),
+        Val<StyledDocument<PS, SEG, S>> documentVal = Val.create(() -> area.subDocument(internalRange.getValue()),
                 internalRange, area.getParagraphs()
-        ).suspendable();
-
-        selectedDocument = Val.create(() -> area.subDocument(internalRange.getValue()),
-                internalRange, area.getParagraphs()
-        ).suspendable();
+        );
+        selectedDocument = documentVal.suspendable();
+        selectedText = documentVal.map(StyledDocument::getText).suspendable();
 
         Val<Tuple2<Position, Position>> positions = internalRange.map(sel -> {
             Position start2D = area.offsetToPosition(sel.getStart(), Forward);
