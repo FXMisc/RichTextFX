@@ -54,7 +54,7 @@ class CssProperties {
 
         @Override
         public String getName() {
-            return "highlightFill";
+            return name;
         }
 
         @Override
