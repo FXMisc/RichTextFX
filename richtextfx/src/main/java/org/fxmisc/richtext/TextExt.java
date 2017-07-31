@@ -133,8 +133,12 @@ public class TextExt extends Text {
         }
     };
 
-    TextExt(String text) {
+    public TextExt(String text) {
         super(text);
+    }
+
+    public TextExt() {
+        super();
     }
 
     @Override
