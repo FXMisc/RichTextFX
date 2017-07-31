@@ -259,6 +259,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 : val;
     }
 
+    private static final PseudoClass READ_ONLY = PseudoClass.getPseudoClass("read-only");
     private static final PseudoClass HAS_CARET = PseudoClass.getPseudoClass("has-caret");
     private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
     private static final PseudoClass LAST_PAR  = PseudoClass.getPseudoClass("last-paragraph");
@@ -279,23 +280,28 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Background fill for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightFill
-            = new CssProperties.HighlightFillProperty(this, HIGHLIGHT_FILL);
+            = new CustomStyleableProperty<>(Color.DODGERBLUE, "highlightFill", this, HIGHLIGHT_FILL);
 
     /**
      * Text color for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CssProperties.HighlightTextFillProperty(this, HIGHLIGHT_TEXT_FILL);
+            = new CustomStyleableProperty<>(Color.WHITE, "highlightTextFill", this, HIGHLIGHT_TEXT_FILL);
 
     /**
      * Controls the blink rate of the caret, when one is displayed. Setting
      * the duration to zero disables blinking.
      */
     private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
-            = new CssProperties.CaretBlinkRateProperty(this, CARET_BLINK_RATE);
+            = new CustomStyleableProperty<>(javafx.util.Duration.millis(500), "caretBlinkRate", this, CARET_BLINK_RATE);
 
     // editable property
-    private final BooleanProperty editable = new CssProperties.EditableProperty<>(this);
+    private final BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true) {
+        @Override
+        protected void invalidated() {
+            ((Region) getBean()).pseudoClassStateChanged(READ_ONLY, !get());
+        }
+    };
     @Override public final boolean isEditable() { return editable.get(); }
     @Override public final void setEditable(boolean value) { editable.set(value); }
     @Override public final BooleanProperty editableProperty() { return editable; }

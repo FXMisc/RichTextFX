@@ -46,92 +46,26 @@ public class TextExt extends Text {
 
         CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
     }
-	
-    private final StyleableObjectProperty<Paint> backgroundColor = new StyleableObjectProperty<Paint>(null) {
-        @Override
-        public Object getBean() {
-            return TextExt.this;
-        }
 
-        @Override
-        public String getName() {
-            return "backgroundColor";
-        }
+    private final StyleableObjectProperty<Paint> backgroundColor = new CustomStyleableProperty<>(
+            null, "backgroundColor", this, StyleableProperties.BACKGROUND_COLOR
+    );
 
-        @Override
-        public CssMetaData<TextExt, Paint> getCssMetaData() {
-            return StyleableProperties.BACKGROUND_COLOR;
-        }
-    };
+    private final StyleableObjectProperty<Paint> underlineColor = new CustomStyleableProperty<>(
+            null, "underlineColor", this, StyleableProperties.UNDERLINE_COLOR
+    );
 
-    private final StyleableObjectProperty<Paint> underlineColor = new StyleableObjectProperty<Paint>(null) {
-        @Override
-        public Object getBean() {
-            return TextExt.this;
-        }
+    private final StyleableObjectProperty<Number> underlineWidth = new CustomStyleableProperty<>(
+            null, "underlineWidth", this, StyleableProperties.UNDERLINE_WIDTH
+    );
 
-        @Override
-        public String getName() {
-            return "underlineColor";
-        }
+    private final StyleableObjectProperty<Number[]> underlineDashArray = new CustomStyleableProperty<>(
+            null, "underlineDashArray", this, StyleableProperties.UNDERLINE_DASH_ARRAY
+    );
 
-        @Override
-        public CssMetaData<TextExt, Paint> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_COLOR;
-        }
-    };
-
-    private final StyleableObjectProperty<Number> underlineWidth = new StyleableObjectProperty<Number>(null) {
-        @Override
-        public Object getBean() {
-            return TextExt.this;
-        }
-
-        @Override
-        public String getName() {
-            return "underlineWidth";
-        }
-
-        @Override
-        public CssMetaData<TextExt, Number> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_WIDTH;
-        }
-    };
-
-    private final StyleableObjectProperty<Number[]> underlineDashArray = new StyleableObjectProperty<Number[]>(null) {
-        @Override
-        public Object getBean() {
-            return TextExt.this;
-        }
-
-        @Override
-        public String getName() {
-            return "underlineDashArray";
-        }
-
-        @Override
-        public CssMetaData<TextExt, Number[]> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_DASH_ARRAY;
-        }
-    };
-
-
-    private final StyleableObjectProperty<StrokeLineCap> underlineCap = new StyleableObjectProperty<StrokeLineCap>(null) {
-        @Override
-        public Object getBean() {
-            return TextExt.this;
-        }
-
-        @Override
-        public String getName() {
-            return "underlineCap";
-        }
-
-        @Override
-        public CssMetaData<TextExt, StrokeLineCap> getCssMetaData() {
-            return StyleableProperties.UNDERLINE_CAP;
-        }
-    };
+    private final StyleableObjectProperty<StrokeLineCap> underlineCap = new CustomStyleableProperty<>(
+            null, "underlineCap", this, StyleableProperties.UNDERLINE_CAP
+    );
 
     public TextExt(String text) {
         super(text);
