@@ -10,8 +10,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.util.Duration;
 
-import java.util.function.Supplier;
-
 
 /**
  * CSS stuff related to {@link GenericStyledArea}.
@@ -33,23 +31,23 @@ class CssProperties {
 
     private static class CustomStyleablePropertyBase<T> extends StyleableObjectProperty<T> {
 
-        private final GenericStyledArea<?, ?, ?> area;
+        private final Object bean;
         private final String name;
         private final CssMetaData<? extends Styleable, T> cssMetaData;
 
         public CustomStyleablePropertyBase(T initialValue,
                                            String name,
-                                           GenericStyledArea<?, ?, ?> area,
+                                           Object bean,
                                            CssMetaData<? extends Styleable, T> cssMetaData) {
             super(initialValue);
-            this.area = area;
+            this.bean = bean;
             this.name = name;
             this.cssMetaData = cssMetaData;
         }
 
         @Override
         public Object getBean() {
-            return area;
+            return bean;
         }
 
         @Override
