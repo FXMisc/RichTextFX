@@ -1,68 +1,21 @@
 package org.fxmisc.richtext.demo.richtext;
 
-import java.util.Optional;
+import org.fxmisc.richtext.model.NodeSegmentOpsBase;
 
-import org.fxmisc.richtext.model.SegmentOps;
+public class LinkedImageOps<S> extends NodeSegmentOpsBase<LinkedImage<S>, S> {
 
-public class LinkedImageOps<S> implements SegmentOps<LinkedImage<S>, S> {
-
-    private final EmptyLinkedImage<S> emptySeg = new EmptyLinkedImage<>();
-
-    @Override
-    public int length(LinkedImage<S> seg) {
-        return seg == emptySeg ? 0 : 1;
+    public LinkedImageOps() {
+        super(new EmptyLinkedImage<>());
     }
 
     @Override
-    public char charAt(LinkedImage<S> seg, int index) {
-        return seg == emptySeg ? '\0' : '\ufffc';
+    public S realGetStyle(LinkedImage<S> linkedImage) {
+        return linkedImage.getStyle();
     }
 
     @Override
-    public String getText(LinkedImage<S> seg) {
-        return seg == emptySeg ? "" : "\ufffc";
+    public LinkedImage<S> realSetStyle(LinkedImage<S> linkedImage, S style) {
+        return linkedImage.setStyle(style);
     }
 
-    @Override
-    public LinkedImage<S> subSequence(LinkedImage<S> seg, int start, int end) {
-        if (start < 0) {
-            throw new IllegalArgumentException("Start cannot be negative. Start = " + start);
-        }
-        if (end > length(seg)) {
-            throw new IllegalArgumentException("End cannot be greater than segment's length");
-        }
-        return start == 0 && end == 1
-                ? seg
-                : emptySeg;
-    }
-
-    @Override
-    public LinkedImage<S> subSequence(LinkedImage<S> seg, int start) {
-        if (start < 0) {
-            throw new IllegalArgumentException("Start cannot be negative. Start = " + start);
-        }
-        return start == 0
-                ? seg
-                : emptySeg;
-    }
-
-    @Override
-    public S getStyle(LinkedImage<S> seg) {
-        return seg.getStyle();
-    }
-
-    @Override
-    public LinkedImage<S> setStyle(LinkedImage<S> seg, S style) {
-        return seg == emptySeg ? emptySeg : seg.setStyle(style);
-    }
-
-    @Override
-    public Optional<LinkedImage<S>> join(LinkedImage<S> currentSeg, LinkedImage<S> nextSeg) {
-        return Optional.empty();
-    }
-
-    @Override
-    public LinkedImage<S> createEmpty() {
-        return emptySeg;
-    }
 }
