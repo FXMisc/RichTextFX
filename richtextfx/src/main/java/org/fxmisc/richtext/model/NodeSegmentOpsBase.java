@@ -30,12 +30,12 @@ public abstract class NodeSegmentOpsBase<SEG, S> extends SegmentOpsBase<SEG, S> 
     }
 
     @Override
-    public SEG realSubsequence(SEG seg, int start, int end) {
+    public SEG realSubSequence(SEG seg, int start, int end) {
         return seg;
     }
 
     @Override
-    public SEG realSubsequence(SEG seg, int start) {
+    public SEG realSubSequence(SEG seg, int start) {
         return seg;
     }
 }

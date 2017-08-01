@@ -23,43 +23,41 @@ public class StyledText<S>  {
      * of {@link org.fxmisc.richtext.GenericStyledArea} and similar classes if you are using this class as the SEG type.
      */
     public static <S> TextOps<StyledText<S>, S> textOps() {
-        return new TextOps<StyledText<S>, S>() {
-
-            private final StyledText<S> emptySeg = new StyledText<>("", null);
+        return new TextOpsBase<StyledText<S>, S>(new StyledText<>("", null)) {
 
             @Override
-            public int length(StyledText<S> styledText) {
+            public int realLength(StyledText<S> styledText) {
                 return styledText.getText().length();
             }
 
             @Override
-            public char charAt(StyledText<S> styledText, int index) {
-                return styledText == emptySeg ? '\0' : styledText.getText().charAt(index);
+            public char realCharAt(StyledText<S> styledText, int index) {
+                return styledText.getText().charAt(index);
             }
 
             @Override
-            public String getText(StyledText<S> styledText) {
+            public String realGetText(StyledText<S> styledText) {
                 return styledText.getText();
             }
 
             @Override
-            public StyledText<S> subSequence(StyledText<S> styledText, int start, int end) {
-                return styledText == emptySeg ? emptySeg : new StyledText<>(styledText.getText().substring(start, end), styledText.getStyle());
+            public StyledText<S> realSubSequence(StyledText<S> styledText, int start, int end) {
+                return new StyledText<>(styledText.getText().substring(start, end), styledText.getStyle());
             }
 
             @Override
-            public StyledText<S> subSequence(StyledText<S> styledText, int start) {
-                return styledText == emptySeg ? emptySeg : new StyledText<>(styledText.getText().substring(start), styledText.getStyle());
+            public StyledText<S> realSubSequence(StyledText<S> styledText, int start) {
+                return new StyledText<>(styledText.getText().substring(start), styledText.getStyle());
             }
 
             @Override
-            public S getStyle(StyledText<S> styledText) {
+            public S realGetStyle(StyledText<S> styledText) {
                 return styledText.getStyle();
             }
 
             @Override
-            public StyledText<S> setStyle(StyledText<S> seg, S style) {
-                return seg == emptySeg ? emptySeg : seg.setStyle(style);
+            public StyledText<S> realSetStyle(StyledText<S> seg, S style) {
+                return seg.setStyle(style);
             }
 
             @Override
@@ -67,11 +65,6 @@ public class StyledText<S>  {
                 return Objects.equals(left.getStyle(), right.getStyle())
                         ? Optional.of(new StyledText<>(left.getText() + right.getText(), left.getStyle()))
                         : Optional.empty();
-            }
-
-            @Override
-            public StyledText<S> createEmpty() {
-                return emptySeg;
             }
 
             @Override

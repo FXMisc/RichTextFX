@@ -32,7 +32,7 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
 
     @Override
     public final String getText(SEG seg) {
-        return seg == empty ? "\0" : realGetText(seg);
+        return seg == empty ? "" : realGetText(seg);
     }
     public abstract String realGetText(SEG seg);
 
@@ -48,18 +48,18 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
         }
         return seg == empty || start == end
                 ? empty
-                : realSubsequence(seg, start, end);
+                : realSubSequence(seg, start, end);
     }
-    public abstract SEG realSubsequence(SEG seg, int start, int end);
+    public abstract SEG realSubSequence(SEG seg, int start, int end);
 
     @Override
     public final SEG subSequence(SEG seg, int start) {
         return seg == empty || length(seg) == start
                 ? empty
-                : realSubsequence(seg, start);
+                : realSubSequence(seg, start);
     }
-    public SEG realSubsequence(SEG seg, int start) {
-        return realSubsequence(seg, start, length(seg));
+    public SEG realSubSequence(SEG seg, int start) {
+        return realSubSequence(seg, start, length(seg));
     }
 
     @Override
@@ -75,7 +75,7 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
     public abstract SEG realSetStyle(SEG seg, S style);
 
     @Override
-    public final Optional<SEG> join(SEG currentSeg, SEG nextSeg) {
+    public Optional<SEG> join(SEG currentSeg, SEG nextSeg) {
         return Optional.empty();
     }
 
