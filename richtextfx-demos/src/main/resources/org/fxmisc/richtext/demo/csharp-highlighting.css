@@ -1,0 +1,30 @@
+.keyword {
+    -fx-fill: #3400FF;
+    -fx-font-weight: bold;
+}
+.semicolon {
+    -fx-font-weight: bold;
+}
+.paren {
+    -fx-fill: firebrick;
+    -fx-font-weight: bold;
+}
+.bracket {
+    -fx-fill: darkgreen;
+    -fx-font-weight: bold;
+}
+.brace {
+    -fx-fill: teal;
+    -fx-font-weight: bold;
+}
+.string {
+    -fx-fill: #A31515;
+}
+
+.comment {
+	-fx-fill: #638000;
+}
+
+.paragraph-box:has-caret {
+    -fx-background-color: #f2f9fc;
+}
