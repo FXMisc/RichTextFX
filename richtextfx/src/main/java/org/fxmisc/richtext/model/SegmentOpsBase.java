@@ -32,7 +32,7 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
 
     @Override
     public final String getText(SEG seg) {
-        return seg == empty ? "\0" : realGetText(seg);
+        return seg == empty ? "" : realGetText(seg);
     }
     public abstract String realGetText(SEG seg);
 
