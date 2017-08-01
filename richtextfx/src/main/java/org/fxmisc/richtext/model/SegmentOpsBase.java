@@ -75,7 +75,7 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
     public abstract SEG realSetStyle(SEG seg, S style);
 
     @Override
-    public final Optional<SEG> join(SEG currentSeg, SEG nextSeg) {
+    public Optional<SEG> join(SEG currentSeg, SEG nextSeg) {
         return Optional.empty();
     }
 
