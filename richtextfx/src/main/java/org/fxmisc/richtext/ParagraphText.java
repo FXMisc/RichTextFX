@@ -45,8 +45,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
-    private final List<Path> backgroundShapes = new ArrayList<>();
-    private final List<Path> underlineShapes = new ArrayList<>();
+    private final List<Path> backgroundShapes;
+    private final List<Path> underlineShapes;
+    private final Val<Double> leftInset;
+    private final Val<Double> topInset;
 
     // proxy for caretShape.visibleProperty() that implements unbind() correctly.
     // This is necessary due to a bug in BooleanPropertyBase#unbind().
@@ -67,8 +69,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         selection.addListener((obs, old, sel) -> requestLayout());
 
-        Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
-        Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
+        leftInset = Val.map(insetsProperty(), Insets::getLeft);
+        topInset = Val.map(insetsProperty(), Insets::getTop);
 
         // selection highlight
         selectionShape.setManaged(false);
@@ -95,6 +97,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //                    text.impl_selectionFillProperty().set(newFill);
 //            }
 //        });
+        int size = par.getSegments().size();
+        backgroundShapes = new ArrayList<>(size);
+        underlineShapes = new ArrayList<>(size);
 
         // populate with text nodes
         for(SEG segment: par.getSegments()) {
@@ -102,23 +107,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             Node fxNode = nodeFactory.apply(segment);
             getChildren().add(fxNode);
 
-            // add corresponding background node (empty)
-            Path backgroundShape = new Path();
-            backgroundShape.setManaged(false);
-            backgroundShape.setStrokeWidth(0);
-            backgroundShape.layoutXProperty().bind(leftInset);
-            backgroundShape.layoutYProperty().bind(topInset);
-            backgroundShapes.add(backgroundShape);
-            getChildren().add(0, backgroundShape);
+            // add placeholder to prevent IOOBE; only create shapes when needed
+            backgroundShapes.add(null);
+            underlineShapes.add(null);
 
-            // add corresponding underline node (empty)
-            Path underlineShape = new Path();
-            underlineShape.setManaged(false);
-            underlineShape.setStrokeWidth(0);
-            underlineShape.layoutXProperty().bind(leftInset);
-            underlineShape.layoutYProperty().bind(topInset);
-            underlineShapes.add(underlineShape);
-            getChildren().add(underlineShape);
         }
     }
 
@@ -221,6 +213,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         }
     }
 
+    private Path getBackgroundShape(int index) {
+        Path backgroundShape = backgroundShapes.get(index);
+        if (backgroundShape == null) {
+            // add corresponding background node (empty)
+            backgroundShape = new Path();
+            backgroundShape.setManaged(false);
+            backgroundShape.setStrokeWidth(0);
+            backgroundShape.layoutXProperty().bind(leftInset);
+            backgroundShape.layoutYProperty().bind(topInset);
+            backgroundShapes.set(index, backgroundShape);
+            getChildren().add(0, backgroundShape);
+        }
+        return backgroundShape;
+    }
 
     /**
      * Updates the background shape for a text segment.
@@ -234,7 +240,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         // Set fill
         Paint paint = text.backgroundColorProperty().get();
         if (paint != null) {
-            Path backgroundShape = backgroundShapes.get(index);
+            Path backgroundShape = getBackgroundShape(index);
             backgroundShape.setFill(paint);
 
             // Set path elements
@@ -243,6 +249,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         }
     }
 
+    private Path getUnderlineShape(int index) {
+        Path underlineShape = underlineShapes.get(index);
+        if (underlineShape == null) {
+            // add corresponding underline node (empty)
+            underlineShape = new Path();
+            underlineShape.setManaged(false);
+            underlineShape.setStrokeWidth(0);
+            underlineShape.layoutXProperty().bind(leftInset);
+            underlineShape.layoutYProperty().bind(topInset);
+            underlineShapes.set(index, underlineShape);
+            getChildren().add(underlineShape);
+        }
+        return underlineShape;
+    }
 
     /**
      * Updates the shape which renders the text underline.
@@ -257,7 +277,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Number underlineWidth = text.underlineWidthProperty().get();
         if (underlineWidth != null && underlineWidth.doubleValue() > 0) {
 
-            Path underlineShape = underlineShapes.get(index);
+            Path underlineShape = getUnderlineShape(index);
             underlineShape.setStrokeWidth(underlineWidth.doubleValue());
 
             // get remaining CSS properties for the underline style
