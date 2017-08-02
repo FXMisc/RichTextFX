@@ -176,83 +176,29 @@ public class TextExt extends Text {
 
     private static class StyleableProperties {
 
-        private static final CssMetaData<TextExt, Paint> BACKGROUND_COLOR = new CssMetaData<TextExt, Paint>(
-                "-rtfx-background-color",
-                StyleConverter.getPaintConverter(),
-                Color.TRANSPARENT) {
-            @Override
-            public boolean isSettable(TextExt node) {
-                return !node.backgroundColor.isBound();
-            }
+        private static final CssMetaData<TextExt, Paint> BACKGROUND_COLOR = new CustomCssMetaData<>(
+                "-rtfx-background-color", StyleConverter.getPaintConverter(),
+                Color.TRANSPARENT, n -> n.backgroundColor
+        );
 
-            @Override
-            public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
-                return node.backgroundColor;
-            }
-        };
+        private static final CssMetaData<TextExt, Paint> UNDERLINE_COLOR = new CustomCssMetaData<>(
+                "-rtfx-underline-color", StyleConverter.getPaintConverter(),
+                Color.TRANSPARENT, n -> n.underlineColor
+        );
 
+        private static final CssMetaData<TextExt, Number> UNDERLINE_WIDTH = new CustomCssMetaData<>(
+                "-rtfx-underline-width", StyleConverter.getSizeConverter(),
+                0, n -> n.underlineWidth
+        );
 
-        private static final CssMetaData<TextExt, Paint> UNDERLINE_COLOR = new CssMetaData<TextExt, Paint>(
-                "-rtfx-underline-color",
-                StyleConverter.getPaintConverter(),
-                Color.TRANSPARENT) {
-            @Override
-            public boolean isSettable(TextExt node) {
-                return !node.underlineColor.isBound();
-            }
+        private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CustomCssMetaData<>(
+                "-rtfx-underline-dash-array", SizeConverter.SequenceConverter.getInstance(),
+                new Double[0], n -> n.underlineDashArray
+        );
 
-            @Override
-            public StyleableProperty<Paint> getStyleableProperty(TextExt node) {
-                return node.underlineColor;
-            }
-        };
-
-        private static final CssMetaData<TextExt, Number> UNDERLINE_WIDTH = new CssMetaData<TextExt, Number>(
-                "-rtfx-underline-width",
-                StyleConverter.getSizeConverter(),
-                0) {
-
-            @Override
-            public boolean isSettable(TextExt node) {
-                return !node.underlineWidth.isBound();
-            }
-
-            @Override
-            public StyleableProperty<Number> getStyleableProperty(TextExt node) {
-                return node.underlineWidth;
-            }
-        };
-
-        private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CssMetaData<TextExt, Number[]>(
-                "-rtfx-underline-dash-array",
-                SizeConverter.SequenceConverter.getInstance(),
-                new Double[0]) {
-
-            @Override
-            public boolean isSettable(TextExt node) {
-                return !node.underlineDashArray.isBound();
-            }
-
-            @Override
-            public StyleableProperty<Number[]> getStyleableProperty(TextExt node) {
-                return node.underlineDashArray;
-            }
-        };
-
-        private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CssMetaData<TextExt, StrokeLineCap>(
-                "-rtfx-underline-cap",
-                new EnumConverter<StrokeLineCap>(StrokeLineCap.class),
-                StrokeLineCap.SQUARE) {
-
-            @Override
-            public boolean isSettable(TextExt node) {
-                return !node.underlineCap.isBound();
-            }
-
-            @Override
-            public StyleableProperty<StrokeLineCap> getStyleableProperty(TextExt node) {
-                return node.underlineCap;
-            }
-        };
+        private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CustomCssMetaData<>(
+                "-rtfx-underline-cap", new EnumConverter<StrokeLineCap>(StrokeLineCap.class),
+                StrokeLineCap.SQUARE, n -> n.underlineCap
+        );
     }
 }
