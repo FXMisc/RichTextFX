@@ -1356,47 +1356,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_FILL
-            = new CssMetaData<GenericStyledArea<?, ?, ?>, Paint>("-fx-highlight-fill", StyleConverter.getPaintConverter(), Color.DODGERBLUE
-    ) {
-        @Override
-        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
-            return !styleable.highlightFill.isBound();
-        }
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_FILL = new CustomCssMetaData<>(
+            "-fx-highlight-fill", StyleConverter.getPaintConverter(), Color.DODGERBLUE, s -> s.highlightFill
+    );
 
-        @Override
-        public StyleableProperty<Paint> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
-            return styleable.highlightFill;
-        }
-    };
-
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL
-            = new CssMetaData<GenericStyledArea<?, ?, ?>, Paint>("-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE
-    ) {
-        @Override
-        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
-            return !styleable.highlightTextFill.isBound();
-        }
-
-        @Override
-        public StyleableProperty<Paint> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
-            return styleable.highlightTextFill;
-        }
-    };
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL = new CustomCssMetaData<>(
+            "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
+    );
 
     private static final CssMetaData<GenericStyledArea<?, ?, ?>, javafx.util.Duration> CARET_BLINK_RATE
-            = new CssMetaData<GenericStyledArea<?, ?, ?>, javafx.util.Duration>("-fx-caret-blink-rate", StyleConverter.getDurationConverter(), javafx.util.Duration.millis(500)
-    ) {
-        @Override
-        public boolean isSettable(GenericStyledArea<?, ?, ?> styleable) {
-            return !styleable.caretBlinkRate.isBound();
-        }
-
-        @Override
-        public StyleableProperty<javafx.util.Duration> getStyleableProperty(GenericStyledArea<?, ?, ?> styleable) {
-            return styleable.caretBlinkRate;
-        }
-    };
+            = new CustomCssMetaData<>("-fx-caret-blink-rate", StyleConverter.getDurationConverter(),
+            javafx.util.Duration.millis(500), s -> s.caretBlinkRate
+    );
 
     private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
 
