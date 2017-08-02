@@ -20,7 +20,7 @@ public class CustomCssMetaData<S extends Styleable, V> extends CssMetaData<S, V>
 
     @Override
     public boolean isSettable(S styleable) {
-        return property.apply(styleable).isBound();
+        return !property.apply(styleable).isBound();
     }
 
     @Override
