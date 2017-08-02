@@ -26,6 +26,7 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
+import javafx.scene.shape.StrokeType;
 import org.fxmisc.richtext.model.Paragraph;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
@@ -57,9 +58,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new LinkedList<>();
     private final List<Path> underlineShapes = new LinkedList<>();
+    private final List<Path> borderShapes = new LinkedList<>();
 
     private final List<Tuple2<Paint, IndexRange>> backgroundColorRanges = new LinkedList<>();
     private final List<Tuple2<UnderlineAttributes, IndexRange>> underlineRanges = new LinkedList<>();
+    private final List<Tuple2<BorderAttributes, IndexRange>> borderRanges = new LinkedList<>();
     private final Val<Double> leftInset;
     private final Val<Double> topInset;
 
@@ -215,22 +218,44 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 updateSharedShapeRange(backgroundColorRanges, backgroundColor, start, end);
             }
 
-            UnderlineAttributes attributes = new UnderlineAttributes(text);
-            if (!attributes.isNullValue()) {
-                updateSharedShapeRange(underlineRanges, attributes, start, end);
+            BorderAttributes border = new BorderAttributes(text);
+            if (!border.isNullValue()) {
+                updateSharedShapeRange(borderRanges, border, start, end);
+            }
+
+            UnderlineAttributes underline = new UnderlineAttributes(text);
+            if (!underline.isNullValue()) {
+                updateSharedShapeRange(underlineRanges, underline, start, end);
             }
 
             start = end;
         }
 
         // now only use one shape per shared value
-        updateSharedShapes(backgroundColorRanges, backgroundShapes, (children, shape) -> children.add(0, shape),
+        BiConsumer<ObservableList<Node>, Path> addToBackground = (children, shape) -> children.add(0, shape);
+        BiConsumer<ObservableList<Node>, Path> addToForeground = ObservableList::add;
+
+        // | background color -> border -> text -> underline -> user's eye
+        updateSharedShapes(borderRanges, borderShapes, addToBackground,
+                (borderShape, tuple) -> {
+                    BorderAttributes attributes = tuple._1;
+                    borderShape.setStrokeWidth(attributes.width);
+                    borderShape.setStroke(attributes.color);
+                    if (attributes.type != null) {
+                        borderShape.setStrokeType(attributes.type);
+                    }
+                    if (attributes.dashArray != null) {
+                        borderShape.getStrokeDashArray().setAll(attributes.dashArray);
+                    }
+                    borderShape.getElements().setAll(getRangeShape(tuple._2));
+                });
+        updateSharedShapes(backgroundColorRanges, backgroundShapes, addToBackground,
                 (colorShape, tuple) -> {
                     colorShape.setStrokeWidth(0);
                     colorShape.setFill(tuple._1);
                     colorShape.getElements().setAll(getRangeShape(tuple._2));
         });
-        updateSharedShapes(underlineRanges, underlineShapes, (children, shape) -> children.add(shape),
+        updateSharedShapes(underlineRanges, underlineShapes, addToForeground,
                 (underlineShape, tuple) -> {
                     UnderlineAttributes attributes = tuple._1;
                     underlineShape.setStroke(attributes.color);
@@ -317,6 +342,70 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         updateCaretShape();
         updateSelectionShape();
         updateBackgroundShapes();
+    }
+
+    private static class BorderAttributes {
+
+        private final double width;
+        private final Paint color;
+        private final Double[] dashArray;
+        private final StrokeType type;
+
+        public final boolean isNullValue() { return color == null || width == -1; }
+
+        BorderAttributes(TextExt text) {
+            color = text.getBorderStrokeColor();
+
+            Number sWidth = text.getBorderStrokeWidth();
+            if (color == null || sWidth == null || sWidth.doubleValue() <= 0) {
+                width = -1;
+                dashArray = null;
+                type = null;
+
+            } else {
+                width = sWidth.doubleValue();
+                type = text.getBorderStrokeType();
+
+                // get the dash array - JavaFX CSS parser seems to return either a Number[] array
+                // or a single value, depending on whether only one or more than one value has been
+                // specified in the CSS
+                Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
+                if (underlineDashArrayProp != null) {
+                    if (underlineDashArrayProp.getClass().isArray()) {
+                        Number[] numberArray = (Number[]) underlineDashArrayProp;
+                        dashArray = new Double[numberArray.length];
+                        int idx = 0;
+                        for (Number d : numberArray) {
+                            dashArray[idx++] = (Double) d;
+                        }
+                    } else {
+                        dashArray = new Double[1];
+                        dashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
+                    }
+                } else {
+                    dashArray = null;
+                }
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof BorderAttributes) {
+                BorderAttributes attributes = (BorderAttributes) obj;
+                return Objects.equals(color, attributes.color)
+                        && Objects.equals(width, attributes.width)
+                        && Objects.equals(type, attributes.type)
+                        && Arrays.equals(dashArray, attributes.dashArray);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("BorderAttributes[color=%s width=%s type=%s dashArray=%s",
+                    color, width, type, Arrays.toString(dashArray));
+        }
     }
 
     private static class UnderlineAttributes {
