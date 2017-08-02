@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -19,6 +20,8 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
 
 import org.fxmisc.richtext.model.Paragraph;
+import org.reactfx.util.Tuple2;
+import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -45,8 +48,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
-    private final List<Path> backgroundShapes;
+    private final List<Path> backgroundShapes = new LinkedList<>();
     private final List<Path> underlineShapes;
+
+    private final List<Tuple2<Paint, IndexRange>> backgroundColorRanges = new LinkedList<>();
     private final Val<Double> leftInset;
     private final Val<Double> topInset;
 
@@ -97,9 +102,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //                    text.impl_selectionFillProperty().set(newFill);
 //            }
 //        });
-        int size = par.getSegments().size();
-        backgroundShapes = new ArrayList<>(size);
-        underlineShapes = new ArrayList<>(size);
+        underlineShapes = new ArrayList<>();
 
         // populate with text nodes
         for(SEG segment: par.getSegments()) {
@@ -108,7 +111,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             getChildren().add(fxNode);
 
             // add placeholder to prevent IOOBE; only create shapes when needed
-            backgroundShapes.add(null);
             underlineShapes.add(null);
 
         }
@@ -205,48 +207,74 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             TextExt text = (TextExt) node;
             int end = start + text.getText().length();
 
-            updateBackground(text, start, end, index);
+            calculateBackgroundColorRange(text, start, end);
+
             updateUnderline(text, start, end, index);
 
             start = end;
             index++;
         }
-    }
 
-    private Path getBackgroundShape(int index) {
-        Path backgroundShape = backgroundShapes.get(index);
-        if (backgroundShape == null) {
-            // add corresponding background node (empty)
-            backgroundShape = new Path();
-            backgroundShape.setManaged(false);
-            backgroundShape.setStrokeWidth(0);
-            backgroundShape.layoutXProperty().bind(leftInset);
-            backgroundShape.layoutYProperty().bind(topInset);
-            backgroundShapes.set(index, backgroundShape);
-            getChildren().add(0, backgroundShape);
-        }
-        return backgroundShape;
+        updateBackgroundColorShapes();
     }
 
     /**
-     * Updates the background shape for a text segment.
-     *
-     * @param text  The text node which specified the style attributes
-     * @param start The index of the first character 
-     * @param end   The index of the last character
-     * @param index The index of the background shape
+     * Calculates the range of a background color that is shared between multiple consecutive {@link TextExt} nodes
      */
-    private void updateBackground(TextExt text, int start, int end, int index) {
-        // Set fill
-        Paint paint = text.backgroundColorProperty().get();
-        if (paint != null) {
-            Path backgroundShape = getBackgroundShape(index);
-            backgroundShape.setFill(paint);
+    private void calculateBackgroundColorRange(TextExt text, int start, int end) {
+        Paint backgroundColor = text.getBackgroundColor();
+        if (backgroundColor != null) {
+            Runnable addNewColor = () -> backgroundColorRanges.add(Tuples.t(backgroundColor, new IndexRange(start, end)));
 
-            // Set path elements
-            PathElement[] shape = getRangeShape(start, end);
-            backgroundShape.getElements().setAll(shape);
+            if (backgroundColorRanges.isEmpty()) {
+                addNewColor.run();
+            } else {
+                int lastIndex = backgroundColorRanges.size() - 1;
+                Tuple2<Paint, IndexRange> lastColorRange = backgroundColorRanges.get(lastIndex);
+                Paint lastColor = lastColorRange._1;
+                if (lastColor.equals(backgroundColor)) {
+                    IndexRange colorRange = lastColorRange._2;
+                    backgroundColorRanges.set(lastIndex, Tuples.t(backgroundColor, new IndexRange(colorRange.getStart(), end)));
+                } else {
+                    addNewColor.run();
+                }
+            }
         }
+    }
+
+    private void updateBackgroundColorShapes() {
+        // remove or add shapes, depending on what's needed
+        int neededNumber = backgroundColorRanges.size();
+        int availableNumber = backgroundShapes.size();
+
+        if (neededNumber < availableNumber) {
+            List<Path> unusedShapes = backgroundShapes.subList(neededNumber, availableNumber);
+            getChildren().removeAll(unusedShapes);
+            unusedShapes.clear();
+        } else if (availableNumber < neededNumber) {
+            for (int i = 0; i < neededNumber - availableNumber; i++) {
+                Path backgroundShape = new Path();
+                backgroundShape.setManaged(false);
+                backgroundShape.setStrokeWidth(0);
+                backgroundShape.layoutXProperty().bind(leftInset);
+                backgroundShape.layoutYProperty().bind(topInset);
+
+                backgroundShapes.add(backgroundShape);
+                getChildren().add(0, backgroundShape);
+            }
+        }
+
+        // update the shape's color and elements
+        int i = 0;
+        for (Tuple2<Paint, IndexRange> t : backgroundColorRanges) {
+            Path backgroundShape = backgroundShapes.get(i);
+            backgroundShape.setFill(t._1);
+            backgroundShape.getElements().setAll(getRangeShape(t._2));
+            i++;
+        }
+
+        // clear, since it's no longer needed
+        backgroundColorRanges.clear();
     }
 
     private Path getUnderlineShape(int index) {

@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 
 import javafx.scene.shape.PathElement;
@@ -87,6 +88,10 @@ class TextFlowExt extends TextFlow {
 
     PathElement[] getCaretShape(int charIdx, boolean isLeading) {
         return textLayout().getCaretShape(charIdx, isLeading, 0.0f, 0.0f);
+    }
+
+    PathElement[] getRangeShape(IndexRange range) {
+        return getRangeShape(range.getStart(), range.getEnd());
     }
 
     PathElement[] getRangeShape(int from, int to) {
