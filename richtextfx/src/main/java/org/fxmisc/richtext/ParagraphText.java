@@ -2,19 +2,18 @@ package org.fxmisc.richtext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -56,15 +55,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
-    private final List<Path> backgroundShapes = new LinkedList<>();
-    private final List<Path> underlineShapes = new LinkedList<>();
-    private final List<Path> borderShapes = new LinkedList<>();
 
-    private final List<Tuple2<Paint, IndexRange>> backgroundColorRanges = new LinkedList<>();
-    private final List<Tuple2<UnderlineAttributes, IndexRange>> underlineRanges = new LinkedList<>();
-    private final List<Tuple2<BorderAttributes, IndexRange>> borderRanges = new LinkedList<>();
-    private final Val<Double> leftInset;
-    private final Val<Double> topInset;
+    private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
+    private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
+    private final CustomCssShapeHelper<UnderlineAttributes> underlineShapeHelper;
 
     // proxy for caretShape.visibleProperty() that implements unbind() correctly.
     // This is necessary due to a bug in BooleanPropertyBase#unbind().
@@ -85,8 +79,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         selection.addListener((obs, old, sel) -> requestLayout());
 
-        leftInset = Val.map(insetsProperty(), Insets::getLeft);
-        topInset = Val.map(insetsProperty(), Insets::getTop);
+        Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
+        Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
         // selection highlight
         selectionShape.setManaged(false);
@@ -120,6 +114,60 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             Node fxNode = nodeFactory.apply(segment);
             getChildren().add(fxNode);
         }
+
+        // set up custom css shape helpers
+        Supplier<Path> createShape = () -> {
+            Path shape = new Path();
+            shape.setManaged(false);
+            shape.layoutXProperty().bind(leftInset);
+            shape.layoutYProperty().bind(topInset);
+            return shape;
+        };
+        Consumer<Collection<Path>> clearUnusedShapes = paths -> getChildren().removeAll(paths);
+        Consumer<Path> addToBackground = path -> getChildren().add(0, path);
+        Consumer<Path> addToForeground = path -> getChildren().add(path);
+        backgroundShapeHelper = new CustomCssShapeHelper<>(
+                createShape,
+                (backgroundShape, tuple) -> {
+                    backgroundShape.setStrokeWidth(0);
+                    backgroundShape.setFill(tuple._1);
+                    backgroundShape.getElements().setAll(getRangeShape(tuple._2));
+                },
+                addToBackground,
+                clearUnusedShapes
+        );
+        borderShapeHelper = new CustomCssShapeHelper<>(
+                createShape,
+                (borderShape, tuple) -> {
+                    BorderAttributes attributes = tuple._1;
+                    borderShape.setStrokeWidth(attributes.width);
+                    borderShape.setStroke(attributes.color);
+                    if (attributes.type != null) {
+                        borderShape.setStrokeType(attributes.type);
+                    }
+                    if (attributes.dashArray != null) {
+                        borderShape.getStrokeDashArray().setAll(attributes.dashArray);
+                    }
+                    borderShape.getElements().setAll(getRangeShape(tuple._2));
+                },
+                addToBackground,
+                clearUnusedShapes
+        );
+        underlineShapeHelper = new CustomCssShapeHelper<>(
+                createShape,
+                (underlineShape, tuple) -> {
+                    UnderlineAttributes attributes = tuple._1;
+                    underlineShape.setStroke(attributes.color);
+                    underlineShape.setStrokeWidth(attributes.width);
+                    underlineShape.setStrokeLineCap(attributes.cap);
+                    if (attributes.dashArray != null) {
+                        underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
+                    }
+                    underlineShape.getElements().setAll(getUnderlineShape(tuple._2));
+                },
+                addToForeground,
+                clearUnusedShapes
+        );
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
@@ -215,124 +263,25 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
             Paint backgroundColor = text.getBackgroundColor();
             if (backgroundColor != null) {
-                updateSharedShapeRange(backgroundColorRanges, backgroundColor, start, end);
+                backgroundShapeHelper.updateSharedShapeRange(backgroundColor, start, end);
             }
 
             BorderAttributes border = new BorderAttributes(text);
             if (!border.isNullValue()) {
-                updateSharedShapeRange(borderRanges, border, start, end);
+                borderShapeHelper.updateSharedShapeRange(border, start, end);
             }
 
             UnderlineAttributes underline = new UnderlineAttributes(text);
             if (!underline.isNullValue()) {
-                updateSharedShapeRange(underlineRanges, underline, start, end);
+                underlineShapeHelper.updateSharedShapeRange(underline, start, end);
             }
 
             start = end;
         }
 
-        // now only use one shape per shared value
-        BiConsumer<ObservableList<Node>, Path> addToBackground = (children, shape) -> children.add(0, shape);
-        BiConsumer<ObservableList<Node>, Path> addToForeground = ObservableList::add;
-
-        // | background color -> border -> text -> underline -> user's eye
-        updateSharedShapes(borderRanges, borderShapes, addToBackground,
-                (borderShape, tuple) -> {
-                    BorderAttributes attributes = tuple._1;
-                    borderShape.setStrokeWidth(attributes.width);
-                    borderShape.setStroke(attributes.color);
-                    if (attributes.type != null) {
-                        borderShape.setStrokeType(attributes.type);
-                    }
-                    if (attributes.dashArray != null) {
-                        borderShape.getStrokeDashArray().setAll(attributes.dashArray);
-                    }
-                    borderShape.getElements().setAll(getRangeShape(tuple._2));
-                });
-        updateSharedShapes(backgroundColorRanges, backgroundShapes, addToBackground,
-                (colorShape, tuple) -> {
-                    colorShape.setStrokeWidth(0);
-                    colorShape.setFill(tuple._1);
-                    colorShape.getElements().setAll(getRangeShape(tuple._2));
-        });
-        updateSharedShapes(underlineRanges, underlineShapes, addToForeground,
-                (underlineShape, tuple) -> {
-                    UnderlineAttributes attributes = tuple._1;
-                    underlineShape.setStroke(attributes.color);
-                    underlineShape.setStrokeWidth(attributes.width);
-                    underlineShape.setStrokeLineCap(attributes.cap);
-                    if (attributes.dashArray != null) {
-                        underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
-                    }
-                    underlineShape.getElements().setAll(getUnderlineShape(tuple._2));
-        });
-    }
-
-    /**
-     * Calculates the range of a value (background color, underline, etc.) that is shared between multiple
-     * consecutive {@link TextExt} nodes
-     */
-    private <T> void updateSharedShapeRange(List<Tuple2<T, IndexRange>> rangeList, T value, int start, int end) {
-        updateSharedShapeRange0(
-                rangeList,
-                () -> Tuples.t(value, new IndexRange(start, end)),
-                lastRange -> {
-                    T lastShapeValue = lastRange._1;
-                    return lastShapeValue.equals(value);
-                },
-                lastRange -> lastRange.map((val, range) -> Tuples.t(val, new IndexRange(range.getStart(), end)))
-        );
-    }
-
-    private <T> void updateSharedShapeRange0(List<T> rangeList, Supplier<T> newValueRange,
-                                                Predicate<T> sharesShapeValue, UnaryOperator<T> mapper) {
-        if (rangeList.isEmpty()) {
-            rangeList.add(newValueRange.get());
-        } else {
-            int lastIndex = rangeList.size() - 1;
-            T lastShapeValueRange = rangeList.get(lastIndex);
-            if (sharesShapeValue.test(lastShapeValueRange)) {
-                rangeList.set(lastIndex, mapper.apply(lastShapeValueRange));
-            } else {
-                rangeList.add(newValueRange.get());
-            }
-        }
-    }
-
-    /**
-     * Updates the shapes calculated in {@link #updateSharedShapeRange(List, Object, int, int)} and configures them
-     * via {@code configureShape}.
-     */
-    private <T> void updateSharedShapes(List<T> rangeList, List<Path> shapeList,
-                                        BiConsumer<ObservableList<Node>, Path> addToChildren,
-                                        BiConsumer<Path, T> configureShape) {
-        // remove or add shapes, depending on what's needed
-        int neededNumber = rangeList.size();
-        int availableNumber = shapeList.size();
-
-        if (neededNumber < availableNumber) {
-            List<Path> unusedShapes = shapeList.subList(neededNumber, availableNumber);
-            getChildren().removeAll(unusedShapes);
-            unusedShapes.clear();
-        } else if (availableNumber < neededNumber) {
-            for (int i = 0; i < neededNumber - availableNumber; i++) {
-                Path shape = new Path();
-                shape.setManaged(false);
-                shape.layoutXProperty().bind(leftInset);
-                shape.layoutYProperty().bind(topInset);
-
-                shapeList.add(shape);
-                addToChildren.accept(getChildren(), shape);
-            }
-        }
-
-        // update the shape's color and elements
-        for (int i = 0; i < rangeList.size(); i++) {
-            configureShape.accept(shapeList.get(i), rangeList.get(i));
-        }
-
-        // clear, since it's no longer needed
-        rangeList.clear();
+        borderShapeHelper.updateSharedShapes();
+        backgroundShapeHelper.updateSharedShapes();
+        underlineShapeHelper.updateSharedShapes();
     }
 
 
@@ -342,6 +291,79 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         updateCaretShape();
         updateSelectionShape();
         updateBackgroundShapes();
+    }
+
+    private static class CustomCssShapeHelper<T> {
+
+        private final List<Tuple2<T, IndexRange>> ranges = new LinkedList<>();
+        private final List<Path> shapes = new LinkedList<>();
+
+        private final Supplier<Path> createShape;
+        private final BiConsumer<Path, Tuple2<T, IndexRange>> configureShape;
+        private final Consumer<Path> addToChildren;
+        private final Consumer<Collection<Path>> clearUnusedShapes;
+
+        CustomCssShapeHelper(Supplier<Path> createShape, BiConsumer<Path, Tuple2<T, IndexRange>> configureShape,
+                             Consumer<Path> addToChildren, Consumer<Collection<Path>> clearUnusedShapes) {
+            this.createShape = createShape;
+            this.configureShape = configureShape;
+            this.addToChildren = addToChildren;
+            this.clearUnusedShapes = clearUnusedShapes;
+        }
+
+        /**
+         * Calculates the range of a value (background color, underline, etc.) that is shared between multiple
+         * consecutive {@link TextExt} nodes
+         */
+        private void updateSharedShapeRange(T value, int start, int end) {
+            Runnable addNewValueRange = () -> ranges.add(Tuples.t(value, new IndexRange(start, end)));
+
+            if (ranges.isEmpty()) {
+                addNewValueRange.run();;
+            } else {
+                int lastIndex = ranges.size() - 1;
+                Tuple2<T, IndexRange> lastShapeValueRange = ranges.get(lastIndex);
+                T lastShapeValue = lastShapeValueRange._1;
+                if (lastShapeValue.equals(value)) {
+                    IndexRange lastRange = lastShapeValueRange._2;
+                    IndexRange extendedRange = new IndexRange(lastRange.getStart(), end);
+                    ranges.set(lastIndex, Tuples.t(lastShapeValue, extendedRange));
+                } else {
+                    addNewValueRange.run();
+                }
+            }
+        }
+
+        /**
+         * Updates the shapes calculated in {@link #updateSharedShapeRange(Object, int, int)} and configures them
+         * via {@code configureShape}.
+         */
+        private void updateSharedShapes() {
+            // remove or add shapes, depending on what's needed
+            int neededNumber = ranges.size();
+            int availableNumber = shapes.size();
+
+            if (neededNumber < availableNumber) {
+                List<Path> unusedShapes = shapes.subList(neededNumber, availableNumber);
+                clearUnusedShapes.accept(unusedShapes);
+                unusedShapes.clear();
+            } else if (availableNumber < neededNumber) {
+                for (int i = 0; i < neededNumber - availableNumber; i++) {
+                    Path shape = createShape.get();
+
+                    shapes.add(shape);
+                    addToChildren.accept(shape);
+                }
+            }
+
+            // update the shape's color and elements
+            for (int i = 0; i < ranges.size(); i++) {
+                configureShape.accept(shapes.get(i), ranges.get(i));
+            }
+
+            // clear, since it's no longer needed
+            ranges.clear();
+        }
     }
 
     private static class BorderAttributes extends LineAttributesBase {
