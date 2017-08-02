@@ -344,58 +344,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         updateBackgroundShapes();
     }
 
-    private static class BorderAttributes {
+    private static class BorderAttributes extends LineAttributesBase {
 
-        private final double width;
-        private final Paint color;
-        private final Double[] dashArray;
-        private final StrokeType type;
-
-        public final boolean isNullValue() { return color == null || width == -1; }
+        final StrokeType type;
 
         BorderAttributes(TextExt text) {
-            color = text.getBorderStrokeColor();
-
-            Number sWidth = text.getBorderStrokeWidth();
-            if (color == null || sWidth == null || sWidth.doubleValue() <= 0) {
-                width = -1;
-                dashArray = null;
-                type = null;
-
-            } else {
-                width = sWidth.doubleValue();
-                type = text.getBorderStrokeType();
-
-                // get the dash array - JavaFX CSS parser seems to return either a Number[] array
-                // or a single value, depending on whether only one or more than one value has been
-                // specified in the CSS
-                Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
-                if (underlineDashArrayProp != null) {
-                    if (underlineDashArrayProp.getClass().isArray()) {
-                        Number[] numberArray = (Number[]) underlineDashArrayProp;
-                        dashArray = new Double[numberArray.length];
-                        int idx = 0;
-                        for (Number d : numberArray) {
-                            dashArray[idx++] = (Double) d;
-                        }
-                    } else {
-                        dashArray = new Double[1];
-                        dashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
-                    }
-                } else {
-                    dashArray = null;
-                }
-            }
+            super(text.getBorderStrokeColor(), text.getBorderStrokeWidth(), text.getBorderStrokeDashArray());
+            type = text.getBorderStrokeType();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof BorderAttributes) {
                 BorderAttributes attributes = (BorderAttributes) obj;
-                return Objects.equals(color, attributes.color)
-                        && Objects.equals(width, attributes.width)
-                        && Objects.equals(type, attributes.type)
-                        && Arrays.equals(dashArray, attributes.dashArray);
+                return super.equals(attributes) && Objects.equals(type, attributes.type);
             } else {
                 return false;
             }
@@ -403,40 +365,59 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         @Override
         public String toString() {
-            return String.format("BorderAttributes[color=%s width=%s type=%s dashArray=%s",
-                    color, width, type, Arrays.toString(dashArray));
+            return String.format("BorderAttributes[type=%s %s]", type, getSubString());
         }
     }
 
-    private static class UnderlineAttributes {
+    private static class UnderlineAttributes extends LineAttributesBase {
 
-        private final double width;
-        private final Paint color;
-        private final Double[] dashArray;
-        private final StrokeLineCap cap;
+        final StrokeLineCap cap;
+
+        UnderlineAttributes(TextExt text) {
+            super(text.getUnderlineColor(), text.getUnderlineWidth(), text.getUnderlineDashArray());
+            cap = text.getUnderlineCap();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof UnderlineAttributes) {
+                UnderlineAttributes attr = (UnderlineAttributes) obj;
+                return super.equals(attr) && Objects.equals(cap, attr.cap);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("UnderlineAttributes[cap=%s %s]", cap, getSubString());
+        }
+    }
+
+    private static class LineAttributesBase {
+
+        final double width;
+        final Paint color;
+        final Double[] dashArray;
 
         public final boolean isNullValue() { return color == null || width == -1; }
 
-        UnderlineAttributes(TextExt text) {
-            color = text.getUnderlineColor();
-            Number underlineWidth = text.getUnderlineWidth();
-            if (color == null || underlineWidth == null || underlineWidth.doubleValue() <= 0) {
+        LineAttributesBase(Paint color, Number width, Object dashArrayProperty) {
+            this.color = color;
+            if (color == null || width == null || width.doubleValue() <= 0) {
                 // null value
-                width = -1;
+                this.width = -1;
                 dashArray = null;
-                cap = null;
             } else {
                 // real value
-                width = underlineWidth.doubleValue();
-                cap = text.getUnderlineCap();
+                this.width = width.doubleValue();
 
                 // get the dash array - JavaFX CSS parser seems to return either a Number[] array
                 // or a single value, depending on whether only one or more than one value has been
                 // specified in the CSS
-                Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
-                if (underlineDashArrayProp != null) {
-                    if (underlineDashArrayProp.getClass().isArray()) {
-                        Number[] numberArray = (Number[]) underlineDashArrayProp;
+                if (dashArrayProperty != null) {
+                    if (dashArrayProperty.getClass().isArray()) {
+                        Number[] numberArray = (Number[]) dashArrayProperty;
                         dashArray = new Double[numberArray.length];
                         int idx = 0;
                         for (Number d : numberArray) {
@@ -444,7 +425,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                         }
                     } else {
                         dashArray = new Double[1];
-                        dashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
+                        dashArray[0] = ((Double) dashArrayProperty).doubleValue();
                     }
                 } else {
                     dashArray = null;
@@ -458,16 +439,14 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 UnderlineAttributes attr = (UnderlineAttributes) obj;
                 return Objects.equals(width, attr.width)
                         && Objects.equals(color, attr.color)
-                        && Objects.equals(cap, attr.cap)
                         && Arrays.equals(dashArray, attr.dashArray);
             } else {
                 return false;
             }
         }
 
-        @Override
-        public String toString() {
-            return String.format("UnderlineAttributes[width=%s color=%s cap=%s dashArray=%s", width, color, cap, Arrays.toString(dashArray));
+        protected final String getSubString() {
+            return String.format("width=%s color=%s dashArray=%s", width, color, Arrays.toString(dashArray));
         }
     }
 }
