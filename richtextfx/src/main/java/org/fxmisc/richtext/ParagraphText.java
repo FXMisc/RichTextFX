@@ -371,7 +371,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         final StrokeType type;
 
         BorderAttributes(TextExt text) {
-            super(text.getBorderStrokeColor(), text.getBorderStrokeWidth(), text.getBorderStrokeDashArray());
+            super(text.getBorderStrokeColor(), text.getBorderStrokeWidth(), text.borderStrokeDashArrayProperty());
             type = text.getBorderStrokeType();
         }
 
@@ -396,7 +396,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         final StrokeLineCap cap;
 
         UnderlineAttributes(TextExt text) {
-            super(text.getUnderlineColor(), text.getUnderlineWidth(), text.getUnderlineDashArray());
+            super(text.getUnderlineColor(), text.getUnderlineWidth(), text.underlineDashArrayProperty());
             cap = text.getUnderlineCap();
         }
 
@@ -424,7 +424,12 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         public final boolean isNullValue() { return color == null || width == -1; }
 
-        LineAttributesBase(Paint color, Number width, Object dashArrayProperty) {
+        /**
+         * Java Quirk! Using {@code t.get[border/underline]DashArray()} throws a ClassCastException
+         * "Double cannot be cast to Number". However, using {@code t.getDashArrayProperty().get()}
+         * works without issue
+         */
+        LineAttributesBase(Paint color, Number width, ObjectProperty<Number[]> dashArrayProp) {
             this.color = color;
             if (color == null || width == null || width.doubleValue() <= 0) {
                 // null value
@@ -437,6 +442,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 // get the dash array - JavaFX CSS parser seems to return either a Number[] array
                 // or a single value, depending on whether only one or more than one value has been
                 // specified in the CSS
+                Object dashArrayProperty = dashArrayProp.get();
                 if (dashArrayProperty != null) {
                     if (dashArrayProperty.getClass().isArray()) {
                         Number[] numberArray = (Number[]) dashArrayProperty;
