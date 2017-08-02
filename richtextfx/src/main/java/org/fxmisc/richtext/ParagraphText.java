@@ -1,13 +1,20 @@
 package org.fxmisc.richtext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -49,9 +56,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final Path caretShape = new Path();
     private final Path selectionShape = new Path();
     private final List<Path> backgroundShapes = new LinkedList<>();
-    private final List<Path> underlineShapes;
+    private final List<Path> underlineShapes = new LinkedList<>();
 
     private final List<Tuple2<Paint, IndexRange>> backgroundColorRanges = new LinkedList<>();
+    private final List<Tuple2<UnderlineAttributes, IndexRange>> underlineRanges = new LinkedList<>();
     private final Val<Double> leftInset;
     private final Val<Double> topInset;
 
@@ -102,17 +110,12 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //                    text.impl_selectionFillProperty().set(newFill);
 //            }
 //        });
-        underlineShapes = new ArrayList<>();
 
         // populate with text nodes
         for(SEG segment: par.getSegments()) {
             // create Segment
             Node fxNode = nodeFactory.apply(segment);
             getChildren().add(fxNode);
-
-            // add placeholder to prevent IOOBE; only create shapes when needed
-            underlineShapes.add(null);
-
         }
     }
 
@@ -199,156 +202,112 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     }
 
     private void updateBackgroundShapes() {
-        int index = 0;
         int start = 0;
 
+        // calculate shared values among consecutive nodes
         FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
         for (Node node : nodeList) {
             TextExt text = (TextExt) node;
             int end = start + text.getText().length();
 
-            calculateBackgroundColorRange(text, start, end);
+            Paint backgroundColor = text.getBackgroundColor();
+            if (backgroundColor != null) {
+                updateSharedShapeRange(backgroundColorRanges, backgroundColor, start, end);
+            }
 
-            updateUnderline(text, start, end, index);
+            UnderlineAttributes attributes = new UnderlineAttributes(text);
+            if (!attributes.isNullValue()) {
+                updateSharedShapeRange(underlineRanges, attributes, start, end);
+            }
 
             start = end;
-            index++;
         }
 
-        updateBackgroundColorShapes();
+        // now only use one shape per shared value
+        updateSharedShapes(backgroundColorRanges, backgroundShapes, (children, shape) -> children.add(0, shape),
+                (colorShape, tuple) -> {
+                    colorShape.setStrokeWidth(0);
+                    colorShape.setFill(tuple._1);
+                    colorShape.getElements().setAll(getRangeShape(tuple._2));
+        });
+        updateSharedShapes(underlineRanges, underlineShapes, (children, shape) -> children.add(shape),
+                (underlineShape, tuple) -> {
+                    UnderlineAttributes attributes = tuple._1;
+                    underlineShape.setStroke(attributes.color);
+                    underlineShape.setStrokeWidth(attributes.width);
+                    underlineShape.setStrokeLineCap(attributes.cap);
+                    if (attributes.dashArray != null) {
+                        underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
+                    }
+                    underlineShape.getElements().setAll(getUnderlineShape(tuple._2));
+        });
     }
 
     /**
-     * Calculates the range of a background color that is shared between multiple consecutive {@link TextExt} nodes
+     * Calculates the range of a value (background color, underline, etc.) that is shared between multiple
+     * consecutive {@link TextExt} nodes
      */
-    private void calculateBackgroundColorRange(TextExt text, int start, int end) {
-        Paint backgroundColor = text.getBackgroundColor();
-        if (backgroundColor != null) {
-            Runnable addNewColor = () -> backgroundColorRanges.add(Tuples.t(backgroundColor, new IndexRange(start, end)));
+    private <T> void updateSharedShapeRange(List<Tuple2<T, IndexRange>> rangeList, T value, int start, int end) {
+        updateSharedShapeRange0(
+                rangeList,
+                () -> Tuples.t(value, new IndexRange(start, end)),
+                lastRange -> {
+                    T lastShapeValue = lastRange._1;
+                    return lastShapeValue.equals(value);
+                },
+                lastRange -> lastRange.map((val, range) -> Tuples.t(val, new IndexRange(range.getStart(), end)))
+        );
+    }
 
-            if (backgroundColorRanges.isEmpty()) {
-                addNewColor.run();
+    private <T> void updateSharedShapeRange0(List<T> rangeList, Supplier<T> newValueRange,
+                                                Predicate<T> sharesShapeValue, UnaryOperator<T> mapper) {
+        if (rangeList.isEmpty()) {
+            rangeList.add(newValueRange.get());
+        } else {
+            int lastIndex = rangeList.size() - 1;
+            T lastShapeValueRange = rangeList.get(lastIndex);
+            if (sharesShapeValue.test(lastShapeValueRange)) {
+                rangeList.set(lastIndex, mapper.apply(lastShapeValueRange));
             } else {
-                int lastIndex = backgroundColorRanges.size() - 1;
-                Tuple2<Paint, IndexRange> lastColorRange = backgroundColorRanges.get(lastIndex);
-                Paint lastColor = lastColorRange._1;
-                if (lastColor.equals(backgroundColor)) {
-                    IndexRange colorRange = lastColorRange._2;
-                    backgroundColorRanges.set(lastIndex, Tuples.t(backgroundColor, new IndexRange(colorRange.getStart(), end)));
-                } else {
-                    addNewColor.run();
-                }
+                rangeList.add(newValueRange.get());
             }
         }
     }
 
-    private void updateBackgroundColorShapes() {
+    /**
+     * Updates the shapes calculated in {@link #updateSharedShapeRange(List, Object, int, int)} and configures them
+     * via {@code configureShape}.
+     */
+    private <T> void updateSharedShapes(List<T> rangeList, List<Path> shapeList,
+                                        BiConsumer<ObservableList<Node>, Path> addToChildren,
+                                        BiConsumer<Path, T> configureShape) {
         // remove or add shapes, depending on what's needed
-        int neededNumber = backgroundColorRanges.size();
-        int availableNumber = backgroundShapes.size();
+        int neededNumber = rangeList.size();
+        int availableNumber = shapeList.size();
 
         if (neededNumber < availableNumber) {
-            List<Path> unusedShapes = backgroundShapes.subList(neededNumber, availableNumber);
+            List<Path> unusedShapes = shapeList.subList(neededNumber, availableNumber);
             getChildren().removeAll(unusedShapes);
             unusedShapes.clear();
         } else if (availableNumber < neededNumber) {
             for (int i = 0; i < neededNumber - availableNumber; i++) {
-                Path backgroundShape = new Path();
-                backgroundShape.setManaged(false);
-                backgroundShape.setStrokeWidth(0);
-                backgroundShape.layoutXProperty().bind(leftInset);
-                backgroundShape.layoutYProperty().bind(topInset);
+                Path shape = new Path();
+                shape.setManaged(false);
+                shape.layoutXProperty().bind(leftInset);
+                shape.layoutYProperty().bind(topInset);
 
-                backgroundShapes.add(backgroundShape);
-                getChildren().add(0, backgroundShape);
+                shapeList.add(shape);
+                addToChildren.accept(getChildren(), shape);
             }
         }
 
         // update the shape's color and elements
-        int i = 0;
-        for (Tuple2<Paint, IndexRange> t : backgroundColorRanges) {
-            Path backgroundShape = backgroundShapes.get(i);
-            backgroundShape.setFill(t._1);
-            backgroundShape.getElements().setAll(getRangeShape(t._2));
-            i++;
+        for (int i = 0; i < rangeList.size(); i++) {
+            configureShape.accept(shapeList.get(i), rangeList.get(i));
         }
 
         // clear, since it's no longer needed
-        backgroundColorRanges.clear();
-    }
-
-    private Path getUnderlineShape(int index) {
-        Path underlineShape = underlineShapes.get(index);
-        if (underlineShape == null) {
-            // add corresponding underline node (empty)
-            underlineShape = new Path();
-            underlineShape.setManaged(false);
-            underlineShape.setStrokeWidth(0);
-            underlineShape.layoutXProperty().bind(leftInset);
-            underlineShape.layoutYProperty().bind(topInset);
-            underlineShapes.set(index, underlineShape);
-            getChildren().add(underlineShape);
-        }
-        return underlineShape;
-    }
-
-    /**
-     * Updates the shape which renders the text underline.
-     * 
-     * @param text  The text node which specified the style attributes
-     * @param start The index of the first character 
-     * @param end   The index of the last character
-     * @param index The index of the background shape
-     */
-    private void updateUnderline(TextExt text, int start, int end, int index) {
-
-        Number underlineWidth = text.underlineWidthProperty().get();
-        if (underlineWidth != null && underlineWidth.doubleValue() > 0) {
-
-            Path underlineShape = getUnderlineShape(index);
-            underlineShape.setStrokeWidth(underlineWidth.doubleValue());
-
-            // get remaining CSS properties for the underline style
-
-            Paint underlineColor = text.underlineColorProperty().get();
-    
-            // get the dash array - JavaFX CSS parser seems to return either a Number[] array
-            // or a single value, depending on whether only one or more than one value has been
-            // specified in the CSS
-            Double[] underlineDashArray = null;
-            Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
-            if (underlineDashArrayProp != null) {
-                if (underlineDashArrayProp.getClass().isArray()) {
-                    Number[] numberArray = (Number[]) underlineDashArrayProp;
-                    underlineDashArray = new Double[numberArray.length];
-                    int idx = 0;
-                    for (Number d : numberArray) {
-                        underlineDashArray[idx++] = (Double) d;
-                    }
-                } else {
-                    underlineDashArray = new Double[1];
-                    underlineDashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
-                }
-            }
-    
-            StrokeLineCap underlineCap = text.underlineCapProperty().get();
-    
-            // apply style
-            if (underlineColor != null) {
-                underlineShape.setStroke(underlineColor);
-            }
-            if (underlineDashArray != null) {
-                underlineShape.getStrokeDashArray().addAll(underlineDashArray);
-            }
-            if (underlineCap != null) {
-                underlineShape.setStrokeLineCap(underlineCap);
-            }
-
-            // Set path elements
-            PathElement[] shape = getUnderlineShape(start, end);
-            underlineShape.getElements().setAll(shape);
-        }
-
+        rangeList.clear();
     }
 
 
@@ -358,5 +317,68 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         updateCaretShape();
         updateSelectionShape();
         updateBackgroundShapes();
+    }
+
+    private static class UnderlineAttributes {
+
+        private final double width;
+        private final Paint color;
+        private final Double[] dashArray;
+        private final StrokeLineCap cap;
+
+        public final boolean isNullValue() { return color == null || width == -1; }
+
+        UnderlineAttributes(TextExt text) {
+            color = text.getUnderlineColor();
+            Number underlineWidth = text.getUnderlineWidth();
+            if (color == null || underlineWidth == null || underlineWidth.doubleValue() <= 0) {
+                // null value
+                width = -1;
+                dashArray = null;
+                cap = null;
+            } else {
+                // real value
+                width = underlineWidth.doubleValue();
+                cap = text.getUnderlineCap();
+
+                // get the dash array - JavaFX CSS parser seems to return either a Number[] array
+                // or a single value, depending on whether only one or more than one value has been
+                // specified in the CSS
+                Object underlineDashArrayProp = text.underlineDashArrayProperty().get();
+                if (underlineDashArrayProp != null) {
+                    if (underlineDashArrayProp.getClass().isArray()) {
+                        Number[] numberArray = (Number[]) underlineDashArrayProp;
+                        dashArray = new Double[numberArray.length];
+                        int idx = 0;
+                        for (Number d : numberArray) {
+                            dashArray[idx++] = (Double) d;
+                        }
+                    } else {
+                        dashArray = new Double[1];
+                        dashArray[0] = ((Double) underlineDashArrayProp).doubleValue();
+                    }
+                } else {
+                    dashArray = null;
+                }
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof UnderlineAttributes) {
+                UnderlineAttributes attr = (UnderlineAttributes) obj;
+                return Objects.equals(width, attr.width)
+                        && Objects.equals(color, attr.color)
+                        && Objects.equals(cap, attr.cap)
+                        && Arrays.equals(dashArray, attr.dashArray);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("UnderlineAttributes[width=%s color=%s cap=%s dashArray=%s", width, color, cap, Arrays.toString(dashArray));
+        }
     }
 }

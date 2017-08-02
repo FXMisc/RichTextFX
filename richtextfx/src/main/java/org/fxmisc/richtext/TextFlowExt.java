@@ -98,6 +98,10 @@ class TextFlowExt extends TextFlow {
         return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
     }
 
+    PathElement[] getUnderlineShape(IndexRange range) {
+        return getUnderlineShape(range.getStart(), range.getEnd());
+    }
+
     /**
      * @param from The index of the first character.
      * @param to The index of the last character.
