@@ -21,6 +21,8 @@ import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
@@ -201,7 +203,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     public Bounds getRangeBoundsOnScreen(int from, int to) {
         layout(); // ensure layout, is a no-op if not dirty
-        PathElement[] rangeShape = getRangeShape(from, to);
+        PathElement[] rangeShape = getRangeShapeSafely(from, to);
 
         // switch out shapes to calculate the bounds on screen
         // Must take a copy of the list contents, not just a reference:
@@ -248,8 +250,60 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private void updateSelectionShape() {
         int start = selection.get().getStart();
         int end = selection.get().getEnd();
-        PathElement[] shape = getRangeShape(start, end);
-        selectionShape.getElements().setAll(shape);
+        selectionShape.getElements().setAll(getRangeShapeSafely(start, end));
+    }
+
+    /**
+     * Gets the range shape for the given positions within the text, including the newline character, if range
+     * defined by the start/end arguments include it.
+     *
+     * @param start the start position of the range shape
+     * @param end the end position of the range shape. If {@code end == paragraph.length() + 1}, the newline character
+     *            will be included in the selection by selecting the rest of the line
+     */
+    private PathElement[] getRangeShapeSafely(int start, int end) {
+        PathElement[] shape;
+        if (end <= paragraph.length()) {
+            // selection w/o newline char
+            shape = getRangeShape(start, end);
+        } else {
+            // Selection includes a newline character.
+            if (paragraph.length() == 0) {
+                // empty paragraph
+                shape = createRectangle(getLayoutX(), getLayoutY(), getWidth(), getHeight());
+            } else if (start == paragraph.length()) {
+                // selecting only the newline char
+
+                // calculate the bounds of the last character
+                shape = getRangeShape(start - 1, start);
+                LineTo lineToTopRight = (LineTo) shape[shape.length - 4];
+                shape = createRectangle(lineToTopRight.getX(), lineToTopRight.getY(), getWidth(), getHeight());
+            } else {
+                shape = getRangeShape(start, paragraph.length());
+                // Since this might be a wrapped multi-line paragraph,
+                // there may be multiple groups of (1 MoveTo, 3 LineTo objects) for each line:
+                // MoveTo(topLeft), LineTo(topRight), LineTo(bottomRight), LineTo(bottomLeft)
+
+                // We only need to adjust the top right and bottom right corners to extend to the
+                // width/height of the line, simulating a full line selection.
+                int length = shape.length;
+                int bottomRightIndex = length - 3;
+                int topRightIndex = bottomRightIndex - 1;
+                LineTo lineToTopRight = (LineTo) shape[topRightIndex];
+                shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
+                shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
+            }
+        }
+        return shape;
+    }
+
+    private PathElement[] createRectangle(double topLeftX, double topLeftY, double bottomRightX, double bottomRightY) {
+        return new PathElement[] {
+                new MoveTo(topLeftX, topLeftY),
+                new LineTo(bottomRightX, topLeftY),
+                new LineTo(bottomRightX, bottomRightY),
+                new LineTo(topLeftX, bottomRightY)
+        };
     }
 
     private void updateBackgroundShapes() {

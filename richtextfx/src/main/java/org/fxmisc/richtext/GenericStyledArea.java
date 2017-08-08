@@ -878,7 +878,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     /**
-     * Returns the selection range in the given paragraph.
+     * Returns the selection range in the given paragraph. Note: this method will return
+     * {@code IndexRange(start, paragraph.length() + 1)} when the selection includes a newline character.
      */
     public IndexRange getParagraphSelection(int paragraph) {
         return getParagraphSelection(caretSelectionBind, paragraph);
@@ -893,7 +894,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
 
         int start = paragraph == startPar ? selection.getStartColumnPosition() : 0;
-        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLength(paragraph);
+        int end = paragraph == endPar ? selection.getEndColumnPosition() : getParagraphLength(paragraph) + 1;
 
         // force rangeProperty() to be valid
         selection.getRange();
