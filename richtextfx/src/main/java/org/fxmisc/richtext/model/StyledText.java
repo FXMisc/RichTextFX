@@ -143,8 +143,9 @@ public class StyledText<S>  {
     public boolean equals(Object obj) {
         if(obj instanceof StyledText) {
             StyledText<?> that = (StyledText<?>) obj;
-            return Objects.equals(this.text, that.text)
-                && Objects.equals(this.style, that.style);
+            return (this.text.isEmpty() && that.text.isEmpty())
+                    || (Objects.equals(this.text, that.text)
+                        && Objects.equals(this.style, that.style));
         } else {
             return false;
         }
