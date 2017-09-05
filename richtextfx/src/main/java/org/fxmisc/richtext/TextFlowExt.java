@@ -141,23 +141,36 @@ class TextFlowExt extends TextFlow {
     CharacterHit hit(double x, double y) {
         HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
         int charIdx = hit.getCharIndex();
+        boolean leading = hit.isLeading();
 
         int lineIdx = getLineIndex((float) y);
         if(lineIdx >= getLineCount()) {
             return CharacterHit.insertionAt(getCharCount());
         }
 
-        TextLine line = getLines()[lineIdx];
+        TextLine[] lines = getLines();
+        TextLine line = lines[lineIdx];
         RectBounds lineBounds = line.getBounds();
 
+        // If this is a wrapped paragraph and hit character is at end of hit line,
+        // make sure that the "character hit" stays at the end of the hit line
+        // (and not at the beginning of the next line).
+        if(lines.length > 1 &&
+            lineIdx < lines.length - 1 &&
+            charIdx + 1 >= line.getStart() + line.getLength() &&
+            !leading)
+        {
+            leading = true;
+        }
+
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {
-            if(hit.isLeading()) {
+            if(leading) {
                 return CharacterHit.insertionAt(charIdx);
             } else {
                 return CharacterHit.insertionAt(charIdx + 1);
             }
         } else {
-            if(hit.isLeading()) {
+            if(leading) {
                 return CharacterHit.leadingHalfOf(charIdx);
             } else {
                 return CharacterHit.trailingHalfOf(charIdx);
