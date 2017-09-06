@@ -270,7 +270,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             // Selection includes a newline character.
             if (paragraph.length() == 0) {
                 // empty paragraph
-                shape = createRectangle(getLayoutX(), getLayoutY(), getWidth(), getHeight());
+                shape = createRectangle(0, 0, getWidth(), getHeight());
             } else if (start == paragraph.length()) {
                 // selecting only the newline char
 
