@@ -261,6 +261,7 @@ public class ClickAndDragTests {
                     area.selectRange(0, firstWord.length());
                 });
 
+                String selText = area.getSelectedText();
                 int caretPos = area.getCaretPosition();
 
                 moveTo(firstLineOfArea())
@@ -268,7 +269,7 @@ public class ClickAndDragTests {
                         .dropBy(0, 14);
 
                 assertTrue(caretPos != area.getCaretPosition());
-                assertTrue(area.getSelectedText().isEmpty());
+                assertEquals(selText, area.getSelectedText());
             }
 
         }
