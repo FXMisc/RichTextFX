@@ -186,6 +186,9 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
                 pos -= sel.getLength();
             deleteText(sel);
             insert(pos, text);
+
+            // select moved text
+            selectRange(pos, pos + text.length());
         }
     }
 }
