@@ -46,17 +46,13 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
                     String.format("End cannot be greater than segment's length. End=%s Length=%s", end, length(seg))
             );
         }
-        return seg == empty || start == end
-                ? empty
-                : realSubSequence(seg, start, end);
+        return seg == empty ? empty : realSubSequence(seg, start, end);
     }
     public abstract SEG realSubSequence(SEG seg, int start, int end);
 
     @Override
     public final SEG subSequence(SEG seg, int start) {
-        return seg == empty || length(seg) == start
-                ? empty
-                : realSubSequence(seg, start);
+        return seg == empty ? empty : realSubSequence(seg, start);
     }
     public SEG realSubSequence(SEG seg, int start) {
         return realSubSequence(seg, start, length(seg));
