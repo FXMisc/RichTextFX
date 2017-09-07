@@ -294,6 +294,19 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
             }
         }
+
+        if (getLineCount() > 1) {
+            // adjust right corners of wrapped lines
+            boolean wrappedAtEndPos = (end > 0 && getLineOfCharacter(end) > getLineOfCharacter(end - 1));
+            int adjustLength = shape.length - (wrappedAtEndPos ? 0 : 5);
+            for (int i = 0; i < adjustLength; i++) {
+                if (shape[i] instanceof MoveTo) {
+                    ((LineTo)shape[i + 1]).setX(getWidth());
+                    ((LineTo)shape[i + 2]).setX(getWidth());
+                }
+            }
+        }
+
         return shape;
     }
 
@@ -302,7 +315,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 new MoveTo(topLeftX, topLeftY),
                 new LineTo(bottomRightX, topLeftY),
                 new LineTo(bottomRightX, bottomRightY),
-                new LineTo(topLeftX, bottomRightY)
+                new LineTo(topLeftX, bottomRightY),
+                new LineTo(topLeftX, topLeftY)
         };
     }
 
