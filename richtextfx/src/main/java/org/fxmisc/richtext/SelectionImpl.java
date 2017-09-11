@@ -46,7 +46,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final int getLength() { return length.getValue(); }
     @Override public final ObservableValue<Integer> lengthProperty() { return length; }
 
-    private final SuspendableVal<Integer> paragraphSpan;
+    private final Val<Integer> paragraphSpan;
     @Override public final int getParagraphSpan() { return paragraphSpan.getValue(); }
     @Override public final ObservableValue<Integer> paragraphSpanProperty() { return paragraphSpan; }
 
@@ -63,11 +63,11 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final int getStartPosition() { return startPosition.getValue(); }
     @Override public final ObservableValue<Integer> startPositionProperty() { return startPosition; }
 
-    private final SuspendableVal<Integer> startParagraphIndex;
+    private final Val<Integer> startParagraphIndex;
     @Override public final int getStartParagraphIndex() { return startParagraphIndex.getValue(); }
     @Override public final ObservableValue<Integer> startParagraphIndexProperty() { return startParagraphIndex; }
 
-    private final SuspendableVal<Integer> startColumnPosition;
+    private final Val<Integer> startColumnPosition;
     @Override public final int getStartColumnPosition() { return startColumnPosition.getValue(); }
     @Override public final ObservableValue<Integer> startColumnPositionProperty() { return startColumnPosition; }
 
@@ -76,11 +76,11 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final int getEndPosition() { return endPosition.getValue(); }
     @Override public final ObservableValue<Integer> endPositionProperty() { return endPosition; }
 
-    private final SuspendableVal<Integer> endPararagraphIndex;
-    @Override public final int getEndParagraphIndex() { return endPararagraphIndex.getValue(); }
-    @Override public final ObservableValue<Integer> endParagraphIndexProperty() { return endPararagraphIndex; }
+    private final Val<Integer> endParagraphIndex;
+    @Override public final int getEndParagraphIndex() { return endParagraphIndex.getValue(); }
+    @Override public final ObservableValue<Integer> endParagraphIndexProperty() { return endParagraphIndex; }
 
-    private final SuspendableVal<Integer> endColumnPosition;
+    private final Val<Integer> endColumnPosition;
     @Override public final int getEndColumnPosition() { return endColumnPosition.getValue(); }
     @Override public final ObservableValue<Integer> endColumnPositionProperty() { return endColumnPosition; }
 
@@ -97,6 +97,9 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     private final SuspendableNo dependentBeingUpdated;
     private final Var<IndexRange> internalRange;
     private final EventStream<?> dirty;
+
+    private final Var<Position> start2DPosition;
+    private final Val<Position> end2DPosition;
 
     private Subscription subscription = () -> {};
 
@@ -126,32 +129,30 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
         selectedDocument = documentVal.suspendable();
         selectedText = documentVal.map(StyledDocument::getText).suspendable();
 
-        Val<Tuple2<Position, Position>> positions = internalRange.map(sel -> {
-            Position start2D = area.offsetToPosition(sel.getStart(), Forward);
-            Position end2D = sel.getLength() == 0
-                    ? start2D
-                    : start2D.offsetBy(sel.getLength(), Backward);
-            return Tuples.t(start2D, end2D);
+        start2DPosition = Var.newSimpleVar(position(0, 0));
+        end2DPosition = start2DPosition.map(startPos2D ->
+                getLength() == 0
+                        ? startPos2D
+                        : startPos2D.offsetBy(getLength(), Backward)
+        );
+
+        internalRange.addListener(obs -> {
+            IndexRange sel = internalRange.getValue();
+            start2DPosition.setValue(area.offsetToPosition(sel.getStart(), Forward));
         });
 
         startPosition = internalRange.map(IndexRange::getStart).suspendable();
-
-        Val<Position> start2D = positions.map(Tuple2::get1);
-        Val<Integer> startPar = start2D.map(Position::getMajor);
-        startParagraphIndex = startPar.suspendable();
-        startColumnPosition = start2D.map(Position::getMinor).suspendable();
+        startParagraphIndex = start2DPosition.map(Position::getMajor);
+        startColumnPosition = start2DPosition.map(Position::getMinor);
 
         endPosition = internalRange.map(IndexRange::getEnd).suspendable();
+        endParagraphIndex = end2DPosition.map(Position::getMajor);
+        endColumnPosition = end2DPosition.map(Position::getMinor);
 
-        Val<Position> end2D = positions.map(Tuple2::get2);
-        Val<Integer> endPar = end2D.map(Position::getMajor);
-        endPararagraphIndex = endPar.suspendable();
-        endColumnPosition = end2D.map(Position::getMinor).suspendable();
-
-        paragraphSpan = Val.create(
-                () -> getEndParagraphIndex() - getStartParagraphIndex() + 1,
-                startPar, endPar
-        ).suspendable();
+        paragraphSpan = Val.combine(
+                startParagraphIndex, endParagraphIndex,
+                (startP, endP) -> endP - startP + 1
+        );
 
         dirty = merge(
                 invalidationsOf(rangeProperty()),
@@ -205,14 +206,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
                 // first, so it's released last
                 beingUpdated,
 
-                paragraphSpan,
-
-                endColumnPosition,
-                endPararagraphIndex,
                 endPosition,
-
-                startColumnPosition,
-                startParagraphIndex,
                 startPosition,
 
                 selectedText,
