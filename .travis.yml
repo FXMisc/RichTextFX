@@ -13,7 +13,7 @@ matrix:
 
      # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
     - os: osx
-      osx_image: xcode8.2
+      osx_image: xcode9
       env: _JAVA_OPTIONS="-Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500"
 
 # enable Java 8u45+, see https://github.com/travis-ci/travis-ci/issues/4042
@@ -36,7 +36,7 @@ before_script:
 
 script:
   - gradle assemble
-  - gradle check --debug --stacktrace
+  - gradle check --info --stacktrace
 
 # See https://docs.travis-ci.com/user/languages/java/#Caching
 before_cache:
