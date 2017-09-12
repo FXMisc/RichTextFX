@@ -132,6 +132,7 @@ public class ClickAndDragTests {
 
             private String firstWord = "Some";
             private String firstParagraph = firstWord + " text goes here";
+            private String extraText = "This is extra text";
 
             @Test
             public void singleClickingWithinSelectedTextMovesCaretToThatPosition() {
@@ -238,18 +239,17 @@ public class ClickAndDragTests {
             public void pressingMouseOnSelectionAndDraggingDisplacesCaret() {
                 // setup
                 interact(() -> {
-                    area.replaceText(firstParagraph + "\n" + "This is extra text");
+                    area.replaceText(firstParagraph + "\n" + extraText);
                     area.selectRange(0, firstWord.length());
                 });
 
                 String selText = area.getSelectedText();
-                int caretPos = area.getCaretPosition();
 
                 moveTo(firstLineOfArea())
                         .press(PRIMARY)
-                        .moveBy(0, 14);
+                        .moveBy(0, 22);
 
-                assertTrue(caretPos != area.getCaretPosition());
+                assertEquals(firstParagraph.length() + 1, area.getCaretPosition());
                 assertEquals(selText, area.getSelectedText());
             }
 
@@ -257,19 +257,22 @@ public class ClickAndDragTests {
             public void pressingMouseOnSelectionAndDraggingAndReleasingMovesSelectedTextToThatPosition() {
                 // setup
                 interact(() -> {
-                    area.replaceText(firstParagraph + "\n" + "This is extra text");
+                    area.replaceText(firstParagraph + "\n" + extraText);
                     area.selectRange(0, firstWord.length());
                 });
 
                 String selText = area.getSelectedText();
-                int caretPos = area.getCaretPosition();
 
                 moveTo(firstLineOfArea())
                         .press(PRIMARY)
-                        .dropBy(0, 14);
+                        .dropBy(0, 22);
 
-                assertTrue(caretPos != area.getCaretPosition());
+                String expectedText = firstParagraph.substring(firstWord.length())
+                    + "\n" + firstWord + extraText;
+
+                assertEquals(firstParagraph.length() + 1, area.getCaretPosition());
                 assertEquals(selText, area.getSelectedText());
+                assertEquals(expectedText, area.getText());
             }
 
         }
