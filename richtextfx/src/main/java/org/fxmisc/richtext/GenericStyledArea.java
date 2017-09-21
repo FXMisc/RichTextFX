@@ -1266,6 +1266,58 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return position(parIdx, 0).toOffset();
     }
 
+    /**
+     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
+     *
+     * The returned bounds object will always be within the bounds of the area. In other words, it takes
+     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
+     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
+     * or if it's long and spans outside of the area's width).
+     *
+     * @param visibleParagraphIndex the index in area's list of visible paragraphs.
+     */
+    public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex) {
+        return getParagraphBoundsOnScreen(virtualFlow.visibleCells().get(visibleParagraphIndex));
+    }
+
+    /**
+     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
+     *
+     * The returned bounds object will always be within the bounds of the area. In other words, it takes
+     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
+     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
+     * or if it's long and spans outside of the area's width).
+     *
+     * @param paragraphIndex the index in area's list of paragraphs (visible and invisible).
+     */
+    public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
+    }
+
+    private Bounds getParagraphBoundsOnScreen(Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell) {
+        Bounds nodeLocal = cell.getNode().getBoundsInLocal();
+        Bounds nodeScreen = cell.getNode().localToScreen(nodeLocal);
+        Bounds areaLocal = getBoundsInLocal();
+        Bounds areaScreen = localToScreen(areaLocal);
+
+        // use area's minX if scrolled right and paragraph's left is not visible
+        double minX = nodeScreen.getMinX() < areaScreen.getMinX()
+                ? areaScreen.getMinX()
+                : nodeScreen.getMinX();
+        // use area's minY if scrolled down vertically and paragraph's top is not visible
+        double minY = nodeScreen.getMinY() < areaScreen.getMinY()
+                ? areaScreen.getMinY()
+                : nodeScreen.getMinY();
+        // use area's width whether paragraph spans outside of it or not
+        // so that short or long paragraph takes up the entire space
+        double width = areaScreen.getWidth();
+        // use area's maxY if scrolled up vertically and paragraph's bottom is not visible
+        double maxY = nodeScreen.getMaxY() < areaScreen.getMaxY()
+                ? nodeScreen.getMaxY()
+                : areaScreen.getMaxY();
+        return new BoundingBox(minX, minY, width, maxY - minY);
+    }
+
     private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
