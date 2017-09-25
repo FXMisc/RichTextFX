@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import javafx.beans.NamedArg;
 import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.StyledText;
 
 /**
  * A convenience subclass of {@link StyleClassedTextArea}
@@ -24,7 +23,7 @@ public class CodeArea extends StyleClassedTextArea {
         setUseInitialStyleForInsertion(true);
     }
 
-    public CodeArea(@NamedArg("document") EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document) {
+    public CodeArea(@NamedArg("document") EditableStyledDocument<Collection<String>, String, Collection<String>> document) {
         super(document, false);
     }
 

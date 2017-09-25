@@ -14,7 +14,7 @@ public class UndoManagerTest {
 
     @Test
     public void testUndoWithWinNewlines() {
-        final TextOps<StyledText<Collection<String>>, Collection<String>> segOps = StyledText.textOps();
+        final TextOps<String, Collection<String>> segOps = SegmentOps.styledTextOps();
 
         String text1 = "abc\r\ndef";
         String text2 = "A\r\nB\r\nC";
@@ -30,7 +30,7 @@ public class UndoManagerTest {
 
     @Test
     public void testForBug216() {
-        final TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps();
+        final TextOps<String, Boolean> segOps = SegmentOps.styledTextOps();
 
         // set up area with some styled text content
         boolean initialStyle = false;

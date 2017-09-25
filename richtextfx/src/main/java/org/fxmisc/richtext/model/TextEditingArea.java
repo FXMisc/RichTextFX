@@ -47,6 +47,8 @@ public interface TextEditingArea<PS, SEG, S> {
      */
     StyledDocument<PS, SEG, S> getDocument();
 
+    SegmentOps<SEG, S> getSegOps();
+
     /**
      * The current position of the caret, as a character offset in the text.
      *
@@ -268,6 +270,37 @@ public interface TextEditingArea<PS, SEG, S> {
     void replace(int start, int end, StyledDocument<PS, SEG, S> replacement);
 
     /**
+     * Replaces a range of characters with the given segment.
+     *
+     * It must hold {@code 0 <= start <= end <= getLength()}.
+     *
+     * @param start Start index of the range to replace, inclusive.
+     * @param end End index of the range to replace, exclusive.
+     * @param seg The seg to put in place of the deleted range.
+     * It must not be null.
+     */
+    void replace(int start, int end, SEG seg, S style);
+
+    /**
+     * Replaces a range of characters with the given segment.
+     *
+     * It must hold {@code 0 <= start <= end <= getLength()} where
+     * {@code start = getAbsolutePosition(startParagraph, startColumn);} and is <b>inclusive</b>, and
+     * {@code int end = getAbsolutePosition(endParagraph, endColumn);} and is <b>exclusive</b>.
+     *
+     * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
+     * can affect the returned position.</p>
+     *
+     * @param seg The segment to put in place of the deleted range.
+     * It must not be null.
+     */
+    default void replace(int startParagraph, int startColumn, int endParagraph, int endColumn, SEG seg, S style) {
+        int start = getAbsolutePosition(startParagraph, startColumn);
+        int end = getAbsolutePosition(endParagraph, endColumn);
+        replace(start, end, seg, style);
+    }
+
+    /**
      * Replaces a range of characters with the given rich-text document.
      *
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
@@ -290,6 +323,19 @@ public interface TextEditingArea<PS, SEG, S> {
      */
     default void replaceText(IndexRange range, String text) {
         replaceText(range.getStart(), range.getEnd(), text);
+    }
+
+    /**
+     * Replaces a range of characters with the given seg.
+     *
+     * @param range The range to replace. It must not be null.
+     * @param seg The segment to put in place of the deleted range.
+     * It must not be null.
+     *
+     * @see #replace(int, int, Object, Object)
+     */
+    default void replace(IndexRange range, SEG seg, S style) {
+        replace(range.getStart(), range.getEnd(), seg, style);
     }
 
     /**

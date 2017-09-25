@@ -63,6 +63,57 @@ public interface Codec<T> {
 
     };
 
+    static <SEG, S> Codec<StyledSegment<SEG, S>> styledSegmentCodec(Codec<SEG> segCodec, Codec<S> styleCodec) {
+        return new Codec<StyledSegment<SEG, S>>() {
+            @Override
+            public String getName() {
+                return "styled-segment<" + segCodec.getName() + ", " + styleCodec.getName() + ">";
+            }
+
+            @Override
+            public void encode(DataOutputStream os, StyledSegment<SEG, S> styledSegment) throws IOException {
+                segCodec.encode(os, styledSegment.getSegment());
+                styleCodec.encode(os, styledSegment.getStyle());
+            }
+
+            @Override
+            public StyledSegment<SEG, S> decode(DataInputStream is) throws IOException {
+                SEG seg = segCodec.decode(is);
+                S style = styleCodec.decode(is);
+                return new StyledSegment<>(seg, style);
+            }
+        };
+    }
+
+    /**
+     * A codec which allows serialisation of this class to/from a data stream.
+     *
+     * Because S may be any type, you must pass a codec for it.  If your style
+     * is String or Color, you can use {@link Codec#STRING_CODEC}/{@link Codec#COLOR_CODEC} respectively.
+     */
+    public static <S> Codec<StyledSegment<String, S>> styledTextCodec(Codec<S> styleCodec) {
+        return new Codec<StyledSegment<String, S>>() {
+            @Override
+            public String getName() {
+                return "styled-text";
+            }
+
+            @Override
+            public void encode(DataOutputStream os, StyledSegment<String, S> styledSeg) throws IOException {
+                Codec.STRING_CODEC.encode(os, styledSeg.getSegment());
+                styleCodec.encode(os, styledSeg.getStyle());
+
+            }
+
+            @Override
+            public StyledSegment<String, S> decode(DataInputStream is) throws IOException {
+                String text = Codec.STRING_CODEC.decode(is);
+                S style = styleCodec.decode(is);
+                return new StyledSegment<>(text, style);
+            }
+        };
+    }
+
     static <T> Codec<List<T>> listCodec(Codec<T> elemCodec) {
         return SuperCodec.collectionListCodec(elemCodec);
     }

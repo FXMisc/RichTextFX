@@ -11,11 +11,11 @@ public class ParagraphTest {
     // This relates to merging text changes and issue #216.
     @Test
     public void concatEmptyParagraphsTest() {
-        TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps();
-        Paragraph<Void, StyledText<Boolean>, Boolean> p1 = new Paragraph<>(null, segOps, segOps.create("", true));
-        Paragraph<Void, StyledText<Boolean>, Boolean> p2 = new Paragraph<>(null, segOps, segOps.create("", false));
+        TextOps<String, Boolean> segOps = SegmentOps.styledTextOps();
+        Paragraph<Void, String, Boolean> p1 = new Paragraph<>(null, segOps, segOps.create(""), true);
+        Paragraph<Void, String, Boolean> p2 = new Paragraph<>(null, segOps, segOps.create(""), false);
 
-        Paragraph<Void, StyledText<Boolean>, Boolean> p = p1.concat(p2);
+        Paragraph<Void, String, Boolean> p = p1.concat(p2);
 
         assertEquals(Boolean.TRUE, p.getStyleAtPosition(0));
     }
@@ -24,13 +24,13 @@ public class ParagraphTest {
     //  would style an empty paragraph would throw an exception
     @Test
     public void restylingEmptyParagraphViaStyleSpansWorks() {
-        TextOps<StyledText<Boolean>, Boolean> segOps = StyledText.textOps();
-        Paragraph<Void, StyledText<Boolean>, Boolean> p = new Paragraph<>(null, segOps, segOps.createEmpty());
+        TextOps<String, Boolean> segOps = SegmentOps.styledTextOps();
+        Paragraph<Void, String, Boolean> p = new Paragraph<>(null, segOps, segOps.createEmptySeg(), false);
 
         StyleSpansBuilder<Boolean> builder = new StyleSpansBuilder<>();
         builder.add(true, 2);
         StyleSpans<Boolean> spans = builder.create();
-        Paragraph<Void, StyledText<Boolean>, Boolean> restyledP = p.restyle(0, spans);
+        Paragraph<Void, String, Boolean> restyledP = p.restyle(0, spans);
 
         assertEquals(p, restyledP);
     }
