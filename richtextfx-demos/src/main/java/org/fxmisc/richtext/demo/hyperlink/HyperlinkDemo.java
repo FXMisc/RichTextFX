@@ -1,9 +1,7 @@
 package org.fxmisc.richtext.demo.hyperlink;
 
 import com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory;
-import com.sun.javafx.application.HostServicesDelegate;
 import javafx.application.Application;
-import javafx.application.HostServices;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;

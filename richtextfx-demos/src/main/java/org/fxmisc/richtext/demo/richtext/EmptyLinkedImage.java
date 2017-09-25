@@ -2,16 +2,11 @@ package org.fxmisc.richtext.demo.richtext;
 
 import javafx.scene.Node;
 
-public class EmptyLinkedImage<S> implements LinkedImage<S> {
+public class EmptyLinkedImage implements LinkedImage {
 
     @Override
-    public LinkedImage<S> setStyle(S style) {
-        return this;
-    }
-
-    @Override
-    public S getStyle() {
-        return null;
+    public boolean isReal() {
+        return false;
     }
 
     @Override

@@ -2,20 +2,16 @@ package org.fxmisc.richtext.demo.richtext;
 
 import org.fxmisc.richtext.model.NodeSegmentOpsBase;
 
-public class LinkedImageOps<S> extends NodeSegmentOpsBase<LinkedImage<S>, S> {
+
+public class LinkedImageOps<S> extends NodeSegmentOpsBase<LinkedImage, S> {
 
     public LinkedImageOps() {
-        super(new EmptyLinkedImage<>());
+        super(new EmptyLinkedImage());
     }
 
     @Override
-    public S realGetStyle(LinkedImage<S> linkedImage) {
-        return linkedImage.getStyle();
-    }
-
-    @Override
-    public LinkedImage<S> realSetStyle(LinkedImage<S> linkedImage, S style) {
-        return linkedImage.setStyle(style);
+    public int length(LinkedImage linkedImage) {
+        return linkedImage.isReal() ? 1 : 0;
     }
 
 }
