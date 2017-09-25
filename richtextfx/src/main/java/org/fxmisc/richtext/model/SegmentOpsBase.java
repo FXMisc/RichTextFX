@@ -4,8 +4,8 @@ import java.util.Optional;
 
 /**
  * Properly implements the {@link SegmentOps} interface and reduces boilerplate, so that developer only needs to
- * implement methods for real segments, not empty ones. Optionally, {@link #join(Object, Object)} can be overridden
- * as well.
+ * implement methods for real segments, not empty ones. Optionally, {@link #joinSeg(Object, Object)} and
+ * {@link #joinStyle(Object, Object)} can be overridden as well.
  *
  * @param <SEG> the type of segment
  * @param <S> the type of style
@@ -14,25 +14,19 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
 
     private final SEG empty;
 
-    public SegmentOpsBase(SEG emptySEg) {
-        this.empty = emptySEg;
+    public SegmentOpsBase(SEG emptySeg) {
+        this.empty = emptySeg;
     }
-
-    @Override
-    public final int length(SEG seg) {
-        return seg == empty ? 0 : realLength(seg);
-    }
-    public abstract int realLength(SEG seg);
 
     @Override
     public final char charAt(SEG seg, int index) {
-        return seg == empty ? '\0' : realCharAt(seg, index);
+        return length(seg) == 0 ? '\0' : realCharAt(seg, index);
     }
     public abstract char realCharAt(SEG seg, int index);
 
     @Override
     public final String getText(SEG seg) {
-        return seg == empty ? "" : realGetText(seg);
+        return length(seg) == 0 ? "" : realGetText(seg);
     }
     public abstract String realGetText(SEG seg);
 
@@ -46,37 +40,29 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
                     String.format("End cannot be greater than segment's length. End=%s Length=%s", end, length(seg))
             );
         }
-        return seg == empty ? empty : realSubSequence(seg, start, end);
+        return length(seg) == 0 || start == end
+                ? empty
+                : realSubSequence(seg, start, end);
     }
     public abstract SEG realSubSequence(SEG seg, int start, int end);
 
     @Override
     public final SEG subSequence(SEG seg, int start) {
-        return seg == empty ? empty : realSubSequence(seg, start);
+        return length(seg) == 0 || start == length(seg)
+                ? empty
+                : realSubSequence(seg, start);
     }
     public SEG realSubSequence(SEG seg, int start) {
         return realSubSequence(seg, start, length(seg));
     }
 
     @Override
-    public final S getStyle(SEG seg) {
-        return seg == empty ? null : realGetStyle(seg);
-    }
-    public abstract S realGetStyle(SEG seg);
-
-    @Override
-    public final SEG setStyle(SEG seg, S style) {
-        return seg == empty ? empty : realSetStyle(seg, style);
-    }
-    public abstract SEG realSetStyle(SEG seg, S style);
-
-    @Override
-    public Optional<SEG> join(SEG currentSeg, SEG nextSeg) {
-        return Optional.empty();
-    }
-
-    @Override
-    public final SEG createEmpty() {
+    public final SEG createEmptySeg() {
         return empty;
+    }
+
+    @Override
+    public Optional<S> joinStyle(S currentStyle, S nextStyle) {
+        return Optional.empty();
     }
 }
