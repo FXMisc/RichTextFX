@@ -29,6 +29,7 @@ import javafx.scene.shape.StrokeLineCap;
 
 import javafx.scene.shape.StrokeType;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyledSegment;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
@@ -70,7 +71,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         caretShape.visibleProperty().bind(caretVisible);
     }
 
-    ParagraphText(Paragraph<PS, SEG, S> par, Function<SEG, Node> nodeFactory) {
+    ParagraphText(Paragraph<PS, SEG, S> par, Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
@@ -111,11 +112,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //        });
 
         // populate with text nodes
-        for(SEG segment: par.getSegments()) {
-            // create Segment
-            Node fxNode = nodeFactory.apply(segment);
-            getChildren().add(fxNode);
-        }
+        par.getStyledSegments().stream().map(nodeFactory).forEach(getChildren()::add);
 
         // set up custom css shape helpers
         Supplier<Path> createShape = () -> {

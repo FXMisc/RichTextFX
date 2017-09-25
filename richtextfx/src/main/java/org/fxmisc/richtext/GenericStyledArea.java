@@ -33,7 +33,6 @@ import javafx.css.PseudoClass;
 import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
-import javafx.css.StyleableProperty;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -69,6 +68,7 @@ import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledSegment;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
@@ -355,13 +355,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
-    private Optional<Tuple2<Codec<PS>, Codec<SEG>>> styleCodecs = Optional.empty();
+    private Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> styleCodecs = Optional.empty();
     @Override
-    public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec) {
-        styleCodecs = Optional.of(t(paragraphStyleCodec, textStyleCodec));
+    public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> styledSegCodec) {
+        styleCodecs = Optional.of(t(paragraphStyleCodec, styledSegCodec));
     }
     @Override
-    public Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs() {
+    public Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> getStyleCodecs() {
         return styleCodecs;
     }
 
@@ -580,7 +580,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                              @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                              @NamedArg("initialTextStyle")      S initialTextStyle,
                              @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
-                             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
+                             @NamedArg("nodeFactory")           Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, segmentOps, true, nodeFactory);
     }
 
@@ -589,7 +589,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                              @NamedArg("initialTextStyle")      S initialTextStyle,
                              @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
                              @NamedArg("preserveStyle")         boolean preserveStyle,
-                             @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
+                             @NamedArg("nodeFactory")           Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle,
                 new GenericEditableStyledDocument<>(initialParagraphStyle, initialTextStyle, segmentOps), segmentOps, preserveStyle, nodeFactory);
     }
@@ -605,7 +605,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             @NamedArg("initialTextStyle")      S initialTextStyle,
             @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
-            @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
+            @NamedArg("nodeFactory")           Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, document, segmentOps, true, nodeFactory);
 
     }
@@ -617,7 +617,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             @NamedArg("document")              EditableStyledDocument<PS, SEG, S> document,
             @NamedArg("segmentOps")            TextOps<SEG, S> segmentOps,
             @NamedArg("preserveStyle")         boolean preserveStyle,
-            @NamedArg("nodeFactory")           Function<SEG, Node> nodeFactory) {
+            @NamedArg("nodeFactory")           Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.initialTextStyle = initialTextStyle;
         this.initialParagraphStyle = initialParagraphStyle;
         this.preserveStyle = preserveStyle;
@@ -1120,10 +1120,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public void setParagraphStyle(int paragraph, PS paragraphStyle) {
         content.setParagraphStyle(paragraph, paragraphStyle);
     }
+
     @Override
     public void replaceText(int start, int end, String text) {
         StyledDocument<PS, SEG, S> doc = ReadOnlyStyledDocument.fromString(
-                text, getParagraphStyleForInsertionAt(start), getStyleForInsertionAt(start), segmentOps);
+                text, getParagraphStyleForInsertionAt(start), getTextStyleForInsertionAt(start), segmentOps
+        );
+        replace(start, end, doc);
+    }
+
+    @Override
+    public void replace(int start, int end, SEG seg, S style) {
+        StyledDocument<PS, SEG, S> doc = ReadOnlyStyledDocument.fromSegment(
+                seg, getParagraphStyleForInsertionAt(start), style, segmentOps
+        );
         replace(start, end, doc);
     }
 
@@ -1179,7 +1189,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> createCell(
             Paragraph<PS, SEG, S> paragraph,
             BiConsumer<TextFlow, PS> applyParagraphStyle,
-            Function<SEG, Node> nodeFactory) {
+            Function<StyledSegment<SEG, S>, Node> nodeFactory) {
 
         ParagraphBox<PS, SEG, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, nodeFactory);
 
@@ -1375,7 +1385,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    private S getStyleForInsertionAt(int pos) {
+    @Override
+    public final S getTextStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
             return initialTextStyle;
         } else {
@@ -1383,7 +1394,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    private PS getParagraphStyleForInsertionAt(int pos) {
+    @Override
+    public final PS getParagraphStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
             return initialParagraphStyle;
         } else {

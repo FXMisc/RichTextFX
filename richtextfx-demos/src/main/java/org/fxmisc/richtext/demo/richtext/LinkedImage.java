@@ -7,41 +7,39 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public interface LinkedImage<S> {
-    static <S> Codec<LinkedImage<S>> codec(Codec<S> styleCodec) {
-        return new Codec<LinkedImage<S>>() {
-
+public interface LinkedImage {
+    static <S> Codec<LinkedImage> codec() {
+        return new Codec<LinkedImage>() {
             @Override
             public String getName() {
-                return "LinkedImage<" + styleCodec.getName() + ">";
+                return "LinkedImage";
             }
 
             @Override
-            public void encode(DataOutputStream os, LinkedImage<S> i) throws IOException {
-                // don't encode EmptyLinkedImage objects
-                if (i.getStyle() != null) {
-                    // external path rep should use forward slashes only
-                    String externalPath = i.getImagePath().replace("\\", "/");
+            public void encode(DataOutputStream os, LinkedImage linkedImage) throws IOException {
+                if (linkedImage.isReal()) {
+                    os.writeBoolean(true);
+                    String externalPath = linkedImage.getImagePath().replace("\\", "/");
                     Codec.STRING_CODEC.encode(os, externalPath);
-                    styleCodec.encode(os, i.getStyle());
+                } else {
+                    os.writeBoolean(false);
                 }
             }
 
             @Override
-            public RealLinkedImage<S> decode(DataInputStream is) throws IOException {
-                // Sanitize path - make sure that forward slashes only are used
-                String imagePath = Codec.STRING_CODEC.decode(is);
-                imagePath = imagePath.replace("\\",  "/");
-                S style = styleCodec.decode(is);
-                return new RealLinkedImage<>(imagePath, style);
+            public LinkedImage decode(DataInputStream is) throws IOException {
+                if (is.readBoolean()) {
+                    String imagePath = Codec.STRING_CODEC.decode(is);
+                    imagePath = imagePath.replace("\\",  "/");
+                    return new RealLinkedImage(imagePath);
+                } else {
+                    return new EmptyLinkedImage();
+                }
             }
-
         };
     }
 
-    LinkedImage<S> setStyle(S style);
-
-    S getStyle();
+    boolean isReal();
 
     /**
      * @return The path of the image to render.

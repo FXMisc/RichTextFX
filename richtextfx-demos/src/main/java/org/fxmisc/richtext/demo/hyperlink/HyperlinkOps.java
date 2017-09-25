@@ -1,48 +1,42 @@
 package org.fxmisc.richtext.demo.hyperlink;
 
-import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.SegmentOpsBase;
 
 import java.util.Optional;
 
-public class HyperlinkOps<S> implements SegmentOps<Hyperlink<S>, S> {
+public class HyperlinkOps<S> extends SegmentOpsBase<Hyperlink, S> {
+
+    public HyperlinkOps() {
+        super(new Hyperlink("", "", ""));
+    }
 
     @Override
-    public int length(Hyperlink<S> hyperlink) {
+    public int length(Hyperlink hyperlink) {
         return hyperlink.length();
     }
 
     @Override
-    public char charAt(Hyperlink<S> hyperlink, int index) {
+    public char realCharAt(Hyperlink hyperlink, int index) {
         return hyperlink.charAt(index);
     }
 
     @Override
-    public String getText(Hyperlink<S> hyperlink) {
+    public String realGetText(Hyperlink hyperlink) {
         return hyperlink.getDisplayedText();
     }
 
     @Override
-    public Hyperlink<S> subSequence(Hyperlink<S> hyperlink, int start, int end) {
+    public Hyperlink realSubSequence(Hyperlink hyperlink, int start, int end) {
         return hyperlink.subSequence(start, end);
     }
 
     @Override
-    public Hyperlink<S> subSequence(Hyperlink<S> hyperlink, int start) {
+    public Hyperlink realSubSequence(Hyperlink hyperlink, int start) {
         return hyperlink.subSequence(start);
     }
 
     @Override
-    public S getStyle(Hyperlink<S> hyperlink) {
-        return hyperlink.getStyle();
-    }
-
-    @Override
-    public Hyperlink<S> setStyle(Hyperlink<S> hyperlink, S style) {
-        return hyperlink.setStyle(style);
-    }
-
-    @Override
-    public Optional<Hyperlink<S>> join(Hyperlink<S> currentSeg, Hyperlink<S> nextSeg) {
+    public Optional<Hyperlink> joinSeg(Hyperlink currentSeg, Hyperlink nextSeg) {
         if (currentSeg.isEmpty()) {
             if (nextSeg.isEmpty()) {
                 return Optional.empty();
@@ -58,7 +52,7 @@ public class HyperlinkOps<S> implements SegmentOps<Hyperlink<S>, S> {
         }
     }
 
-    private Optional<Hyperlink<S>> concatHyperlinks(Hyperlink<S> leftSeg, Hyperlink<S> rightSeg) {
+    private Optional<Hyperlink> concatHyperlinks(Hyperlink leftSeg, Hyperlink rightSeg) {
         if (!leftSeg.shareSameAncestor(rightSeg)) {
             return Optional.empty();
         }
@@ -90,8 +84,4 @@ public class HyperlinkOps<S> implements SegmentOps<Hyperlink<S>, S> {
         }
     }
 
-    @Override
-    public Hyperlink<S> createEmpty() {
-        return new Hyperlink<>("", "", null, "");
-    }
 }

@@ -6,15 +6,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.junit.Test;
 
 public class ReadOnlyStyledDocumentTest {
 
+    private static Void NULL = new Void();
+
+    /** Short for Void:
+     * cannot pass in 'null' since compiler will interpret it as a StyleSpans argument to Paragraph's constructor */
+    private static class Void { }
+
     @Test
     public void testUndo() {
-        TextOps<StyledText<String>, String> segOps = StyledText.textOps();
-        ReadOnlyStyledDocument<String, StyledText<String>, String> doc0 = fromString("", "X", "X", segOps);
+        TextOps<String, String> segOps = SegmentOps.styledTextOps();
+        ReadOnlyStyledDocument<String, String, String> doc0 = fromString("", "X", "X", segOps);
 
         doc0.replace(0, 0, fromString("abcd", "Y", "Y", segOps)).exec((doc1, chng1, pchng1) -> {
             // undo chng1
@@ -30,52 +37,59 @@ public class ReadOnlyStyledDocumentTest {
 
     @Test
     public void deleteNewlineTest() {
-        TextOps<StyledText<Void>, Void> segOps = StyledText.textOps();
-        ReadOnlyStyledDocument<Void, StyledText<Void>, Void> doc0 = fromString("Foo\nBar", null, null, segOps);
-        doc0.replace(3, 4, fromString("", null, null, segOps)).exec((doc1, ch, pch) -> {
-            List<? extends Paragraph<Void, StyledText<Void>, Void>> removed = pch.getRemoved();
-            List<? extends Paragraph<Void, StyledText<Void>, Void>> added = pch.getAdded();
+        TextOps<String, Void> segOps = SegmentOps.styledTextOps();
+        ReadOnlyStyledDocument<Void, String, Void> doc0 = fromString("Foo\nBar", NULL, NULL, segOps);
+        doc0.replace(3, 4, fromString("", NULL, NULL, segOps)).exec((doc1, ch, pch) -> {
+            List<? extends Paragraph<Void, String, Void>> removed = pch.getRemoved();
+            List<? extends Paragraph<Void, String, Void>> added = pch.getAdded();
             assertEquals(2, removed.size());
-            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("Foo", null)), removed.get(0));
-            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("Bar", null)), removed.get(1));
+            Paragraph<Void, String, Void> p = new Paragraph<>(NULL, segOps, segOps.create("som"), NULL);
+            assertEquals(new Paragraph<>(NULL, segOps, "Foo", NULL), removed.get(0));
+            assertEquals(new Paragraph<>(NULL, segOps, "Bar", NULL), removed.get(1));
             assertEquals(1, added.size());
-            assertEquals(new Paragraph<Void, StyledText<Void>, Void>(null, segOps, segOps.create("FooBar", null)), added.get(0));
+            assertEquals(new Paragraph<>(NULL, segOps, "FooBar", NULL), added.get(0));
         });
     }
 
     @Test
     public void testRestyle() {
+        // texts
         final String fooBar = "Foo Bar";
         final String and = " and ";
         final String helloWorld = "Hello World";
-        TextOps<StyledText<String>, String> segOps = StyledText.textOps();
+
+        // styles
+        final String bold = "bold";
+        final String empty = "";
+        final String italic = "italic";
+        TextOps<String, String> segOps = SegmentOps.styledTextOps();
 
         SimpleEditableStyledDocument<String, String> doc0 = new SimpleEditableStyledDocument<>("", "");
 
-        ReadOnlyStyledDocument<String, StyledText<String>, String> text = fromString(fooBar, "", "bold", segOps);
-        doc0.replace(doc0.getLength(),  doc0.getLength(), text);
+        BiConsumer<String, String> appendStyledText = (text, style) -> {
+            ReadOnlyStyledDocument<String, String, String> rosDoc = fromString(text, "", style, segOps);
+            doc0.replace(doc0.getLength(), doc0.getLength(), rosDoc);
+        };
 
-        text = fromString(and, "", "", segOps);
-        doc0.replace(doc0.getLength(),  doc0.getLength(), text);
-
-        text = fromString(helloWorld, "", "bold", segOps);
-        doc0.replace(doc0.getLength(),  doc0.getLength(), text);
+        appendStyledText.accept(fooBar, bold);
+        appendStyledText.accept(and, empty);
+        appendStyledText.accept(helloWorld, bold);
 
         StyleSpans<String> styles = doc0.getStyleSpans(4,  17);
         assertThat("Invalid number of Spans", styles.getSpanCount(), equalTo(3));
 
-        StyleSpans<String> newStyles = styles.mapStyles(style -> "italic");
+        StyleSpans<String> newStyles = styles.mapStyles(style -> italic);
         doc0.setStyleSpans(4, newStyles);
 
         // assert the new segment structure:
         //  StyledText[text="Foo ", style=bold]
         //  StyledText[text="Bar and Hello", style=italic]
         //  StyledText[text=" World", style=bold]
-        List<StyledText<String>> result = doc0.getParagraphs().get(0).getSegments();
-        assertThat(result.size(), equalTo(3));
-        assertThat(result.get(0).getText(), equalTo("Foo "));
-        assertThat(result.get(1).getText(), equalTo("Bar and Hello"));
-        assertThat(result.get(2).getText(), equalTo(" World"));
+        StyleSpans<String> spans = doc0.getParagraphs().get(0).getStyleSpans();
+        assertThat(spans.getSpanCount(), equalTo(3));
+        assertThat(spans.getStyleSpan(0).getStyle(), equalTo(bold));
+        assertThat(spans.getStyleSpan(1).getStyle(), equalTo(italic));
+        assertThat(spans.getStyleSpan(2).getStyle(), equalTo(bold));
     }
 
 }

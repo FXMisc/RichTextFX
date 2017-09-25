@@ -19,6 +19,7 @@ import org.fxmisc.richtext.model.EditActions;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledSegment;
 import org.fxmisc.richtext.model.TextEditingArea;
 import org.reactfx.util.Tuple2;
 
@@ -31,8 +32,8 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
      * Gets codecs to encode/decode style information to/from binary format.
      * Providing codecs enables clipboard actions to retain the style information.
      */
-    Optional<Tuple2<Codec<PS>, Codec<SEG>>> getStyleCodecs();
-    void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<SEG> textStyleCodec);
+    Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> getStyleCodecs();
+    void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> textStyleCodec);
 
     SegmentOps<SEG, S> getSegOps();
 
@@ -85,7 +86,7 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
         Clipboard clipboard = Clipboard.getSystemClipboard();
 
         if(getStyleCodecs().isPresent()) {
-            Tuple2<Codec<PS>, Codec<SEG>> codecs = getStyleCodecs().get();
+            Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>> codecs = getStyleCodecs().get();
             Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {

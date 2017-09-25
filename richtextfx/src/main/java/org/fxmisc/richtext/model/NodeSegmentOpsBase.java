@@ -1,9 +1,11 @@
 package org.fxmisc.richtext.model;
 
+import java.util.Optional;
+
 /**
  * Properly implements {@link SegmentOps} when implementing a non-text custom object (e.g. shape, circle, image)
- * and reduces boilerplate. Developers only need to override {@link #realGetStyle(Object)} and
- * {@link #realSetStyle(Object, Object)}. Developers may also want to override {@link #join(Object, Object)}.
+ * and reduces boilerplate. Developers may want to override {@link #joinSeg(Object, Object)} and
+ * {@link #joinStyle(Object, Object)}.
  *
  * @param <SEG> type of segment
  * @param <S> type of style
@@ -12,11 +14,6 @@ public abstract class NodeSegmentOpsBase<SEG, S> extends SegmentOpsBase<SEG, S> 
 
     public NodeSegmentOpsBase(SEG empty) {
         super(empty);
-    }
-
-    @Override
-    public int realLength(SEG seg) {
-        return 1;
     }
 
     @Override
@@ -37,5 +34,10 @@ public abstract class NodeSegmentOpsBase<SEG, S> extends SegmentOpsBase<SEG, S> 
     @Override
     public SEG realSubSequence(SEG seg, int start) {
         return seg;
+    }
+
+    @Override
+    public Optional<SEG> joinSeg(SEG currentSeg, SEG nextSeg) {
+        return Optional.empty();
     }
 }

@@ -25,6 +25,18 @@ public interface StyleActions<PS, S> {
     PS getInitialParagraphStyle();
 
     /**
+     * Returns {@link #getInitialTextStyle()} if {@link #getUseInitialStyleForInsertion()} is true;
+     * otherwise, returns the style at the given position.
+     */
+    S getTextStyleForInsertionAt(int pos);
+
+    /**
+     * Returns {@link #getInitialParagraphStyle()} if {@link #getUseInitialStyleForInsertion()} is true;
+     * otherwise, returns the paragraph style at the given position.
+     */
+    PS getParagraphStyleForInsertionAt(int pos);
+
+    /**
      * Indicates whether style should be preserved on undo/redo (and in the future copy/paste and text move).
      */
     boolean isPreserveStyle();

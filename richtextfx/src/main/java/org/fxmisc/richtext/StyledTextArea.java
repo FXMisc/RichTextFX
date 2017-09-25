@@ -10,7 +10,8 @@ import javafx.scene.text.TextFlow;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.richtext.model.StyledSegment;
+import org.fxmisc.richtext.model.TextOps;
 
 /**
  * Text editing control. Accepts user input (keyboard, mouse) and
@@ -60,25 +61,37 @@ import org.fxmisc.richtext.model.StyledText;
  *
  * @param <S> type of style that can be applied to text.
  */
-public class StyledTextArea<PS, S> extends GenericStyledArea<PS, StyledText<S>, S> {
+public class StyledTextArea<PS, S> extends GenericStyledArea<PS, String, S> {
 
     public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
                           @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                           @NamedArg("initialTextStyle")      S initialTextStyle,
                           @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
-                          @NamedArg("document")              EditableStyledDocument<PS, StyledText<S>, S> document,
+                          @NamedArg("document")              EditableStyledDocument<PS, String, S> document,
+                          @NamedArg("segmentOps")            TextOps<String, S> segmentOps,
                           @NamedArg("preserveStyle")         boolean preserveStyle) {
         super(initialParagraphStyle, applyParagraphStyle,
-              initialTextStyle,
-              document, StyledText.textOps(), preserveStyle,
-              seg -> createStyledTextNode(seg, StyledText.textOps(), applyStyle));
+                initialTextStyle, document, segmentOps, preserveStyle,
+                seg -> createStyledTextNode(seg, applyStyle)
+        );
     }
 
     public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
                           @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                           @NamedArg("initialTextStyle")      S initialTextStyle,
                           @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
-                          @NamedArg("document")              EditableStyledDocument<PS, StyledText<S>, S> document) {
+                          @NamedArg("document")              EditableStyledDocument<PS, String, S> document,
+                          @NamedArg("preserveStyle")         boolean preserveStyle) {
+        this(initialParagraphStyle, applyParagraphStyle,
+              initialTextStyle, applyStyle,
+              document, SegmentOps.styledTextOps(), preserveStyle);
+    }
+
+    public StyledTextArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
+                          @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
+                          @NamedArg("initialTextStyle")      S initialTextStyle,
+                          @NamedArg("applyStyle")            BiConsumer<? super TextExt, S> applyStyle,
+                          @NamedArg("document")              EditableStyledDocument<PS, String, S> document) {
         this(initialParagraphStyle, applyParagraphStyle,
              initialTextStyle, applyStyle, document, true);
     }
@@ -105,13 +118,18 @@ public class StyledTextArea<PS, S> extends GenericStyledArea<PS, StyledText<S>, 
              initialTextStyle, applyStyle, true);
     }
 
-    public static <S> Node createStyledTextNode(StyledText<S> seg, SegmentOps<StyledText<S>, S> segOps,
-            BiConsumer<? super TextExt, S> applyStyle) {
+    public static <S> Node createStyledTextNode(StyledSegment<String, S> seg,
+                                                BiConsumer<? super TextExt, S> applyStyle) {
+        return createStyledTextNode(seg.getSegment(), seg.getStyle(), applyStyle);
+    }
 
-        TextExt t = new TextExt(segOps.getText(seg));
+    public static <S> Node createStyledTextNode(String text, S style,
+                                                BiConsumer<? super TextExt, S> applyStyle) {
+
+        TextExt t = new TextExt(text);
         t.setTextOrigin(VPos.TOP);
         t.getStyleClass().add("text");
-        applyStyle.accept(t, segOps.getStyle(seg));
+        applyStyle.accept(t, style);
 
         // XXX: binding selectionFill to textFill,
         // see the note at highlightTextFill

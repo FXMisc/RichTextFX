@@ -7,7 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -78,18 +78,18 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         m.reset();
         while(m.find()) {
             String s = str.substring(start, m.start());
-            res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(s, style)));
+            res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(s), style));
             start = m.end();
         }
         String last = str.substring(start);
-        res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(last, style)));
+        res.add(new Paragraph<>(paragraphStyle, segmentOps, segmentOps.create(last), style));
 
         return new ReadOnlyStyledDocument<>(res);
     }
 
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromSegment(SEG segment,  PS paragraphStyle, S style, SegmentOps<SEG, S> segmentOps) {
-        Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, Arrays.asList(segment));
-        List<Paragraph<PS, SEG, S>> res = Arrays.asList(content);
+        Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, segment, style);
+        List<Paragraph<PS, SEG, S>> res = Collections.singletonList(content);
         return new ReadOnlyStyledDocument<>(res);
     }
 
@@ -102,9 +102,12 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     }
 
 
-    public static <PS, SEG, S> Codec<StyledDocument<PS, SEG, S>> codec(Codec<PS> pCodec, Codec<SEG> segCodec, SegmentOps<SEG, S> segmentOps) {
+    public static <PS, SEG, S> Codec<StyledDocument<PS, SEG, S>> codec(Codec<PS> pCodec, Codec<StyledSegment<SEG, S>> segCodec,
+                                                                       SegmentOps<SEG, S> segmentOps) {
         return new Codec<StyledDocument<PS, SEG, S>>() {
-            private final Codec<List<Paragraph<PS, SEG, S>>> codec = Codec.listCodec(paragraphCodec(pCodec, segCodec, segmentOps));
+            private final Codec<List<Paragraph<PS, SEG, S>>> codec = Codec.listCodec(
+                    paragraphCodec(pCodec, segCodec, segmentOps)
+            );
 
             @Override
             public String getName() {
@@ -124,9 +127,11 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         };
     }
 
-    private static <PS, SEG, S> Codec<Paragraph<PS, SEG, S>> paragraphCodec(Codec<PS> pCodec, Codec<SEG> segCodec, SegmentOps<SEG, S> segmentOps) {
+    private static <PS, SEG, S> Codec<Paragraph<PS, SEG, S>> paragraphCodec(Codec<PS> pCodec,
+                                                                            Codec<StyledSegment<SEG, S>> segCodec,
+                                                                            SegmentOps<SEG, S> segmentOps) {
         return new Codec<Paragraph<PS, SEG, S>>() {
-            private final Codec<List<SEG>> segmentsCodec = Codec.listCodec(segCodec);
+            private final Codec<List<StyledSegment<SEG, S>>> segmentsCodec = Codec.listCodec(segCodec);
 
             @Override
             public String getName() {
@@ -136,13 +141,13 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
             @Override
             public void encode(DataOutputStream os, Paragraph<PS, SEG, S> p) throws IOException {
                 pCodec.encode(os, p.getParagraphStyle());
-                segmentsCodec.encode(os, p.getSegments());
+                segmentsCodec.encode(os, p.getStyledSegments());
             }
 
             @Override
             public Paragraph<PS, SEG, S> decode(DataInputStream is) throws IOException {
                 PS paragraphStyle = pCodec.decode(is);
-                List<SEG> segments = segmentsCodec.decode(is);
+                List<StyledSegment<SEG, S>> segments = segmentsCodec.decode(is);
                 return new Paragraph<>(paragraphStyle, segmentOps, segments);
             }
         };

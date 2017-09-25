@@ -12,18 +12,16 @@ import javafx.scene.image.ImageView;
  * When rendered in the rich text editor, the image is loaded from the
  * specified file.
  */
-public class RealLinkedImage<S> implements LinkedImage<S> {
+public class RealLinkedImage implements LinkedImage {
 
     private final String imagePath;
-    private final S style;
 
     /**
      * Creates a new linked image object.
      *
      * @param imagePath The path to the image file.
-     * @param style The text style to apply to the corresponding segment.
      */
-    public RealLinkedImage(String imagePath, S style) {
+    public RealLinkedImage(String imagePath) {
 
         // if the image is below the current working directory,
         // then store as relative path name.
@@ -33,25 +31,17 @@ public class RealLinkedImage<S> implements LinkedImage<S> {
         }
 
         this.imagePath = imagePath;
-        this.style = style;
     }
 
     @Override
-    public RealLinkedImage<S> setStyle(S style) {
-        return new RealLinkedImage<>(imagePath, style);
+    public boolean isReal() {
+        return true;
     }
-
 
     @Override
     public String getImagePath() {
         return imagePath;
     }
-
-    @Override
-    public S getStyle() {
-        return style;
-    }
-
 
     @Override
     public String toString() {
