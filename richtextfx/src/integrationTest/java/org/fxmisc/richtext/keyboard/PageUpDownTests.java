@@ -3,7 +3,6 @@ package org.fxmisc.richtext.keyboard;
 import javafx.geometry.Bounds;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static javafx.scene.input.KeyCode.PAGE_DOWN;
