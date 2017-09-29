@@ -109,47 +109,15 @@ public final class Paragraph<PS, SEG, S> {
         );
     }
 
+    private List<StyledSegment<SEG, S>> styledSegments = null;
     public List<StyledSegment<SEG, S>> getStyledSegments() {
-        if (segments.size() == 1 && styles.getSpanCount() == 1) {
-            return Collections.singletonList(
-                    new StyledSegment<>(segments.get(0), styles.getStyleSpan(0).getStyle())
-            );
-        }
-
-        List<StyledSegment<SEG, S>> styledSegments = new LinkedList<>();
-        Iterator<SEG> segIterator = segments.iterator();
-        Iterator<StyleSpan<S>> styleIterator = styles.iterator();
-        SEG segCurrent = segIterator.next();
-        StyleSpan<S> styleCurrent = styleIterator.next();
-        int segOffset = 0, styleOffset = 0;
-        boolean finished = false;
-        while (!finished) {
-            int segLength = segmentOps.length(segCurrent) - segOffset;
-            int styleLength = styleCurrent.getLength() - styleOffset;
-
-            if (segLength < styleLength) {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                segCurrent = segIterator.next();
-                segOffset = 0;
-                styleOffset += segLength;
-            } else if (styleLength < segLength) {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                styleCurrent = styleIterator.next();
-                styleOffset = 0;
-                segOffset += styleLength;
+        if (styledSegments == null) {
+            if (segments.size() == 1 && styles.getSpanCount() == 1) {
+                styledSegments = Collections.singletonList(
+                        new StyledSegment<>(segments.get(0), styles.getStyleSpan(0).getStyle())
+                );
             } else {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                if (segIterator.hasNext() && styleIterator.hasNext()) {
-                    segCurrent = segIterator.next();
-                    segOffset = 0;
-                    styleCurrent = styleIterator.next();
-                    styleOffset = 0;
-                } else {
-                    finished = true;
-                }
+                styledSegments = createStyledSegments();
             }
         }
         return styledSegments;
@@ -164,13 +132,13 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     private int length = -1;
+
     public int length() {
         if(length == -1) {
             length = segments.stream().mapToInt(segmentOps::length).sum();
         }
         return length;
     }
-
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
         return segmentOps.charAt(segments.get(pos.getMajor()), pos.getMinor());
@@ -401,6 +369,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     private String text = null;
+
     /**
      * Returns the plain text content of this paragraph,
      * not including the line terminator.
@@ -414,7 +383,6 @@ public final class Paragraph<PS, SEG, S> {
         }
         return text;
     }
-
     @Override
     public String toString() {
         return
@@ -443,5 +411,45 @@ public final class Paragraph<PS, SEG, S> {
     @Override
     public int hashCode() {
         return Objects.hash(paragraphStyle, segments, styles);
+    }
+
+    private List<StyledSegment<SEG, S>> createStyledSegments() {
+        List<StyledSegment<SEG, S>> styledSegments = new LinkedList<>();
+        Iterator<SEG> segIterator = segments.iterator();
+        Iterator<StyleSpan<S>> styleIterator = styles.iterator();
+        SEG segCurrent = segIterator.next();
+        StyleSpan<S> styleCurrent = styleIterator.next();
+        int segOffset = 0, styleOffset = 0;
+        boolean finished = false;
+        while (!finished) {
+            int segLength = segmentOps.length(segCurrent) - segOffset;
+            int styleLength = styleCurrent.getLength() - styleOffset;
+
+            if (segLength < styleLength) {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                segCurrent = segIterator.next();
+                segOffset = 0;
+                styleOffset += segLength;
+            } else if (styleLength < segLength) {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                styleCurrent = styleIterator.next();
+                styleOffset = 0;
+                segOffset += styleLength;
+            } else {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                if (segIterator.hasNext() && styleIterator.hasNext()) {
+                    segCurrent = segIterator.next();
+                    segOffset = 0;
+                    styleCurrent = styleIterator.next();
+                    styleOffset = 0;
+                } else {
+                    finished = true;
+                }
+            }
+        }
+        return styledSegments;
     }
 }
