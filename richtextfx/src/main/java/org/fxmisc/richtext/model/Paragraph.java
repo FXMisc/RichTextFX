@@ -42,11 +42,19 @@ public final class Paragraph<PS, SEG, S> {
 
     private static <SEG, S> Tuple2<List<SEG>, StyleSpans<S>> decompose(List<StyledSegment<SEG, S>> list,
                                                                        SegmentOps<SEG, S> segmentOps) {
-        // TODO: optimize this so that join-able segments/styles are joined before returning tuple
         List<SEG> segs = new ArrayList<>();
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>();
         for (StyledSegment<SEG, S> styledSegment : list) {
-            segs.add(styledSegment.getSegment());
+            // attempt to merge differently-styled consecutive segments into one
+            int lastIndex = segs.size() - 1;
+            SEG previousSeg = segs.get(lastIndex);
+            Optional<SEG> merged = segmentOps.joinSeg(previousSeg, styledSegment.getSegment());
+            if (merged.isPresent()) {
+                segs.set(lastIndex, merged.get());
+            } else {
+                segs.add(styledSegment.getSegment());
+            }
+            // builder merges styles shared between consecutive different segments
             builder.add(styledSegment.getStyle(), segmentOps.length(styledSegment.getSegment()));
         }
         return Tuples.t(segs, builder.create());
@@ -73,7 +81,6 @@ public final class Paragraph<PS, SEG, S> {
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<StyledSegment<SEG, S>> styledSegments) {
         this(paragraphStyle, segmentOps, decompose(styledSegments, segmentOps));
-
     }
 
     private Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, Tuple2<List<SEG>, StyleSpans<S>> decomposedList) {
@@ -81,9 +88,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, S style) {
-        this(paragraphStyle, segmentOps, segment,
-                new StyleSpansBuilder<S>().add(style, segmentOps.length(segment)).create()
-        );
+        this(paragraphStyle, segmentOps, segment, StyleSpans.singleton(style, segmentOps.length(segment)));
     }
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, StyleSpans<S> styles) {
@@ -109,47 +114,16 @@ public final class Paragraph<PS, SEG, S> {
         );
     }
 
+    private List<StyledSegment<SEG, S>> styledSegments = null;
+
     public List<StyledSegment<SEG, S>> getStyledSegments() {
-        if (segments.size() == 1 && styles.getSpanCount() == 1) {
-            return Collections.singletonList(
-                    new StyledSegment<>(segments.get(0), styles.getStyleSpan(0).getStyle())
-            );
-        }
-
-        List<StyledSegment<SEG, S>> styledSegments = new LinkedList<>();
-        Iterator<SEG> segIterator = segments.iterator();
-        Iterator<StyleSpan<S>> styleIterator = styles.iterator();
-        SEG segCurrent = segIterator.next();
-        StyleSpan<S> styleCurrent = styleIterator.next();
-        int segOffset = 0, styleOffset = 0;
-        boolean finished = false;
-        while (!finished) {
-            int segLength = segmentOps.length(segCurrent) - segOffset;
-            int styleLength = styleCurrent.getLength() - styleOffset;
-
-            if (segLength < styleLength) {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                segCurrent = segIterator.next();
-                segOffset = 0;
-                styleOffset += segLength;
-            } else if (styleLength < segLength) {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                styleCurrent = styleIterator.next();
-                styleOffset = 0;
-                segOffset += styleLength;
+        if (styledSegments == null) {
+            if (segments.size() == 1 && styles.getSpanCount() == 1) {
+                styledSegments = Collections.singletonList(
+                        new StyledSegment<>(segments.get(0), styles.getStyleSpan(0).getStyle())
+                );
             } else {
-                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
-                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
-                if (segIterator.hasNext() && styleIterator.hasNext()) {
-                    segCurrent = segIterator.next();
-                    segOffset = 0;
-                    styleCurrent = styleIterator.next();
-                    styleOffset = 0;
-                } else {
-                    finished = true;
-                }
+                styledSegments = createStyledSegments();
             }
         }
         return styledSegments;
@@ -164,6 +138,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     private int length = -1;
+
     public int length() {
         if(length == -1) {
             length = segments.stream().mapToInt(segmentOps::length).sum();
@@ -301,8 +276,7 @@ public final class Paragraph<PS, SEG, S> {
      * @return The new paragraph with the restyled segments.
      */
     public Paragraph<PS, SEG, S> restyle(S style) {
-        StyleSpans<S> spans = new StyleSpansBuilder<S>().add(new StyleSpan<>(style, length())).create();
-        return new Paragraph<>(paragraphStyle, segmentOps, segments, spans);
+        return new Paragraph<>(paragraphStyle, segmentOps, segments, StyleSpans.singleton(style, length()));
     }
 
     public Paragraph<PS, SEG, S> restyle(int from, int to, S style) {
@@ -401,6 +375,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     private String text = null;
+
     /**
      * Returns the plain text content of this paragraph,
      * not including the line terminator.
@@ -443,5 +418,45 @@ public final class Paragraph<PS, SEG, S> {
     @Override
     public int hashCode() {
         return Objects.hash(paragraphStyle, segments, styles);
+    }
+
+    private List<StyledSegment<SEG, S>> createStyledSegments() {
+        List<StyledSegment<SEG, S>> styledSegments = new LinkedList<>();
+        Iterator<SEG> segIterator = segments.iterator();
+        Iterator<StyleSpan<S>> styleIterator = styles.iterator();
+        SEG segCurrent = segIterator.next();
+        StyleSpan<S> styleCurrent = styleIterator.next();
+        int segOffset = 0, styleOffset = 0;
+        boolean finished = false;
+        while (!finished) {
+            int segLength = segmentOps.length(segCurrent) - segOffset;
+            int styleLength = styleCurrent.getLength() - styleOffset;
+
+            if (segLength < styleLength) {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                segCurrent = segIterator.next();
+                segOffset = 0;
+                styleOffset += segLength;
+            } else if (styleLength < segLength) {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                styleCurrent = styleIterator.next();
+                styleOffset = 0;
+                segOffset += styleLength;
+            } else {
+                SEG splitSeg = segmentOps.subSequence(segCurrent, segOffset, segOffset + styleLength);
+                styledSegments.add(new StyledSegment<>(splitSeg, styleCurrent.getStyle()));
+                if (segIterator.hasNext() && styleIterator.hasNext()) {
+                    segCurrent = segIterator.next();
+                    segOffset = 0;
+                    styleCurrent = styleIterator.next();
+                    styleOffset = 0;
+                } else {
+                    finished = true;
+                }
+            }
+        }
+        return styledSegments;
     }
 }
