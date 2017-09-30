@@ -79,9 +79,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, S style) {
-        this(paragraphStyle, segmentOps, segment,
-                new StyleSpansBuilder<S>().add(style, segmentOps.length(segment)).create()
-        );
+        this(paragraphStyle, segmentOps, segment, StyleSpans.singleton(style, segmentOps.length(segment)));
     }
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, StyleSpans<S> styles) {
@@ -269,8 +267,7 @@ public final class Paragraph<PS, SEG, S> {
      * @return The new paragraph with the restyled segments.
      */
     public Paragraph<PS, SEG, S> restyle(S style) {
-        StyleSpans<S> spans = new StyleSpansBuilder<S>().add(new StyleSpan<>(style, length())).create();
-        return new Paragraph<>(paragraphStyle, segmentOps, segments, spans);
+        return new Paragraph<>(paragraphStyle, segmentOps, segments, StyleSpans.singleton(style, length()));
     }
 
     public Paragraph<PS, SEG, S> restyle(int from, int to, S style) {
