@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.model.NavigationActions;
 import org.junit.Before;
@@ -18,6 +19,15 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(NestedRunner.class)
 public class HitTests extends InlineCssTextAreaAppTest {
+
+    @Override
+    public void start(Stage stage) throws Exception {
+        super.start(stage);
+
+        // insure stage width doesn't change irregardless of changes in superclass' start method
+        stage.setWidth(400);
+        stage.setHeight(400);
+    }
 
     private void moveCaretToAreaEnd() {
         area.moveTo(area.getLength());
