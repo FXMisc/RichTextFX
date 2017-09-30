@@ -20,6 +20,23 @@ import static org.junit.Assert.assertEquals;
 @RunWith(NestedRunner.class)
 public class HitTests extends InlineCssTextAreaAppTest {
 
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+    private static final String FIFTY_PARS;
+    private static final double PADDING_AMOUNT = 20;
+
+    static {
+        int totalPars = 50;
+        int indexLimit = totalPars - 1;
+        StringBuilder sb = new StringBuilder();
+        Consumer<Integer> appendParagraph = i -> sb.append("Par #").append(i).append(" ").append(ALPHABET);
+        for (int i = 0; i < indexLimit; i++) {
+            appendParagraph.accept(i);
+            sb.append("\n");
+        }
+        appendParagraph.accept(indexLimit);
+        FIFTY_PARS = sb.toString();
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
@@ -35,8 +52,6 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
     public class WhenAreaIsPadded {
 
-        double paddingAmount = 20;
-
         public class AndHitsOccurOutsideArea {
 
             String text = "text";
@@ -49,7 +64,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void clickingInTopPaddingMovesCaretToTopLine() {
-                interact(() -> area.setPadding(new Insets(paddingAmount, 0, 0, 0)));
+                interact(() -> area.setPadding(new Insets(PADDING_AMOUNT, 0, 0, 0)));
 
                 moveCaretToAreaEnd();
                 moveTo(position(Pos.TOP_LEFT, 1, 2)).clickOn(PRIMARY);
@@ -62,7 +77,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void clickingInLeftPaddingMovesCaretToBeginningOfLineOnSingleLineParagraph() {
-                interact(() -> area.setPadding(new Insets(0, 0, 0, paddingAmount)));
+                interact(() -> area.setPadding(new Insets(0, 0, 0, PADDING_AMOUNT)));
 
                 moveCaretToAreaEnd();
                 moveTo(position(Pos.TOP_LEFT, 1, 1)).clickOn(PRIMARY);
@@ -72,7 +87,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             @Test
             public void clickingInRightPaddingMovesCaretToEndOfLineOnSingleLineParagraph() {
                 interact(() -> {
-                    area.setPadding(new Insets(0, paddingAmount, 0, 0));
+                    area.setPadding(new Insets(0, PADDING_AMOUNT, 0, 0));
                     area.moveTo(0);
 
                     // insure we're scrolled all the way to the right
@@ -86,7 +101,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             @Test
             public void clickingInBottomPaddingMovesCaretToBottomLine() {
                 interact(() -> {
-                    area.setPadding(new Insets(0, 0, paddingAmount, 0));
+                    area.setPadding(new Insets(0, 0, PADDING_AMOUNT, 0));
                     area.moveTo(0);
 
                     // insure we're scrolled all the way to the bottom
@@ -101,27 +116,11 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
         public class AndHitsOccurInsideArea {
 
-            String text = "abcdefghijklmnopqrstuvwxyz";
-            String fullText;
-
-            {
-                int totalPars = 50;
-                int indexLimit = totalPars - 1;
-                StringBuilder sb = new StringBuilder();
-                Consumer<Integer> appendParagraph = i -> sb.append("Par #").append(i).append(" ").append(text);
-                for (int i = 0; i < indexLimit; i++) {
-                    appendParagraph.accept(i);
-                    sb.append("\n");
-                }
-                appendParagraph.accept(indexLimit);
-                fullText = sb.toString();
-            }
-
             @Before
             public void setup() {
                 interact(() -> {
-                    area.replaceText(fullText);
-                    area.setPadding(new Insets(paddingAmount));
+                    area.replaceText(FIFTY_PARS);
+                    area.setPadding(new Insets(PADDING_AMOUNT));
                     area.setStyle("-fx-font-family: monospace; -fx-font-size: 12pt;");
                 });
             }
@@ -177,28 +176,10 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
     public class WhenParagraphBoxIsPadded {
 
-        double paddingAmount = 20;
-
-        String text = "abcdefghijklmnopqrstuvwxyz";
-        String fullText;
-
-        {
-            int totalPars = 50;
-            int indexLimit = totalPars - 1;
-            StringBuilder sb = new StringBuilder();
-            Consumer<Integer> appendParagraph = i -> sb.append("Par #").append(i).append(" ").append(text);
-            for (int i = 0; i < indexLimit; i++) {
-                appendParagraph.accept(i);
-                sb.append("\n");
-            }
-            appendParagraph.accept(indexLimit);
-            fullText = sb.toString();
-        }
-
         @Before
         public void setup() {
             interact(() -> {
-                area.replaceText(fullText);
+                area.replaceText(FIFTY_PARS);
                 area.setStyle("-fx-font-family: monospace; -fx-font-size: 12pt;");
                 scene.getStylesheets().add(HitTests.class.getResource("padded-paragraph-box.css").toExternalForm());
             });
@@ -215,7 +196,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void clickingCharacterShouldMoveCaretToThatPosition() {
-                interact(() -> area.setPadding(new Insets(paddingAmount)));
+                interact(() -> area.setPadding(new Insets(PADDING_AMOUNT)));
 
                 runTest();
             }
