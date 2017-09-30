@@ -72,7 +72,6 @@ public final class Paragraph<PS, SEG, S> {
 
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<StyledSegment<SEG, S>> styledSegments) {
         this(paragraphStyle, segmentOps, decompose(styledSegments, segmentOps));
-
     }
 
     private Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, Tuple2<List<SEG>, StyleSpans<S>> decomposedList) {
@@ -109,6 +108,7 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     private List<StyledSegment<SEG, S>> styledSegments = null;
+
     public List<StyledSegment<SEG, S>> getStyledSegments() {
         if (styledSegments == null) {
             if (segments.size() == 1 && styles.getSpanCount() == 1) {
@@ -138,6 +138,7 @@ public final class Paragraph<PS, SEG, S> {
         }
         return length;
     }
+
     public char charAt(int index) {
         Position pos = navigator.offsetToPosition(index, Forward);
         return segmentOps.charAt(segments.get(pos.getMajor()), pos.getMinor());
@@ -382,6 +383,7 @@ public final class Paragraph<PS, SEG, S> {
         }
         return text;
     }
+
     @Override
     public String toString() {
         return
