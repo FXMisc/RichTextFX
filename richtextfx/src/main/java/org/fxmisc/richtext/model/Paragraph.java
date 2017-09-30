@@ -42,7 +42,6 @@ public final class Paragraph<PS, SEG, S> {
 
     private static <SEG, S> Tuple2<List<SEG>, StyleSpans<S>> decompose(List<StyledSegment<SEG, S>> list,
                                                                        SegmentOps<SEG, S> segmentOps) {
-        // TODO: optimize this so that join-able segments/styles are joined before returning tuple
         List<SEG> segs = new ArrayList<>();
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>();
         for (StyledSegment<SEG, S> styledSegment : list) {
