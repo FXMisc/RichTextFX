@@ -740,6 +740,64 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
+    /**
+     * Maps a paragraph index from {@link #getParagraphs()} into the index system of {@link #getVisibleParagraphs()}.
+     */
+    public final Optional<Integer> allParToVisibleParIndex(int allParIndex) {
+        if (allParIndex < 0) {
+            throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + allParIndex);
+        }
+        if (allParIndex >= getVisibleParagraphs().size()) {
+            throw new IllegalArgumentException(String.format(
+                    "Paragraphs' last index is [%s] but allParIndex was [%s]",
+                    getParagraphs().size() - 1, allParIndex)
+            );
+        }
+        Paragraph<PS, SEG, S> p = getParagraph(allParIndex);
+        for (int index = 0; index < getVisibleParagraphs().size(); index++) {
+            if (getVisibleParagraphs().get(index) == p) {
+                return Optional.of(index);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Maps a paragraph index from {@link #getVisibleParagraphs()} into the index system of {@link #getParagraphs()}.
+     */
+    public final int visibleParToAllParIndex(int visibleParIndex) {
+        if (visibleParIndex < 0) {
+            throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + visibleParIndex);
+        }
+        if (visibleParIndex >= getVisibleParagraphs().size()) {
+            throw new IllegalArgumentException(String.format(
+                    "Visible paragraphs' last index is [%s] but visibleParIndex was [%s]",
+                    getVisibleParagraphs().size() - 1, visibleParIndex)
+            );
+        }
+        Paragraph<PS, SEG, S> visibleP = getVisibleParagraphs().get(visibleParIndex);
+        for (int index = 0; index < getParagraphs().size(); index++) {
+            if (getParagraph(index) == visibleP) {
+                return index;
+            }
+        }
+        throw new AssertionError("Unreachable code");
+    }
+
+    /**
+     * Returns the index of the first visible paragraph in the index system of {@link #getParagraphs()}.
+     */
+    public final int firstVisibleParToAllParIndex() {
+        return visibleParToAllParIndex(0);
+    }
+
+    /**
+     * Returns the index of the last visible paragraph in the index system of {@link #getParagraphs()}.
+     */
+    public final int lastVisibleParToAllParIndex() {
+        return visibleParToAllParIndex(visibleParagraphs.size() - 1);
+    }
+
     @Override
     public CharacterHit hit(double x, double y) {
         // mouse position used, so account for padding
