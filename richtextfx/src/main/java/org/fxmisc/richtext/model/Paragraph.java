@@ -45,7 +45,16 @@ public final class Paragraph<PS, SEG, S> {
         List<SEG> segs = new ArrayList<>();
         StyleSpansBuilder<S> builder = new StyleSpansBuilder<>();
         for (StyledSegment<SEG, S> styledSegment : list) {
-            segs.add(styledSegment.getSegment());
+            // attempt to merge differently-styled consecutive segments into one
+            int lastIndex = segs.size() - 1;
+            SEG previousSeg = segs.get(lastIndex);
+            Optional<SEG> merged = segmentOps.joinSeg(previousSeg, styledSegment.getSegment());
+            if (merged.isPresent()) {
+                segs.set(lastIndex, merged.get());
+            } else {
+                segs.add(styledSegment.getSegment());
+            }
+            // builder merges styles shared between consecutive different segments
             builder.add(styledSegment.getStyle(), segmentOps.length(styledSegment.getSegment()));
         }
         return Tuples.t(segs, builder.create());
