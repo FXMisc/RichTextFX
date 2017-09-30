@@ -2,8 +2,6 @@ package org.fxmisc.richtext;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.testfx.api.FxRobotInterface;
@@ -18,7 +16,6 @@ public class InlineCssTextAreaAppTest extends RichTextFXTestBase {
     public Stage stage;
     public Scene scene;
     public InlineCssTextArea area;
-    public ContextMenu menu;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -30,12 +27,6 @@ public class InlineCssTextAreaAppTest extends RichTextFXTestBase {
         stage.setWidth(400);
         stage.setHeight(400);
         stage.show();
-
-        menu = new ContextMenu(new MenuItem("A menu item"));
-        area.setContextMenu(menu);
-        // offset needs to be 5+ to prevent test failures
-        area.setContextMenuXOffset(30);
-        area.setContextMenuYOffset(30);
 
         // so tests don't need to do this themselves
         area.requestFocus();

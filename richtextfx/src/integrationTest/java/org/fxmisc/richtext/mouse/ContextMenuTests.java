@@ -2,15 +2,38 @@ package org.fxmisc.richtext.mouse;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
+import org.junit.After;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 public class ContextMenuTests extends InlineCssTextAreaAppTest {
+
+    private ContextMenu menu;
+
+    // offset needs to be 5+ to prevent test failures
+    private double offset = 30;
+
+    @Override
+    public void start(Stage stage) throws Exception {
+        super.start(stage);
+        menu = new ContextMenu(new MenuItem("A menu item"));
+        area.setContextMenu(menu);
+        area.setContextMenuXOffset(offset);
+        area.setContextMenuYOffset(offset);
+    }
+
+    @After
+    public void cleanup() {
+        interact(menu::hide);
+    }
 
     @Test
     public void clickingSecondaryShowsContextMenu() {
@@ -43,18 +66,20 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     @Test
     public void pressingPrimaryMouseButtonHidesContextMenu() {
         // given menu is showing
-        showContextMenuAt(Pos.TOP_LEFT, 30);
+        showContextMenuAt();
 
         moveTo(firstLineOfArea()).press(MouseButton.PRIMARY);
+
         assertFalse(area.getContextMenu().isShowing());
     }
 
     @Test
     public void pressingMiddleMouseButtonHidesContextMenu() {
         // given menu is showing
-        showContextMenuAt(Pos.TOP_LEFT, 30);
+        showContextMenuAt();
 
         moveTo(firstLineOfArea()).press(MouseButton.MIDDLE);
+
         assertFalse(area.getContextMenu().isShowing());
     }
 
@@ -68,8 +93,8 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
         assertTrue(area.getContextMenu().isShowing());
     }
 
-    private void showContextMenuAt(Pos posInArea, double offset) {
-        Point2D screenPoint = point(area).atPosition(posInArea).atOffset(offset, offset).query();
+    private void showContextMenuAt() {
+        Point2D screenPoint = position(Pos.TOP_LEFT, offset, offset).query();
         interact(() -> area.getContextMenu().show(area, screenPoint.getX(), screenPoint.getY()));
     }
 
