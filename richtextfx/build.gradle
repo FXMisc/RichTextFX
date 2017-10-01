@@ -20,7 +20,6 @@ testSets {
 
 check.dependsOn integrationTest
 integrationTest.mustRunAfter test
-integrationTest.systemProperty "testfx.robot", "glass"
 if (gradle.gradleVersion.substring(0, 1) >= "4") {
     // required for Gradle 4 to see custom integrationTest test suite
     integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -78,6 +77,35 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 test {
+    testLogging {
+        // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
+        // set options for log level LIFECYCLE
+        events TestLogEvent.PASSED, TestLogEvent.SKIPPED,
+                TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT
+        showExceptions true
+        exceptionFormat TestExceptionFormat.FULL
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED, TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED, TestLogEvent.FAILED,
+                    TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR
+        }
+        info.events = debug.events
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+
+integrationTest {
     testLogging {
         // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
         // set options for log level LIFECYCLE
