@@ -16,7 +16,7 @@ public class CharacterBoundsTest extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void selectionBoundsUnchangedWhenCallGetCharacterBounds() {
+    public void selection_bounds_are_unchanged_when_call_getCharacterBounds() {
         area.selectAll();
         Bounds bounds = area.getSelectionBounds().get();
 

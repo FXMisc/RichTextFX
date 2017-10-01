@@ -32,7 +32,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
         area.replaceText(fullText);
     }
 
-    public class WhenNothingIsSelected {
+    public class When_Nothing_Is_Selected {
 
         @Before
         public void insureSelectionIsEmpty() {
@@ -40,7 +40,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             assertTrue(area.getSelectedText().isEmpty());
         }
 
-        public class NothingIsStoredInClipboardWhenCopyVia {
+        public class Nothing_Is_Stored_In_Clipboard_When_Copy_Via {
 
             private void runAssert() {
                 interact(() -> assertFalse(Clipboard.getSystemClipboard().hasString()));
@@ -59,14 +59,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_C() {
+            public void shortcut_c() {
                 press(SHORTCUT, C);
 
                 runAssert();
             }
 
             @Test
-            public void shortcut_Insert() {
+            public void shortcut_insert() {
                 press(SHORTCUT, INSERT);
 
                 runAssert();
@@ -74,7 +74,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         }
 
-        public class NothingIsRemovedInAreaWhenCutVia {
+        public class Nothing_Is_Removed_In_Area_When_Cut_Via {
 
             private void runAssert() {
                 assertEquals(fullText, area.getText());
@@ -88,14 +88,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_X() {
+            public void shortcut_x() {
                 press(SHORTCUT, X);
 
                 runAssert();
             }
 
             @Test
-            public void shift_Delete() {
+            public void shift_delete() {
                 press(SHIFT, DELETE);
 
                 runAssert();
@@ -103,7 +103,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         }
 
-        public class TextIsInsertedInAreaWhenPasteVia {
+        public class Text_Is_Inserted_In_Area_When_Paste_Via {
 
             private void runAssert() {
                 assertEquals(beginning + text + middle + end, area.getText());
@@ -131,14 +131,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_V() {
+            public void shortcut_v() {
                 press(SHORTCUT, V);
 
                 runAssert();
             }
 
             @Test
-            public void shift_Insert() {
+            public void shift_insert() {
                 press(SHIFT, INSERT);
 
                 runAssert();
@@ -146,7 +146,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
         }
     }
 
-    public class WhenTextIsSelected {
+    public class When_Text_Is_Selected {
 
         int startMiddle = beginning.length();
         int endMiddle = startMiddle + middle.length();
@@ -157,7 +157,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             assertEquals(middle, area.getSelectedText());
         }
 
-        public class SelectionIsStoredInClipboardWhenCopyVia {
+        public class Selection_Is_Stored_In_Clipboard_When_Copy_Via {
 
             private void runAssert() {
                 interact(() -> {
@@ -174,14 +174,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_C() {
+            public void shortcut_c() {
                 press(SHORTCUT, C);
 
                 runAssert();
             }
 
             @Test
-            public void shortcut_Insert() {
+            public void shortcut_insert() {
                 press(SHORTCUT, INSERT);
 
                 runAssert();
@@ -189,7 +189,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         }
 
-        public class SelectionIsRemovedAndStoredInClipboardWhenCutVia {
+        public class Selection_Is_Removed_And_Stored_In_Clipboard_When_Cut_Via {
 
             private void runAssert() {
                 assertEquals(beginning + end, area.getText());
@@ -212,14 +212,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_X() {
+            public void shortcut_x() {
                 press(SHORTCUT, X);
 
                 runAssert();
             }
 
             @Test
-            public void shift_Delete() {
+            public void shift_delete() {
                 press(SHIFT, DELETE);
 
                 runAssert();
@@ -227,7 +227,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
         }
 
-        public class SelectionIsReplacedInAreaWhenPasteVia {
+        public class Selection_Is_Replaced_In_Area_When_Paste_Via {
 
             @Before
             public void storeTextInClipboard() {
@@ -256,14 +256,14 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void shortcut_V() {
+            public void shortcut_v() {
                 press(SHORTCUT, V);
 
                 runAssert();
             }
 
             @Test
-            public void shift_Insert() {
+            public void shift_insert() {
                 press(SHIFT, INSERT);
 
                 runAssert();

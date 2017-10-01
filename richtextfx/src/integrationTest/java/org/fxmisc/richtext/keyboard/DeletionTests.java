@@ -31,7 +31,7 @@ public class DeletionTests {
         return s.substring(1);
     }
 
-    public class WhenShortcutIsDown extends InlineCssTextAreaAppTest {
+    public class When_Shortcut_Is_Down extends InlineCssTextAreaAppTest {
 
         @Override
         public void start(Stage stage) throws Exception {
@@ -42,7 +42,7 @@ public class DeletionTests {
         }
 
         @Test
-        public void pressingDeleteRemovesNextWordAndSpace() {
+        public void pressing_delete_removes_next_word_and_space() {
             area.moveTo(0);
             int pos = area.getCaretPosition();
 
@@ -53,7 +53,7 @@ public class DeletionTests {
         }
 
         @Test
-        public void pressingBackspaceRemovesPreviousWordAndSpace() {
+        public void pressing_backspace_removes_previous_word_and_space() {
             area.end(CLEAR);
             int pos = area.getCaretPosition();
 
@@ -64,7 +64,7 @@ public class DeletionTests {
         }
     }
 
-    public class WhenModifiersAreNotDown extends InlineCssTextAreaAppTest  {
+    public class When_No_Modifiers extends InlineCssTextAreaAppTest  {
 
         @Override
         public void start(Stage stage) throws Exception {
@@ -73,7 +73,7 @@ public class DeletionTests {
         }
 
         @Test
-        public void pressingDeleteRemovesNextChar() {
+        public void pressing_delete_removes_next_char() {
             area.moveTo(0);
             int pos = area.getCaretPosition();
 
@@ -84,7 +84,7 @@ public class DeletionTests {
         }
 
         @Test
-        public void pressingBackspaceRemovesPreviousChar() {
+        public void pressing_backspace_removes_previous_char() {
             area.end(CLEAR);
             int pos = area.getCaretPosition();
 

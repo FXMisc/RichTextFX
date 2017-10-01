@@ -36,7 +36,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void clickingSecondaryShowsContextMenu() {
+    public void clicking_secondary_shows_context_menu() {
         // Linux passes; Mac fails; Windows untested
         //  so for now, only run on Linux
         // TODO: See if tests pass on Windows
@@ -50,7 +50,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressingSecondaryShowsContextMenu() {
+    public void pressing_secondary_shows_context_menu() {
         // Linux passes; Mac fails; Windows untested
         //  so for now, only run on Linux
         // TODO: See if tests pass on Windows
@@ -64,7 +64,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressingPrimaryMouseButtonHidesContextMenu() {
+    public void pressing_primary_mouse_button_hides_context_menu() {
         // given menu is showing
         showContextMenuAt();
 
@@ -74,7 +74,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressingMiddleMouseButtonHidesContextMenu() {
+    public void pressing_middle_mouse_button_hides_context_menu() {
         // given menu is showing
         showContextMenuAt();
 
@@ -84,7 +84,7 @@ public class ContextMenuTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void requestingContextMenuViaKeyboardWorksOnWindows() {
+    public void requesting_context_nenu_via_keyboard_works_on_windows() {
         run_only_on_windows();
 
         leftClickOnFirstLine();

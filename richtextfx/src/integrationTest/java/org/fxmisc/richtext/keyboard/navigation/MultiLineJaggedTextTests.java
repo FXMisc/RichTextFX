@@ -38,7 +38,7 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressingDownMovesCaretToNextLine() throws TimeoutException {
+    public void pressing_down_moves_caret_to_next_line() throws TimeoutException {
         waitForMultiLineRegistration();
 
         area.moveTo(27);
@@ -49,7 +49,7 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressingUpMovesCaretToPrevLine() throws TimeoutException {
+    public void pressing_up_moves_caret_to_previous_line() throws TimeoutException {
         waitForMultiLineRegistration();
 
         area.moveTo(66);

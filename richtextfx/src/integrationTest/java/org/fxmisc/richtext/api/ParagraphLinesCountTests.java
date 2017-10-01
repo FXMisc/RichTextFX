@@ -9,7 +9,7 @@ import static org.junit.Assert.assertFalse;
 public class ParagraphLinesCountTests extends InlineCssTextAreaAppTest {
 
     @Test
-    public void multiLineReturnsCorrectCount() {
+    public void multi_line_returns_correct_count() {
         String[] lines = {
                 "01 02 03 04 05",
                 "11 12 13 14 15",
@@ -25,7 +25,7 @@ public class ParagraphLinesCountTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void singleLineReturnsOne() {
+    public void single_line_returns_one() {
         interact(() -> area.replaceText("some text"));
         assertFalse(area.isWrapText());
 

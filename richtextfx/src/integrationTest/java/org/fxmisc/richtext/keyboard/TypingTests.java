@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 public class TypingTests extends InlineCssTextAreaAppTest {
 
     @Test
-    public void typingALetterMovesTheCaretAfterThatInsertedLetter() {
+    public void typing_a_letter_moves_caret_after_the_inserted_letter() {
         interact(() -> {
             area.moveTo(0);
             area.clear();

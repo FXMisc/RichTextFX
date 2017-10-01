@@ -50,7 +50,7 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void nullDelayNeverFires() {
+    public void null_delay_never_fires() {
         setDelay(null);
 
         moveTo(firstLineOfArea()).sleep(300);
@@ -60,7 +60,7 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
 
     @Ignore("END events are fired multiple times when BEGIN event hasn't yet fired")
     @Test
-    public void eventsFireAfterDelayAndPostMove() {
+    public void events_fire_after_delay_and_post_move() {
         setDelay(100);
 
         moveTo(firstLineOfArea()).sleep(300);
@@ -76,7 +76,7 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
 
     @Ignore("setting delay while mouse is over text fires END event when BEGIN event hasn't yet fired")
     @Test
-    public void settingDelayWhileMouseOverTextDoesNotFireEvent() {
+    public void setting_delay_while_mouse_is_over_text_does_not_fire_event() {
         setDelay(null);
 
         moveTo(firstLineOfArea()).sleep(300);
@@ -94,7 +94,7 @@ public class MouseOverTextDelayTests extends InlineCssTextAreaAppTest {
 
     @Ignore("this test is only important when above two tests get fixed")
     @Test
-    public void settingDelayBeforeEndFiresPreventsEndFromFiring() {
+    public void setting_delay_before_end_fires_prevents_end_from_firing() {
         setDelay(100);
 
         moveTo(firstLineOfArea()).sleep(200);

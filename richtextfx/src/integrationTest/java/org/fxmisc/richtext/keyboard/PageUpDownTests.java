@@ -14,23 +14,28 @@ import static org.junit.Assert.assertTrue;
 
 public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
+    private static final String EIGHT_LINES;
+
+    static {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            sb.append(i).append("\n");
+        }
+        sb.append(9);
+        EIGHT_LINES = sb.toString();
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
 
         // allow 6 lines to be displayed
         stage.setHeight(90);
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            sb.append(i).append("\n");
-        }
-        sb.append(9);
-        area.replaceText(sb.toString());
+        area.replaceText(EIGHT_LINES);
     }
 
     @Test
-    public void testPageUp() {
+    public void page_up_moves_caret_to_top_of_viewport() {
         interact(() -> {
             area.moveTo(5, 0);
             area.requestFollowCaret();
@@ -48,7 +53,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
     @Ignore("doesn't work despite 'testShiftPageDown' working fine using the same code")
     @Test
-    public void testPageDown() throws Exception {
+    public void page_down_moves_caret_to_bottom_of_viewport() throws Exception {
         interact(() -> {
             area.moveTo(0);
             area.requestFollowCaret();
@@ -65,7 +70,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void testShiftPageUp() {
+    public void shift_page_up_moves_caret_to_top_of_viewport_and_makes_selection() {
         interact(() -> {
             area.moveTo(5, 0);
             area.requestFollowCaret();
@@ -82,7 +87,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void testShiftPageDown() {
+    public void shift_page_down_moves_caret_to_bottom_of_viewport_and_makes_selection() {
         interact(() -> {
             area.moveTo(0);
             area.requestFollowCaret();

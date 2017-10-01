@@ -74,7 +74,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
         );
     }
 
-    public class WhenNoModifiersPressed {
+    public class When_No_Modifiers_Pressed {
 
         @Before
         public void setup() throws TimeoutException {
@@ -127,7 +127,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
 
     }
 
-    public class WhenShortcutIsPressed {
+    public class When_Shortcut_Is_Pressed {
 
         @Before
         public void setup() throws TimeoutException {
@@ -183,7 +183,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
 
     }
 
-    public class WhenShiftIsPressed {
+    public class When_Shift_Is_Pressed {
 
         @Before
         public void setup() throws TimeoutException {
@@ -238,7 +238,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
 
     }
 
-    public class ShortcutShiftDown {
+    public class When_Shortcut_And_Shift_Pressed {
 
         @Before
         public void setup() throws TimeoutException {

@@ -11,24 +11,30 @@ import static org.junit.Assert.assertTrue;
 
 public class CaretTests extends InlineCssTextAreaAppTest {
 
+    private static final String FIFTY_PARS_OF_TEXT;
+
+    static {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 50; i++) {
+            sb.append(i).append("\n");
+        }
+        sb.append(50);
+        FIFTY_PARS_OF_TEXT = sb.toString();
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
 
         // insure caret is always visible
         area.setShowCaret(Caret.CaretVisibility.ON);
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 50; i++) {
-            sb.append(i).append("\n");
-        }
-        area.replaceText(sb.toString());
+        area.replaceText(FIFTY_PARS_OF_TEXT);
         area.moveTo(0);
         area.showParagraphAtTop(0);
     }
 
     @Test
-    public void testMoveCaretAndFollowIt() {
+    public void caret_bounds_are_present_after_moving_caret_and_following_it() {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport
@@ -43,7 +49,7 @@ public class CaretTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void testMoveCaretWithoutFollowingIt() {
+    public void caret_bounds_are_absent_after_moving_caret_without_following_it() {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport

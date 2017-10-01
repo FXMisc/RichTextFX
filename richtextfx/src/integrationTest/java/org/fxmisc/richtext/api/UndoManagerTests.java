@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 public class UndoManagerTests extends InlineCssTextAreaAppTest {
 
     @Test
-    public void preventMergeOfIncomingChangeAfterPeriodOfUserInactivity() {
+    public void incoming_change_is_not_merged_after_period_of_user_inactivity() {
         String text1 = "text1";
         String text2 = "text2";
 

@@ -30,7 +30,7 @@ public class ClipboardTests {
         }
 
 
-        public class WhenUserMakesSelectionEndingInNewLineCharacter {
+        public class When_User_Makes_Selection_Ending_In_Newline_Character {
 
             @Before
             public void setup() {
@@ -38,7 +38,7 @@ public class ClipboardTests {
             }
 
             @Test
-            public void copyingShouldNotThrowException() {
+            public void copying_and_pasting_should_not_throw_exception() {
                 push(CONTROL, C);
 
                 push(CONTROL, V);

@@ -15,7 +15,7 @@ import static junit.framework.TestCase.assertTrue;
 @RunWith(NestedRunner.class)
 public class ClickAndDragTests {
 
-    public class WhenAreaIsDisabled extends InlineCssTextAreaAppTest {
+    public class When_Area_Is_Disabled extends InlineCssTextAreaAppTest {
 
         @Override
         public void start(Stage stage) throws Exception {
@@ -26,7 +26,7 @@ public class ClickAndDragTests {
         }
 
         @Test
-        public void shiftClickingAreaDoesNothing() {
+        public void shift_clicking_area_does_nothing() {
             moveTo(firstLineOfArea())
                     .moveBy(20, 0)
                     .press(SHIFT)
@@ -36,28 +36,28 @@ public class ClickAndDragTests {
         }
 
         @Test
-        public void singleClickingAreaDoesNothing() {
+        public void single_clicking_area_does_nothing() {
             leftClickOnFirstLine();
 
             assertFalse(area.isFocused());
         }
 
         @Test
-        public void doubleClickingAreaDoesNothing() {
+        public void double_clicking_area_does_nothing() {
             doubleClickOnFirstLine();
 
             assertFalse(area.isFocused());
         }
 
         @Test
-        public void tripleClickingAreaDoesNothing() {
+        public void triple_clicking_area_does_nothing() {
             tripleClickOnFirstLine();
 
             assertFalse(area.isFocused());
         }
 
         @Test
-        public void draggingTheMouseDoesNotSelectText() {
+        public void dragging_the_mouse_does_not_select_text() {
             moveTo(firstLineOfArea())
                     .press(PRIMARY)
                     .moveBy(20, 0);
@@ -66,7 +66,7 @@ public class ClickAndDragTests {
         }
 
         @Test
-        public void releasingTheMouseAfterDragDoesNothing() {
+        public void releasing_the_mouse_after_drag_does_nothing() {
             assertEquals(0, area.getCaretPosition());
 
             moveTo(firstLineOfArea())
@@ -78,9 +78,9 @@ public class ClickAndDragTests {
 
     }
 
-    public class WhenAreaIsEnabled {
+    public class When_Area_Is_Enabled {
 
-        public class AndTextIsNotSelected extends InlineCssTextAreaAppTest {
+        public class And_Text_Is_Not_Selected extends InlineCssTextAreaAppTest {
 
             private String firstWord = "Some";
             private String firstParagraph = firstWord + " text goes here";
@@ -93,7 +93,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void singleClickingAreaMovesCaretToThatPosition() {
+            public void single_clicking_area_moves_caret_to_that_position() {
                 assertEquals(0, area.getCaretPosition());
 
                 moveTo(firstLineOfArea())
@@ -104,21 +104,21 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void doubleClickingTextInAreaSelectsClosestWord() {
+            public void double_clicking_text_in_area_selects_closest_word() {
                 doubleClickOnFirstLine();
 
                 assertEquals(firstWord, area.getSelectedText());
             }
 
             @Test
-            public void tripleClickingLineInAreaSelectsParagraph() {
+            public void triple_clicking_line_in_area_selects_paragraph() {
                 tripleClickOnFirstLine();
 
                 assertEquals(firstParagraph, area.getSelectedText());
             }
 
             @Test
-            public void pressingMouseOverTextAndDraggingMouseSelectsText() {
+            public void pressing_mouse_over_text_and_dragging_mouse_selects_text() {
                 moveTo(firstLineOfArea())
                         .press(PRIMARY)
                         .moveBy(20, 0);
@@ -128,14 +128,14 @@ public class ClickAndDragTests {
 
         }
 
-        public class AndTextIsSelected extends InlineCssTextAreaAppTest {
+        public class And_Text_Is_Selected extends InlineCssTextAreaAppTest {
 
             private String firstWord = "Some";
             private String firstParagraph = firstWord + " text goes here";
             private String extraText = "This is extra text";
 
             @Test
-            public void singleClickingWithinSelectedTextMovesCaretToThatPosition() {
+            public void single_clicking_within_selected_text_moves_caret_to_that_position() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph);
@@ -150,7 +150,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void doubleClickingWithinSelectedTextSelectsClosestWord() {
+            public void double_clicking_within_selected_text_selects_closest_word() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph);
@@ -163,7 +163,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void tripleClickingWithinSelectedTextSelectsParagraph() {
+            public void triple_clicking_within_selected_text_selects_paragraph() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph);
@@ -176,7 +176,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void singleClickingOutsideOfSelectedTextMovesCaretToThatPosition() {
+            public void single_clicking_outside_of_selected_text_moves_caret_to_that_position() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
@@ -193,7 +193,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void doubleClickingOutsideOfSelectedTextSelectsClosestWord() {
+            public void double_clicking_outside_of_selected_text_selects_closest_word() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
@@ -206,7 +206,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void tripleClickingOutsideOfSelectedTextSelectsParagraph() {
+            public void triple_clicking_outside_of_selected_text_selects_paragraph() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
@@ -219,7 +219,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressingMouseOnUnselectedTextAndDraggingMakesNewSelection() {
+            public void pressing_mouse_on_unselected_text_and_dragging_makes_new_selection() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
@@ -236,7 +236,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressingMouseOnSelectionAndDraggingDisplacesCaret() {
+            public void pressing_mouse_on_selection_and_dragging_displaces_caret() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + extraText);
@@ -254,7 +254,7 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressingMouseOnSelectionAndDraggingAndReleasingMovesSelectedTextToThatPosition() {
+            public void pressing_mouse_on_selection_and_dragging_and_releasing_moves_selected_text_to_that_position() {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + extraText);

@@ -12,7 +12,7 @@ import static javafx.scene.input.KeyCode.DELETE;
 @RunWith(NestedRunner.class)
 public class MiscellaneousTests {
 
-    public class WhenAreaEndsWithEmptyLine extends InlineCssTextAreaAppTest {
+    public class When_Area_Ends_With_Empty_Line extends InlineCssTextAreaAppTest {
 
         @Override
         public void start(Stage stage) throws Exception {
@@ -20,7 +20,7 @@ public class MiscellaneousTests {
             area.replaceText(0, 0, "abc\n");
         }
 
-        public class AndAllTextIsSelected {
+        public class And_All_Text_Is_Selected {
 
             @Before
             public void selectAllText() {
@@ -29,7 +29,7 @@ public class MiscellaneousTests {
 
 
             @Test
-            public void pressingDeleteShouldNotThrowException() {
+            public void pressing_delete_should_not_throw_exception() {
                 push(DELETE);
             }
 

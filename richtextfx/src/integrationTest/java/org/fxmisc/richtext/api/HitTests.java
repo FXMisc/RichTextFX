@@ -50,9 +50,9 @@ public class HitTests extends InlineCssTextAreaAppTest {
         area.moveTo(area.getLength());
     }
 
-    public class WhenAreaIsPadded {
+    public class When_Area_Is_Padded {
 
-        public class AndHitsOccurOutsideArea {
+        public class And_Hits_Occur_Outside_Area {
 
             String text = "text";
             String fullText = text + "\n" + text;
@@ -63,7 +63,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clickingInTopPaddingMovesCaretToTopLine() {
+            public void clicking_in_top_padding_moves_caret_to_top_line() {
                 interact(() -> area.setPadding(new Insets(PADDING_AMOUNT, 0, 0, 0)));
 
                 moveCaretToAreaEnd();
@@ -76,7 +76,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clickingInLeftPaddingMovesCaretToBeginningOfLineOnSingleLineParagraph() {
+            public void clicking_in_left_padding_moves_caret_to_beginning_of_line_on_single_line_paragraph() {
                 interact(() -> area.setPadding(new Insets(0, 0, 0, PADDING_AMOUNT)));
 
                 moveCaretToAreaEnd();
@@ -85,7 +85,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clickingInRightPaddingMovesCaretToEndOfLineOnSingleLineParagraph() {
+            public void clicking_in_right_padding_moves_caret_to_end_of_line_on_single_line_paragraph() {
                 interact(() -> {
                     area.setPadding(new Insets(0, PADDING_AMOUNT, 0, 0));
                     area.moveTo(0);
@@ -99,7 +99,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clickingInBottomPaddingMovesCaretToBottomLine() {
+            public void clicking_in_bottom_padding_moves_caret_to_bottom_line() {
                 interact(() -> {
                     area.setPadding(new Insets(0, 0, PADDING_AMOUNT, 0));
                     area.moveTo(0);
@@ -114,7 +114,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
         }
 
-        public class AndHitsOccurInsideArea {
+        public class And_Hits_Occur_Inside_Area {
 
             @Before
             public void setup() {
@@ -126,7 +126,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clickingCharacterShouldMoveCaretToThatPosition() {
+            public void clicking_character_should_move_caret_to_that_position() {
                 int start = area.getAbsolutePosition(3, 8);
                 Bounds b = area.getCharacterBoundsOnScreen(start, start + 1).get();
                 moveTo(b).clickOn(PRIMARY);
@@ -134,7 +134,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void prevPageMovesCaretToTopOfPage() {
+            public void prev_page_moves_caret_to_top_of_page() {
                 area.showParagraphAtBottom(area.getParagraphs().size() - 1);
                 // move to last line, column 0
                 area.moveTo(area.getParagraphs().size() - 1, 0);
@@ -149,7 +149,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void nextPageMovesCaretToBottomOfPage() {
+            public void next_page_moves_caret_to_bottom_of_page() {
                 area.showParagraphAtTop(0);
                 area.moveTo(0);
 
@@ -166,7 +166,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
     }
 
-    public class WhenParagraphBoxIsPadded {
+    public class When_ParagraphBox_Is_Padded {
 
         @Before
         public void setup() {
@@ -184,20 +184,20 @@ public class HitTests extends InlineCssTextAreaAppTest {
             assertEquals(start, area.getCaretPosition());
         }
 
-        public class AndAreaIsPadded {
+        public class And_Area_Is_Padded {
 
             @Test
-            public void clickingCharacterShouldMoveCaretToThatPosition() {
+            public void clicking_character_should_move_caret_to_that_position() {
                 interact(() -> area.setPadding(new Insets(PADDING_AMOUNT)));
 
                 runTest();
             }
         }
 
-        public class AndAreaIsNotPadded {
+        public class And_Area_Is_Not_Padded {
 
             @Test
-            public void clickingCharacterShouldMoveCaretToThatPosition() {
+            public void clicking_character_should_move_caret_to_that_position() {
                 runTest();
             }
 
