@@ -9,7 +9,6 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -210,7 +209,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void cut()          {
+            public void cut() {
                 // this test fails on Linux; Windows is untested
                 // so for now, only run on Mac
                 // TODO: update if test succeeds on Windows, too
@@ -252,9 +251,8 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
                 assertEquals(beginning + text + end, area.getText());
             }
 
-            @Ignore("Flaky test when all others of equivalent tests pass")
             @Test
-            public void paste()        {
+            public void paste() {
                 // this test fails on Linux; Windows is untested
                 // so for now, only run on Mac
                 // TODO: update if test succeeds on Windows, too

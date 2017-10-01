@@ -52,7 +52,6 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
         assertTrue(beforeBounds.getMinY() > afterBounds.getMinY());
     }
 
-    @Ignore("doesn't work despite 'testShiftPageDown' working fine using the same code")
     @Test
     public void page_down_moves_caret_to_bottom_of_viewport() throws Exception {
         interact(() -> {
