@@ -156,9 +156,10 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
         int endMiddle = startMiddle + middle.length();
 
         @Before
-        public void selectMiddle() {
+        public void selectMiddleAndClearClipboard() {
             area.selectRange(startMiddle, endMiddle);
             assertEquals(middle, area.getSelectedText());
+            interact(() -> Clipboard.getSystemClipboard().clear());
         }
 
         public class Selection_Is_Stored_In_Clipboard_When_Copy_Via {
