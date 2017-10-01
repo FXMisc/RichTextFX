@@ -35,8 +35,8 @@ before_script:
   - if [[ "${TRAVIS_OS_NAME}" == linux ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; fi
 
 script:
-  - gradle assemble
-  - gradle check --info --stacktrace
+  - ./gradlew assemble
+  - ./gradlew check --info --stacktrace
 
 # See https://docs.travis-ci.com/user/languages/java/#Caching
 before_cache:
