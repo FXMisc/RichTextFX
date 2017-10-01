@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.mouse;
 
 import com.nitorcreations.junit.runners.NestedRunner;
+import javafx.geometry.Bounds;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Test;
@@ -96,11 +97,12 @@ public class ClickAndDragTests {
             public void single_clicking_area_moves_caret_to_that_position() {
                 assertEquals(0, area.getCaretPosition());
 
-                moveTo(firstLineOfArea())
-                        .moveBy(20, 0)
-                        .clickOn(PRIMARY);
+                Bounds bounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
 
-                assertTrue(0 != area.getCaretPosition());
+                moveTo(bounds).clickOn(PRIMARY);
+
+                assertEquals(firstWord.length(), area.getCaretPosition());
             }
 
             @Test
@@ -142,11 +144,12 @@ public class ClickAndDragTests {
                     area.selectAll();
                 });
 
-                moveTo(firstLineOfArea())
-                        .moveBy(20, 0)
-                        .clickOn(PRIMARY);
+                Bounds bounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
 
-                assertTrue(0 != area.getCaretPosition());
+                moveTo(bounds).clickOn(PRIMARY);
+
+                assertEquals(firstWord.length(), area.getCaretPosition());
             }
 
             @Test
@@ -183,13 +186,12 @@ public class ClickAndDragTests {
                     area.selectRange(1, 0, 2, -1);
                 });
 
-                int caretPos = area.getCaretPosition();
+                Bounds bounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
 
-                moveTo(firstLineOfArea())
-                        .moveBy(20, 0)
-                        .clickOn(PRIMARY);
+                moveTo(bounds).clickOn(PRIMARY);
 
-                assertTrue(caretPos != area.getCaretPosition());
+                assertEquals(firstWord.length(), area.getCaretPosition());
             }
 
             @Test
@@ -240,37 +242,52 @@ public class ClickAndDragTests {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + extraText);
-                    area.selectRange(0, firstWord.length());
+                    area.selectRange(0, firstParagraph.length());
                 });
 
                 String selText = area.getSelectedText();
 
-                moveTo(firstLineOfArea())
-                        .press(PRIMARY)
-                        .moveBy(0, 22);
+                interact(() -> {
+                    area.caretPositionProperty().addListener((obs, ov, nv) ->
+                            System.out.println("Changed to: " + nv));
+                });
 
-                assertEquals(firstParagraph.length() + 1, area.getCaretPosition());
+                Bounds firstLetterBounds = area.getCharacterBoundsOnScreen(1, 2).get();
+                Bounds firstWordEndBounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
+
+                moveTo(firstLetterBounds)
+                        .clickOn(PRIMARY)
+                        .moveTo(firstWordEndBounds);
+
+                assertEquals(firstWord.length(), area.getCaretPosition());
                 assertEquals(selText, area.getSelectedText());
             }
 
             @Test
             public void pressing_mouse_on_selection_and_dragging_and_releasing_moves_selected_text_to_that_position() {
                 // setup
+                String twoSpaces = "  ";
                 interact(() -> {
-                    area.replaceText(firstParagraph + "\n" + extraText);
+                    area.replaceText(firstParagraph + "\n" + twoSpaces + extraText);
                     area.selectRange(0, firstWord.length());
                 });
 
                 String selText = area.getSelectedText();
 
-                moveTo(firstLineOfArea())
+                Bounds letterInFirstWord = area.getCharacterBoundsOnScreen(1, 2).get();
+
+                int insertionPosition = firstParagraph.length() + 2;
+                Bounds insertionBounds = area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get();
+
+                moveTo(letterInFirstWord)
                         .press(PRIMARY)
-                        .dropBy(0, 22);
+                        .dropTo(insertionBounds);
 
                 String expectedText = firstParagraph.substring(firstWord.length())
-                    + "\n" + firstWord + extraText;
+                    + "\n" + " " + firstWord + " " + extraText;
 
-                assertEquals(firstParagraph.length() + 1, area.getCaretPosition());
+                assertEquals(insertionPosition, area.getCaretPosition());
                 assertEquals(selText, area.getSelectedText());
                 assertEquals(expectedText, area.getText());
             }
