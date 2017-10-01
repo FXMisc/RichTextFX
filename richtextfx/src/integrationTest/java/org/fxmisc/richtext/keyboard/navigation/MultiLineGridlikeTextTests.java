@@ -136,9 +136,8 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
             press(SHORTCUT);
         }
 
-        // up/down do nothing
         @Test
-        public void up_moves_caret_to_previous_line() {
+        public void up_does_not_move_caret() {
             assertTrue(area.getSelectedText().isEmpty());
             moveCaretTo(lineStart(2));
 
@@ -149,7 +148,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
         }
 
         @Test
-        public void down_moves_caret_to_next_line() {
+        public void down_does_not_move_caret() {
             assertTrue(area.getSelectedText().isEmpty());
             moveCaretTo(lineStart(2));
 
@@ -248,7 +247,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
         }
 
         @Test
-        public void up() {
+        public void up_does_not_move_caret() {
             moveCaretTo(lineStart(2));
             assertTrue(area.getSelectedText().isEmpty());
 
@@ -259,7 +258,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
         }
 
         @Test
-        public void down() {
+        public void down_does_not_move_caret() {
             moveCaretTo(lineStart(1));
             assertTrue(area.getSelectedText().isEmpty());
 
