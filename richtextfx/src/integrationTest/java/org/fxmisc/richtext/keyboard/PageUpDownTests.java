@@ -18,10 +18,11 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
     static {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
+        int totalLines = 8;
+        for (int i = 0; i < totalLines - 1; i++) {
             sb.append(i).append("\n");
         }
-        sb.append(9);
+        sb.append(totalLines);
         EIGHT_LINES = sb.toString();
     }
 
