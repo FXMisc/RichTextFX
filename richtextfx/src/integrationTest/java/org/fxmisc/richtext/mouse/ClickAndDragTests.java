@@ -247,17 +247,12 @@ public class ClickAndDragTests {
 
                 String selText = area.getSelectedText();
 
-                interact(() -> {
-                    area.caretPositionProperty().addListener((obs, ov, nv) ->
-                            System.out.println("Changed to: " + nv));
-                });
-
                 Bounds firstLetterBounds = area.getCharacterBoundsOnScreen(1, 2).get();
                 Bounds firstWordEndBounds = area.getCharacterBoundsOnScreen(
                         firstWord.length(), firstWord.length() + 1).get();
 
                 moveTo(firstLetterBounds)
-                        .clickOn(PRIMARY)
+                        .press(PRIMARY)
                         .moveTo(firstWordEndBounds);
 
                 assertEquals(firstWord.length(), area.getCaretPosition());
