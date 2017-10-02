@@ -5,11 +5,6 @@ import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import org.testfx.util.WaitForAsyncUtils;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.UP;
@@ -30,22 +25,8 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
         area.setWrapText(true);
     }
 
-    private void waitForMultiLineRegistration() throws TimeoutException {
-        // When the stage's width changes, TextFlow does not properly handle API calls to a
-        //  multi-line paragraph immediately. So, wait until it correctly responds
-        //  to the stage width change
-        Future<Void> textFlowIsReady = WaitForAsyncUtils.asyncFx(() -> {
-            while (area.getParagraphLinesCount(0) != 3) {
-                sleep(10);
-            }
-        });
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, textFlowIsReady);
-    }
-
     @Test
-    public void pressing_down_moves_caret_to_next_line() throws TimeoutException {
-        waitForMultiLineRegistration();
-
+    public void pressing_down_moves_caret_to_next_line() {
         area.moveTo(27);
 
         push(DOWN);
@@ -54,9 +35,7 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void pressing_up_moves_caret_to_previous_line() throws TimeoutException {
-        waitForMultiLineRegistration();
-
+    public void pressing_up_moves_caret_to_previous_line() {
         area.moveTo(66);
 
         push(UP);
