@@ -303,9 +303,8 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void copying_and_pasting_should_not_throw_exception() {
-                push(CONTROL, C);
-
-                push(CONTROL, V);
+                interact(area::copy);
+                interact(area::paste);
             }
         }
     }
