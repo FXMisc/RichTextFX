@@ -24,11 +24,32 @@ import static org.junit.Assume.assumeTrue;
 public abstract class RichTextFXTestBase extends ApplicationTest {
 
     static {
+        String robotProperty = System.getProperty("testfx.robot");
+        boolean usingGlass = robotProperty != null && robotProperty.equals("glass");
+
+        USING_GLASS_ADAPTER = usingGlass;
+        USING_AWT_ADAPTER = !usingGlass;
+
         String osName = System.getProperty("os.name").toLowerCase();
 
         IS_WINDOWS = osName.startsWith("win");
         IS_MAC = osName.startsWith("mac");
         IS_LINUX = osName.startsWith("linux");
+    }
+
+    /* *********************************************** *
+     * TestFX--Related
+     * *********************************************** */
+
+    public static final boolean USING_AWT_ADAPTER;
+    public static final boolean USING_GLASS_ADAPTER;
+
+    public final void skip_if_using_glass_robot() {
+        assumeTrue(USING_AWT_ADAPTER);
+    }
+
+    public final void skip_if_using_awt_robot() {
+        assumeTrue(USING_GLASS_ADAPTER);
     }
 
     /* *********************************************** *

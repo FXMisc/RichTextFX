@@ -6,11 +6,6 @@ import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.util.WaitForAsyncUtils;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.END;
@@ -48,18 +43,6 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
         area.moveTo(position);
     }
 
-    private void waitForMultiLineRegistration() throws TimeoutException {
-        // When the stage's width changes, TextFlow does not properly handle API calls to a
-        //  multi-line paragraph immediately. So, wait until it correctly responds
-        //  to the stage width change
-        Future<Void> textFlowIsReady = WaitForAsyncUtils.asyncFx(() -> {
-            while (area.getParagraphLinesCount(0) != lines.length) {
-                sleep(10);
-            }
-        });
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, textFlowIsReady);
-    }
-
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
@@ -75,11 +58,6 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
     }
 
     public class When_No_Modifiers_Pressed {
-
-        @Before
-        public void setup() throws TimeoutException {
-            waitForMultiLineRegistration();
-        }
 
         @Test
         public void up_moves_caret_to_previous_line() {
@@ -130,9 +108,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
     public class When_Shortcut_Is_Pressed {
 
         @Before
-        public void setup() throws TimeoutException {
-            waitForMultiLineRegistration();
-
+        public void setup() {
             press(SHORTCUT);
         }
 
@@ -185,9 +161,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
     public class When_Shift_Is_Pressed {
 
         @Before
-        public void setup() throws TimeoutException {
-            waitForMultiLineRegistration();
-
+        public void setup() {
             press(SHIFT);
         }
 
@@ -240,9 +214,7 @@ public class MultiLineGridlikeTextTests extends InlineCssTextAreaAppTest {
     public class When_Shortcut_And_Shift_Pressed {
 
         @Before
-        public void setup() throws TimeoutException {
-            waitForMultiLineRegistration();
-
+        public void setup() {
             press(SHORTCUT, SHIFT);
         }
 

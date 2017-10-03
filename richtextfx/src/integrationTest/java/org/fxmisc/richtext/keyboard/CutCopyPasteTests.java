@@ -17,6 +17,7 @@ import static javafx.scene.input.KeyCode.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 @RunWith(NestedRunner.class)
 public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
@@ -56,6 +57,8 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void copy() {
+                assumeFalse(USING_AWT_ADAPTER && IS_WINDOWS);
+
                 press(COPY);
 
                 runAssert();
@@ -85,6 +88,8 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void cut() {
+                assumeFalse(USING_AWT_ADAPTER && IS_WINDOWS);
+
                 press(CUT);
 
                 runAssert();

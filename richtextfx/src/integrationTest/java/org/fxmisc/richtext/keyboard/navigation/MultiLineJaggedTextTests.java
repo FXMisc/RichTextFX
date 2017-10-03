@@ -2,18 +2,18 @@ package org.fxmisc.richtext.keyboard.navigation;
 
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
+import org.junit.Rule;
 import org.junit.Test;
-import org.testfx.util.WaitForAsyncUtils;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import org.junit.rules.Timeout;
 
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.UP;
 import static org.junit.Assert.assertEquals;
 
 public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(10);
 
     String threeLinesOfText = "Some long amount of text to take up a lot of space in the given area.";
 
@@ -25,37 +25,24 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
         area.setWrapText(true);
     }
 
-    private void waitForMultiLineRegistration() throws TimeoutException {
-        // When the stage's width changes, TextFlow does not properly handle API calls to a
-        //  multi-line paragraph immediately. So, wait until it correctly responds
-        //  to the stage width change
-        Future<Void> textFlowIsReady = WaitForAsyncUtils.asyncFx(() -> {
-            while (area.getParagraphLinesCount(0) != 3) {
-                sleep(10);
-            }
-        });
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, textFlowIsReady);
-    }
-
     @Test
-    public void pressing_down_moves_caret_to_next_line() throws TimeoutException {
-        waitForMultiLineRegistration();
-
-        area.moveTo(27);
+    public void pressing_down_moves_caret_to_next_line() {
+        area.moveTo(0);
+        assertEquals(0, area.getCaretSelectionBind().getLineIndex().getAsInt());
 
         push(DOWN);
 
-        assertEquals(57, area.getCaretPosition());
+        assertEquals(1, area.getCaretSelectionBind().getLineIndex().getAsInt());
     }
 
     @Test
-    public void pressing_up_moves_caret_to_previous_line() throws TimeoutException {
-        waitForMultiLineRegistration();
-
-        area.moveTo(66);
+    public void pressing_up_moves_caret_to_previous_line() {
+        area.moveTo(area.getLength());
+        int lastLineIndex = area.getParagraphLinesCount(0) - 1;
+        assertEquals(lastLineIndex, area.getCaretSelectionBind().getLineIndex().getAsInt());
 
         push(UP);
 
-        assertEquals(36, area.getCaretPosition());
+        assertEquals(lastLineIndex - 1, area.getCaretSelectionBind().getLineIndex().getAsInt());
     }
 }
