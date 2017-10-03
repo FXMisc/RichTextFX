@@ -27,19 +27,22 @@ public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
 
     @Test
     public void pressing_down_moves_caret_to_next_line() {
-        area.moveTo(27);
+        area.moveTo(0);
+        assertEquals(0, area.getCaretSelectionBind().getLineIndex().getAsInt());
 
         push(DOWN);
 
-        assertEquals(57, area.getCaretPosition());
+        assertEquals(1, area.getCaretSelectionBind().getLineIndex().getAsInt());
     }
 
     @Test
     public void pressing_up_moves_caret_to_previous_line() {
-        area.moveTo(66);
+        area.moveTo(area.getLength());
+        int lastLineIndex = area.getParagraphLinesCount(0) - 1;
+        assertEquals(lastLineIndex, area.getCaretSelectionBind().getLineIndex().getAsInt());
 
         push(UP);
 
-        assertEquals(36, area.getCaretPosition());
+        assertEquals(lastLineIndex - 1, area.getCaretSelectionBind().getLineIndex().getAsInt());
     }
 }
