@@ -493,6 +493,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // rich text changes
     @Override public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return content.richChanges(); }
 
+    private final SuspendableEventStream<?> viewportDirty;
+    /** Returns an EventStream that emits an event every time the viewport becomes dirty */
+    public final EventStream<?> viewportDirtyEvents() { return viewportDirty; }
+
     /* ********************************************************************** *
      *                                                                        *
      * Private fields                                                         *
@@ -508,8 +512,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final TwoLevelNavigator navigator;
 
     private boolean followCaretRequested = false;
-
-    private final SuspendableEventStream<?> viewportDirty;
 
     /* ********************************************************************** *
      *                                                                        *
