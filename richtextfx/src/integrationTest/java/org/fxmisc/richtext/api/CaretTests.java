@@ -26,6 +26,7 @@ public class CaretTests extends InlineCssTextAreaAppTest {
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
+        stage.setHeight(50);
 
         // insure caret is always visible
         area.setShowCaret(Caret.CaretVisibility.ON);
