@@ -11,24 +11,26 @@ import static org.junit.Assert.assertTrue;
 
 public class CaretTests extends InlineCssTextAreaAppTest {
 
-    private static final String FIFTY_PARS_OF_TEXT;
+    private static final String MANY_PARS_OF_TEXT;
 
     static {
+        int totalLines = 20;
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < totalLines; i++) {
             sb.append(i).append("\n");
         }
-        sb.append(50);
-        FIFTY_PARS_OF_TEXT = sb.toString();
+        sb.append(totalLines);
+        MANY_PARS_OF_TEXT = sb.toString();
     }
 
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
+        stage.setHeight(50);
 
         // insure caret is always visible
         area.setShowCaret(Caret.CaretVisibility.ON);
-        area.replaceText(FIFTY_PARS_OF_TEXT);
+        area.replaceText(MANY_PARS_OF_TEXT);
         area.moveTo(0);
         area.showParagraphAtTop(0);
     }
