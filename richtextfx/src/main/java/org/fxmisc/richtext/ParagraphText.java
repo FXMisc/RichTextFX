@@ -56,8 +56,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     private final Paragraph<PS, SEG, S> paragraph;
 
-    private final Path caretShape = new Path();
-    private final Path selectionShape = new Path();
+    private final Path caretShape = new CaretPath();
+    private final Path selectionShape = new SelectionPath();
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
     private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
@@ -115,18 +115,33 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         par.getStyledSegments().stream().map(nodeFactory).forEach(getChildren()::add);
 
         // set up custom css shape helpers
-        Supplier<Path> createShape = () -> {
-            Path shape = new Path();
+        Supplier<Path> createBackgroundShape = () -> {
+            Path shape = new BackgroundPath();
             shape.setManaged(false);
             shape.layoutXProperty().bind(leftInset);
             shape.layoutYProperty().bind(topInset);
             return shape;
         };
+        Supplier<Path> createBorderShape = () -> {
+            Path shape = new BorderPath();
+            shape.setManaged(false);
+            shape.layoutXProperty().bind(leftInset);
+            shape.layoutYProperty().bind(topInset);
+            return shape;
+        };
+        Supplier<Path> createUnderlineShape = () -> {
+            Path shape = new UnderlinePath();
+            shape.setManaged(false);
+            shape.layoutXProperty().bind(leftInset);
+            shape.layoutYProperty().bind(topInset);
+            return shape;
+        };
+
         Consumer<Collection<Path>> clearUnusedShapes = paths -> getChildren().removeAll(paths);
         Consumer<Path> addToBackground = path -> getChildren().add(0, path);
         Consumer<Path> addToForeground = path -> getChildren().add(path);
         backgroundShapeHelper = new CustomCssShapeHelper<>(
-                createShape,
+                createBackgroundShape,
                 (backgroundShape, tuple) -> {
                     backgroundShape.setStrokeWidth(0);
                     backgroundShape.setFill(tuple._1);
@@ -136,7 +151,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 clearUnusedShapes
         );
         borderShapeHelper = new CustomCssShapeHelper<>(
-                createShape,
+                createBorderShape,
                 (borderShape, tuple) -> {
                     BorderAttributes attributes = tuple._1;
                     borderShape.setStrokeWidth(attributes.width);
@@ -153,7 +168,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 clearUnusedShapes
         );
         underlineShapeHelper = new CustomCssShapeHelper<>(
-                createShape,
+                createUnderlineShape,
                 (underlineShape, tuple) -> {
                     UnderlineAttributes attributes = tuple._1;
                     underlineShape.setStroke(attributes.color);
@@ -389,7 +404,12 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 int lastIndex = ranges.size() - 1;
                 Tuple2<T, IndexRange> lastShapeValueRange = ranges.get(lastIndex);
                 T lastShapeValue = lastShapeValueRange._1;
-                if (lastShapeValue.equals(value)) {
+
+                // calculate smallest possible position which is consecutive to the given start position
+                final int prevEndNext = lastShapeValueRange.get2().getEnd() + 1;  
+                if (start <= prevEndNext &&         // Consecutive? 
+                    lastShapeValue.equals(value)) { // Same style?
+
                     IndexRange lastRange = lastShapeValueRange._2;
                     IndexRange extendedRange = new IndexRange(lastRange.getStart(), end);
                     ranges.set(lastIndex, Tuples.t(lastShapeValue, extendedRange));
