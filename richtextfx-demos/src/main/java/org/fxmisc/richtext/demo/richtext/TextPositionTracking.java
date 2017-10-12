@@ -70,11 +70,6 @@ public class TextPositionTracking extends Application
         area.setOnMouseReleased (ev ->
         {
 
-        });
-
-        area.setOnMouseReleased (ev ->
-        {
-
             if (ev.isPopupTrigger ())
             {
 
@@ -117,7 +112,6 @@ public class TextPositionTracking extends Application
 
         HBox main = new HBox (0);
         main.getChildren ().addAll (this.margin, vsPane);
-        //main.setPrefWidth (Double.MAX_VALUE);
         HBox.setHgrow(vsPane, Priority.ALWAYS);
 
         Scene scene = new Scene(main, 600, 400);
