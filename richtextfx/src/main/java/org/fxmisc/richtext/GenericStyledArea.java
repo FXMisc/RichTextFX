@@ -1388,7 +1388,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return new BoundingBox(minX, minY, width, maxY - minY);
     }
 
-    private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
+    public Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
