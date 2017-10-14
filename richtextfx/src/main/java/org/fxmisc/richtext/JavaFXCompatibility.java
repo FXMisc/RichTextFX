@@ -8,7 +8,7 @@ import javafx.css.StyleConverter;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 
-class JavaFXCompatibility {
+public class JavaFXCompatibility {
 
     private static boolean isJava9orLater;
 
@@ -28,7 +28,7 @@ class JavaFXCompatibility {
      * Java 9+: ObjectProperty<Paint> javafx.scene.text.Text.selectionFillProperty()
      */
     @SuppressWarnings("unchecked")
-    static ObjectProperty<Paint> Text_selectionFillProperty(Text text) {
+    public static ObjectProperty<Paint> Text_selectionFillProperty(Text text) {
         try {
             if (mText_selectionFillProperty == null) {
                 mText_selectionFillProperty = Text.class.getMethod(
