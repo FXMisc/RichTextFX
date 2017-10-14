@@ -1,6 +1,5 @@
 package org.fxmisc.richtext;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.StringTokenizer;
@@ -67,27 +66,4 @@ class JavaFXCompatibility {
     }
 
     private static Method mSizeConverter_SequenceConverter_getInstance;
-
-    /**
-     * Java 8:  new com.sun.javafx.css.converters.EnumConverter(Class<E> enumClass)
-     * Java 9+: new javafx.css.converter.EnumConverter(Class<E> enumClass)
-     */
-    @SuppressWarnings("unchecked")
-    static <E> StyleConverter<?, E> new_EnumConverter(Class<E> enumClass) {
-        try {
-            if (mEnumConverter_newInstance == null) {
-                Class<?> c = Class.forName(isJava9orLater
-                        ? "javafx.css.converter.EnumConverter"
-                        : "com.sun.javafx.css.converters.EnumConverter");
-                mEnumConverter_newInstance = c.getConstructor(Class.class);
-            }
-            return (StyleConverter<?, E>) mEnumConverter_newInstance.newInstance(enumClass);
-        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException |
-                IllegalArgumentException | InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
-            throw new Error(e);
-        }
-    }
-
-    private static Constructor<?> mEnumConverter_newInstance;
 }

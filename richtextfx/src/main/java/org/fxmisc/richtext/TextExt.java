@@ -272,7 +272,7 @@ public class TextExt extends Text {
         );
 
         private static final CssMetaData<TextExt, StrokeType> BORDER_TYPE = new CustomCssMetaData<>(
-                "-rtfx-border-stroke-type", JavaFXCompatibility.new_EnumConverter(StrokeType.class),
+                "-rtfx-border-stroke-type", (StyleConverter<?, StrokeType>) StyleConverter.getEnumConverter(StrokeType.class),
                 StrokeType.INSIDE, n -> n.borderStrokeType
         );
 
@@ -297,7 +297,7 @@ public class TextExt extends Text {
         );
 
         private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CustomCssMetaData<>(
-                "-rtfx-underline-cap", JavaFXCompatibility.new_EnumConverter(StrokeLineCap.class),
+                "-rtfx-underline-cap", (StyleConverter<?, StrokeLineCap>) StyleConverter.getEnumConverter(StrokeLineCap.class),
                 StrokeLineCap.SQUARE, n -> n.underlineCap
         );
     }
