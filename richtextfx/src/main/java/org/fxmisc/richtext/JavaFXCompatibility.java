@@ -24,8 +24,8 @@ public class JavaFXCompatibility {
     }
 
     /**
-     * Java 8:  ObjectProperty<Paint> javafx.scene.text.Text.impl_selectionFillProperty()
-     * Java 9+: ObjectProperty<Paint> javafx.scene.text.Text.selectionFillProperty()
+     * Java 8:  javafx.scene.text.Text.impl_selectionFillProperty()
+     * Java 9+: javafx.scene.text.Text.selectionFillProperty()
      */
     @SuppressWarnings("unchecked")
     public static ObjectProperty<Paint> Text_selectionFillProperty(Text text) {
