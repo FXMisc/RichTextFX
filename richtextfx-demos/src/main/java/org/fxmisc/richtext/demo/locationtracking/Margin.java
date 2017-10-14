@@ -76,32 +76,32 @@ public class Margin extends Region {
         // A filter is not used here for performance reasons, a modelToView call can be expensive so only performing it
         // once and manually filtering is better than having to do it twice.
         this.inds.stream().forEach(i -> {
+                i.setVisible(false);
+
                 Optional<Bounds> charb = this.parent.modelToView(i.getPosition().get());
 
                 if (!charb.isPresent()) {
                     return;
                 }
 
-                long   cy     = Math.round(charb.get().getMinY());
-                long   sy     = Math.round(sselfb.getMinY());
+                double cy     = charb.get().getMinY();
+                double sy     = sselfb.getMinY();
                 Insets insets = this.getInsets();
 
                 sy -= insets.getTop();
 
+                Bounds nb = i.getLayoutBounds();
+
                 // See if the character y-bound is within the margin.
-                if ((cy < sy) || (sy > cy)) {
+                if (((cy + nb.getHeight()) > sy) && (cy <= (sy + sselfb.getHeight()))) {
 
                     // Any indicator not within our bounds is hidden.
-                    i.setVisible(false);
+                    i.setVisible(true);
 
-                    return;
+                    // Move our indicator to the correct y offset, the x is any suitable value within the
+                    // margin width bounds.
+                    i.relocate(0, cy - sy);
                 }
-
-                i.setVisible(true);
-
-                // Move our indicator to the correct y offset, the x is any suitable value within the
-                // margin width bounds.
-                i.relocate(10, Math.round(charb.get().getMinY()) - Math.round(sselfb.getMinY()));
             } );
     }
 
