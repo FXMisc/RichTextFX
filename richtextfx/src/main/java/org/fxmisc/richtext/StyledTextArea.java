@@ -133,7 +133,7 @@ public class StyledTextArea<PS, S> extends GenericStyledArea<PS, String, S> {
 
         // XXX: binding selectionFill to textFill,
         // see the note at highlightTextFill
-        t.selectionFillProperty().bind(t.fillProperty());
+        JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
         return t;
     }
 }
