@@ -7,10 +7,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
-import javafx.scene.text.HitInfo;
 import org.fxmisc.richtext.j9adapters.GenericIceBreaker;
+import org.fxmisc.richtext.j9adapters.HitInfo;
 import org.fxmisc.richtext.j9adapters.RectBounds;
 import org.fxmisc.richtext.j9adapters.TextLayout;
 import org.fxmisc.richtext.j9adapters.TextLine;
@@ -27,15 +26,12 @@ import javafx.scene.shape.MoveTo;
 class TextFlowExt extends TextFlow {
 
     private static Method mGetTextLayout;
-    private static Method mGetRange;
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
-            mGetRange = TextFlow.class.getDeclaredMethod("getRange", int.class, int.class, int.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
-        mGetRange.setAccessible(true);
         mGetTextLayout.setAccessible(true);
     }
 
@@ -81,7 +77,9 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getCaretShape(int charIdx, boolean isLeading) {
-        return caretShape(charIdx, isLeading);
+// use if Java 9 becomes minimum requirement
+//        return caretShape(charIdx, isLeading);
+        return textLayout().getCaretShape(charIdx, isLeading, 0, 0);
     }
 
     PathElement[] getRangeShape(IndexRange range) {
@@ -89,7 +87,9 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getRangeShape(int from, int to) {
-        return rangeShape(from, to);
+// use if Java 9 becomes minimum requirement
+//        return rangeShape(from, to);
+        return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
     }
 
     PathElement[] getUnderlineShape(IndexRange range) {
@@ -104,13 +104,7 @@ class TextFlowExt extends TextFlow {
      */
     PathElement[] getUnderlineShape(int from, int to) {
         // get a Path for the text underline
-        PathElement[] shape;
-        try {
-            shape = (PathElement[]) mGetRange.invoke(this, from, to, 1 << 1);
-        }
-        catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException();
-        }
+        PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
 
         // The shape is returned as a closed Path (a thin rectangle).
         // If we use the Path as it is, this causes rendering issues.
@@ -139,7 +133,9 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hit(double x, double y) {
-        HitInfo hit = hitTest(new Point2D(x, y));
+// use if Java 9 becomes minimum requirement
+//        HitInfo hit = hitTest(new Point2D(x, y));
+        HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
 
