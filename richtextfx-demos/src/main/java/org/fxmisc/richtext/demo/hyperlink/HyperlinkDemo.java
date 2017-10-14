@@ -1,11 +1,14 @@
 package org.fxmisc.richtext.demo.hyperlink;
 
-import com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.function.Consumer;
 
 /**
@@ -21,7 +24,16 @@ public class HyperlinkDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Consumer<String> showLink = HostServicesFactory.getInstance(this)::showDocument;
+        Consumer<String> showLink = (string) -> {
+            try
+            {
+                Desktop.getDesktop().browse(new URI(string));
+            }
+            catch (IOException | URISyntaxException e)
+            {
+                throw new RuntimeException(e);
+            }
+        };
         TextHyperlinkArea area = new TextHyperlinkArea(showLink);
 
         area.appendText("Some text in the area\n");

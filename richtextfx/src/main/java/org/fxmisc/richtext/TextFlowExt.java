@@ -7,7 +7,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.geometry.Point2D;
 import javafx.scene.control.IndexRange;
+import javafx.scene.text.HitInfo;
+import org.fxmisc.richtext.j9adapters.GenericIceBreaker;
+import org.fxmisc.richtext.j9adapters.RectBounds;
+import org.fxmisc.richtext.j9adapters.TextLayout;
+import org.fxmisc.richtext.j9adapters.TextLine;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 
 import javafx.scene.shape.PathElement;
@@ -15,34 +21,22 @@ import javafx.scene.text.TextFlow;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 
-import com.sun.javafx.geom.RectBounds;
-import com.sun.javafx.scene.text.HitInfo;
-import com.sun.javafx.scene.text.TextLayout;
-import com.sun.javafx.text.PrismTextLayout;
-import com.sun.javafx.text.TextLine;
-
 /**
  * Adds additional API to {@link TextFlow}.
  */
 class TextFlowExt extends TextFlow {
 
     private static Method mGetTextLayout;
-    private static Method mGetLines;
-    private static Method mGetLineIndex;
-    private static Method mGetCharCount;
+    private static Method mGetRange;
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
-            mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
-            mGetLineIndex = PrismTextLayout.class.getDeclaredMethod("getLineIndex", float.class);
-            mGetCharCount = PrismTextLayout.class.getDeclaredMethod("getCharCount");
+            mGetRange = TextFlow.class.getDeclaredMethod("getRange", int.class, int.class, int.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
+        mGetRange.setAccessible(true);
         mGetTextLayout.setAccessible(true);
-        mGetLines.setAccessible(true);
-        mGetLineIndex.setAccessible(true);
-        mGetCharCount.setAccessible(true);
     }
 
     private static Object invoke(Method m, Object obj, Object... args) {
@@ -87,7 +81,7 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getCaretShape(int charIdx, boolean isLeading) {
-        return textLayout().getCaretShape(charIdx, isLeading, 0.0f, 0.0f);
+        return caretShape(charIdx, isLeading);
     }
 
     PathElement[] getRangeShape(IndexRange range) {
@@ -95,7 +89,7 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getRangeShape(int from, int to) {
-        return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
+        return rangeShape(from, to);
     }
 
     PathElement[] getUnderlineShape(IndexRange range) {
@@ -110,7 +104,13 @@ class TextFlowExt extends TextFlow {
      */
     PathElement[] getUnderlineShape(int from, int to) {
         // get a Path for the text underline
-        PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
+        PathElement[] shape;
+        try {
+            shape = (PathElement[]) mGetRange.invoke(this, from, to, 1 << 1);
+        }
+        catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException();
+        }
 
         // The shape is returned as a closed Path (a thin rectangle).
         // If we use the Path as it is, this causes rendering issues.
@@ -139,7 +139,7 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hit(double x, double y) {
-        HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
+        HitInfo hit = hitTest(new Point2D(x, y));
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
 
@@ -193,18 +193,18 @@ class TextFlowExt extends TextFlow {
     }
 
     private TextLine[] getLines() {
-        return (TextLine[]) invoke(mGetLines, textLayout());
+        return textLayout().getLines();
     }
 
     private int getLineIndex(float y) {
-        return (int) invoke(mGetLineIndex, textLayout(), y);
+        return textLayout().getLineIndex(y);
     }
 
     private int getCharCount() {
-        return (int) invoke(mGetCharCount, textLayout());
+        return textLayout().getCharCount();
     }
 
     private TextLayout textLayout() {
-        return (TextLayout) invoke(mGetTextLayout, this);
+        return GenericIceBreaker.proxy(TextLayout.class, invoke(mGetTextLayout, this));
     }
 }
