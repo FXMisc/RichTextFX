@@ -112,7 +112,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //        });
 
         // populate with text nodes
-        par.getStyledSegments().stream().map(nodeFactory).forEach(getChildren()::add);
+        par.getStyledSegments().stream().map(nodeFactory).forEach(n -> {
+            if (n instanceof TextExt) {
+                TextExt t = (TextExt) n;
+                // XXX: binding selectionFill to textFill,
+                // see the note at highlightTextFill
+                t.impl_selectionFillProperty().bind(t.fillProperty());
+            }
+            getChildren().add(n);
+        });
 
         // set up custom css shape helpers
         Supplier<Path> createBackgroundShape = () -> {
@@ -406,8 +414,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 T lastShapeValue = lastShapeValueRange._1;
 
                 // calculate smallest possible position which is consecutive to the given start position
-                final int prevEndNext = lastShapeValueRange.get2().getEnd() + 1;  
-                if (start <= prevEndNext &&         // Consecutive? 
+                final int prevEndNext = lastShapeValueRange.get2().getEnd() + 1;
+                if (start <= prevEndNext &&         // Consecutive?
                     lastShapeValue.equals(value)) { // Same style?
 
                     IndexRange lastRange = lastShapeValueRange._2;
