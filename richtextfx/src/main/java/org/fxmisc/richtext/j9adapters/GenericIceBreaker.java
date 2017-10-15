@@ -1,6 +1,8 @@
 package org.fxmisc.richtext.j9adapters;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class GenericIceBreaker implements InvocationHandler {
     private final Object delegate;
@@ -11,7 +13,7 @@ public class GenericIceBreaker implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Method delegateMethod = delegate.getClass().getDeclaredMethod(method.getName(), method.getParameterTypes());
+        Method delegateMethod = getDeclaredMethod(delegate.getClass(), method.getName(), method.getParameterTypes());
 //TODO        if (!delegateMethod.canAccess(delegate)) {
             delegateMethod.setAccessible(true);
 //        }
@@ -57,5 +59,52 @@ public class GenericIceBreaker implements InvocationHandler {
                 iface.getClassLoader(),
                 new Class[]{iface},
                 new GenericIceBreaker(delegate));
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Method cache                                                           *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private static final HashMap<MethodCacheKey, Method> declaredMethodCache = new HashMap<>();
+
+    private static synchronized Method getDeclaredMethod(Class<?> cls, String name, Class<?>... paramTypes)
+            throws NoSuchMethodException, SecurityException
+    {
+        MethodCacheKey methodCacheKey = new MethodCacheKey(cls, name, paramTypes);
+
+        Method m = declaredMethodCache.get(methodCacheKey);
+        if (m == null) {
+            m = cls.getDeclaredMethod(name, paramTypes);
+            declaredMethodCache.put(methodCacheKey, m);
+        }
+        return m;
+    }
+
+    private static class MethodCacheKey {
+        final Class<?> cls;
+        final String name;
+        final Class<?>[] paramTypes;
+
+        public MethodCacheKey(Class<?> cls, String name, Class<?>... paramTypes) {
+            this.cls = cls;
+            this.name = name;
+            this.paramTypes = paramTypes;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MethodCacheKey))
+                return false;
+
+            MethodCacheKey key2 = (MethodCacheKey) obj;
+            return cls == key2.cls && name.equals(key2.name) && Arrays.equals(paramTypes, key2.paramTypes);
+        }
+
+        @Override
+        public int hashCode() {
+            return cls.hashCode() + name.hashCode() + Arrays.hashCode(paramTypes);
+        }
     }
 }
