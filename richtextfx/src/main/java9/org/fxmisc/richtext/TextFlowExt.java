@@ -2,8 +2,11 @@ package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,25 +28,16 @@ class TextFlowExt extends TextFlow {
 
     private static Method mGetTextLayout;
     private static Method mGetRange;
-    private static Method mGetLines;
-    private static Method mGetLineIndex;
-    private static Method mGetCharCount;
+
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
             mGetRange = TextFlow.class.getDeclaredMethod("getRange", int.class, int.class, int.class);
-
-  //          mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
-  //          mGetLineIndex = PrismTextLayout.class.getDeclaredMethod("getLineIndex", float.class);
-   //         mGetCharCount = PrismTextLayout.class.getDeclaredMethod("getCharCount");
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
         mGetTextLayout.setAccessible(true);
         mGetRange.setAccessible(true);
-//        mGetLines.setAccessible(true);
-//        mGetLineIndex.setAccessible(true);
-//        mGetCharCount.setAccessible(true);
     }
 
     private static Object invoke(Method m, Object obj, Object... args) {
@@ -203,18 +197,84 @@ class TextFlowExt extends TextFlow {
     }
 
     private TextLine[] getLines() {
-        return (TextLine[]) invoke(mGetLines, textLayout());
+    	return textLayout().getLines();
     }
 
     private int getLineIndex(float y) {
-        return (int) invoke(mGetLineIndex, textLayout(), y);
+    	return textLayout().getLineIndex(y);
     }
 
     private int getCharCount() {
-        return (int) invoke(mGetCharCount, textLayout());
+    	 return textLayout().getCharCount();
     }
 
     private TextLayout textLayout() {
-        return (TextLayout) invoke(mGetTextLayout, this);
+    	return GenericIceBreaker.proxy(TextLayout.class, invoke(mGetTextLayout, this));
     }
+
+    
+    
+    
+    
+    static class GenericIceBreaker implements InvocationHandler {
+    private final Object delegate;
+
+   public GenericIceBreaker(Object delegate) {
+         this.delegate = delegate;
+     }
+ 
+     @Override
+     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+         Method delegateMethod = delegate.getClass().getDeclaredMethod(method.getName(), method.getParameterTypes());
+         if (!delegateMethod.canAccess(delegate)) {
+             delegateMethod.setAccessible(true);
+        }
+ 
+        Object delegateMethodReturn = null;
+        try {
+            delegateMethodReturn = delegateMethod.invoke(delegate, args);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException("problems invoking " + method.getName());
+        }
+        if (delegateMethodReturn == null) {
+            return null;
+        }
+
+        if (method.getReturnType().isArray()) {
+            if (method.getReturnType().getComponentType().isInterface()
+                    && !method.getReturnType().getComponentType().equals(delegateMethod.getReturnType().getComponentType())) {
+
+                int arrayLength = Array.getLength(delegateMethodReturn);
+                Object retArray = Array.newInstance(method.getReturnType().getComponentType(), arrayLength);
+                for (int i = 0; i < arrayLength; i++) {
+                    Array.set(retArray,
+                            i,
+                            proxy(
+                                    method.getReturnType().getComponentType(),
+                                    Array.get(delegateMethodReturn, i)));
+                }
+
+                return retArray;
+            }
+        }
+
+        if (method.getReturnType().isInterface()
+                && !method.getReturnType().equals(delegateMethod.getReturnType())) {
+            return proxy(method.getReturnType(), delegateMethodReturn);
+        }
+
+        return delegateMethodReturn;
+    }
+
+    public static <T> T proxy(Class<T> iface, Object delegate) {
+        return (T) Proxy.newProxyInstance(
+                iface.getClassLoader(),
+                new Class[]{iface},
+                new GenericIceBreaker(delegate));
+    }
+}    
+    
+    
+    
+    
 }
