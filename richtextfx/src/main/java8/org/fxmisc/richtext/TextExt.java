@@ -304,4 +304,8 @@ public class TextExt extends Text {
                 StrokeLineCap.SQUARE, n -> n.underlineCap
         );
     }
+
+	public ObjectProperty<Paint> getSelectionFillProperty() {
+		return impl_selectionFillProperty();
+	}
 }
