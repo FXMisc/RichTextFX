@@ -14,9 +14,6 @@ public class GenericIceBreaker implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Method delegateMethod = getDeclaredMethod(delegate.getClass(), method.getName(), method.getParameterTypes());
-//TODO        if (!delegateMethod.canAccess(delegate)) {
-            delegateMethod.setAccessible(true);
-//        }
 
         Object delegateMethodReturn = null;
         try {
@@ -77,6 +74,7 @@ public class GenericIceBreaker implements InvocationHandler {
         Method m = declaredMethodCache.get(methodCacheKey);
         if (m == null) {
             m = cls.getDeclaredMethod(name, paramTypes);
+            m.setAccessible(true);
             declaredMethodCache.put(methodCacheKey, m);
         }
         return m;
