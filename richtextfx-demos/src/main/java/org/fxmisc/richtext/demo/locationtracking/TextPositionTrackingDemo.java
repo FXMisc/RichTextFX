@@ -44,13 +44,8 @@ import org.reactfx.util.*;
  * This demo requires GenericStyledArea.getRangeBoundsOnScreen to be made public so it can be used in the modelToView method.
  */
 public class TextPositionTrackingDemo extends Application {
-    private final TextOps<String, TextStyle>               styledTextOps = SegmentOps.styledTextOps();
-    private GenericStyledArea<ParStyle, String, TextStyle> area          = null;
-    private Margin                                         margin        = null;
-
-    private Node createNode(StyledSegment<String, TextStyle> seg, BiConsumer<? super TextExt, TextStyle> applyStyle) {
-        return StyledTextArea.createStyledTextNode(seg.getSegment(), seg.getStyle(), applyStyle);
-    }
+    private InlineCssTextArea area   = null;
+    private Margin            margin = null;
 
     public static void main(String[] args) {
         launch(args);
@@ -164,13 +159,10 @@ public class TextPositionTrackingDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        this.area = new GenericStyledArea<>(ParStyle.EMPTY,    // default paragraph style
-                                            (paragraph, style) -> paragraph.setStyle(style.toCss()),    // paragraph style setter
-                                            TextStyle.EMPTY.updateFontSize(12).updateFontFamily(
-                                                "Serif").updateTextColor(Color.BLACK),    // default segment style
-                                            styledTextOps,    // segment operations
-                                            (seg) -> createNode(seg, (text, style) -> text.setStyle(style.toCss())));    // Node creator and segment style setter
+        this.area = new InlineCssTextArea();    // Node creator and segment style setter
         area.setWrapText(true);
+        area.appendText(
+            "Click on this text to add a tracked position, a ==> will appear in the margin to the right.  Right-click anywhere to remove all tracked position.");
         area.setOnMouseReleased(
             ev -> {
                 if (ev.isPopupTrigger()) {
@@ -193,10 +185,9 @@ public class TextPositionTrackingDemo extends Application {
             } );
         this.margin = new Margin(area, this);
         this.margin.setStyle(
-            "-fx-pref-width: 50; -fx-background-color: yellow; -fx-border-width: 1; -fx-border-color: green;");
+            "-fx-pref-width: 50; -fx-background-color: yellow;");
 
-        final VirtualizedScrollPane<GenericStyledArea<ParStyle, String, TextStyle>> vsPane =
-            new VirtualizedScrollPane<>(area);
+        final VirtualizedScrollPane<InlineCssTextArea> vsPane = new VirtualizedScrollPane<>(area);
 
         vsPane.estimatedScrollYProperty().addListener((ev, oldv, newv) -> this.margin.updateLayout());
         vsPane.boundsInLocalProperty().addListener((ev, oldv, newv) -> this.margin.updateLayout());

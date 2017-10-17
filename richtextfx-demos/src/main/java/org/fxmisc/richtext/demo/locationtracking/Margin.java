@@ -8,7 +8,7 @@ import javafx.geometry.*;
 
 import javafx.scene.layout.*;
 
-import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.InlineCssTextArea;
 
 /**
  * A region that will hold all the text position indicators.
@@ -16,11 +16,11 @@ import org.fxmisc.richtext.GenericStyledArea;
  * child indicators as necessary.
  */
 public class Margin extends Region {
-    private List<Indicator>                                inds   = new ArrayList<>();
-    private GenericStyledArea<ParStyle, String, TextStyle> area   = null;
-    private TextPositionTrackingDemo                       parent = null;
+    private List<Indicator>          inds   = new ArrayList<>();
+    private InlineCssTextArea        area   = null;
+    private TextPositionTrackingDemo parent = null;
 
-    public Margin(GenericStyledArea<ParStyle, String, TextStyle> area, TextPositionTrackingDemo parent) {
+    public Margin(InlineCssTextArea area, TextPositionTrackingDemo parent) {
         this.area   = area;
         this.parent = parent;
 
@@ -37,7 +37,11 @@ public class Margin extends Region {
                 this.inds.stream()
                          .filter(
                              i -> {
-                                 if ((event.getPosition() >= i.getPosition().get()) && (event.getNetLength() < 0)) {
+                                 int ep = event.getPosition();
+                                 int ip = i.getPosition().get();
+
+                                 // Ignore events happening beyond our position or events that delete text at our position (i.e. the Delete key).
+                                 if ((ep > ip) || ((ep == ip) && (event.getNetLength() < 0))) {
                                      return false;
                                  }
 
@@ -45,9 +49,7 @@ public class Margin extends Region {
                              } )
                          .forEach(
                              i -> {
-                                 if (event.getPosition() <= i.getPosition().get()) {
-                                     i.getPosition().update(event.getNetLength());
-                                 }
+                                 i.getPosition().update(event.getNetLength());
                              } );
 
                 // Force a layout of our children on a future pulse.  This ensures that the positions will be in sync.
