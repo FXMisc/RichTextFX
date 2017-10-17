@@ -2,7 +2,6 @@ package org.fxmisc.richtext.demo.hyperlink;
 
 import javafx.geometry.VPos;
 import org.fxmisc.richtext.GenericStyledArea;
-import org.fxmisc.richtext.JavaFXCompatibility;
 import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
@@ -63,10 +62,6 @@ public class TextHyperlinkArea extends GenericStyledArea<Void, Either<String, Hy
         TextExt t = new TextExt();
         t.setTextOrigin(VPos.TOP);
         applySegment.accept(t);
-
-        // XXX: binding selectionFill to textFill,
-        // see the note at highlightTextFill
-        JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
         return t;
     }
 }
