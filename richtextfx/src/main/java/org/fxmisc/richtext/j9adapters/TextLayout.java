@@ -4,8 +4,8 @@ import javafx.scene.shape.PathElement;
 
 public interface TextLayout
 {
-	public static final int TYPE_TEXT           = 1 << 0;
-	public static final int TYPE_UNDERLINE      = 1 << 1;
+    public static final int TYPE_TEXT           = 1 << 0;
+    public static final int TYPE_UNDERLINE      = 1 << 1;
 
     TextLine[] getLines();
 
