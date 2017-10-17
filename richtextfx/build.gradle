@@ -35,6 +35,9 @@ dependencies {
     integrationTestCompile group: 'junit', name: 'junit', version: '4.12'
     integrationTestCompile group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
     integrationTestCompile "org.testfx:testfx-core:4.0.8-alpha"
+    if (org.gradle.api.JavaVersion.current().isJava9()) {
+        integrationTestCompile "org.testfx:testfx-internal-java9:4.0.8-alpha"
+    }
     integrationTestCompile ("org.testfx:testfx-junit:4.0.8-alpha") {
         exclude(group: "junit", module: "junit")
     }
