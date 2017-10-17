@@ -15,5 +15,13 @@ subprojects {
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
 
+    // allow setting source/target compatibility from command line
+    // for checking Java 9+ compatibility in Travis CI
+    def checkSourceCompatibility = System.properties["checkSourceCompatibility"]
+    if (checkSourceCompatibility != null) {
+        sourceCompatibility = checkSourceCompatibility
+        targetCompatibility = checkSourceCompatibility
+    }
+
     compileJava.options.deprecation = true
 }

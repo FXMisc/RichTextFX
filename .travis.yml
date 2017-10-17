@@ -13,6 +13,7 @@ matrix:
     - os: linux
       dist: trusty
       jdk: oraclejdk9
+      env: _JAVA_OPTIONS="-DcheckSourceCompatibility=9"
 
      # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
     - os: osx
