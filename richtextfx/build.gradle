@@ -73,6 +73,8 @@ javadoc {
         // resolve links to Flowless
         'https://fxmisc.github.io/flowless/javadoc/0.5/'
     ]
+
+    exclude('**/j9adapters/**')
 }
 
 // use test logging.
