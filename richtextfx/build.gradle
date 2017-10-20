@@ -186,9 +186,9 @@ if(doUploadArchives) {
                 url 'http://www.fxmisc.org/richtext/'
            
                 scm {
-                    url 'scm:git@github.com:TomasMikula/RichTextFX.git'
-                    connection 'scm:git@github.com:TomasMikula/RichTextFX.git'
-                    developerConnection 'scm:git@github.com:TomasMikula/RichTextFX.git'
+                    url 'scm:git@github.com:FXMisc/RichTextFX.git'
+                    connection 'scm:git@github.com:FXMisc/RichTextFX.git'
+                    developerConnection 'scm:git@github.com:FXMisc/RichTextFX.git'
                 }
            
                 licenses {

@@ -25,12 +25,9 @@ For a greater explanation of RichTextFX, its design principles, how it works, an
   * [Custom tooltips](#custom-tooltips)
 * [Download](#download)
   * [Stable](#stable-release)
-  * [Milestone](#milestone-release)
   * [Snapshot](#snapshot-releases)
-  * [Custom via Jitpack](#custom-via-jitpack)
 * API Documentation (Javadoc)
-  - [0.6.10](http://fxmisc.github.io/richtext/javadoc/0.6.10/org/fxmisc/richtext/package-summary.html)
-  - [0.7-M5](http://fxmisc.github.io/richtext/javadoc/0.7-M5/org/fxmisc/richtext/package-summary.html)
+  * [0.8.0](http://fxmisc.github.io/richtext/javadoc/0.8.0/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -227,61 +224,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.6.10. (We encourage you to try 0.7 milestone release below.)
+Current stable release is 0.8.0.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.6.10  |
+| org.fxmisc.richtext | richtextfx  | 0.8.0  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.6.10'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.8.0'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.6.10"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.8.0"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-0.6.10.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.6.10/richtextfx-fat-0.6.10.jar) and place it on your classpath.
-
-
-### Milestone release
-
-Milestone version of the upcoming release is 0.7-M5.
-
-#### Maven coordinates
-
-| Group ID            | Artifact ID | Version |
-| :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.7-M5  |
-
-#### Gradle example
-
-```groovy
-dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.7-M5'
-}
-```
-
-#### Sbt example
-
-```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.7-M5"
-```
-
-#### Manual download
-
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M5/richtextfx-0.7-M5.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M5/richtextfx-fat-0.7-M5.jar) and place it on your classpath.
-
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.8.0/richtextfx-0.8.0.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.8.0/richtextfx-fat-0.8.0.jar) and place it on your classpath.
 
 ### Snapshot releases
 
@@ -313,52 +280,6 @@ dependencies {
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "1.0.0-SNAPSHOT"
-```
-
-### Custom Via Jitpack
-
-In the following examples, the version is either a commit (via its short hash) or a tag. See [Jitpack's documentation](https://jitpack.io/docs/) for more options and further instructions.
-
-#### Maven
-
-Add the repository
-````xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-````
-
-Add the dependency
-````xml
-<dependency>
-    <groupId>com.github.TomasMikula</groupId>
-    <artifactId>RichTextFX</artifactId>
-    <version>commitOrTag</version>
-</dependency>
-````
-
-#### Gradle example
-````groovy
-repositories {
-    maven {
-        url 'https://jitpack.io'
-    }
-}
-
-dependencies {
-    compile "com.github.TomasMikula:RichTextFX:commitOrTag"
-}
-````
-
-#### Sbt example
-
-```scala
-resolvers += "jitpack" at "https://jitpack.io"
-
-libraryDependencies += "com.github.TomasMikula" % "RichTextFX" % "commitOrTag"
 ```
 
 License
