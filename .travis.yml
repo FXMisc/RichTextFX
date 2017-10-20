@@ -4,18 +4,18 @@ sudo: false   # Linux OS: run in container
 
 matrix:
   include:
-    - os: linux
-      dist: precise
-      jdk: oraclejdk8
+      # Java 8 Linux build
     - os: linux
       dist: trusty
       jdk: oraclejdk8
+      # Java 9 Linux build
     - os: linux
       dist: trusty
       jdk: oraclejdk9
       env: _JAVA_OPTIONS="-DcheckSourceCompatibility=9"
 
-     # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
+      # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
+      # Java 8 Mac build
     - os: osx
       osx_image: xcode9
       env: _JAVA_OPTIONS="-Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500"
