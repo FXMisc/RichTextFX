@@ -1,25 +1,23 @@
 package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
-
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 
+import javafx.scene.control.IndexRange;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
-
-import com.sun.javafx.geom.RectBounds;
-import com.sun.javafx.scene.text.HitInfo;
-import com.sun.javafx.scene.text.TextLayout;
-import com.sun.javafx.text.PrismTextLayout;
-import com.sun.javafx.text.TextLine;
 
 /**
  * Adds additional API to {@link TextFlow}.
@@ -27,22 +25,13 @@ import com.sun.javafx.text.TextLine;
 class TextFlowExt extends TextFlow {
 
     private static Method mGetTextLayout;
-    private static Method mGetLines;
-    private static Method mGetLineIndex;
-    private static Method mGetCharCount;
     static {
         try {
             mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
-            mGetLines = PrismTextLayout.class.getDeclaredMethod("getLines");
-            mGetLineIndex = PrismTextLayout.class.getDeclaredMethod("getLineIndex", float.class);
-            mGetCharCount = PrismTextLayout.class.getDeclaredMethod("getCharCount");
         } catch (NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
         mGetTextLayout.setAccessible(true);
-        mGetLines.setAccessible(true);
-        mGetLineIndex.setAccessible(true);
-        mGetCharCount.setAccessible(true);
     }
 
     private static Object invoke(Method m, Object obj, Object... args) {
@@ -87,7 +76,9 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getCaretShape(int charIdx, boolean isLeading) {
-        return textLayout().getCaretShape(charIdx, isLeading, 0.0f, 0.0f);
+// use if Java 9 becomes minimum requirement
+//        return caretShape(charIdx, isLeading);
+        return textLayout().getCaretShape(charIdx, isLeading, 0, 0);
     }
 
     PathElement[] getRangeShape(IndexRange range) {
@@ -95,6 +86,8 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getRangeShape(int from, int to) {
+// use if Java 9 becomes minimum requirement
+//        return rangeShape(from, to);
         return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
     }
 
@@ -139,6 +132,8 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hit(double x, double y) {
+// use if Java 9 becomes minimum requirement
+//        HitInfo hit = hitTest(new Point2D(x, y));
         HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
@@ -193,18 +188,162 @@ class TextFlowExt extends TextFlow {
     }
 
     private TextLine[] getLines() {
-        return (TextLine[]) invoke(mGetLines, textLayout());
+        return textLayout().getLines();
     }
 
     private int getLineIndex(float y) {
-        return (int) invoke(mGetLineIndex, textLayout(), y);
+        return textLayout().getLineIndex(y);
     }
 
     private int getCharCount() {
-        return (int) invoke(mGetCharCount, textLayout());
+        return textLayout().getCharCount();
     }
 
     private TextLayout textLayout() {
-        return (TextLayout) invoke(mGetTextLayout, this);
+        return GenericIceBreaker.proxy(TextLayout.class, invoke(mGetTextLayout, this));
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * GenericIceBreaker                                                      *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private static class GenericIceBreaker implements InvocationHandler {
+        private final Object delegate;
+
+        private GenericIceBreaker(Object delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Method delegateMethod = getDeclaredMethod(delegate.getClass(), method.getName(), method.getParameterTypes());
+
+            Object delegateMethodReturn = null;
+            try {
+                delegateMethodReturn = delegateMethod.invoke(delegate, args);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new RuntimeException("problems invoking " + method.getName());
+            }
+            if (delegateMethodReturn == null) {
+                return null;
+            }
+
+            if (method.getReturnType().isArray()) {
+                if (method.getReturnType().getComponentType().isInterface()
+                        && !method.getReturnType().getComponentType().equals(delegateMethod.getReturnType().getComponentType())) {
+
+                    int arrayLength = Array.getLength(delegateMethodReturn);
+                    Object retArray = Array.newInstance(method.getReturnType().getComponentType(), arrayLength);
+                    for (int i = 0; i < arrayLength; i++) {
+                        Array.set(retArray,
+                                i,
+                                proxy(
+                                        method.getReturnType().getComponentType(),
+                                        Array.get(delegateMethodReturn, i)));
+                    }
+
+                    return retArray;
+                }
+            }
+
+            if (method.getReturnType().isInterface()
+                    && !method.getReturnType().equals(delegateMethod.getReturnType())) {
+                return proxy(method.getReturnType(), delegateMethodReturn);
+            }
+
+            return delegateMethodReturn;
+        }
+
+        @SuppressWarnings("unchecked")
+        static <T> T proxy(Class<T> iface, Object delegate) {
+            return (T) Proxy.newProxyInstance(
+                    iface.getClassLoader(),
+                    new Class[]{iface},
+                    new GenericIceBreaker(delegate));
+        }
+
+        private static final HashMap<MethodCacheKey, Method> declaredMethodCache = new HashMap<>();
+
+        private static synchronized Method getDeclaredMethod(Class<?> cls, String name, Class<?>... paramTypes)
+                throws NoSuchMethodException, SecurityException
+        {
+            MethodCacheKey methodCacheKey = new MethodCacheKey(cls, name, paramTypes);
+
+            Method m = declaredMethodCache.get(methodCacheKey);
+            if (m == null) {
+                m = cls.getDeclaredMethod(name, paramTypes);
+                m.setAccessible(true);
+                declaredMethodCache.put(methodCacheKey, m);
+            }
+            return m;
+        }
+    }
+
+    private static class MethodCacheKey {
+        final Class<?> cls;
+        final String name;
+        final Class<?>[] paramTypes;
+
+        MethodCacheKey(Class<?> cls, String name, Class<?>... paramTypes) {
+            this.cls = cls;
+            this.name = name;
+            this.paramTypes = paramTypes;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MethodCacheKey))
+                return false;
+
+            MethodCacheKey key2 = (MethodCacheKey) obj;
+            return cls == key2.cls && name.equals(key2.name) && Arrays.equals(paramTypes, key2.paramTypes);
+        }
+
+        @Override
+        public int hashCode() {
+            return cls.hashCode() + name.hashCode() + Arrays.hashCode(paramTypes);
+        }
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Proxy interfaces                                                       *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private interface TextLayout
+    {
+        static final int TYPE_TEXT           = 1 << 0;
+        static final int TYPE_UNDERLINE      = 1 << 1;
+
+        TextLine[] getLines();
+        int getLineIndex(float y);
+        int getCharCount();
+
+        HitInfo getHitInfo(float x, float y);
+        PathElement[] getCaretShape(int offset, boolean isLeading, float x, float y);
+        PathElement[] getRange(int start, int end, int type, float x, float y);
+    }
+
+    private interface TextLine
+    {
+        int getLength();
+        RectBounds getBounds();
+        int getStart();
+    }
+
+    private interface RectBounds
+    {
+        float getMinX();
+        float getMaxX();
+        float getHeight();
+    }
+
+    private interface HitInfo
+    {
+        int getCharIndex();
+        boolean isLeading();
     }
 }

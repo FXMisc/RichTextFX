@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.sun.javafx.css.converters.EnumConverter;
-import com.sun.javafx.css.converters.SizeConverter;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.css.CssMetaData;
 import javafx.css.StyleConverter;
@@ -226,7 +223,7 @@ public class TextExt extends Text {
      */
     public ObjectProperty<Number> underlineWidthProperty() { return underlineWidth; }
 
-    // Dash array for the text underline 
+    // Dash array for the text underline
     public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
     public void setUnderlineDashArray(Number[] dashArray) { underlineDashArray.set(dashArray); }
 
@@ -275,12 +272,12 @@ public class TextExt extends Text {
         );
 
         private static final CssMetaData<TextExt, StrokeType> BORDER_TYPE = new CustomCssMetaData<>(
-                "-rtfx-border-stroke-type", new EnumConverter<>(StrokeType.class),
+                "-rtfx-border-stroke-type", (StyleConverter<?, StrokeType>) StyleConverter.getEnumConverter(StrokeType.class),
                 StrokeType.INSIDE, n -> n.borderStrokeType
         );
 
         private static final CssMetaData<TextExt, Number[]> BORDER_DASH_ARRAY = new CustomCssMetaData<>(
-                "-rtfx-border-stroke-dash-array", SizeConverter.SequenceConverter.getInstance(),
+                "-rtfx-border-stroke-dash-array", JavaFXCompatibility.SizeConverter_SequenceConverter_getInstance(),
                 new Double[0], n -> n.borderStrokeDashArray
         );
 
@@ -295,12 +292,12 @@ public class TextExt extends Text {
         );
 
         private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CustomCssMetaData<>(
-                "-rtfx-underline-dash-array", SizeConverter.SequenceConverter.getInstance(),
+                "-rtfx-underline-dash-array", JavaFXCompatibility.SizeConverter_SequenceConverter_getInstance(),
                 new Double[0], n -> n.underlineDashArray
         );
 
         private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CustomCssMetaData<>(
-                "-rtfx-underline-cap", new EnumConverter<StrokeLineCap>(StrokeLineCap.class),
+                "-rtfx-underline-cap", (StyleConverter<?, StrokeLineCap>) StyleConverter.getEnumConverter(StrokeLineCap.class),
                 StrokeLineCap.SQUARE, n -> n.underlineCap
         );
     }
