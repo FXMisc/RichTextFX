@@ -14,51 +14,11 @@ import org.fxmisc.richtext.model.StyledSegment;
 import org.fxmisc.richtext.model.TextOps;
 
 /**
- * Text editing control. Accepts user input (keyboard, mouse) and
- * provides API to assign style to text ranges. It is suitable for
- * syntax highlighting and rich-text editors.
+ * A {@link GenericStyledArea} whose segment generic has been specified to be a {@link String}. How the text
+ * will be styled is not yet specified in this class, but use {@link StyleClassedTextArea} for a style class
+ * approach to styling the text and {@link InlineCssTextArea} for an inline css approach to styling the text.
  *
- * <p>Subclassing is allowed to define the type of style, e.g. inline
- * style or style classes.</p>
- *
- * <p>Note: Scroll bars no longer appear when the content spans outside
- * of the viewport. To add scroll bars, the area needs to be wrapped in
- * a {@link org.fxmisc.flowless.VirtualizedScrollPane}. For example, </p>
- * <pre>
- * {@code
- * // shows area without scroll bars
- * InlineCssTextArea area = new InlineCssTextArea();
- *
- * // add scroll bars that will display as needed
- * VirtualizedScrollPane<InlineCssTextArea> vsPane = new VirtualizedScrollPane(area);
- *
- * Parent parent = //;
- * parent.getChildren().add(vsPane)
- * }
- * </pre>
- *
- * <h3>Overriding keyboard shortcuts</h3>
- *
- * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
- * character input and {@code KEY_PRESSED} handler to handle control key
- * combinations (including Enter and Tab). To add or override some keyboard
- * shortcuts, while keeping the rest in place, you would combine the default
- * event handler with a new one that adds or overrides some of the default
- * key combinations. This is how to bind {@code Ctrl+S} to the {@code save()}
- * operation:
- * <pre>
- * {@code
- * import static javafx.scene.input.KeyCode.*;
- * import static javafx.scene.input.KeyCombination.*;
- * import static org.fxmisc.wellbehaved.event.EventPattern.*;
- * import static org.fxmisc.wellbehaved.event.InputMap.*;
- *
- * import org.fxmisc.wellbehaved.event.Nodes;
- *
- * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -> save()));
- * }
- * </pre>
- *
+ * @param <PS> type of paragraph style
  * @param <S> type of style that can be applied to text.
  */
 public class StyledTextArea<PS, S> extends GenericStyledArea<PS, String, S> {
@@ -118,11 +78,17 @@ public class StyledTextArea<PS, S> extends GenericStyledArea<PS, String, S> {
              initialTextStyle, applyStyle, true);
     }
 
+    /**
+     * Creates a {@link TextExt} node using the given styled text.
+     */
     public static <S> Node createStyledTextNode(StyledSegment<String, S> seg,
                                                 BiConsumer<? super TextExt, S> applyStyle) {
         return createStyledTextNode(seg.getSegment(), seg.getStyle(), applyStyle);
     }
 
+    /**
+     * Creates a {@link TextExt} node using the given styled text.
+     */
     public static <S> Node createStyledTextNode(String text, S style,
                                                 BiConsumer<? super TextExt, S> applyStyle) {
 

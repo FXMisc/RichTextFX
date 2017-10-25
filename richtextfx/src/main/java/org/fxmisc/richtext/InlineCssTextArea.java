@@ -11,14 +11,21 @@ import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import static org.fxmisc.richtext.model.Codec.styledTextCodec;
 
 /**
- * Text area that uses inline css to define style of text segments and paragraph segments.
+ * Text area that uses inline css to define style of text segments and paragraphs.
  */
 public class InlineCssTextArea extends StyledTextArea<String, String> {
 
+    /**
+     * Creates a blank area
+     */
     public InlineCssTextArea() {
         this(new SimpleEditableStyledDocument<>("", ""));
     }
 
+    /**
+     * Creates an area that can render and edit another area's {@link EditableStyledDocument} or a developer's
+     * custom implementation of {@link EditableStyledDocument}.
+     */
     public InlineCssTextArea(@NamedArg("document") EditableStyledDocument<String, String, String> document) {
         super(
                 "", TextFlow::setStyle,

@@ -34,6 +34,16 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+/**
+ * Node responsible for rendering a single paragraph in the viewport, which may include a paragraph graphic factory
+ * (an {@link IntFunction} that takes the paragraph's index as an argument and returns a node), and definitely
+ * includes the segments of the paragraph itself. The paragraph graphic factory is often used to display
+ * the paragraph's line number.
+ *
+ * @param <PS> paragraph style type
+ * @param <SEG> segment type
+ * @param <S> segment style type
+ */
 class ParagraphBox<PS, SEG, S> extends Region {
 
     /**

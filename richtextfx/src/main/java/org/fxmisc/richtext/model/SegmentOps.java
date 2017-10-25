@@ -12,6 +12,7 @@ import org.reactfx.util.Either;
  * @param <S> The style type for the segment
  */
 public interface SegmentOps<SEG, S> {
+
     public int length(SEG seg);
 
     public char charAt(SEG seg, int index);
@@ -22,18 +23,34 @@ public interface SegmentOps<SEG, S> {
 
     public SEG subSequence(SEG seg, int start);
 
+    /**
+     * Joins two consecutive segments together into one or {@link Optional#empty()} if they cannot be joined.
+     */
     public Optional<SEG> joinSeg(SEG currentSeg, SEG nextSeg);
 
+    /**
+     * Joins two consecutive styles together into one or {@link Optional#empty()} if they cannot be joined. By default,
+     * returns {@link Optional#empty()}.
+     */
     default Optional<S> joinStyle(S currentStyle, S nextStyle) {
         return Optional.empty();
     }
 
+    /**
+     * Creates an empty segment. This method should return the same object for better performance and memory usage.
+     */
     public SEG createEmptySeg();
 
+    /**
+     * Creates a {@link TextOps} specified for a {@link String} segment that never merges consecutive styles
+     */
     public static <S> TextOps<String, S> styledTextOps() {
         return styledTextOps((s1, s2) -> Optional.empty());
     }
 
+    /**
+     * Creates a {@link TextOps} specified for a {@link String}
+     */
     public static <S> TextOps<String, S> styledTextOps(BiFunction<S, S, Optional<S>> mergeStyle) {
         return new TextOpsBase<String, S>("") {
             @Override
@@ -73,28 +90,67 @@ public interface SegmentOps<SEG, S> {
         };
     }
 
+    /**
+     * Returns a {@link SegmentOps} that specifies its segment type to be an {@link Either}
+     * whose {@link Either#left(Object) left} value is this segment type and
+     * whose {@link Either#right(Object) right} value is {@code rOps}' segment type.
+     */
     public default <R> SegmentOps<Either<SEG, R>, S> or(SegmentOps<R, S> rOps) {
         return either(this, rOps);
     }
 
+    /**
+     * Returns a {@link SegmentOps}
+     *  that specifies its segment type to be an {@link Either}
+     *      whose {@link Either#left(Object) left} value is this segment type and
+     *      whose {@link Either#right(Object) right} value is {@code rOps}' segment type, and
+     *  that specifies its style type to be {@link Either}
+     *      whose {@link Either#left(Object) left} value is this style type and
+     *      whose {@link Either#right(Object) right} value is {@code rOps}' style type.
+     */
     public default <RSeg, RStyle> SegmentOps<Either<SEG, RSeg>, Either<S, RStyle>> orStyled(
             SegmentOps<RSeg, RStyle> rOps
     ) {
         return eitherStyles(this, rOps);
     }
 
+    /**
+     * Returns a {@link SegmentOps}
+     *  that specifies its segment type to be an {@link Either}
+     *      whose {@link Either#left(Object) left} value is {@code lOps}' segment type and
+     *      whose {@link Either#right(Object) right} value is {@code rOps}' segment type, and
+     *  that specifies its style type to be {@link Either}
+     *      whose {@link Either#left(Object) left} value is {@code lOps}' style type and
+     *      whose {@link Either#right(Object) right} value is {@code rOps}' style type.
+     *
+     * Note: consecutive styles will not be merged.
+     */
     public static <LSeg, LStyle, RSeg, RStyle> SegmentOps<Either<LSeg, RSeg>, Either<LStyle, RStyle>> eitherStyles(
             SegmentOps<LSeg, LStyle> lOps,
             SegmentOps<RSeg, RStyle> rOps) {
         return new EitherStyledSegmentOps<>(lOps, rOps);
     }
 
-    public static <L, R, S> SegmentOps<Either<L, R>, S> either(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps) {
+    /**
+     * Returns a {@link SegmentOps} that specifies its segment type to be an {@link Either}
+     * whose {@link Either#left(Object) left} value is {@code lOps}' segment type and
+     * whose {@link Either#right(Object) right} value is {@code rOps}' segment type.
+     *
+     * Note: consecutive styles will not be merged.
+     */
+    public static <LSeg, RSeg, Style> SegmentOps<Either<LSeg, RSeg>, Style> either(SegmentOps<LSeg, Style> lOps,
+                                                                                   SegmentOps<RSeg, Style> rOps) {
         return either(lOps, rOps, (leftStyle, rightStyle) -> Optional.empty());
     }
 
-    public static <L, R, S> SegmentOps<Either<L, R>, S> either(SegmentOps<L, S> lOps, SegmentOps<R, S> rOps,
-                                                               BiFunction<S, S, Optional<S>> mergeStyle) {
+    /**
+     * Returns a {@link SegmentOps} that specifies its segment type to be an {@link Either}
+     * whose {@link Either#left(Object) left} value is {@code lOps}' segment type and
+     * whose {@link Either#right(Object) right} value is {@code rOps}' segment type.
+     */
+    public static <LSeg, RSeg, Style> SegmentOps<Either<LSeg, RSeg>, Style> either(
+            SegmentOps<LSeg, Style> lOps, SegmentOps<RSeg, Style> rOps,
+            BiFunction<Style, Style, Optional<Style>> mergeStyle) {
         return new EitherSegmentOps<>(lOps, rOps, mergeStyle);
     }
 }

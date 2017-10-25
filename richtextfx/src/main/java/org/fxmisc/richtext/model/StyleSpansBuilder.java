@@ -7,6 +7,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * A one-time-use builder that Builds a memory efficient {@link StyleSpans} object.
+ *
+ * @param <S> the segment style type
+ */
 public class StyleSpansBuilder<S> {
 
     private static class StyleSpansImpl<S> extends StyleSpansBase<S> {

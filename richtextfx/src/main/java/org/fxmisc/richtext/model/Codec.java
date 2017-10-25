@@ -11,6 +11,11 @@ import javafx.scene.paint.Color;
 
 import org.reactfx.util.Either;
 
+/**
+ * Specifies a way to serialize an object to/from a data stream
+ *
+ * @param <T> the type of object to serialize
+ */
 public interface Codec<T> {
 
     String getName();
@@ -85,12 +90,6 @@ public interface Codec<T> {
         };
     }
 
-    /**
-     * A codec which allows serialisation of this class to/from a data stream.
-     *
-     * Because S may be any type, you must pass a codec for it.  If your style
-     * is String or Color, you can use {@link Codec#STRING_CODEC}/{@link Codec#COLOR_CODEC} respectively.
-     */
     public static <S> Codec<StyledSegment<String, S>> styledTextCodec(Codec<S> styleCodec) {
         return new Codec<StyledSegment<String, S>>() {
             @Override

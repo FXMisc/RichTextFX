@@ -5,6 +5,10 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
+/**
+ * Default implementation of {@link TwoDimensional} that makes it trivial to calculate a position within a
+ * two dimensional object.
+ */
 public class TwoLevelNavigator implements TwoDimensional {
 
     private class Pos implements Position {
@@ -58,11 +62,11 @@ public class TwoLevelNavigator implements TwoDimensional {
         }
 
         @Override
-        public Position offsetBy(int offset, Bias bias) {
-            if(offset > 0) {
-                return forward(offset, bias);
-            } else if(offset < 0) {
-                return backward(-offset, bias);
+        public Position offsetBy(int amount, Bias bias) {
+            if(amount > 0) {
+                return forward(amount, bias);
+            } else if(amount < 0) {
+                return backward(-amount, bias);
             } else if(minor == 0 && major > 1 && bias == Backward) {
                 return new Pos(major - 1, elemLength.applyAsInt(major - 1));
             } else if(minor == elemLength.applyAsInt(major) && major < elemCount.getAsInt() - 1 && bias == Forward){
@@ -127,6 +131,15 @@ public class TwoLevelNavigator implements TwoDimensional {
     private final IntSupplier elemCount;
     private final IntUnaryOperator elemLength;
 
+    /**
+     * Creates a navigator that can be used to find a {@link TwoDimensional.Position} within a two dimensional object.
+     *
+     * @param elemCount a supplier that returns the number of "inner lists" within an "outer list" (see
+     *                  {@link TwoDimensional} for clarification). For example,
+     *                  {@link java.util.List#size() List::size}
+     * @param elemLength a function that, given the index of an "inner list," returns either the size of that "inner
+     *                   list" of the length of that inner object.
+     */
     public TwoLevelNavigator(IntSupplier elemCount, IntUnaryOperator elemLength) {
         this.elemCount = elemCount;
         this.elemLength = elemLength;

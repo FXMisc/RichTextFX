@@ -132,17 +132,17 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     }
 
     @Override
-    public void setStyle(int paragraph, S style) {
-        ensureValidParagraphIndex(paragraph);
-        doc.replaceParagraph(paragraph, p -> p.restyle(style)).exec(this::update);
+    public void setStyle(int paragraphIndex, S style) {
+        ensureValidParagraphIndex(paragraphIndex);
+        doc.replaceParagraph(paragraphIndex, p -> p.restyle(style)).exec(this::update);
     }
 
     @Override
-    public void setStyle(int paragraph, int fromCol, int toCol, S style) {
-        ensureValidParagraphRange(paragraph, fromCol, toCol);
+    public void setStyle(int paragraphIndex, int fromCol, int toCol, S style) {
+        ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
         doc.replace(
-            new BiIndex(paragraph, fromCol),
-            new BiIndex(paragraph, toCol),
+            new BiIndex(paragraphIndex, fromCol),
+            new BiIndex(paragraphIndex, toCol),
             d -> d.mapParagraphs(p -> p.restyle(style))
         ).exec(this::update);
     }
@@ -165,14 +165,14 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     }
 
     @Override
-    public void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans) {
-        setStyleSpans(doc.position(paragraph, from).toOffset(), styleSpans);
+    public void setStyleSpans(int paragraphIndex, int from, StyleSpans<? extends S> styleSpans) {
+        setStyleSpans(doc.position(paragraphIndex, from).toOffset(), styleSpans);
     }
 
     @Override
-    public void setParagraphStyle(int parIdx, PS style) {
-        ensureValidParagraphIndex(parIdx);
-        doc.replaceParagraph(parIdx, p -> p.setParagraphStyle(style)).exec(this::update);
+    public void setParagraphStyle(int paragraphIndex, PS style) {
+        ensureValidParagraphIndex(paragraphIndex);
+        doc.replaceParagraph(paragraphIndex, p -> p.setParagraphStyle(style)).exec(this::update);
     }
 
     @Override

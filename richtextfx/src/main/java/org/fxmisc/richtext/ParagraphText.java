@@ -35,6 +35,14 @@ import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+/**
+ * The class responsible for rendering the segments in an paragraph. It also renders additional RichTextFX-specific
+ * CSS found in {@link TextExt} as well as the selection and caret shapes.
+ *
+ * @param <PS> paragraph style type
+ * @param <SEG> segment type
+ * @param <S> segment style type
+ */
 class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     // FIXME: changing it currently has not effect, because

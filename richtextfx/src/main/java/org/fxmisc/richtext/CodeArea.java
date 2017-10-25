@@ -7,9 +7,8 @@ import javafx.beans.NamedArg;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 
 /**
- * A convenience subclass of {@link StyleClassedTextArea}
- * with fixed-width font and an undo manager that observes
- * only plain text changes (not styled changes).
+ * A convenience subclass of {@link StyleClassedTextArea} with fixed-width font and an undo manager that observes
+ * only plain text changes (not styled changes). It's style class is {@code code-area}.
  */
 public class CodeArea extends StyleClassedTextArea {
 
@@ -23,10 +22,16 @@ public class CodeArea extends StyleClassedTextArea {
         setUseInitialStyleForInsertion(true);
     }
 
+    /**
+     * Creates an area that can render and edit the same {@link EditableStyledDocument} as another {@link CodeArea}.
+     */
     public CodeArea(@NamedArg("document") EditableStyledDocument<Collection<String>, String, Collection<String>> document) {
         super(document, false);
     }
 
+    /**
+     * Creates an area with no text.
+     */
     public CodeArea() {
         super(false);
     }

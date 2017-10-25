@@ -4,6 +4,9 @@ import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 
+/**
+ * Reduces the boilerplate when creating a custom CSS property (i.e. {@link javafx.css.StyleableProperty}).
+ */
 public class CustomStyleableProperty<T> extends StyleableObjectProperty<T> {
 
     private final Object bean;

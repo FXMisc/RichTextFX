@@ -4,7 +4,7 @@ import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.GenericStyledArea;
 
 /**
- * Extended edit actions for {@link TextEditingArea}.
+ * Specifies actions for editing the content of a {@link TextEditingArea}.
  */
 public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
 
@@ -25,55 +25,56 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
     /**
      * Inserts the given text at the given position.
      *
-     * @param index The location to insert the text.
+     * @param position The position to insert the text.
      * @param text The text to insert.
      */
-    default void insertText(int index, String text) {
-        replaceText(index, index, text);
+    default void insertText(int position, String text) {
+        replaceText(position, position, text);
     }
 
     /**
      * Inserts the given text at the position returned from
-     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
+     * {@code getAbsolutePosition(paragraphIndex, columnPosition)}.
      *
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
      *
      * @param text The text to insert
      */
-    default void insertText(int paragraphIndex, int columnIndex, String text) {
-        int index = getAbsolutePosition(paragraphIndex, columnIndex);
+    default void insertText(int paragraphIndex, int columnPosition, String text) {
+        int index = getAbsolutePosition(paragraphIndex, columnPosition);
         replaceText(index, index, text);
     }
 
     /**
      * Inserts the given rich-text content at the given position.
      *
-     * @param index The location to insert the text.
+     * @param position The position to insert the text.
      * @param document The rich-text content to insert.
      */
-    default void insert(int index, StyledDocument<PS, SEG, S> document) {
-        replace(index, index, document);
+    default void insert(int position, StyledDocument<PS, SEG, S> document) {
+        replace(position, position, document);
     }
 
     /**
      * Inserts the given rich-text content at the position returned from
-     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
+     * {@code getAbsolutePosition(paragraphIndex, columnPosition)}.
      *
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
      *
      * @param document The rich-text content to insert.
      */
-    default void insert(int paragraphIndex, int columnIndex, StyledDocument<PS, SEG, S> document) {
-        int index = getAbsolutePosition(paragraphIndex, columnIndex);
-        replace(index, index, document);
+    default void insert(int paragraphIndex, int columnPosition, StyledDocument<PS, SEG, S> document) {
+        int pos = getAbsolutePosition(paragraphIndex, columnPosition);
+        replace(pos, pos, document);
     }
 
     /**
      * Removes a range of text.
      *
-     * @param range The range of text to delete. It must not be null.
+     * @param range The range of text to delete. It must not be null. Its start and end values specify the start
+     *              and end positions within the area.
      *
      * @see #deleteText(int, int)
      */
@@ -86,8 +87,8 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
      *
      * It must hold {@code 0 <= start <= end <= getLength()}.
      *
-     * @param start Start index of the range to remove, inclusive.
-     * @param end End index of the range to remove, exclusive.
+     * @param start Start position of the range to remove
+     * @param end End position of the range to remove
      */
     default void deleteText(int start, int end) {
         replaceText(start, end, "");
@@ -134,7 +135,7 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
     }
 
     /**
-     * Clears the text.
+     * Clears the area, so that it displays only an empty paragraph.
      */
     default void clear() {
         replaceText(0, getLength(), "");
@@ -174,21 +175,26 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
         replace(getSelection(), replacement);
     }
 
-    default void moveSelectedText(int pos) {
+    /**
+     * If something is currently selected and the given position is outside of the selection, moves the selected
+     * rich-text document to the given position by deleting it from the area and re-inserting it at the given position.
+     * If nothing is selected, moves the caret ot that position.
+     */
+    default void moveSelectedText(int position) {
         IndexRange sel = getSelection();
 
-        if((pos >= sel.getStart() && pos <= sel.getEnd()) || sel.equals(GenericStyledArea.EMPTY_RANGE)) {
+        if((position >= sel.getStart() && position <= sel.getEnd()) || sel.equals(GenericStyledArea.EMPTY_RANGE)) {
             // no move, just position the caret
-            selectRange(pos, pos);
+            selectRange(position, position);
         } else {
             StyledDocument<PS, SEG, S> text = this.subDocument(sel.getStart(), sel.getEnd());
-            if(pos > sel.getEnd())
-                pos -= sel.getLength();
+            if(position > sel.getEnd())
+                position -= sel.getLength();
             deleteText(sel);
-            insert(pos, text);
+            insert(position, text);
 
             // select moved text
-            selectRange(pos, pos + text.length());
+            selectRange(position, position + text.length());
         }
     }
 }

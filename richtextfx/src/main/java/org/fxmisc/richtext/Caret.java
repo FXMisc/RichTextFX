@@ -34,6 +34,11 @@ import java.util.OptionalInt;
  */
 public interface Caret {
 
+    /**
+     * Determines whether the caret is visible. Those who wish to use the default configuartion should use
+     * {@link #AUTO} while those who want a more custom configuration should make a caret's {@code CaretVisibility}
+     * value oscilate between {@link #ON} and {@link #OFF}.
+     */
     public static enum CaretVisibility {
         /** Caret is displayed. */
         ON,

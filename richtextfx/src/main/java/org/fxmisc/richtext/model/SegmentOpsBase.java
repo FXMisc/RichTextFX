@@ -3,9 +3,9 @@ package org.fxmisc.richtext.model;
 import java.util.Optional;
 
 /**
- * Properly implements the {@link SegmentOps} interface and reduces boilerplate, so that developer only needs to
- * implement methods for real segments, not empty ones. Optionally, {@link #joinSeg(Object, Object)} and
- * {@link #joinStyle(Object, Object)} can be overridden as well.
+ * Provides a base for properly implementing the {@link SegmentOps} interface and reduces boilerplate,
+ * so that a developer only needs to implement methods for real segments, not empty ones. Optionally,
+ * {@link #joinSeg(Object, Object)} and {@link #joinStyle(Object, Object)} can be overridden as well.
  *
  * @param <SEG> the type of segment
  * @param <S> the type of style
@@ -14,6 +14,9 @@ public abstract class SegmentOpsBase<SEG, S> implements SegmentOps<SEG, S> {
 
     private final SEG empty;
 
+    /**
+     * Creates a {@link SegmentOpsBase} that returns {@code emptySeg} every time an empty segment should be returned
+     */
     public SegmentOpsBase(SEG emptySeg) {
         this.empty = emptySeg;
     }

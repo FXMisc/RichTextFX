@@ -3,6 +3,13 @@ package org.fxmisc.richtext.model;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Base change class for style changes ({@link RichTextChange}) and non-style changes ({@link PlainTextChange})
+ * in a {@link TextEditingArea}.
+ *
+ * @param <S> type of data that was removed and inserted in the {@link TextEditingArea}.
+ * @param <Self> a subclass of TextChange
+ */
 public abstract class TextChange<S, Self extends TextChange<S, Self>> {
 
     protected final int position;
@@ -15,11 +22,24 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
         this.inserted = inserted;
     }
 
+    /**
+     * Gets the start position of where the replacement happened
+     */
     public int getPosition() { return position; };
+
     public S getRemoved() { return removed; }
     public S getInserted() { return inserted; }
+
+    /**
+     * Returns a new subclass of {@link TextChange} that makes the {@code inserted} the removed object and
+     * the {@code removed} the inserted object
+     */
     public Self invert() { return create(position, inserted, removed); }
+
+    /** Returns the position where the removal ends (e.g. {@code position + removedLength())} */
     public int getRemovalEnd() { return position + removedLength(); }
+
+    /** Returns the position where the inserted ends (e.g. {@code position + insertedLength())} */
     public int getInsertionEnd() { return position + insertedLength(); }
 
     /**

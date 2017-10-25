@@ -90,38 +90,53 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 /**
- * Text editing control. Accepts user input (keyboard, mouse) and
- * provides API to assign style to text ranges. It is suitable for
+ * Text editing control that renders and edits a {@link EditableStyledDocument}.
+ *
+ * Accepts user input (keyboard, mouse) and provides API to assign style to text ranges. It is suitable for
  * syntax highlighting and rich-text editors.
  *
  * <h3>Adding Scrollbars to the Area</h3>
  *
- * <p>The scroll bars no longer appear when the content spans outside
- * of the viewport. To add scroll bars, the area needs to be wrapped in
- * a {@link VirtualizedScrollPane}. For example, </p>
- * <pre>
- * {@code
+ * <p>By default, scroll bars do not appear when the content spans outside of the viewport.
+ * To add scroll bars, the area needs to be wrapped in a {@link VirtualizedScrollPane}. For example, </p>
+ * <pre><code>
  * // shows area without scroll bars
  * InlineCssTextArea area = new InlineCssTextArea();
  *
  * // add scroll bars that will display as needed
- * VirtualizedScrollPane<InlineCssTextArea> vsPane = new VirtualizedScrollPane(area);
+ * VirtualizedScrollPane&lt;InlineCssTextArea&gt; vsPane = new VirtualizedScrollPane&lt;&gt;(area);
  *
- * Parent parent = //;
+ * Parent parent = // creation code
  * parent.getChildren().add(vsPane)
- * }
- * </pre>
+ * </code></pre>
  *
  * <h3>Auto-Scrolling to the Caret</h3>
  *
  * <p>Every time the underlying {@link EditableStyledDocument} changes via user interaction (e.g. typing) through
- * the {@code StyledTextArea}, the area will scroll to insure the caret is kept in view. However, this does not
+ * the {@code GenericStyledArea}, the area will scroll to insure the caret is kept in view. However, this does not
  * occur if changes are done programmatically. For example, let's say the area is displaying the bottom part
  * of the area's {@link EditableStyledDocument} and some code changes something in the top part of the document
  * that is not currently visible. If there is no call to {@link #requestFollowCaret()} at the end of that code,
  * the area will not auto-scroll to that section of the document. The change will occur, and the user will continue
  * to see the bottom part of the document as before. If such a call is there, then the area will scroll
  * to the top of the document and no longer display the bottom part of it.</p>
+ * <p>For example...</p>
+ * <pre><code>
+ * // assuming the user is currently seeing the top of the area
+ *
+ * // then changing the bottom, currently not visible part of the area...
+ * int startParIdx = 40;
+ * int startColPosition = 2;
+ * int endParIdx = 42;
+ * int endColPosition = 10;
+ *
+ * // ...by itself will not scroll the viewport to where the change occurs
+ * area.replaceText(startParIdx, startColPosition, endParIdx, endColPosition, "replacement text");
+ *
+ * // adding this line after the last modification to the area will cause the viewport to scroll to that change
+ * // leaving the following line out will leave the viewport unaffected and the user will not notice any difference
+ * area.requestFollowCaret();
+ * </code></pre>
  *
  * <p>Additionally, when overriding the default user-interaction behavior, remember to include a call
  * to {@link #requestFollowCaret()}.</p>
@@ -136,15 +151,16 @@ import org.reactfx.value.Var;
  *
  * <h3>Overriding default keyboard behavior</h3>
  *
- * {@code StyledTextArea} uses {@code KEY_TYPED} handler to handle ordinary
- * character input and {@code KEY_PRESSED} handler to handle control key
+ * {@code GenericStyledArea} uses {@link javafx.scene.input.KeyEvent#KEY_TYPED KEY_TYPED} to handle ordinary
+ * character input and {@link javafx.scene.input.KeyEvent#KEY_PRESSED KEY_PRESSED} to handle control key
  * combinations (including Enter and Tab). To add or override some keyboard
  * shortcuts, while keeping the rest in place, you would combine the default
  * event handler with a new one that adds or overrides some of the default
- * key combinations. This is how to bind {@code Ctrl+S} to the {@code save()}
- * operation:
- * <pre>
- * {@code
+ * key combinations.
+ * <p>
+ *     For example, this is how to bind {@code Ctrl+S} to the {@code save()} operation:
+ * </p>
+ * <pre><code>
  * import static javafx.scene.input.KeyCode.*;
  * import static javafx.scene.input.KeyCombination.*;
  * import static org.fxmisc.wellbehaved.event.EventPattern.*;
@@ -152,18 +168,19 @@ import org.reactfx.value.Var;
  *
  * import org.fxmisc.wellbehaved.event.Nodes;
  *
- * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -> save()));
- * }
- * </pre>
+ * // installs the following consume InputMap,
+ * // so that a CTRL+S event saves the document and consumes the event
+ * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -&gt; save()));
+ * </code></pre>
  *
  * <h3>Overriding default mouse behavior</h3>
  *
  * The area's default mouse behavior properly handles auto-scrolling and dragging the selected text to a new location.
  * As such, some parts cannot be partially overridden without it affecting other behavior.
  *
- * <p>The following lists either {@link org.fxmisc.wellbehaved.event.EventPattern}s that cannot be overridden without
- * negatively affecting the default mouse behavior or describe how to safely override things in a special way without
- * disrupting the auto scroll behavior.</p>
+ * <p>The following lists either {@link org.fxmisc.wellbehaved.event.EventPattern}s that cannot be
+ * overridden without negatively affecting the default mouse behavior or describe how to safely override things
+ * in a special way without disrupting the auto scroll behavior.</p>
  * <ul>
  *     <li>
  *         <em>First (1 click count) Primary Button Mouse Pressed Events:</em>
@@ -227,6 +244,36 @@ import org.reactfx.value.Var;
  *     </li>
  * </ul>
  *
+ * <h3>CSS, Style Classes, and Pseudo Classes</h3>
+ * <p>
+ *     Refer to the <a href="https://github.com/FXMisc/RichTextFX/wiki/RichTextFX-CSS-Reference-Guide">
+ *         RichTextFX CSS Reference Guide
+ *     </a>.
+ * </p>
+ *
+ * <h3>Area Actions and Other Operations</h3>
+ * <p>
+ *     To distinguish the actual operations one can do on this area from the boilerplate methods
+ *     within this area (e.g. properties and their getters/setters, etc.), look at the interfaces
+ *     this area implements. Each lists and documents methods that fall under that category.
+ * </p>
+ *
+ * <h3>Calculating a Position Within the Area</h3>
+ * <p>
+ *     To calculate a position or index within the area, read through the javadoc of
+ *     {@link org.fxmisc.richtext.model.TwoDimensional} and {@link org.fxmisc.richtext.model.TwoDimensional.Bias}.
+ *     Also, read the difference between "position" and "index" in
+ *     {@link org.fxmisc.richtext.model.StyledDocument#getAbsolutePosition(int, int)}.
+ * </p>
+ *
+ * @see EditableStyledDocument
+ * @see TwoDimensional
+ * @see org.fxmisc.richtext.model.TwoDimensional.Bias
+ * @see VirtualFlow
+ * @see VirtualizedScrollPane
+ * @see Caret
+ * @see Selection
+ * @see CaretSelectionBind
  *
  * @param <PS> type of style that can be applied to paragraphs (e.g. {@link TextFlow}.
  * @param <SEG> type of segment used in {@link Paragraph}. Can be only text (plain or styled) or
@@ -586,6 +633,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         this(initialParagraphStyle, applyParagraphStyle, initialTextStyle, segmentOps, true, nodeFactory);
     }
 
+    /**
+     * Same as {@link #GenericStyledArea(Object, BiConsumer, Object, TextOps, Function)} but also allows one
+     * to specify whether the undo manager should be a plain or rich undo manager via {@code preserveStyle}.
+     *
+     * @param initialParagraphStyle style to use in places where no other style is specified (yet).
+     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
+     *                            a style, applies the style to the paragraph node. This function is
+     *                            used by the default skin to apply style to paragraph nodes.
+     * @param initialTextStyle style to use in places where no other style is specified (yet).
+     * @param segmentOps The operations which are defined on the text segment objects.
+     * @param preserveStyle whether to use an undo manager that can undo/redo {@link RichTextChange}s or
+     *                      {@link PlainTextChange}s
+     * @param nodeFactory A function which is used to create the JavaFX scene node for a particular segment.
+     */
     public GenericStyledArea(@NamedArg("initialParagraphStyle") PS initialParagraphStyle,
                              @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
                              @NamedArg("initialTextStyle")      S initialTextStyle,
@@ -598,8 +659,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     /**
      * The same as {@link #GenericStyledArea(Object, BiConsumer, Object, TextOps, Function)} except that
-     * this constructor can be used to create another {@code GenericStyledArea} object that
-     * shares the same {@link EditableStyledDocument}.
+     * this constructor can be used to create another {@code GenericStyledArea} that renders and edits the same
+     * {@link EditableStyledDocument} or when one wants to use a custom {@link EditableStyledDocument} implementation.
      */
     public GenericStyledArea(
             @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
@@ -612,6 +673,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     }
 
+    /**
+     * Creates an area with flexibility in all of its options.
+     *
+     * @param initialParagraphStyle style to use in places where no other style is specified (yet).
+     * @param applyParagraphStyle function that, given a {@link TextFlow} node and
+     *                            a style, applies the style to the paragraph node. This function is
+     *                            used by the default skin to apply style to paragraph nodes.
+     * @param initialTextStyle style to use in places where no other style is specified (yet).
+     * @param document the document to render and edit
+     * @param segmentOps The operations which are defined on the text segment objects.
+     * @param preserveStyle whether to use an undo manager that can undo/redo {@link RichTextChange}s or
+     *                      {@link PlainTextChange}s
+     * @param nodeFactory A function which is used to create the JavaFX scene node for a particular segment.
+     */
     public GenericStyledArea(
             @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
             @NamedArg("applyParagraphStyle")   BiConsumer<TextFlow, PS> applyParagraphStyle,
@@ -835,9 +910,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return _position(parIdx, lineIdx);
     }
 
-    public final int lineIndex(int paragraphIndex, int column) {
+    /**
+     * Returns 0 if the given paragraph displays its content across only one line, or returns the index
+     * of the line on which the given column position appears if the paragraph spans multiple lines.
+     */
+    public final int lineIndex(int paragraphIndex, int columnPosition) {
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
-        return cell.getNode().getCurrentLineIndex(column);
+        return cell.getNode().getCurrentLineIndex(columnPosition);
     }
 
     TwoDimensional.Position _position(int par, int line) {
@@ -1211,6 +1290,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
+    /**
+     * Disposes this area, preventing memory leaks.
+     */
     public void dispose() {
         subscriptions.unsubscribe();
         virtualFlow.dispose();

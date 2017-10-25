@@ -48,6 +48,9 @@ import java.util.Optional;
  */
 public interface Selection<PS, SEG, S> {
 
+    /**
+     * Specifies whether to update the start/end value of a selection to the left (towards 0) or right (away from 0)
+     */
     public static enum Direction {
         LEFT,
         RIGHT
