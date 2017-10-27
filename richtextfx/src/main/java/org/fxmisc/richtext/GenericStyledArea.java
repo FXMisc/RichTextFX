@@ -1407,16 +1407,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 
-    private <T> void subscribeTo(EventStream<T> src, Consumer<T> cOnsumer) {
-        manageSubscription(src.subscribe(cOnsumer));
-    }
-
     private void manageSubscription(Subscription subscription) {
         subscriptions = subscriptions.and(subscription);
-    }
-
-    private void manageBinding(Binding<?> binding) {
-        subscriptions = subscriptions.and(binding::dispose);
     }
 
     private static Bounds extendLeft(Bounds b, double w) {
