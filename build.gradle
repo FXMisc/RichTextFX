@@ -24,4 +24,13 @@ subprojects {
     }
 
     compileJava.options.deprecation = true
+
+    if (it.name.equals("richtextfx")) {
+        task("getProjectVersion") {
+            doLast {
+                println version
+            }
+        }
+    }
+
 }
