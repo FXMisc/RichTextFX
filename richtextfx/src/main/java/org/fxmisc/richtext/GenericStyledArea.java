@@ -781,10 +781,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return getCell(paragraphIndex).getCaretOffsetX();
     }
 
-    double getViewportHeight() {
-        return virtualFlow.getHeight();
-    }
-
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
         ParagraphBox<PS, SEG, S> cell = virtualFlow.getCell(parIdx).getNode();
@@ -807,6 +803,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             CharacterHit parHit = cell.hitText(x, cellOffset.getY());
             return parHit.offset(parOffset);
         }
+    }
+
+    @Override
+    public final double getViewportHeight() {
+        return virtualFlow.getHeight();
     }
 
     @Override

@@ -256,6 +256,11 @@ public interface ViewActions<PS, SEG, S> {
      * ********************************************************************** */
 
     /**
+     * Gets the height of the viewport and ignores the padding values added to the area.
+     */
+    public double getViewportHeight();
+
+    /**
      * Maps a paragraph index from {@link TextEditingArea#getParagraphs()} into the index system of
      * {@link #getVisibleParagraphs()}.
      */
