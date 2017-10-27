@@ -434,36 +434,36 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
     });
-    public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
+    @Override public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
+    @Override public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
 
     private final Property<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
     });
-    public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
+    @Override public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
+    @Override public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
 
     private final Property<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
     });
-    public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
-    public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
+    @Override public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
+    @Override public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
 
     private final Property<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
     });
-    public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
-    public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
+    @Override public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
+    @Override public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
 
     private final Property<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
         displaceCaret(hit.getInsertionIndex());
     });
-    public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
-    public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
+    @Override public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
+    @Override public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
 
     private final Property<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
@@ -474,8 +474,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     // not a hook, but still plays a part in the default mouse behavior
     private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
-    public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
-    public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
+    @Override public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
+    @Override public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -509,8 +509,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
-    public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
-    public final boolean isBeingUpdated() { return beingUpdated.get(); }
+    @Override public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
+    @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     @Override
@@ -537,8 +537,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final EventStream<RichTextChange<PS, SEG, S>> richChanges() { return content.richChanges(); }
 
     private final SuspendableEventStream<?> viewportDirty;
-    /** Returns an EventStream that emits an event every time the viewport becomes dirty */
-    public final EventStream<?> viewportDirtyEvents() { return viewportDirty; }
+    @Override public final EventStream<?> viewportDirtyEvents() { return viewportDirty; }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -563,10 +562,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     private final EditableStyledDocument<PS, SEG, S> content;
-    /**
-     * The underlying document that can be displayed by multiple {@code StyledTextArea}s.
-     */
-    public final EditableStyledDocument<PS, SEG, S> getContent() { return content; }
+    @Override public final EditableStyledDocument<PS, SEG, S> getContent() { return content; }
 
     private final S initialTextStyle;
     @Override public final S getInitialTextStyle() { return initialTextStyle; }
@@ -813,9 +809,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    /**
-     * Maps a paragraph index from {@link #getParagraphs()} into the index system of {@link #getVisibleParagraphs()}.
-     */
+    @Override
     public final Optional<Integer> allParToVisibleParIndex(int allParIndex) {
         if (allParIndex < 0) {
             throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + allParIndex);
@@ -835,9 +829,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return Optional.empty();
     }
 
-    /**
-     * Maps a paragraph index from {@link #getVisibleParagraphs()} into the index system of {@link #getParagraphs()}.
-     */
+    @Override
     public final int visibleParToAllParIndex(int visibleParIndex) {
         if (visibleParIndex < 0) {
             throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + visibleParIndex);
@@ -857,16 +849,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         throw new AssertionError("Unreachable code");
     }
 
-    /**
-     * Returns the index of the first visible paragraph in the index system of {@link #getParagraphs()}.
-     */
+    @Override
     public final int firstVisibleParToAllParIndex() {
         return visibleParToAllParIndex(0);
     }
 
-    /**
-     * Returns the index of the last visible paragraph in the index system of {@link #getParagraphs()}.
-     */
+    @Override
     public final int lastVisibleParToAllParIndex() {
         return visibleParToAllParIndex(visibleParagraphs.size() - 1);
     }
@@ -906,10 +894,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return _position(parIdx, lineIdx);
     }
 
-    /**
-     * Returns 0 if the given paragraph displays its content across only one line, or returns the index
-     * of the line on which the given column position appears if the paragraph spans multiple lines.
-     */
+    @Override
     public final int lineIndex(int paragraphIndex, int columnPosition) {
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
         return cell.getNode().getCurrentLineIndex(columnPosition);
@@ -994,14 +979,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.getText(range);
     }
 
-    public Paragraph<PS, SEG, S> getParagraph(int index) {
-        return content.getParagraph(index);
-    }
-
-    public int getParagraphLength(int index) {
-        return content.getParagraphLength(index);
-    }
-
     @Override
     public StyledDocument<PS, SEG, S> subDocument(int start, int end) {
         return content.subSequence(start, end);
@@ -1012,14 +989,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.subDocument(paragraphIndex);
     }
 
-    /**
-     * Returns the selection range in the given paragraph. Note: this method will return
-     * {@code IndexRange(start, paragraph.length() + 1)} when the selection includes a newline character.
-     */
-    public IndexRange getParagraphSelection(int paragraph) {
-        return getParagraphSelection(caretSelectionBind, paragraph);
-    }
-
+    @Override
     public IndexRange getParagraphSelection(Selection selection, int paragraph) {
         int startPar = selection.getStartParagraphIndex();
         int endPar = selection.getEndParagraphIndex();
@@ -1205,20 +1175,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         moveTo(hit.getInsertionIndex(), selectionPolicy);
     }
 
-    /**
-     * Displaces the caret from the selection by positioning only the caret to the new location without
-     * also affecting the selection's {@link #getAnchor() anchor} or the {@link #getSelection() selection}.
-     * Do not confuse this method with {@link #moveTo(int)}, which is the normal way of moving the caret.
-     * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
-     * as opposed to always being at the boundary. Use with care.
-     */
+    @Override
     public void displaceCaret(int pos) {
         caretSelectionBind.displaceCaret(pos);
     }
 
-    /**
-     * Hides the area's context menu if it is not {@code null} and it is {@link ContextMenu#isShowing() showing}.
-     */
+    @Override
     public final void hideContextMenu() {
         ContextMenu menu = getContextMenu();
         if (menu != null && menu.isShowing()) {
@@ -1286,9 +1248,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Disposes this area, preventing memory leaks.
-     */
+    @Override
     public void dispose() {
         if (undoManager != null) {
             undoManager.close();
@@ -1417,30 +1377,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return position(parIdx, 0).toOffset();
     }
 
-    /**
-     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
-     *
-     * The returned bounds object will always be within the bounds of the area. In other words, it takes
-     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
-     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
-     * or if it's long and spans outside of the area's width).
-     *
-     * @param visibleParagraphIndex the index in area's list of visible paragraphs.
-     */
+    @Override
     public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex) {
         return getParagraphBoundsOnScreen(virtualFlow.visibleCells().get(visibleParagraphIndex));
     }
 
-    /**
-     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
-     *
-     * The returned bounds object will always be within the bounds of the area. In other words, it takes
-     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
-     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
-     * or if it's long and spans outside of the area's width).
-     *
-     * @param paragraphIndex the index in area's list of paragraphs (visible and invisible).
-     */
+    @Override
     public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex) {
         return virtualFlow.getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
     }
@@ -1474,6 +1416,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 
+    @Override
     public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
         return virtualFlow.getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getCaretBoundsOnScreen());
