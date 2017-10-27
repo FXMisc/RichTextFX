@@ -1295,6 +1295,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Disposes this area, preventing memory leaks.
      */
     public void dispose() {
+        if (undoManager != null) {
+            undoManager.close();
+        }
         subscriptions.unsubscribe();
         virtualFlow.dispose();
     }
