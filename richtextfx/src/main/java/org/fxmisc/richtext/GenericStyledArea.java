@@ -551,7 +551,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
-    private final TwoLevelNavigator navigator;
+    private final TwoLevelNavigator paragraphLineNavigator;
 
     private boolean followCaretRequested = false;
 
@@ -724,7 +724,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
         IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
-        navigator = new TwoLevelNavigator(cellCount, cellLength);
+        paragraphLineNavigator = new TwoLevelNavigator(cellCount, cellLength);
 
         viewportDirty = merge(
                 // no need to check for width & height invalidations as scroll values update when these do
@@ -891,17 +891,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         int lineIdx = cell.getNode().getCurrentLineIndex();
-        return _position(parIdx, lineIdx);
+        return paragraphLineNavigator.position(parIdx, lineIdx);
     }
 
     @Override
     public final int lineIndex(int paragraphIndex, int columnPosition) {
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
         return cell.getNode().getCurrentLineIndex(columnPosition);
-    }
-
-    TwoDimensional.Position _position(int par, int line) {
-        return navigator.position(par, line);
     }
 
     @Override
