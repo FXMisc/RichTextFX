@@ -21,9 +21,10 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -336,14 +337,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             ((Region) getBean()).pseudoClassStateChanged(READ_ONLY, !get());
         }
     };
-    @Override public final boolean isEditable() { return editable.get(); }
-    @Override public final void setEditable(boolean value) { editable.set(value); }
     @Override public final BooleanProperty editableProperty() { return editable; }
 
     // wrapText property
     private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
-    @Override public final boolean isWrapText() { return wrapText.get(); }
-    @Override public final void setWrapText(boolean value) { wrapText.set(value); }
     @Override public final BooleanProperty wrapTextProperty() { return wrapText; }
 
     // undo manager
@@ -355,33 +352,24 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
-    @Override public void setMouseOverTextDelay(Duration delay) { mouseOverTextDelay.set(delay); }
-    @Override public Duration getMouseOverTextDelay() { return mouseOverTextDelay.get(); }
     @Override public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
-    @Override public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
-    @Override public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
     @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
-    @Override public final ContextMenu getContextMenu() { return contextMenu.get(); }
-    @Override public final void setContextMenu(ContextMenu menu) { contextMenu.setValue(menu); }
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
+
     protected final boolean isContextMenuPresent() { return contextMenu.get() != null; }
 
-    private double contextMenuXOffset = 2;
-    @Override public final double getContextMenuXOffset() { return contextMenuXOffset; }
-    @Override public final void setContextMenuXOffset(double offset) { contextMenuXOffset = offset; }
+    private DoubleProperty contextMenuXOffset = new SimpleDoubleProperty(2);
+    @Override public final DoubleProperty contextMenuXOffsetProperty() { return contextMenuXOffset; }
 
-    private double contextMenuYOffset = 2;
-    @Override public final double getContextMenuYOffset() { return contextMenuYOffset; }
-    @Override public final void setContextMenuYOffset(double offset) { contextMenuYOffset = offset; }
+    private DoubleProperty contextMenuYOffset = new SimpleDoubleProperty(2);
+    @Override public final DoubleProperty contextMenuYOffsetProperty() { return contextMenuYOffset; }
 
     private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
     @Override public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
-    @Override public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
-    @Override public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
     private Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> styleCodecs = Optional.empty();
     @Override public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> styledSegCodec) {
@@ -392,12 +380,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
-    @Override public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
-    @Override public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
 
     @Override public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
-    @Override public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
-    @Override public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -407,52 +391,45 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private final Property<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
+    private final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
     });
-    @Override public final void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePress.setValue(consumer); }
-    @Override public final Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePress.getValue(); }
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty() { return onOutsideSelectionMousePress; }
 
-    private final Property<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
+    private final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
     });
-    @Override public final void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressRelease.setValue(consumer); }
-    @Override public final Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressRelease.getValue(); }
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty() { return onInsideSelectionMousePressRelease; }
 
-    private final Property<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
+    private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
     });
-    @Override public final void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDrag.setValue(consumer); }
-    @Override public final Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDrag.getValue(); }
+    @Override public final ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty() { return onNewSelectionDrag; }
 
-    private final Property<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
+    private final ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
     });
-    @Override public final void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEnd.setValue(consumer); }
-    @Override public final Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEnd.getValue(); }
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEndProperty() { return onNewSelectionDragEnd; }
 
-    private final Property<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
+    private final ObjectProperty<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
         displaceCaret(hit.getInsertionIndex());
     });
-    @Override public final void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDrag.setValue(consumer); }
-    @Override public final Consumer<Point2D> getOnSelectionDrag() { return onSelectionDrag.getValue(); }
+    @Override public final ObjectProperty<Consumer<Point2D>> onSelectionDragProperty() { return onSelectionDrag; }
 
-    private final Property<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
+    private final ObjectProperty<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveSelectedText(hit.getInsertionIndex());
     });
-    @Override public final void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDrop.setValue(consumer); }
-    @Override public final Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDrop.getValue(); }
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty() { return onSelectionDrop; }
 
     // not a hook, but still plays a part in the default mouse behavior
     private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
-    @Override public final void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
-    @Override public final boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
+    @Override public final BooleanProperty autoScrollOnDragDesiredProperty() { return autoScrollOnDragDesired; }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -465,7 +442,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     // text
-    @Override public final String getText() { return content.getText(); }
     @Override public final ObservableValue<String> textProperty() { return content.textProperty(); }
 
     // rich text
@@ -475,7 +451,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final CaretSelectionBind<PS, SEG, S> getCaretSelectionBind() { return caretSelectionBind; }
 
     // length
-    @Override public final int getLength() { return content.getLength(); }
     @Override public final ObservableValue<Integer> lengthProperty() { return content.lengthProperty(); }
 
     // paragraphs
@@ -487,15 +462,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // beingUpdated
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
-    @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
     @Override public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
-    @Override public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
     // total height estimate
     @Override public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
-    @Override public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -823,16 +795,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override
-    public final int firstVisibleParToAllParIndex() {
-        return visibleParToAllParIndex(0);
-    }
-
-    @Override
-    public final int lastVisibleParToAllParIndex() {
-        return visibleParToAllParIndex(visibleParagraphs.size() - 1);
-    }
-
-    @Override
     public CharacterHit hit(double x, double y) {
         // mouse position used, so account for padding
         double adjustedX = x - getInsets().getLeft();
@@ -1152,14 +1114,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public void displaceCaret(int pos) {
         caretSelectionBind.displaceCaret(pos);
-    }
-
-    @Override
-    public final void hideContextMenu() {
-        ContextMenu menu = getContextMenu();
-        if (menu != null && menu.isShowing()) {
-            menu.hide();
-        }
     }
 
     @Override

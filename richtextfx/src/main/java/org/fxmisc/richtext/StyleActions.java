@@ -17,9 +17,9 @@ public interface StyleActions<PS, S> {
      * inserted into this text area. When {@code false}, the style immediately
      * preceding the insertion position is used. Default value is {@code false}.
      */
-    boolean getUseInitialStyleForInsertion();
+    default boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertionProperty().get(); }
+    default void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertionProperty().set(value); }
     BooleanProperty useInitialStyleForInsertionProperty();
-    void setUseInitialStyleForInsertion(boolean value);
 
     /**
      * Style used by default when no other style is provided.
