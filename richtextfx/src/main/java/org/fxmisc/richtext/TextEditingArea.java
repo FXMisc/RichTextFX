@@ -1,12 +1,15 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 
-import org.fxmisc.richtext.CaretSelectionBind;
-import org.fxmisc.richtext.Caret;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.PlainTextChange;
+import org.fxmisc.richtext.model.RichTextChange;
+import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.EventStream;
 import org.reactfx.value.Var;
 
@@ -137,12 +140,12 @@ public interface TextEditingArea<PS, SEG, S> {
      *********************/
 
     /**
-     * See {@link EditableStyledDocument#plainChanges()}
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#plainChanges()}
      */
     EventStream<PlainTextChange> plainTextChanges();
 
     /**
-     * See {@link EditableStyledDocument#richChanges()}
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#richChanges()}
      */
     EventStream<RichTextChange<PS, SEG, S>> richChanges();
 

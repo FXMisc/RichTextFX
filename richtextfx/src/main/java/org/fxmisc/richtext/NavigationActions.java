@@ -1,8 +1,6 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import java.text.BreakIterator;
-
-import javafx.scene.control.IndexRange;
 
 /**
  * Specifies actions for moving the caret and/or making a selection for a {@link TextEditingArea}.

@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 import static javafx.scene.input.KeyCode.BACK_SPACE;
 import static javafx.scene.input.KeyCode.DELETE;
 import static javafx.scene.input.KeyCode.SHORTCUT;
-import static org.fxmisc.richtext.model.NavigationActions.SelectionPolicy.CLEAR;
+import static org.fxmisc.richtext.NavigationActions.SelectionPolicy.CLEAR;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(NestedRunner.class)

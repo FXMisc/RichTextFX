@@ -125,7 +125,7 @@ public interface Caret {
      * This method can be used to achieve the special case of positioning the caret outside or inside the selection,
      * as opposed to always being at the boundary. Use with care.
      *
-     * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)} to
+     * <p><b>Caution:</b> see {@link TextEditingArea#getAbsolutePosition(int, int)} to
      * know how the column index argument can affect the returned position.</p>
      */
     public void moveTo(int paragraphIndex, int columnPosition);

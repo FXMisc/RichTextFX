@@ -1,7 +1,6 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import org.fxmisc.undo.UndoManager;
-import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.value.Val;
 
 /**

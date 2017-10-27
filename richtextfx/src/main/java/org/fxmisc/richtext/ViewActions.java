@@ -8,7 +8,6 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
-import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.event.MouseOverTextEvent;
 import org.reactfx.collection.LiveList;
@@ -22,7 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 /**
- * Specifies view-related API for a {@link org.fxmisc.richtext.model.TextEditingArea}
+ * Specifies view-related API for a {@link TextEditingArea}
  *
  * @param <PS> paragraph style type
  * @param <SEG> segment type
@@ -107,7 +106,7 @@ public interface ViewActions<PS, SEG, S> {
      * but has not yet released the mouse.
      *
      * <p>By default, this will create a new selection or
-     * {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
+     * {@link NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
      * smaller via the code:
      * <pre><code>
      *     e -&gt; {
@@ -124,7 +123,7 @@ public interface ViewActions<PS, SEG, S> {
      * pressed the mouse on top of the selection, dragged it to a new location within the area,
      * and released the mouse.
      *
-     * <p>By default, this will {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the
+     * <p>By default, this will {@link NavigationActions.SelectionPolicy#ADJUST} the
      * current selection to be bigger or smaller via the code:
      * <pre><code>
      *     e -&gt; {
