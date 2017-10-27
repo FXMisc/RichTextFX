@@ -4,7 +4,7 @@
  *
  * <p>
  *     An {@link org.fxmisc.richtext.model.EditableStyledDocument} acts as an immutable model for rich-text content
- *     that will be rendered by an object implementing the {@link org.fxmisc.richtext.model.TextEditingArea} interface.
+ *     that will be rendered by an object implementing the {@link org.fxmisc.richtext.TextEditingArea} interface.
  *     A {@link org.fxmisc.richtext.model.StyledDocument} is composed of a list of
  *     {@link org.fxmisc.richtext.model.Paragraph}s. Paragraphs are nothing more than an
  *     object containing a paragraph style (type {@code PS}), a list of a generic segments (type {@code SEG}), and a

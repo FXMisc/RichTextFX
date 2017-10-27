@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util;
+package org.fxmisc.richtext.event;
 
 import static javafx.scene.input.MouseEvent.*;
 import static org.reactfx.EventStreams.*;

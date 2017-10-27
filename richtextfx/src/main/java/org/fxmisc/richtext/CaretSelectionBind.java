@@ -2,7 +2,6 @@ package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.IndexRange;
-import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.StyledDocument;
 
 import java.text.BreakIterator;
@@ -103,7 +102,7 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
 
     /**
      * Moves the caret to the position returned from
-     * {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)}
+     * {@link TextEditingArea#getAbsolutePosition(int, int)}
      * and clears any selection.
      */
     @Override
@@ -176,7 +175,7 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
      * Selects the given range and moves the caret to either the start of the new selection if the anchor was equal to
      * the original start or the end if the anchor was equal to the original end
      *
-     * <p><b>Caution:</b> see {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)} to
+     * <p><b>Caution:</b> see {@link TextEditingArea#getAbsolutePosition(int, int)} to
      * know how the column index argument can affect the returned position.</p>
      */
     @Override
@@ -292,7 +291,7 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
 
     /**
      * Moves the caret to the position returned from
-     * {@link org.fxmisc.richtext.model.TextEditingArea#getAbsolutePosition(int, int)}.
+     * {@link TextEditingArea#getAbsolutePosition(int, int)}.
      */
     void moveTo(int paragraphIndex, int columnIndex, NavigationActions.SelectionPolicy selectionPolicy);
 

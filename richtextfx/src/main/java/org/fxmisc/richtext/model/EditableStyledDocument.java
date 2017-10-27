@@ -1,7 +1,6 @@
 package org.fxmisc.richtext.model;
 
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 
 import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;

@@ -1,7 +1,8 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.StyleSpans;
 
 /**
  * Specifies actions related to getting and setting styles throughout a {@link TextEditingArea}.
@@ -150,7 +151,8 @@ public interface StyleActions<PS, S> {
      *     from += span.getLength();
      * }
      * </pre>
-     * but the actual implementation in {@link SimpleEditableStyledDocument} is more efficient.
+     * but the actual implementation in {@link org.fxmisc.richtext.model.SimpleEditableStyledDocument} is
+     * more efficient.
      */
     void setStyleSpans(int from, StyleSpans<? extends S> styleSpans);
 
@@ -162,7 +164,8 @@ public interface StyleActions<PS, S> {
      *     from += span.getLength();
      * }
      * </pre>
-     * but the actual implementation in {@link SimpleEditableStyledDocument} is more efficient.
+     * but the actual implementation in {@link org.fxmisc.richtext.model.SimpleEditableStyledDocument} is
+     * more efficient.
      */
     void setStyleSpans(int paragraph, int from, StyleSpans<? extends S> styleSpans);
 

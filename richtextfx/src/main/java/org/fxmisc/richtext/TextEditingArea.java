@@ -1,13 +1,18 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 
-import org.fxmisc.richtext.CaretSelectionBind;
-import org.fxmisc.richtext.Caret;
+import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.PlainTextChange;
+import org.fxmisc.richtext.model.RichTextChange;
+import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.EventStream;
+import org.reactfx.SuspendableNo;
 import org.reactfx.value.Var;
 
 import java.util.Optional;
@@ -46,6 +51,11 @@ public interface TextEditingArea<PS, SEG, S> {
      * subsequent edits of this text-editing area.
      */
     StyledDocument<PS, SEG, S> getDocument();
+
+    /**
+     * The underlying document of this area that can be displayed by multiple {@code StyledTextArea}s.
+     */
+    EditableStyledDocument<PS, SEG, S> getContent();
 
     /**
      * Returns the object used for operating over {@link SEG segments} and their styles
@@ -128,7 +138,15 @@ public interface TextEditingArea<PS, SEG, S> {
      * Unmodifiable observable list of paragraphs in this text area.
      */
     ObservableList<Paragraph<PS, SEG, S>> getParagraphs();
+    default Paragraph<PS, SEG, S> getParagraph(int index) { return getParagraphs().get(index); }
+    default int getParagraphLength(int index) { return getParagraph(index).length(); }
 
+    /**
+     * True when an update to the area's {@link #getContent() underling editable document} is still occurring
+     * or the viewport is being updated.
+     */
+    SuspendableNo beingUpdatedProperty();
+    default boolean isBeingUpdated() { return beingUpdatedProperty().get(); }
 
     /*********************
      *                   *
@@ -137,12 +155,12 @@ public interface TextEditingArea<PS, SEG, S> {
      *********************/
 
     /**
-     * See {@link EditableStyledDocument#plainChanges()}
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#plainChanges()}
      */
     EventStream<PlainTextChange> plainTextChanges();
 
     /**
-     * See {@link EditableStyledDocument#richChanges()}
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#richChanges()}
      */
     EventStream<RichTextChange<PS, SEG, S>> richChanges();
 
@@ -209,6 +227,17 @@ public interface TextEditingArea<PS, SEG, S> {
         return subDocument(start, end);
     }
 
+    /**
+     * Returns the selection range in the given paragraph. Note: this method will return
+     * {@code IndexRange(start, paragraph.length() + 1)} when the selection includes a newline character.
+     */
+    default IndexRange getParagraphSelection(int paragraph) {
+        return getParagraphSelection(getCaretSelectionBind(), paragraph);
+    }
+
+    public IndexRange getParagraphSelection(Selection selection, int paragraph);
+
+
     /***************
      *             *
      *   Actions   *
@@ -235,6 +264,15 @@ public interface TextEditingArea<PS, SEG, S> {
         int caretPosition = getAbsolutePosition(caretPositionParagraph, caretPositionColumn);
         selectRange(anchor, caretPosition);
     }
+
+    /**
+     * Displaces the caret from the selection by positioning only the caret to the new location without
+     * also affecting the selection's {@link #getAnchor() anchor} or the {@link #getSelection() selection}.
+     * Do not confuse this method with {@link NavigationActions#moveTo(int)}, which is the normal way of moving the
+     * caret. This method can be used to achieve the special case of positioning the caret outside or inside the
+     * selection, as opposed to always being at the boundary. Use with care.
+     */
+    public void displaceCaret(int pos);
 
     /**
      * Replaces a range of characters with the given text.
@@ -383,4 +421,9 @@ public interface TextEditingArea<PS, SEG, S> {
      *                    If negative, the index going backward (the previous paragraph's line(s)
      */
     int getAbsolutePosition(int paragraphIndex, int columnIndex);
+
+    /**
+     * Disposes this area, preventing memory leaks.
+     */
+    public void dispose();
 }

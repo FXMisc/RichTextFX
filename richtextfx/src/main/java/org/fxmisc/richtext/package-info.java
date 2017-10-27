@@ -15,7 +15,7 @@
  * @see org.fxmisc.richtext.model.TwoDimensional
  * @see org.fxmisc.richtext.model.TwoDimensional.Bias
  * @see org.fxmisc.richtext.GenericStyledArea
- * @see org.fxmisc.richtext.model.TextEditingArea
+ * @see org.fxmisc.richtext.TextEditingArea
  * @see org.fxmisc.richtext.Caret
  * @see org.fxmisc.richtext.Selection
  */

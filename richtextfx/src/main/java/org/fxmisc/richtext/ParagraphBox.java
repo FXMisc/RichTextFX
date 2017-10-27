@@ -27,7 +27,7 @@ import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyledSegment;
-import org.fxmisc.richtext.util.MouseStationaryHelper;
+import org.fxmisc.richtext.event.MouseStationaryHelper;
 import org.reactfx.EventStream;
 import org.reactfx.util.Either;
 import org.reactfx.util.Tuple2;

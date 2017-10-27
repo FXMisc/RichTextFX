@@ -3,7 +3,6 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
-import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;

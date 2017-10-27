@@ -8,8 +8,9 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
-import org.fxmisc.richtext.model.NavigationActions;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.event.MouseOverTextEvent;
+import org.reactfx.EventStream;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -21,7 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 /**
- * Specifies view-related API for a {@link org.fxmisc.richtext.model.TextEditingArea}
+ * Specifies view-related API for a {@link TextEditingArea}
  *
  * @param <PS> paragraph style type
  * @param <SEG> segment type
@@ -106,7 +107,7 @@ public interface ViewActions<PS, SEG, S> {
      * but has not yet released the mouse.
      *
      * <p>By default, this will create a new selection or
-     * {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
+     * {@link NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
      * smaller via the code:
      * <pre><code>
      *     e -&gt; {
@@ -123,7 +124,7 @@ public interface ViewActions<PS, SEG, S> {
      * pressed the mouse on top of the selection, dragged it to a new location within the area,
      * and released the mouse.
      *
-     * <p>By default, this will {@link org.fxmisc.richtext.model.NavigationActions.SelectionPolicy#ADJUST} the
+     * <p>By default, this will {@link NavigationActions.SelectionPolicy#ADJUST} the
      * current selection to be bigger or smaller via the code:
      * <pre><code>
      *     e -&gt; {
@@ -231,6 +232,12 @@ public interface ViewActions<PS, SEG, S> {
     Val<Double> totalHeightEstimateProperty();
 
     /**
+     * Returns an {@link EventStream} that emits a {@code null} value every time the viewport becomes dirty (e.g.
+     * the viewport's width, height, scaleX, scaleY, estimatedScrollX, or estimatedScrollY values change)
+     */
+    public EventStream<?> viewportDirtyEvents();
+
+    /**
      * Gets the visible paragraphs, even the ones that are barely displayed.
      */
     LiveList<Paragraph<PS, SEG, S>> getVisibleParagraphs();
@@ -249,6 +256,28 @@ public interface ViewActions<PS, SEG, S> {
      * ********************************************************************** */
 
     /**
+     * Maps a paragraph index from {@link TextEditingArea#getParagraphs()} into the index system of
+     * {@link #getVisibleParagraphs()}.
+     */
+    public Optional<Integer> allParToVisibleParIndex(int allParIndex);
+
+    /**
+     * Maps a paragraph index from {@link #getVisibleParagraphs()} into the index system of
+     * {@link TextEditingArea#getParagraphs()}.
+     */
+    public int visibleParToAllParIndex(int visibleParIndex);
+
+    /**
+     * Returns the index of the first visible paragraph in the index system of {@link TextEditingArea#getParagraphs()}.
+     */
+    public int firstVisibleParToAllParIndex();
+
+    /**
+     * Returns the index of the last visible paragraph in the index system of {@link TextEditingArea#getParagraphs()}.
+     */
+    public int lastVisibleParToAllParIndex();
+
+    /**
      * Helpful for determining which letter is at point x, y:
      * <pre>
      *     {@code
@@ -265,6 +294,12 @@ public interface ViewActions<PS, SEG, S> {
     CharacterHit hit(double x, double y);
 
     /**
+     * Returns 0 if the given paragraph displays its content across only one line, or returns the index
+     * of the line on which the given column position appears if the paragraph spans multiple lines.
+     */
+    public int lineIndex(int paragraphIndex, int columnPosition);
+
+    /**
      * Gets the number of lines a paragraph spans when {@link #isWrapText()} is true, or otherwise returns 1.
      * CAUTION: the underlying TextFlow does not immediately account for changes in the stage's width when the
      * paragraph in question is a multi-line paragraph and {@link #isWrapText() text wrap is on}. After calling
@@ -275,6 +310,12 @@ public interface ViewActions<PS, SEG, S> {
     int getParagraphLinesCount(int paragraphIndex);
 
     /**
+     * Using the paragraph index of the "all paragraph" index system, returns the bounds of a caret on the
+     * given paragraph or {@link Optional#empty()} if no caret is on that paragraph or the pragraph is not visible.
+     */
+    public Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex);
+
+    /**
      * Gets the character bounds on screen
      *
      * @param from the start position
@@ -282,6 +323,30 @@ public interface ViewActions<PS, SEG, S> {
      * @return the bounds or {@link Optional#empty()} if line is not visible or the range is only a newline character.
      */
     Optional<Bounds> getCharacterBoundsOnScreen(int from, int to);
+
+    /**
+     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
+     *
+     * The returned bounds object will always be within the bounds of the area. In other words, it takes
+     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
+     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
+     * or if it's long and spans outside of the area's width).
+     *
+     * @param visibleParagraphIndex the index in area's list of visible paragraphs.
+     */
+    public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex);
+
+    /**
+     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
+     *
+     * The returned bounds object will always be within the bounds of the area. In other words, it takes
+     * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
+     * the paragraph's real width (if it's short and doesn't take up all of the area's provided horizontal space
+     * or if it's long and spans outside of the area's width).
+     *
+     * @param paragraphIndex the index in area's list of paragraphs (visible and invisible).
+     */
+    public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex);
 
     /* ********************************************************************** *
      *                                                                        *
@@ -370,5 +435,10 @@ public interface ViewActions<PS, SEG, S> {
      *                        to the place to where the caret is moved is desired.
      */
     void nextPage(NavigationActions.SelectionPolicy selectionPolicy);
+
+    /**
+     * Hides the area's context menu if it is not {@code null} and it is {@link ContextMenu#isShowing() showing}.
+     */
+    void hideContextMenu();
 
 }

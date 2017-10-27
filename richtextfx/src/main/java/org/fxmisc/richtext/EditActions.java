@@ -1,7 +1,7 @@
-package org.fxmisc.richtext.model;
+package org.fxmisc.richtext;
 
 import javafx.scene.control.IndexRange;
-import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.model.StyledDocument;
 
 /**
  * Specifies actions for editing the content of a {@link TextEditingArea}.

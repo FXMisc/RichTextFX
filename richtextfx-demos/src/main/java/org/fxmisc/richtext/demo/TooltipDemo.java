@@ -9,7 +9,7 @@ import javafx.scene.control.Label;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
-import org.fxmisc.richtext.MouseOverTextEvent;
+import org.fxmisc.richtext.event.MouseOverTextEvent;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class TooltipDemo extends Application {

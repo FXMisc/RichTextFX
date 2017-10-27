@@ -5,9 +5,9 @@ import java.util.Optional;
 
 /**
  * Base change class for style changes ({@link RichTextChange}) and non-style changes ({@link PlainTextChange})
- * in a {@link TextEditingArea}.
+ * in a {@link org.fxmisc.richtext.TextEditingArea}.
  *
- * @param <S> type of data that was removed and inserted in the {@link TextEditingArea}.
+ * @param <S> type of data that was removed and inserted in the {@link org.fxmisc.richtext.TextEditingArea}.
  * @param <Self> a subclass of TextChange
  */
 public abstract class TextChange<S, Self extends TextChange<S, Self>> {
