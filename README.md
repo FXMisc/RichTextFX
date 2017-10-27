@@ -286,3 +286,5 @@ License
 -------
 
 Dual-licensed under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause) and [GPLv2 with the Classpath Exception](http://openjdk.java.net/legal/gplv2+ce.html).
+
+Wonderful javafx api!! Very cool!
