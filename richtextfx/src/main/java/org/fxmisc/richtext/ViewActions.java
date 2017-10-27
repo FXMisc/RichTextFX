@@ -384,6 +384,12 @@ public interface ViewActions<PS, SEG, S> {
     void showParagraphAtBottom(int paragraphIndex);
 
     /**
+     * Lays out the viewport so that the given bounds (according to the paragraph's coordinate system) within
+     * the given paragraph is visible in the viewport.
+     */
+    void showParagraphRegion(int paragraphIndex, Bounds region);
+
+    /**
      * If the caret is not visible within the area's view, the area will scroll so that caret
      * is visible in the next layout pass. Use this method when you wish to "follow the caret"
      * (i.e. auto-scroll to caret) after making a change (add/remove/modify area's segments).

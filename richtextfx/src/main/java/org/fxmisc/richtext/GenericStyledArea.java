@@ -1113,6 +1113,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.showAsLast(paragraphIndex));
     }
 
+    @Override
+    public void showParagraphRegion(int paragraphIndex, Bounds region) {
+        suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex, region));
+    }
+
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
