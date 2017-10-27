@@ -1,13 +1,20 @@
 # Change Log
 
-## [Unreleased](https://github.com/FXMisc/RichTextFX/tree/HEAD)
-
-[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.8.0...HEAD)
+## [0.8.1](https://github.com/FXMisc/RichTextFX/tree/0.8.1) (2017-10-27)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.8.0...0.8.1)
 
 **Closed issues:**
 
+- Write high-quality javadoc [\#626](https://github.com/FXMisc/RichTextFX/issues/626)
 - Remove deprecated Travis Precise build [\#623](https://github.com/FXMisc/RichTextFX/issues/623)
+- Drop "Milestone" from release version and continue with 0.8, 0.9, 0.10, ... [\#622](https://github.com/FXMisc/RichTextFX/issues/622)
 - Update Flowless to stable release \(once it's released\) [\#516](https://github.com/FXMisc/RichTextFX/issues/516)
+
+**Merged pull requests:**
+
+- Get viewport height; show paragraph region; clean up source code \(boilerplate & organization\) [\#632](https://github.com/FXMisc/RichTextFX/pull/632) ([JordanMartinez](https://github.com/JordanMartinez))
+- Insure all public methods are overridden in interface; move interfaces to view package [\#631](https://github.com/FXMisc/RichTextFX/pull/631) ([JordanMartinez](https://github.com/JordanMartinez))
+- Document all classes [\#630](https://github.com/FXMisc/RichTextFX/pull/630) ([JordanMartinez](https://github.com/JordanMartinez))
 
 ## [v0.8.0](https://github.com/FXMisc/RichTextFX/tree/v0.8.0) (2017-10-20)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.7-M5n...v0.8.0)
