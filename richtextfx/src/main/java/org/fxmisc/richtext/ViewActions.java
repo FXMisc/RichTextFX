@@ -1,6 +1,7 @@
 package org.fxmisc.richtext;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -34,8 +35,8 @@ public interface ViewActions<PS, SEG, S> {
      * Indicates whether this text area can be edited by the user.
      * Note that this property doesn't affect editing through the API.
      */
-    boolean isEditable();
-    void setEditable(boolean value);
+    default boolean isEditable() { return editableProperty().get(); }
+    default void setEditable(boolean value) { editableProperty().set(value); }
     BooleanProperty editableProperty();
 
     /**
@@ -43,8 +44,8 @@ public interface ViewActions<PS, SEG, S> {
      * then this property indicates whether the text should wrap
      * onto another line.
      */
-    boolean isWrapText();
-    void setWrapText(boolean value);
+    default boolean isWrapText() { return wrapTextProperty().get(); }
+    default void setWrapText(boolean value) { wrapTextProperty().set(value); }
     BooleanProperty wrapTextProperty();
 
     /**
@@ -55,8 +56,8 @@ public interface ViewActions<PS, SEG, S> {
      *
      * <p>Default value is {@code null}.
      */
-    Duration getMouseOverTextDelay();
-    void setMouseOverTextDelay(Duration delay);
+    default Duration getMouseOverTextDelay() { return mouseOverTextDelayProperty().get(); }
+    default void setMouseOverTextDelay(Duration delay) { mouseOverTextDelayProperty().set(delay); }
     ObjectProperty<Duration> mouseOverTextDelayProperty();
 
     /**
@@ -65,8 +66,9 @@ public interface ViewActions<PS, SEG, S> {
      * want this auto scroll feature to occur. This flag should be set to the correct value before the end of
      * the process InputMap.
      */
-    boolean isAutoScrollOnDragDesired();
-    void setAutoScrollOnDragDesired(boolean val);
+    default boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesiredProperty().get(); }
+    default void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesiredProperty().set(val); }
+    BooleanProperty autoScrollOnDragDesiredProperty();
 
     /**
      * Runs the consumer when the user pressed the mouse over unselected text within the area.
@@ -80,8 +82,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer);
-    Consumer<MouseEvent> getOnOutsideSelectionMousePress();
+    default void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePressProperty().set(consumer); }
+    default Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePressProperty().get(); }
+    ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty();
 
     /**
      * Runs the consumer when the mouse is released in this scenario: the user has selected some text and then
@@ -98,8 +101,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    Consumer<MouseEvent> getOnInsideSelectionMousePressRelease();
-    void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer);
+    default Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressReleaseProperty().get(); }
+    default void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressReleaseProperty().set(consumer); }
+    ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty();
 
     /**
      * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
@@ -116,8 +120,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    Consumer<Point2D> getOnNewSelectionDrag();
-    void setOnNewSelectionDrag(Consumer<Point2D> consumer);
+    default Consumer<Point2D> getOnNewSelectionDrag() { return onNewSelectionDragProperty().get(); }
+    default void setOnNewSelectionDrag(Consumer<Point2D> consumer) { onNewSelectionDragProperty().set(consumer); }
+    ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty();
 
     /**
      * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
@@ -133,8 +138,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    Consumer<MouseEvent> getOnNewSelectionDragEnd();
-    void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer);
+    default Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEndProperty().get(); }
+    default void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEndProperty().set(consumer); }
+    ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEndProperty();
 
     /**
      * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
@@ -150,8 +156,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    Consumer<Point2D> getOnSelectionDrag();
-    void setOnSelectionDrag(Consumer<Point2D> consumer);
+    default Consumer<Point2D> getOnSelectionDrag() { return onSelectionDragProperty().get(); }
+    default void setOnSelectionDrag(Consumer<Point2D> consumer) { onSelectionDragProperty().set(consumer); }
+    ObjectProperty<Consumer<Point2D>> onSelectionDragProperty();
 
     /**
      * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
@@ -167,68 +174,65 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    Consumer<MouseEvent> getOnSelectionDrop();
-    void setOnSelectionDrop(Consumer<MouseEvent> consumer);
+    default Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDropProperty().get(); }
+    default void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDropProperty().set(consumer); }
+    ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty();
 
     /**
      * Gets the function that maps a line index to a node that is positioned to the left of the first character
      * in a paragraph's text. Useful for toggle points or indicating the line's number via {@link LineNumberFactory}.
      */
-    IntFunction<? extends Node> getParagraphGraphicFactory();
-    void setParagraphGraphicFactory(IntFunction<? extends Node> factory);
+    default IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactoryProperty().get(); }
+    default void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactoryProperty().set(factory); }
     ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty();
 
     /** Gets the {@link ContextMenu} for the area, which is by default null. */
-    ContextMenu getContextMenu();
-    void setContextMenu(ContextMenu menu);
+    default ContextMenu getContextMenu() { return contextMenuObjectProperty().get(); }
+    default void setContextMenu(ContextMenu menu) { contextMenuObjectProperty().set(menu); }
     ObjectProperty<ContextMenu> contextMenuObjectProperty();
 
     /**
      * Gets the horizontal amount in pixels by which to offset the {@link #getContextMenu()} when it is shown,
      * which has a default value of 2.
      */
-    double getContextMenuXOffset();
-    void setContextMenuXOffset(double offset);
+    default double getContextMenuXOffset() { return contextMenuXOffsetProperty().get(); }
+    default void setContextMenuXOffset(double offset) { contextMenuXOffsetProperty().set(offset); }
+    DoubleProperty contextMenuXOffsetProperty();
 
     /**
      * Gets the vertical amount in pixels by which to offset the {@link #getContextMenu()} when it is shown,
      * which has a default value of 2.
      */
-    double getContextMenuYOffset();
-    void setContextMenuYOffset(double offset);
+    default double getContextMenuYOffset() { return contextMenuYOffsetProperty().get(); }
+    default void setContextMenuYOffset(double offset) { contextMenuYOffsetProperty().set(offset); }
+    DoubleProperty contextMenuYOffsetProperty();
 
     /**
-     * Gets the <em>estimated</em> scrollX value. This can be set in order to scroll the content.
+     * The <em>estimated</em> scrollX value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    double getEstimatedScrollX();
-    void setEstimatedScrollX(double value);
     Var<Double> estimatedScrollXProperty();
 
     /**
-     * Gets the <em>estimated</em> scrollY value. This can be set in order to scroll the content.
+     * The <em>estimated</em> scrollY value. This can be set in order to scroll the content.
      * Value is only accurate when area does not wrap lines and uses the same font size
      * throughout the entire area.
      */
-    double getEstimatedScrollY();
-    void setEstimatedScrollY(double value);
     Var<Double> estimatedScrollYProperty();
 
     /**
-     * Gets the <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
+     * The <em>estimated</em> width of the entire document. Accurate when area does not wrap lines and
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    double getTotalWidthEstimate();
     Val<Double> totalWidthEstimateProperty();
 
     /**
-     * Gets the <em>estimated</em> height of the entire document. Accurate when area does not wrap lines and
+     * The <em>estimated</em> height of the entire document. Accurate when area does not wrap lines and
      * uses the same font size throughout the entire area. Value is only supposed to be <em>set</em> by
      * the skin, not the user.
      */
-    double getTotalHeightEstimate();
     Val<Double> totalHeightEstimateProperty();
 
     /**
@@ -256,6 +260,11 @@ public interface ViewActions<PS, SEG, S> {
      * ********************************************************************** */
 
     /**
+     * Gets the height of the viewport and ignores the padding values added to the area.
+     */
+    public double getViewportHeight();
+
+    /**
      * Maps a paragraph index from {@link TextEditingArea#getParagraphs()} into the index system of
      * {@link #getVisibleParagraphs()}.
      */
@@ -270,12 +279,12 @@ public interface ViewActions<PS, SEG, S> {
     /**
      * Returns the index of the first visible paragraph in the index system of {@link TextEditingArea#getParagraphs()}.
      */
-    public int firstVisibleParToAllParIndex();
+    default int firstVisibleParToAllParIndex() { return visibleParToAllParIndex(0); }
 
     /**
      * Returns the index of the last visible paragraph in the index system of {@link TextEditingArea#getParagraphs()}.
      */
-    public int lastVisibleParToAllParIndex();
+    default int lastVisibleParToAllParIndex() { return visibleParToAllParIndex(getVisibleParagraphs().size() - 1); }
 
     /**
      * Helpful for determining which letter is at point x, y:
@@ -384,6 +393,12 @@ public interface ViewActions<PS, SEG, S> {
     void showParagraphAtBottom(int paragraphIndex);
 
     /**
+     * Lays out the viewport so that the given bounds (according to the paragraph's coordinate system) within
+     * the given paragraph is visible in the viewport.
+     */
+    void showParagraphRegion(int paragraphIndex, Bounds region);
+
+    /**
      * If the caret is not visible within the area's view, the area will scroll so that caret
      * is visible in the next layout pass. Use this method when you wish to "follow the caret"
      * (i.e. auto-scroll to caret) after making a change (add/remove/modify area's segments).
@@ -439,6 +454,11 @@ public interface ViewActions<PS, SEG, S> {
     /**
      * Hides the area's context menu if it is not {@code null} and it is {@link ContextMenu#isShowing() showing}.
      */
-    void hideContextMenu();
+    default void hideContextMenu() {
+        ContextMenu menu = getContextMenu();
+        if (menu != null && menu.isShowing()) {
+            menu.hide();
+        }
+    }
 
 }

@@ -36,13 +36,13 @@ public interface TextEditingArea<PS, SEG, S> {
     /**
      * The number of characters in this text-editing area.
      */
-    int getLength();
+    default int getLength() { return lengthProperty().getValue(); }
     ObservableValue<Integer> lengthProperty();
 
     /**
      * Text content of this text-editing area.
      */
-    String getText();
+    default String getText() { return textProperty().getValue(); }
     ObservableValue<String> textProperty();
 
     /**
