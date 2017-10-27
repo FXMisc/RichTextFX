@@ -718,37 +718,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Returns x coordinate of the caret in the current paragraph.
-     */
-    final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
-        return getCell(paragraphIndex).getCaretOffsetX();
-    }
-
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
-        int parIdx = targetLine.getMajor();
-        ParagraphBox<PS, SEG, S> cell = virtualFlow.getCell(parIdx).getNode();
-        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
-        return parHit.offset(getParagraphOffset(parIdx));
-    }
-
-    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
-        // don't account for padding here since height of virtualFlow is used, not area + potential padding
-        VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(0.0, y);
-        if(hit.isBeforeCells()) {
-            return CharacterHit.insertionAt(0);
-        } else if(hit.isAfterCells()) {
-            return CharacterHit.insertionAt(getLength());
-        } else {
-            int parIdx = hit.getCellIndex();
-            int parOffset = getParagraphOffset(parIdx);
-            ParagraphBox<PS, SEG, S> cell = hit.getCell().getNode();
-            Point2D cellOffset = hit.getCellOffset();
-            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
-            return parHit.offset(parOffset);
-        }
-    }
-
     @Override
     public final double getViewportHeight() {
         return virtualFlow.getHeight();
@@ -812,21 +781,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             CharacterHit parHit = cell.hit(cellOffset);
             return parHit.offset(parOffset);
         }
-    }
-
-    /**
-     * Returns the current line as a two-level index.
-     * The major number is the paragraph index, the minor
-     * number is the line number within the paragraph.
-     *
-     * <p>This method has a side-effect of bringing the current
-     * paragraph to the viewport if it is not already visible.
-     */
-    TwoDimensional.Position currentLine() {
-        int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        int lineIdx = cell.getNode().getCurrentLineIndex();
-        return paragraphLineNavigator.position(parIdx, lineIdx);
     }
 
     @Override
@@ -998,6 +952,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.offsetToPosition(charOffset, bias);
     }
 
+    @Override
+    public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex) {
+        return getParagraphBoundsOnScreen(virtualFlow.visibleCells().get(visibleParagraphIndex));
+    }
+
+    @Override
+    public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
+    }
+
+    @Override
+    public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
+        return virtualFlow.getCellIfVisible(paragraphIndex)
+                .map(c -> c.getNode().getCaretBoundsOnScreen());
+    }
+
 
     /* ********************************************************************** *
      *                                                                        *
@@ -1053,36 +1023,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex, region));
     }
 
-    void showCaretAtBottom() {
-        int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
-        double y = caretBounds.getMaxY();
-        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, getViewportHeight() - y));
-    }
-
-    void showCaretAtTop() {
-        int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
-        double y = caretBounds.getMinY();
-        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, -y));
-    }
-
     @Override
     public void requestFollowCaret() {
         followCaretRequested = true;
         requestLayout();
-    }
-
-    /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
-    private void followCaret() {
-        int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
-        double graphicWidth = cell.getNode().getGraphicPrefWidth();
-        Bounds region = extendLeft(caretBounds, graphicWidth);
-        virtualFlow.show(parIdx, region);
     }
 
     @Override
@@ -1147,6 +1091,24 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override
+    public final S getTextStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialTextStyle;
+        } else {
+            return content.getStyleAtPosition(pos);
+        }
+    }
+
+    @Override
+    public final PS getParagraphStyleForInsertionAt(int pos) {
+        if(useInitialStyleForInsertion.get()) {
+            return initialParagraphStyle;
+        } else {
+            return content.getParagraphStyleAtPosition(pos);
+        }
+    }
+
+    @Override
     public void replaceText(int start, int end, String text) {
         StyledDocument<PS, SEG, S> doc = ReadOnlyStyledDocument.fromString(
                 text, getParagraphStyleForInsertionAt(start), getTextStyleForInsertionAt(start), segmentOps
@@ -1207,6 +1169,107 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 }
             }
         });
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * Package-Private methods                                                *
+     *                                                                        *
+     * ********************************************************************** */
+
+    /**
+     * Returns the current line as a two-level index.
+     * The major number is the paragraph index, the minor
+     * number is the line number within the paragraph.
+     *
+     * <p>This method has a side-effect of bringing the current
+     * paragraph to the viewport if it is not already visible.
+     */
+    TwoDimensional.Position currentLine() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
+        int lineIdx = cell.getNode().getCurrentLineIndex();
+        return paragraphLineNavigator.position(parIdx, lineIdx);
+    }
+
+    void showCaretAtBottom() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMaxY();
+        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, getViewportHeight() - y));
+    }
+
+    void showCaretAtTop() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double y = caretBounds.getMinY();
+        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, -y));
+    }
+
+    /**
+     * Returns x coordinate of the caret in the current paragraph.
+     */
+    final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
+        return getCell(paragraphIndex).getCaretOffsetX();
+    }
+
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
+        int parIdx = targetLine.getMajor();
+        ParagraphBox<PS, SEG, S> cell = virtualFlow.getCell(parIdx).getNode();
+        CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
+        return parHit.offset(getParagraphOffset(parIdx));
+    }
+
+    CharacterHit hit(ParagraphBox.CaretOffsetX x, double y) {
+        // don't account for padding here since height of virtualFlow is used, not area + potential padding
+        VirtualFlowHit<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> hit = virtualFlow.hit(0.0, y);
+        if(hit.isBeforeCells()) {
+            return CharacterHit.insertionAt(0);
+        } else if(hit.isAfterCells()) {
+            return CharacterHit.insertionAt(getLength());
+        } else {
+            int parIdx = hit.getCellIndex();
+            int parOffset = getParagraphOffset(parIdx);
+            ParagraphBox<PS, SEG, S> cell = hit.getCell().getNode();
+            Point2D cellOffset = hit.getCellOffset();
+            CharacterHit parHit = cell.hitText(x, cellOffset.getY());
+            return parHit.offset(parOffset);
+        }
+    }
+
+    final Optional<Bounds> getSelectionBoundsOnScreen(Selection selection) {
+        if (selection.getLength() == 0) {
+            return Optional.empty();
+        }
+
+        List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
+        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
+            final int i0 = i;
+            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
+                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
+                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
+                bounds.add(b);
+            });
+        }
+
+        if(bounds.size() == 0) {
+            return Optional.empty();
+        }
+        double minX = bounds.stream().mapToDouble(Bounds::getMinX).min().getAsDouble();
+        double maxX = bounds.stream().mapToDouble(Bounds::getMaxX).max().getAsDouble();
+        double minY = bounds.stream().mapToDouble(Bounds::getMinY).min().getAsDouble();
+        double maxY = bounds.stream().mapToDouble(Bounds::getMaxY).max().getAsDouble();
+        return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
+    }
+
+    void clearTargetCaretOffset() {
+        caretSelectionBind.clearTargetOffset();
+    }
+
+    ParagraphBox.CaretOffsetX getTargetCaretOffset() {
+        return caretSelectionBind.getTargetOffset();
     }
 
     /* ********************************************************************** *
@@ -1291,6 +1354,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         };
     }
 
+    /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
+    private void followCaret() {
+        int parIdx = getCurrentParagraph();
+        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
+        Bounds caretBounds = cell.getNode().getCaretBounds();
+        double graphicWidth = cell.getNode().getGraphicPrefWidth();
+        Bounds region = extendLeft(caretBounds, graphicWidth);
+        virtualFlow.show(parIdx, region);
+    }
+
     private ParagraphBox<PS, SEG, S> getCell(int index) {
         return virtualFlow.getCell(index).getNode();
     }
@@ -1303,16 +1376,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private int getParagraphOffset(int parIdx) {
         return position(parIdx, 0).toOffset();
-    }
-
-    @Override
-    public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex) {
-        return getParagraphBoundsOnScreen(virtualFlow.visibleCells().get(visibleParagraphIndex));
-    }
-
-    @Override
-    public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex) {
-        return virtualFlow.getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
     }
 
     private Bounds getParagraphBoundsOnScreen(Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell) {
@@ -1344,37 +1407,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 
-    @Override
-    public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
-        return virtualFlow.getCellIfVisible(paragraphIndex)
-                .map(c -> c.getNode().getCaretBoundsOnScreen());
-    }
-
-    final Optional<Bounds> getSelectionBoundsOnScreen(Selection selection) {
-        if (selection.getLength() == 0) {
-            return Optional.empty();
-        }
-
-        List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
-        for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
-            final int i0 = i;
-            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
-                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
-                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
-                bounds.add(b);
-            });
-        }
-
-        if(bounds.size() == 0) {
-            return Optional.empty();
-        }
-        double minX = bounds.stream().mapToDouble(Bounds::getMinX).min().getAsDouble();
-        double maxX = bounds.stream().mapToDouble(Bounds::getMaxX).max().getAsDouble();
-        double minY = bounds.stream().mapToDouble(Bounds::getMinY).min().getAsDouble();
-        double maxY = bounds.stream().mapToDouble(Bounds::getMaxY).max().getAsDouble();
-        return Optional.of(new BoundingBox(minX, minY, maxX-minX, maxY-minY));
-    }
-
     private <T> void subscribeTo(EventStream<T> src, Consumer<T> cOnsumer) {
         manageSubscription(src.subscribe(cOnsumer));
     }
@@ -1397,34 +1429,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    @Override
-    public final S getTextStyleForInsertionAt(int pos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialTextStyle;
-        } else {
-            return content.getStyleAtPosition(pos);
-        }
-    }
-
-    @Override
-    public final PS getParagraphStyleForInsertionAt(int pos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialParagraphStyle;
-        } else {
-            return content.getParagraphStyleAtPosition(pos);
-        }
-    }
-
     private void suspendVisibleParsWhile(Runnable runnable) {
         Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
-    }
-
-    void clearTargetCaretOffset() {
-        caretSelectionBind.clearTargetOffset();
-    }
-
-    ParagraphBox.CaretOffsetX getTargetCaretOffset() {
-        return caretSelectionBind.getTargetOffset();
     }
 
     /* ********************************************************************** *
