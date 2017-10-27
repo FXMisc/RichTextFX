@@ -293,15 +293,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     public static final IndexRange EMPTY_RANGE = new IndexRange(0, 0);
 
-    /**
-     * Private helper method.
-     */
-    private static int clamp(int min, int val, int max) {
-        return val < min ? min
-                : val > max ? max
-                : val;
-    }
-
     private static final PseudoClass READ_ONLY = PseudoClass.getPseudoClass("read-only");
     private static final PseudoClass HAS_CARET = PseudoClass.getPseudoClass("has-caret");
     private static final PseudoClass FIRST_PAR = PseudoClass.getPseudoClass("first-paragraph");
