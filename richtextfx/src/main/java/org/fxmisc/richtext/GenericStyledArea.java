@@ -360,12 +360,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public ObjectProperty<Duration> mouseOverTextDelayProperty() { return mouseOverTextDelay; }
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
-    @Override
-    public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
-    @Override
-    public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
-    @Override
-    public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
+    @Override public void setParagraphGraphicFactory(IntFunction<? extends Node> factory) { paragraphGraphicFactory.set(factory); }
+    @Override public IntFunction<? extends Node> getParagraphGraphicFactory() { return paragraphGraphicFactory.get(); }
+    @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ContextMenu getContextMenu() { return contextMenu.get(); }
@@ -382,36 +379,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setContextMenuYOffset(double offset) { contextMenuYOffset = offset; }
 
     private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
-    @Override
-    public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
-    @Override
-    public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
-    @Override
-    public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
+    @Override public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
+    @Override public void setUseInitialStyleForInsertion(boolean value) { useInitialStyleForInsertion.set(value); }
+    @Override public boolean getUseInitialStyleForInsertion() { return useInitialStyleForInsertion.get(); }
 
     private Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> styleCodecs = Optional.empty();
-    @Override
-    public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> styledSegCodec) {
+    @Override public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> styledSegCodec) {
         styleCodecs = Optional.of(t(paragraphStyleCodec, styledSegCodec));
     }
-    @Override
-    public Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> getStyleCodecs() {
+    @Override public Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> getStyleCodecs() {
         return styleCodecs;
     }
 
-    @Override
-    public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
-    @Override
-    public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
-    @Override
-    public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
+    @Override public Var<Double> estimatedScrollXProperty() { return virtualFlow.estimatedScrollXProperty(); }
+    @Override public double getEstimatedScrollX() { return virtualFlow.estimatedScrollXProperty().getValue(); }
+    @Override public void setEstimatedScrollX(double value) { virtualFlow.estimatedScrollXProperty().setValue(value); }
 
-    @Override
-    public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
-    @Override
-    public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
-    @Override
-    public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
+    @Override public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
+    @Override public double getEstimatedScrollY() { return virtualFlow.estimatedScrollYProperty().getValue(); }
+    @Override public void setEstimatedScrollY(double value) { virtualFlow.estimatedScrollYProperty().setValue(value); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -504,16 +490,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
     // total width estimate
-    @Override
-    public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
-    @Override
-    public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
+    @Override public Val<Double> totalWidthEstimateProperty() { return virtualFlow.totalWidthEstimateProperty(); }
+    @Override public double getTotalWidthEstimate() { return virtualFlow.totalWidthEstimateProperty().getValue(); }
 
     // total height estimate
-    @Override
-    public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
-    @Override
-    public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
+    @Override public Val<Double> totalHeightEstimateProperty() { return virtualFlow.totalHeightEstimateProperty(); }
+    @Override public double getTotalHeightEstimate() { return virtualFlow.totalHeightEstimateProperty().getValue(); }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -562,8 +544,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final PS getInitialParagraphStyle() { return initialParagraphStyle; }
 
     private final BiConsumer<TextFlow, PS> applyParagraphStyle;
-    @Override
-    public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
+    @Override public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() { return applyParagraphStyle; }
 
     // TODO: Currently, only undo/redo respect this flag.
     private final boolean preserveStyle;
