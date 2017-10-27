@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.util;
+package org.fxmisc.richtext.event;
 import javafx.event.EventTarget;
 import javafx.event.EventType;
 import javafx.geometry.Point2D;

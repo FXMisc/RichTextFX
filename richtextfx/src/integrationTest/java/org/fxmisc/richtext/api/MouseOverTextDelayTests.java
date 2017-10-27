@@ -4,7 +4,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.fxmisc.richtext.MouseOverTextEvent;
+import org.fxmisc.richtext.event.MouseOverTextEvent;
 import org.junit.Ignore;
 import org.junit.Test;
 

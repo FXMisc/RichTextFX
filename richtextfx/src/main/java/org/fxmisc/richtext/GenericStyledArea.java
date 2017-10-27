@@ -74,6 +74,7 @@ import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 import org.fxmisc.richtext.model.UndoActions;
+import org.fxmisc.richtext.event.MouseOverTextEvent;
 import org.fxmisc.richtext.util.UndoUtils;
 import org.fxmisc.undo.UndoManager;
 import org.reactfx.EventStream;
