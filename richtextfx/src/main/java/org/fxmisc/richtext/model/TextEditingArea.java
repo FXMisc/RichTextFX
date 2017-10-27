@@ -47,6 +47,9 @@ public interface TextEditingArea<PS, SEG, S> {
      */
     StyledDocument<PS, SEG, S> getDocument();
 
+    /**
+     * Returns the object used for operating over {@link SEG segments} and their styles
+     */
     SegmentOps<SEG, S> getSegOps();
 
     /**
@@ -88,7 +91,7 @@ public interface TextEditingArea<PS, SEG, S> {
     default Var<Caret.CaretVisibility> showCaretProperty() { return getCaretSelectionBind().showCaretProperty(); }
 
     /**
-     * Gets the area's main selection
+     * Gets the area's main {@link CaretSelectionBind}.
      */
     CaretSelectionBind<PS, SEG, S> getCaretSelectionBind();
 
@@ -134,12 +137,12 @@ public interface TextEditingArea<PS, SEG, S> {
      *********************/
 
     /**
-     * Stream of text changes.
+     * See {@link EditableStyledDocument#plainChanges()}
      */
     EventStream<PlainTextChange> plainTextChanges();
 
     /**
-     * Stream of rich text changes.
+     * See {@link EditableStyledDocument#richChanges()}
      */
     EventStream<RichTextChange<PS, SEG, S>> richChanges();
 

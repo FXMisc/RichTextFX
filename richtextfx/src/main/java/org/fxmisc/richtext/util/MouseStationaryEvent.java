@@ -6,6 +6,11 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.InputEvent;
 
+/**
+ * An event indicating that the mouse has stopped moving and remained stationary for time
+ * ({@link #MOUSE_STATIONARY_BEGIN}), or that the stationary mouse has once again moved
+ * ({@link #MOUSE_STATIONARY_END}).
+ */
 public abstract class MouseStationaryEvent extends InputEvent {
 
     private static final long serialVersionUID = 1L;

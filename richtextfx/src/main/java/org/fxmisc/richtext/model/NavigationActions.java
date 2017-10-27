@@ -5,7 +5,7 @@ import java.text.BreakIterator;
 import javafx.scene.control.IndexRange;
 
 /**
- * Navigation actions for {@link TextEditingArea}.
+ * Specifies actions for moving the caret and/or making a selection for a {@link TextEditingArea}.
  */
 public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
 
@@ -13,22 +13,36 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
      * Indicates how to treat selection when caret is moved.
      */
     static enum SelectionPolicy {
+        /** Move the caret and anchor to the same given position, thereby clearing any existing selection */
         CLEAR,
+        /**
+         * Moves the caret only without also moving the anchor, thereby making a selection
+         */
         ADJUST,
+        /**
+         * Extends the selection by updating the "boundary" of the selection that is closest to the new position
+         * (i.e. either the selection's start or end position) to that new position and keeping the other position the
+         * same. In either case, the caret position is updated to that new position while the anchor is updated to the
+         * opposite boundary.
+         * <p>Using the following example, where "||" is the anchor, "|" is the caret" and "_" is the
+         * new position, EXTEND updates the values to:
+         * <pre><code>
+         * "A text ||with| a _selection" -&gt; "A text ||with a |selection"
+         * "A _text ||with| a selection" -&gt; "A |text with|| a selection"
+         * </code></pre>
+         */
         EXTEND,
     }
 
     /**
-     * Moves the caret to the given position in the text
-     * and clears any selection.
+     * Moves the caret to the given position in the text and clears any selection.
      */
     default void moveTo(int pos) {
         getCaretSelectionBind().moveTo(pos);
     }
 
     /**
-     * Moves the caret to the position returned from
-     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}
+     * Moves the caret to the position returned from {@code getAbsolutePosition(paragraphIndex, columnIndex)}
      * and clears any selection.
      *
      * <p>For example, if "|" represents the caret, "_" represents a newline character, and given the text "Some_Text"
@@ -51,28 +65,15 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     }
 
     /**
-     * Moves the caret to the position indicated by {@code pos}.
-     * Based on the selection policy, the selection is either <em>cleared</em>
-     * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
-     * (i.e. anchor is not moved at all), or <em>extended</em>
-     * (i.e. {@code pos} becomes the new caret and, if {@code pos} points
-     * outside the current selection, the far end of the current selection
-     * becomes the anchor.
+     * Moves the caret to the given position.
      */
-    default void moveTo(int pos, SelectionPolicy selectionPolicy) {
-        getCaretSelectionBind().moveTo(pos, selectionPolicy);
+    default void moveTo(int position, SelectionPolicy selectionPolicy) {
+        getCaretSelectionBind().moveTo(position, selectionPolicy);
     }
 
     /**
      * Moves the caret to the position returned from
-     * {@code getAbsolutePosition(paragraphIndex, columnIndex)}.
-     *
-     * Based on the selection policy, the selection is either <em>cleared</em>
-     * (i.e. anchor is set to the same position as caret), <em>adjusted</em>
-     * (i.e. anchor is not moved at all), or <em>extended</em>
-     * (i.e. {@code getAbsolutePosition(paragraphIndex, columnIndex} becomes
-     * the new caret and, if that returned value points outside the current selection,
-     * the far end of the current selection becomes the anchor.
+     * {@code getAbsolutePosition(paragraphIndex, columnIndex)} using the given selection policy.
      *
      * <p><b>Caution:</b> see {@link #getAbsolutePosition(int, int)} to know how the column index argument
      * can affect the returned position.</p>
@@ -83,8 +84,6 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
 
     /**
      * Moves the caret backward one char in the text.
-     * Based on the given selection policy, anchor either moves with
-     * the caret, stays put, or moves to the former caret position.
      */
     default void previousChar(SelectionPolicy selectionPolicy) {
         getCaretSelectionBind().moveToPrevChar(selectionPolicy);
@@ -92,8 +91,6 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
 
     /**
      * Moves the caret forward one char in the text.
-     * Based on the given selection policy, anchor either moves with
-     * the caret, stays put, or moves to the former caret position.
      */
     default void nextChar(SelectionPolicy selectionPolicy) {
         getCaretSelectionBind().moveToNextChar(selectionPolicy);
@@ -101,8 +98,6 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
 
     /**
      * Skips n number of word boundaries backwards.
-     * Based on the given selection policy, anchor either moves with
-     * the caret, stays put, or moves to the former caret position.
      */
     default void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy) {
         if(getLength() == 0) {
@@ -121,8 +116,6 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
 
     /**
      * Skips n number of word boundaries forward.
-     * Based on the given selection policy, anchor either moves with
-     * the caret, stays put, or moves to the former caret position.
      */
     default void wordBreaksForwards(int n, SelectionPolicy selectionPolicy) {
         if(getLength() == 0) {
@@ -182,7 +175,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
     }
 
     /**
-     * Selects all text in the text input.
+     * Selects everything in the area.
      */
     default void selectAll() {
         getCaretSelectionBind().selectAll();

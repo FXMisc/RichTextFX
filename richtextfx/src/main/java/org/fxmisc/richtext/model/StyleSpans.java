@@ -11,12 +11,23 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Essentially, a list of {@link StyleSpan} objects.
+ *
+ * @param <S> the style type
+ */
 public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
 
+    /**
+     * Creates a {@link StyleSpans} object that only contains one {@link StyleSpan} object.
+     */
     static <S> StyleSpans<S> singleton(S style, int length) {
         return singleton(new StyleSpan<>(style, length));
     }
 
+    /**
+     * Creates a {@link StyleSpans} object that only contains one {@link StyleSpan} object.
+     */
     static <S> StyleSpans<S> singleton(StyleSpan<S> span) {
         return new SingletonSpans<>(span);
     }
@@ -51,10 +62,16 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         };
     }
 
+    /**
+     * Appends the given style to the end of the list of {@link StyleSpan}.
+     */
     default StyleSpans<S> append(S style, int length) {
         return append(new StyleSpan<>(style, length));
     }
 
+    /**
+     * Appends the given style to the end of the list of {@link StyleSpan}.
+     */
     default StyleSpans<S> append(StyleSpan<S> span) {
         if(span.getLength() == 0) {
             return this;
@@ -72,10 +89,16 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         }
     }
 
+    /**
+     * Prepends the given style to the start of the list of {@link StyleSpan}.
+     */
     default StyleSpans<S> prepend(S style, int length) {
         return prepend(new StyleSpan<>(style, length));
     }
 
+    /**
+     * Prepends the given style to the start of the list of {@link StyleSpan}.
+     */
     default StyleSpans<S> prepend(StyleSpan<S> span) {
         if(span.getLength() == 0) {
             return this;
@@ -92,6 +115,9 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         }
     }
 
+    /**
+     * Same as {@link java.util.List#subList(int, int)}
+     */
     default StyleSpans<S> subView(int from, int to) {
         Position start = offsetToPosition(from, Forward);
         Position end = to > from
@@ -100,6 +126,9 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         return subView(start, end);
     }
 
+    /**
+     * Same as {@link java.util.List#subList(int, int)}, except that the arguments are two dimensional.
+     */
     default StyleSpans<S> subView(Position from, Position to) {
         return new SubSpans<>(this, from, to);
     }
@@ -153,14 +182,24 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
         return builder.create();
     }
 
+    /**
+     * Applies the given bifunction {@code f} to this object's {@link StyleSpan} objects and
+     * {@code that} {@link StyleSpan} objects and stores the result in the returned {@link StyleSpans} object.
+     */
     default StyleSpans<S> overlay(StyleSpans<S> that, BiFunction<? super S, ? super S, ? extends S> f) {
         return StyleSpansBuilder.overlay(this, that, f);
     }
 
+    /**
+     * Returns a stream of just this list of {@link StyleSpan}'s styles.
+     */
     default Stream<S> styleStream() {
         return stream().map(StyleSpan::getStyle);
     }
 
+    /**
+     * Returns a stream of this list' {@link StyleSpan} objects.
+     */
     default Stream<StyleSpan<S>> stream() {
         Spliterator<StyleSpan<S>> spliterator = new Spliterator<StyleSpan<S>>() {
             private final Iterator<StyleSpan<S>> iterator = iterator();

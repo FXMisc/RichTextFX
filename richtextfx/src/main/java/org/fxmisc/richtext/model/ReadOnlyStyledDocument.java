@@ -25,8 +25,19 @@ import org.reactfx.util.ToSemigroup;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuple3;
 
+/**
+ * An immutable implementation of {@link StyledDocument} that does not allow editing. For a {@link StyledDocument}
+ * that can be edited, see {@link EditableStyledDocument}.
+ *
+ * @param <PS> The type of the paragraph style.
+ * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+ * @param <S> The type of the style of individual segments.
+ */
 public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<PS, SEG, S> {
 
+    /**
+     * Private class used for calculating {@link TwoDimensional.Position}s within this document.
+     */
     private static class Summary {
         private final int paragraphCount;
         private final int charCount;
@@ -44,6 +55,9 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         }
     }
 
+    /**
+     * Private method for quickly calculating the length of a portion (subdocument) of this document.
+     */
     private static <PS, SEG, S> ToSemigroup<Paragraph<PS, SEG, S>, Summary> summaryProvider() {
         return new ToSemigroup<Paragraph<PS, SEG, S>, Summary>() {
 
@@ -67,6 +81,17 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     private static final BiFunction<Summary, Integer, Either<Integer, Integer>> NAVIGATE =
             (s, i) -> i <= s.length() ? left(i) : right(i - (s.length() + 1));
 
+    /**
+     * Creates a {@link ReadOnlyStyledDocument} from the given string.
+     *
+     * @param str the text to use to create the segments
+     * @param paragraphStyle the paragraph style to use for each paragraph in the returned document
+     * @param style the style to use for each segment in the document
+     * @param segmentOps the operations object that can create a segment froma given text
+     * @param <PS> The type of the paragraph style.
+     * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+     * @param <S> The type of the style of individual segments.
+     */
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromString(String str, PS paragraphStyle, S style, TextOps<SEG, S> segmentOps) {
         Matcher m = LINE_TERMINATOR.matcher(str);
 
@@ -87,12 +112,30 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         return new ReadOnlyStyledDocument<>(res);
     }
 
+    /**
+     * Creates a {@link ReadOnlyStyledDocument} from the given segment.
+     *
+     * @param segment the only segment in the only paragraph in the document
+     * @param paragraphStyle the paragraph style to use for each paragraph in the returned document
+     * @param style the style to use for each segment in the document
+     * @param segmentOps the operations object that can create a segment froma given text
+     * @param <PS> The type of the paragraph style.
+     * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+     * @param <S> The type of the style of individual segments.
+     */
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromSegment(SEG segment,  PS paragraphStyle, S style, SegmentOps<SEG, S> segmentOps) {
         Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, segment, style);
         List<Paragraph<PS, SEG, S>> res = Collections.singletonList(content);
         return new ReadOnlyStyledDocument<>(res);
     }
 
+    /**
+     * Creates a {@link ReadOnlyStyledDocument} from the given {@link StyledDocument}.
+     *
+     * @param <PS> The type of the paragraph style.
+     * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+     * @param <S> The type of the style of individual segments.
+     */
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> from(StyledDocument<PS, SEG, S> doc) {
         if(doc instanceof ReadOnlyStyledDocument) {
             return (ReadOnlyStyledDocument<PS, SEG, S>) doc;
@@ -101,7 +144,17 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         }
     }
 
-
+    /**
+     * Defines a codec for serializing a {@link ReadOnlyStyledDocument}.
+     *
+     * @param pCodec the codec for serializing a {@link Paragraph}
+     * @param segCodec the codec for serializing a {@link StyledSegment}
+     * @param segmentOps the operations object for operating on segments
+     *
+     * @param <PS> The type of the paragraph style.
+     * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+     * @param <S> The type of the style of individual segments.
+     */
     public static <PS, SEG, S> Codec<StyledDocument<PS, SEG, S>> codec(Codec<PS> pCodec, Codec<StyledSegment<SEG, S>> segCodec,
                                                                        SegmentOps<SEG, S> segmentOps) {
         return new Codec<StyledDocument<PS, SEG, S>>() {
@@ -212,15 +265,21 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         return position(0, 0).offsetBy(offset, bias);
     }
 
+    /**
+     * Splits this document into two at the given position and returns both halves.
+     */
     public Tuple2<ReadOnlyStyledDocument<PS, SEG, S>, ReadOnlyStyledDocument<PS, SEG, S>> split(int position) {
         return tree.locate(NAVIGATE, position).map(this::split);
     }
 
+    /**
+     * Splits this document into two at the given paragraph's column position and returns both halves.
+     */
     public Tuple2<ReadOnlyStyledDocument<PS, SEG, S>, ReadOnlyStyledDocument<PS, SEG, S>> split(
-            int row, int col) {
-        return tree.splitAt(row).map((l, p, r) -> {
-            Paragraph<PS, SEG, S> p1 = p.trim(col);
-            Paragraph<PS, SEG, S> p2 = p.subSequence(col);
+            int paragraphIndex, int columnPosition) {
+        return tree.splitAt(paragraphIndex).map((l, p, r) -> {
+            Paragraph<PS, SEG, S> p1 = p.trim(columnPosition);
+            Paragraph<PS, SEG, S> p2 = p.subSequence(columnPosition);
             ReadOnlyStyledDocument<PS, SEG, S> doc1 = new ReadOnlyStyledDocument<>(l.append(p1));
             ReadOnlyStyledDocument<PS, SEG, S> doc2 = new ReadOnlyStyledDocument<>(r.prepend(p2));
             return t(doc1, doc2);
@@ -253,6 +312,12 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         return split(end)._1.split(start)._2;
     }
 
+    /**
+     * Replaces the given portion {@code "from..to"} with the given replacement and returns
+     *  1) the updated version of this document that includes the replacement,
+     *  2) the {@link RichTextChange} that represents the change from this document to the returned one, and
+     *  3) the modification used to update an area's list of visible paragraphs.
+     */
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int from, int to, ReadOnlyStyledDocument<PS, SEG, S> replacement) {
         return replace(from, to, x -> replacement);
@@ -379,8 +444,8 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         }
 
         @Override
-        public Position offsetBy(int offset, Bias bias) {
-            return tree.locateProgressively(s -> s.charCount + s.paragraphCount, toOffset() + offset)
+        public Position offsetBy(int amount, Bias bias) {
+            return tree.locateProgressively(s -> s.charCount + s.paragraphCount, toOffset() + amount)
                     .map(Pos::new);
         }
 

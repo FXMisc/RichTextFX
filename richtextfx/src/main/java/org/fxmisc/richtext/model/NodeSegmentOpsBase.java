@@ -3,7 +3,7 @@ package org.fxmisc.richtext.model;
 import java.util.Optional;
 
 /**
- * Properly implements {@link SegmentOps} when implementing a non-text custom object (e.g. shape, circle, image)
+ * Properly implements {@link SegmentOps} when implementing a non-text custom object, such as a shape or image,
  * and reduces boilerplate. Developers may want to override {@link #joinSeg(Object, Object)} and
  * {@link #joinStyle(Object, Object)}.
  *

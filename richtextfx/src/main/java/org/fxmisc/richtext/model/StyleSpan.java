@@ -2,11 +2,19 @@ package org.fxmisc.richtext.model;
 
 import java.util.Objects;
 
+/**
+ * Essentially, a {@link org.reactfx.util.Tuple2} of a given style {@link S} that spans a given length.
+ *
+ * @param <S> the style type
+ */
 public class StyleSpan<S> {
 
     private final S style;
     private final int length;
 
+    /**
+     * Creates a style span. Note: length cannot be negative.
+     */
     public StyleSpan(S style, int length) {
         if(length < 0) {
             throw new IllegalArgumentException("StyleSpan's length cannot be negative");

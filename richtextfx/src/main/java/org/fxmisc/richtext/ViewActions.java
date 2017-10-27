@@ -20,6 +20,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
+/**
+ * Specifies view-related API for a {@link org.fxmisc.richtext.model.TextEditingArea}
+ *
+ * @param <PS> paragraph style type
+ * @param <SEG> segment type
+ * @param <S> segment style type
+ */
 public interface ViewActions<PS, SEG, S> {
 
     /**

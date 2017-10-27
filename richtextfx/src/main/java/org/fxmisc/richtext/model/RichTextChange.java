@@ -1,5 +1,8 @@
 package org.fxmisc.richtext.model;
 
+/**
+ * An object that specifies where a change occurred in a {@link org.fxmisc.richtext.GenericStyledArea}.
+ */
 public class RichTextChange<PS, SEG, S> extends TextChange<StyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>> {
 
     public RichTextChange(int position, StyledDocument<PS, SEG, S> removed, StyledDocument<PS, SEG, S> inserted) {

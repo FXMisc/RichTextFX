@@ -6,6 +6,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 
+/**
+ * Defines an event where the mouse becomes stationary over some part of an area ({@link #MOUSE_OVER_TEXT_BEGIN})
+ * and when it moves from that position ({@link #MOUSE_OVER_TEXT_END}).
+ */
 public abstract class MouseOverTextEvent extends Event {
 
     private static final long serialVersionUID = 1L;

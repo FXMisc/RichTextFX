@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Codec that can serialize an object and its super class; helpful when using generics and captures.
+ *
+ * @param <S> the super class type
+ * @param <T> the regular class type
+ */
 interface SuperCodec<S, T extends S> extends Codec<T> {
     void encodeSuper(DataOutputStream os, S s) throws IOException;
 
@@ -15,6 +21,9 @@ interface SuperCodec<S, T extends S> extends Codec<T> {
         encodeSuper(os, t);
     }
 
+    /**
+     * Returns a codec that can serialize {@code sc}'s type's super class
+     */
     @SuppressWarnings("unchecked")
     static <S, U extends S, T extends U> SuperCodec<S, U> upCast(SuperCodec<S, T> sc) {
         return (SuperCodec<S, U>) sc;

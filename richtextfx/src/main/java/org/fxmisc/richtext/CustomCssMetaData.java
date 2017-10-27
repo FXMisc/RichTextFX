@@ -8,6 +8,9 @@ import javafx.css.StyleableProperty;
 
 import java.util.function.Function;
 
+/**
+ * Reduces boilerplate when creating a custom {@link CssMetaData} object
+ */
 public class CustomCssMetaData<S extends Styleable, V> extends CssMetaData<S, V> {
 
     private final Function<S, StyleableObjectProperty<V>> property;

@@ -8,6 +8,9 @@ import javafx.css.StyleConverter;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 
+/**
+ * Uses reflection to make this project's code work on Java 8 and Java 9 in a single jar
+ */
 class JavaFXCompatibility {
 
     private static boolean isJava9orLater;

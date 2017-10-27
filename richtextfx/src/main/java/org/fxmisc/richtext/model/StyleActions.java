@@ -3,6 +3,12 @@ package org.fxmisc.richtext.model;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.IndexRange;
 
+/**
+ * Specifies actions related to getting and setting styles throughout a {@link TextEditingArea}.
+ *
+ * @param <PS> the paragraph style
+ * @param <S> the segment's style
+ */
 public interface StyleActions<PS, S> {
 
     /**

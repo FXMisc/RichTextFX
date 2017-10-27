@@ -16,14 +16,14 @@ import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 
 /**
- * A class which adds some more styleable properties to JavaFX's {@link Text} class.
+ * A class which adds some more RichTextFX-specific styleable properties to JavaFX's {@link Text} class.
  *
  * The extra items can be styled using the properties (and accessors/mutators) or via CSS.
- * Each property is documented with its CSS property.  Each CSS property begins with the "-rtfx"
+ * Each property is documented with its CSS property. Each CSS property begins with the "-rtfx"
  * prefix.
  *
  * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
- * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+ * from {@link Text}. The underline properties defined here in {@link TextExt} will cause an underline to be
  * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
  * the value of {@link #underlineProperty()}.</p>
  */

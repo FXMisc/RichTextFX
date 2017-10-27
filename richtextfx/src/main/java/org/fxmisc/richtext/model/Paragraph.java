@@ -17,16 +17,21 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
 
 /**
- * This is one Paragraph of the document. Depending on whether the text is wrapped,
- * it corresponds to a single line or it can also span multiple lines. A Paragraph
- * contains of a list of SEG objects which make up the individual segments of the
- * Paragraph. By providing a specific segment object and an associated segment
- * operations object, all required data and the necessary operations on this data
- * for a single segment can be provided.
+ * One paragraph in the document that can itself be styled and which contains a list of styled segments.
  *
- * <p>For more complex requirements (for example, when images shall be part of the
- * document) a different segment type must be provided (which can make use of
- * {@code StyledText<S>} for the text part and add another segment type for images).
+ * <p>
+ *     It corresponds to a single line when the
+ *     text is not wrapped or spans multiple lines when the text is wrapped. A Paragraph
+ *     contains of a list of {@link SEG} objects which make up the individual segments of the
+ *     Paragraph. By providing a specific segment object and an associated
+ *     {@link SegmentOps segment operations} object, all required data and the necessary
+ *     operations on this data for a single segment can be provided.
+ * </p>
+ *
+ * <p>For more complex requirements (for example, when both text and images shall be part
+ * of the document), a different segment type must be provided. One should use something
+ * like {@code Either<String, Image>} for their segment type.
+ *
  * <b>Note that Paragraph is an immutable class</b> - to modify a Paragraph, a new
  * Paragraph object must be created. Paragraph itself contains some methods which
  * take care of this, such as concat(), which appends some Paragraph to the current
@@ -34,8 +39,8 @@ import org.reactfx.util.Tuples;
  *
  * @param <PS> The type of the paragraph style.
  * @param <SEG> The type of the content segments in the paragraph (e.g. {@link String}).
- *              Every paragraph, even an empty paragraph, must have at least one SEG object
- *             (even if that SEG object itself represents an empty segment).
+ *              Every paragraph, even an empty paragraph, must have at least one {@link SEG} object
+ *              (even if that {@link SEG} object itself represents an empty segment).
  * @param <S> The type of the style of individual segments.
  */
 public final class Paragraph<PS, SEG, S> {
@@ -83,6 +88,9 @@ public final class Paragraph<PS, SEG, S> {
 
     private final SegmentOps<SEG, S> segmentOps;
 
+    /**
+     * Creates a paragraph using a list of styled segments
+     */
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<StyledSegment<SEG, S>> styledSegments) {
         this(paragraphStyle, segmentOps, decompose(styledSegments, segmentOps));
     }
@@ -91,14 +99,23 @@ public final class Paragraph<PS, SEG, S> {
         this(paragraphStyle, segmentOps, decomposedList._1, decomposedList._2);
     }
 
+    /**
+     * Creates a paragraph that has only one segment that has the same given style throughout.
+     */
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, S style) {
         this(paragraphStyle, segmentOps, segment, StyleSpans.singleton(style, segmentOps.length(segment)));
     }
 
+    /**
+     * Creates a paragraph that has only one segment but a number of different styles throughout that segment
+     */
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, SEG segment, StyleSpans<S> styles) {
         this(paragraphStyle, segmentOps, Collections.singletonList(segment), styles);
     }
 
+    /**
+     * Creates a paragraph that has multiple segments with multiple styles throughout those segments
+     */
     public Paragraph(PS paragraphStyle, SegmentOps<SEG, S> segmentOps, List<SEG> segments, StyleSpans<S> styles) {
         if (segments.isEmpty()) {
             throw new IllegalArgumentException("Cannot construct a Paragraph with an empty list of segments");
@@ -120,6 +137,11 @@ public final class Paragraph<PS, SEG, S> {
 
     private List<StyledSegment<SEG, S>> styledSegments = null;
 
+    /**
+     * Since the segments and styles in a paragraph are stored separate from another, combines these two collections
+     * into a single collection where each segment and its corresponding style are grouped into the same object.
+     * Essentially, returns {@code List<Tuple2<Segment, Style>>}.
+     */
     public List<StyledSegment<SEG, S>> getStyledSegments() {
         if (styledSegments == null) {
             if (segments.size() == 1 && styles.getSpanCount() == 1) {

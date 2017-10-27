@@ -8,6 +8,13 @@ import java.util.List;
 
 import javafx.scene.control.IndexRange;
 
+/**
+ * An object (document) that is a list of styleable {@link Paragraph} that each contain a list of styleable segments.
+ *
+ * @param <PS> The type of the paragraph style.
+ * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
+ * @param <S> The type of the style of individual segments.
+ */
 public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
 
     int length();
@@ -140,8 +147,43 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
         return getParagraphs().get(paragraph).getStyleSpans(from, to);
     }
 
-    default int getAbsolutePosition(int paragraphIndex, int columnIndex) {
-        int position = position(paragraphIndex, columnIndex).toOffset();
+    /**
+     * Returns the absolute position (i.e. the spot in-between characters) of the given column position in the given
+     * paragraph.
+     *
+     * <p>For example, given a text with only one line {@code "text"} and a {@code columnPosition} value of {@code 1},
+     * the value, {@code 1}, as in "position 1" would be returned:</p>
+     * <pre>
+     *  ┌ character index 0
+     *  | ┌ character index 1
+     *  | |   ┌ character index 3
+     *  | |   |
+     *  v v   v
+     *
+     * |t|e|x|t|
+     *
+     * ^ ^     ^
+     * | |     |
+     * | |     └ position 4
+     * | └ position 1
+     * └ position 0
+     * </pre>
+     *
+     * <h3>Warning: Off-By-One errors can easily occur</h3>
+     * <p>If the column index spans outside of the given paragraph's length, the returned value will
+     * pass on to the previous/next paragraph. In other words, given a document with two paragraphs
+     * (where the first paragraph's text is "some" and the second "thing"), then the following statements are true:</p>
+     * <ul>
+     *     <li><code>getAbsolutePosition(0, "some".length()) == 4 == getAbsolutePosition(1, -1)</code></li>
+     *     <li><code>getAbsolutePosition(0, "some".length() + 1) == 5 == getAbsolutePosition(1, 0)</code></li>
+     * </ul>
+     *
+     * @param paragraphIndex The index of the paragraph from which to start.
+     * @param columnPosition If positive, the index going forward (the given paragraph's line or the next one(s)).
+     *                       If negative, the index going backward (the previous paragraph's line(s))
+     */
+    default int getAbsolutePosition(int paragraphIndex, int columnPosition) {
+        int position = position(paragraphIndex, columnPosition).toOffset();
         if (position < 0) {
             throw new IndexOutOfBoundsException(String.format("Negative index! Out of bounds by %s.", 0 - position));
         }

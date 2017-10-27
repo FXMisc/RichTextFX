@@ -2,6 +2,13 @@ package org.fxmisc.richtext.model;
 
 import java.util.Objects;
 
+/**
+ * Essentially, an immutable {@link org.reactfx.util.Tuple2} that combines a {@link SEG segment} object and a
+ * {@link S style} object together.
+ *
+ * @param <SEG> the segment type
+ * @param <S> the style type
+ */
 public final class StyledSegment<SEG, S> {
 
     private final SEG segment;
@@ -17,7 +24,7 @@ public final class StyledSegment<SEG, S> {
 
     @Override
     public String toString() {
-        return String.format("StyledSegment(segment=%s style=%s", segment, style);
+        return String.format("StyledSegment(segment=%s style=%s)", segment, style);
     }
 
     @Override
