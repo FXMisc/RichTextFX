@@ -86,8 +86,11 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     @Override public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
 
-    GenericEditableStyledDocumentBase(Paragraph<PS, SEG, S> initialParagraph) {
-        this.doc = new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph));
+    /**
+     * Creates an {@link EditableStyledDocument} with the given document as its initial content
+     */
+    GenericEditableStyledDocumentBase(ReadOnlyStyledDocument<PS, SEG, S> initialContent) {
+        this.doc = initialContent;
 
         final Suspendable omniSuspendable = Suspendable.combine(
                 text,
@@ -102,9 +105,16 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     }
 
     /**
+     * Creates an {@link EditableStyledDocument} with the given paragraph as its initial content
+     */
+    GenericEditableStyledDocumentBase(Paragraph<PS, SEG, S> initialParagraph) {
+        this(new ReadOnlyStyledDocument<>(Collections.singletonList(initialParagraph)));
+    }
+
+    /**
      * Creates an empty {@link EditableStyledDocument}
      */
-    public GenericEditableStyledDocumentBase(PS initialParagraphStyle, S initialStyle, SegmentOps<SEG, S> segmentOps) {
+    GenericEditableStyledDocumentBase(PS initialParagraphStyle, S initialStyle, SegmentOps<SEG, S> segmentOps) {
         this(new Paragraph<>(initialParagraphStyle, segmentOps, segmentOps.createEmptySeg(), initialStyle));
     }
 

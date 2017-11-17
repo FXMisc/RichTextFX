@@ -13,6 +13,23 @@ package org.fxmisc.richtext.model;
 public final class GenericEditableStyledDocument<PS, SEG, S> extends GenericEditableStyledDocumentBase<PS, SEG, S>
         implements EditableStyledDocument<PS, SEG, S> {
 
+    /**
+     * Creates an {@link EditableStyledDocument} with the given document as its initial content
+     */
+    public GenericEditableStyledDocument(ReadOnlyStyledDocument<PS, SEG, S> initialContent) {
+        super(initialContent);
+    }
+
+    /**
+     * Creates an {@link EditableStyledDocument} with given paragraph as its initial content
+     */
+    public GenericEditableStyledDocument(Paragraph<PS, SEG, S> initialParagraph) {
+        super(initialParagraph);
+    }
+
+    /**
+     * Creates an empty {@link EditableStyledDocument}
+     */
     public GenericEditableStyledDocument(PS initialParagraphStyle, S initialStyle, SegmentOps<SEG, S> segmentOps) {
         super(initialParagraphStyle, initialStyle, segmentOps);
     }

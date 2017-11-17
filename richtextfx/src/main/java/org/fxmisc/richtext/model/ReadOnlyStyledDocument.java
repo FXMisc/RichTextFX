@@ -27,7 +27,8 @@ import org.reactfx.util.Tuple3;
 
 /**
  * An immutable implementation of {@link StyledDocument} that does not allow editing. For a {@link StyledDocument}
- * that can be edited, see {@link EditableStyledDocument}.
+ * that can be edited, see {@link EditableStyledDocument}. To create one, use its static factory
+ * "from"-prefixed methods or {@link ReadOnlyStyledDocumentBuilder}.
  *
  * @param <PS> The type of the paragraph style.
  * @param <SEG> The type of the segments in the paragraph (e.g. {@link String}).
