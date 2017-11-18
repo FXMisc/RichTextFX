@@ -315,20 +315,43 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
 
     /**
      * Replaces the given portion {@code "from..to"} with the given replacement and returns
-     *  1) the updated version of this document that includes the replacement,
-     *  2) the {@link RichTextChange} that represents the change from this document to the returned one, and
-     *  3) the modification used to update an area's list of visible paragraphs.
+     * <ol>
+     *     <li>
+     *         the updated version of this document that includes the replacement,
+     *     </li>
+     *     <li>
+     *         the {@link RichTextChange} that represents the change from this document to the returned one, and
+     *     </li>
+     *     <li>
+     *         the modification used to update an area's list of paragraphs.
+     *     </li>
+     * </ol>
      */
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int from, int to, ReadOnlyStyledDocument<PS, SEG, S> replacement) {
         return replace(from, to, x -> replacement);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
-            int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
+    /**
+     * Replaces the given portion {@code "from..to"} in the document by getting that portion of this document,
+     * passing it into the mapping function, and using the result as the replacement. Returns
+     * <ol>
+     *     <li>
+     *         the updated version of this document that includes the replacement,
+     *     </li>
+     *     <li>
+     *         the {@link RichTextChange} that represents the change from this document to the returned one, and
+     *     </li>
+     *     <li>
+     *         the modification used to update an area's list of paragraphs.
+     *     </li>
+     * </ol>
+     */
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> mapper) {
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
-        return replace(start, end, f);
+        return replace(start, end, mapper);
     }
 
     Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
@@ -351,19 +374,37 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         });
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
-            int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> f) {
+    /**
+     * Maps the paragraph at the given index by calling {@link #replace(int, int, UnaryOperator)}. Returns
+     * <ol>
+     *     <li>
+     *         the updated version of this document that includes the replacement,
+     *     </li>
+     *     <li>
+     *         the {@link RichTextChange} that represents the change from this document to the returned one, and
+     *     </li>
+     *     <li>
+     *         the modification used to update an area's list of paragraphs.
+     *     </li>
+     * </ol>
+     */
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
+            int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> mapper) {
         return replace(
                 new BiIndex(parIdx, 0),
                 new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
-                doc -> doc.mapParagraphs(f));
+                doc -> doc.mapParagraphs(mapper));
     }
 
-    ReadOnlyStyledDocument<PS, SEG, S> mapParagraphs(UnaryOperator<Paragraph<PS, SEG, S>> f) {
+    /**
+     * Maps all of this document's paragraphs using the given mapper and returns them in a new
+     * {@link ReadOnlyStyledDocument}.
+     */
+    public ReadOnlyStyledDocument<PS, SEG, S> mapParagraphs(UnaryOperator<Paragraph<PS, SEG, S>> mapper) {
         int n = tree.getLeafCount();
         List<Paragraph<PS, SEG, S>> pars = new ArrayList<>(n);
         for(int i = 0; i < n; ++i) {
-            pars.add(f.apply(tree.getLeaf(i)));
+            pars.add(mapper.apply(tree.getLeaf(i)));
         }
         return new ReadOnlyStyledDocument<>(pars);
     }
