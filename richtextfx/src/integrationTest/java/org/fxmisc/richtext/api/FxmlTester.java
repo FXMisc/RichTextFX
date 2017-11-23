@@ -9,16 +9,18 @@ public class FxmlTester extends RichTextFXTestBase {
 
     @Override
     public void start(Stage stage) throws Exception {
-    	// Nothing needed here
+        // Nothing needed here
     }
-    
-	@Test
-	public void test_fxml_construction_of_area()
-	{
-		Object obj = null;
-		try	{ obj = FXMLLoader.load( getClass().getResource( "/org/fxmisc/richtext/api/FxmlTest.fxml" ) ); }
-		catch ( Exception EX ) { EX.printStackTrace(); }
-		org.junit.Assert.assertNotNull( obj );
-	}
+
+    @Test
+    public void test_fxml_construction_of_area()
+    {
+        Object obj = null;
+        // FxmlTest.fxml is located in resources folder:
+        // src/integrationTest/resources/org/fxmisc/richtext/api/
+        try	{ obj = FXMLLoader.load( getClass().getResource( "FxmlTest.fxml" ) ); }
+        catch ( Exception EX ) { EX.printStackTrace(); }
+        org.junit.Assert.assertNotNull( obj );
+    }
 
 }
