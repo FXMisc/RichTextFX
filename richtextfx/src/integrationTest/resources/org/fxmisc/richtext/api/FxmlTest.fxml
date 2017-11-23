@@ -6,8 +6,8 @@
 <?import javafx.scene.control.MenuItem?>
 
 <VBox xmlns:fx="http://javafx.com/fxml/1">
-    <StyleClassedTextArea editable="true" wrapText="true" autoScrollOnDragDesired="true" />
-    <StyleClassedTextArea contextMenuXOffset="12.0" contextMenuYOffset="34.0" >
+    <StyleClassedTextArea editable="true" wrapText="true" autoScrollOnDragDesired="true"
+                          contextMenuXOffset="12.0" contextMenuYOffset="34.0" >
         <contextMenu>
             <ContextMenu>
                 <items><MenuItem text="Test Item" /></items>
