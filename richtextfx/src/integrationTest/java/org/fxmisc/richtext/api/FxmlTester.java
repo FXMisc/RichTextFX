@@ -16,7 +16,7 @@ public class FxmlTester extends RichTextFXTestBase {
 	public void test_fxml_construction_of_area()
 	{
 		Object obj = null;
-		try	{ obj = FXMLLoader.load( getClass().getResource( "FxmlTest.fxml" ) ); }
+		try	{ obj = FXMLLoader.load( getClass().getResource( "/org/fxmisc/richtext/api/FxmlTest.fxml" ) ); }
 		catch ( Exception EX ) { EX.printStackTrace(); }
 		org.junit.Assert.assertNotNull( obj );
 	}
