@@ -338,11 +338,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     };
     @Override public final BooleanProperty editableProperty() { return editable; }
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setEditable(boolean value) { editable.set(value); }
+    @Override public boolean isEditable() { return editable.get(); }
 
     // wrapText property
     private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
     @Override public final BooleanProperty wrapTextProperty() { return wrapText; }
-
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setWrapText(boolean value) { wrapText.set(value); }
+    @Override public boolean isWrapText() { return wrapText.get(); }
+    
     // undo manager
     private UndoManager undoManager;
     @Override public UndoManager getUndoManager() { return undoManager; }
@@ -359,14 +365,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setContextMenu(ContextMenu menu) { contextMenu.set(menu); }
+    @Override public ContextMenu getContextMenu() { return contextMenu.get(); }
 
     protected final boolean isContextMenuPresent() { return contextMenu.get() != null; }
 
     private DoubleProperty contextMenuXOffset = new SimpleDoubleProperty(2);
     @Override public final DoubleProperty contextMenuXOffsetProperty() { return contextMenuXOffset; }
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setContextMenuXOffset(double offset) { contextMenuXOffset.set(offset); }
+    @Override public double getContextMenuXOffset() { return contextMenuXOffset.get(); }
 
     private DoubleProperty contextMenuYOffset = new SimpleDoubleProperty(2);
     @Override public final DoubleProperty contextMenuYOffsetProperty() { return contextMenuYOffset; }
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setContextMenuYOffset(double offset) { contextMenuYOffset.set(offset); }
+    @Override public double getContextMenuYOffset() { return contextMenuYOffset.get(); }
 
     private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
     @Override public BooleanProperty useInitialStyleForInsertionProperty() { return useInitialStyleForInsertion; }
@@ -430,6 +445,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // not a hook, but still plays a part in the default mouse behavior
     private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
     @Override public final BooleanProperty autoScrollOnDragDesiredProperty() { return autoScrollOnDragDesired; }
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override public void setAutoScrollOnDragDesired(boolean val) { autoScrollOnDragDesired.set(val); }
+    @Override public boolean isAutoScrollOnDragDesired() { return autoScrollOnDragDesired.get(); }
 
     /* ********************************************************************** *
      *                                                                        *
