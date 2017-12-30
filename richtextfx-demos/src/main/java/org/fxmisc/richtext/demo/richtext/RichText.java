@@ -313,7 +313,7 @@ public class RichText extends Application {
             action.run();
             area.requestFocus();
         });
-        button.setPrefWidth(20);
+        button.setPrefWidth(25);
         button.setPrefHeight(20);
         if (toolTip != null) {
             button.setTooltip(new Tooltip(toolTip));
@@ -329,7 +329,7 @@ public class RichText extends Application {
             action.run();
             area.requestFocus();
         });
-        button.setPrefWidth(20);
+        button.setPrefWidth(25);
         button.setPrefHeight(20);
         return button;
     }
