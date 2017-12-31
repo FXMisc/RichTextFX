@@ -22,6 +22,7 @@ import java.util.function.Function;
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -29,10 +30,11 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.IndexRange;
+import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -97,26 +99,28 @@ public class RichText extends Application {
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
-        Button undoBtn = createButton("undo", area::undo);
-        Button redoBtn = createButton("redo", area::redo);
-        Button cutBtn = createButton("cut", area::cut);
-        Button copyBtn = createButton("copy", area::copy);
-        Button pasteBtn = createButton("paste", area::paste);
-        Button boldBtn = createButton("bold", this::toggleBold);
-        Button italicBtn = createButton("italic", this::toggleItalic);
-        Button underlineBtn = createButton("underline", this::toggleUnderline);
-        Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough);
+        Button undoBtn = createButton("undo", area::undo, "Undo");
+        Button redoBtn = createButton("redo", area::redo, "Redo");
+        Button cutBtn = createButton("cut", area::cut, "Cut");
+        Button copyBtn = createButton("copy", area::copy, "Copy");
+        Button pasteBtn = createButton("paste", area::paste, "Paste");
+        Button boldBtn = createButton("bold", this::toggleBold, "Bold");
+        Button italicBtn = createButton("italic", this::toggleItalic, "Italic");
+        Button underlineBtn = createButton("underline", this::toggleUnderline, "Underline");
+        Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough, "Strike Trough");
         Button insertImageBtn = createButton("insertimage", this::insertImage, "Insert Image");
         ToggleGroup alignmentGrp = new ToggleGroup();
-        ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft);
-        ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter);
-        ToggleButton alignRightBtn = createToggleButton(alignmentGrp, "align-right", this::alignRight);
-        ToggleButton alignJustifyBtn = createToggleButton(alignmentGrp, "align-justify", this::alignJustify);
+        ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft, "Align left");
+        ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter, "Align center");
+        ToggleButton alignRightBtn = createToggleButton(alignmentGrp, "align-right", this::alignRight, "Align right");
+        ToggleButton alignJustifyBtn = createToggleButton(alignmentGrp, "align-justify", this::alignJustify, "Justify");
         ColorPicker paragraphBackgroundPicker = new ColorPicker();
         ComboBox<Integer> sizeCombo = new ComboBox<>(FXCollections.observableArrayList(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72));
         sizeCombo.getSelectionModel().select(Integer.valueOf(12));
+        sizeCombo.setTooltip(new Tooltip("Font size"));
         ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableList(Font.getFamilies()));
         familyCombo.getSelectionModel().select("Serif");
+        familyCombo.setTooltip(new Tooltip("Font family"));
         ColorPicker textColorPicker = new ColorPicker(Color.BLACK);
         ColorPicker backgroundColorPicker = new ColorPicker();
 
@@ -262,20 +266,22 @@ public class RichText extends Application {
             }
         });
 
-        HBox panel1 = new HBox(3.0);
-        HBox panel2 = new HBox(3.0);
-        panel1.getChildren().addAll(
-                loadBtn, saveBtn,
-                wrapToggle, undoBtn, redoBtn, cutBtn, copyBtn, pasteBtn,
-                boldBtn, italicBtn, underlineBtn, strikeBtn,
-                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, insertImageBtn,
+        ToolBar toolBar1 = new ToolBar(
+                loadBtn, saveBtn,  new Separator(Orientation.VERTICAL),
+                wrapToggle, new Separator(Orientation.VERTICAL),
+                undoBtn, redoBtn, new Separator(Orientation.VERTICAL),
+                cutBtn, copyBtn, pasteBtn, new Separator(Orientation.VERTICAL),
+                boldBtn, italicBtn, underlineBtn, strikeBtn, new Separator(Orientation.VERTICAL),
+                alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, new Separator(Orientation.VERTICAL),
+                insertImageBtn, new Separator(Orientation.VERTICAL),
                 paragraphBackgroundPicker);
-        panel2.getChildren().addAll(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
+        
+        ToolBar toolBar2 = new ToolBar(sizeCombo, familyCombo, textColorPicker, backgroundColorPicker);
 
         VirtualizedScrollPane<GenericStyledArea<ParStyle, Either<String, LinkedImage>, TextStyle>> vsPane = new VirtualizedScrollPane<>(area);
         VBox vbox = new VBox();
         VBox.setVgrow(vsPane, Priority.ALWAYS);
-        vbox.getChildren().addAll(panel1, panel2, vsPane);
+        vbox.getChildren().addAll(toolBar1, toolBar2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
         scene.getStylesheets().add(RichText.class.getResource("rich-text.css").toExternalForm());
@@ -306,15 +312,15 @@ public class RichText extends Application {
             action.run();
             area.requestFocus();
         });
-        button.setPrefWidth(20);
-        button.setPrefHeight(20);
+        button.setPrefWidth(25);
+        button.setPrefHeight(25);
         if (toolTip != null) {
             button.setTooltip(new Tooltip(toolTip));
         }
         return button;
     }
 
-    private ToggleButton createToggleButton(ToggleGroup grp, String styleClass, Runnable action) {
+    private ToggleButton createToggleButton(ToggleGroup grp, String styleClass, Runnable action, String toolTip) {
         ToggleButton button = new ToggleButton();
         button.setToggleGroup(grp);
         button.getStyleClass().add(styleClass);
@@ -322,8 +328,11 @@ public class RichText extends Application {
             action.run();
             area.requestFocus();
         });
-        button.setPrefWidth(20);
-        button.setPrefHeight(20);
+        button.setPrefWidth(25);
+        button.setPrefHeight(25);
+        if (toolTip != null) {
+            button.setTooltip(new Tooltip(toolTip));
+        }
         return button;
     }
 
