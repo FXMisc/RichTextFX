@@ -184,7 +184,7 @@ Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo ab
 
 ### Rich-text editor
 
-![Screenshot of the RichText demo](https://cloud.githubusercontent.com/assets/8413037/24158984/22d36a10-0e1b-11e7-95e0-f4546cb528c3.png)
+![Screenshot of the RichText demo](/images/screen_shoot_javafxmathml_201801021624.png)
 
 #### Run using the pre-built JAR
 [Download](https://github.com/TomasMikula/RichTextFX/releases/download/v0.7-M5/richtextfx-demos-fat-0.7-M5.jar) the pre-built "fat" JAR file and run
