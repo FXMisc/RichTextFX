@@ -14,6 +14,7 @@ import java.time.Duration;
  * after a specified period of time.
  *
  * @param <C> the type of change the UndoManager can undo/redo
+ * @deprecated No longer needed since UndoFX 1.4.0. Will be removed in future release.
  */
 final class UndoManagerInactivityWrapper<C> implements UndoManager<C> {
 
@@ -52,6 +53,11 @@ final class UndoManagerInactivityWrapper<C> implements UndoManager<C> {
     }
 
     @Override
+    public Val<C> nextUndoProperty() {
+        return delegate.nextUndoProperty();
+    }
+
+    @Override
     public Val<C> nextToUndoProperty() {
         return delegate.nextToUndoProperty();
     }
@@ -59,6 +65,11 @@ final class UndoManagerInactivityWrapper<C> implements UndoManager<C> {
     @Override
     public C getNextToUndo() {
         return delegate.getNextToUndo();
+    }
+
+    @Override
+    public Val<C> nextRedoProperty() {
+        return delegate.nextRedoProperty();
     }
 
     @Override
