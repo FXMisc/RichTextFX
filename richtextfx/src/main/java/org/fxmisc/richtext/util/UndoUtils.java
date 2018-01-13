@@ -14,11 +14,6 @@ import java.util.function.Consumer;
 /**
  * A class filled with factory methods to help easily construct an {@link UndoManager} for a {@link GenericStyledArea}.
  *
- * <p>
- *     To create an UndoManager that will prevent incoming changes from merging with the previous one after a period
- *     of user inactivity (via {@link UndoManager#preventMerge()}),
- *     use {@link #wrap(UndoManager, EventStream, Duration)}.
- * </p>
  */
 public final class UndoUtils {
 
@@ -84,11 +79,8 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area,
                                                                                            UndoManagerFactory factory,
                                                                                            Duration preventMergeDelay) {
-        return wrap(
-                factory.create(area.richChanges(), TextChange::invert, applyRichTextChange(area), TextChange::mergeWith, TextChange::isIdentity),
-                area.richChanges(),
-                preventMergeDelay
-        );
+        return factory.create(area.richChanges(), TextChange::invert, applyRichTextChange(area),
+                TextChange::mergeWith, TextChange::isIdentity, preventMergeDelay);
     };
 
     /**
@@ -128,11 +120,8 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area,
                                                                                  UndoManagerFactory factory,
                                                                                  Duration preventMergeDelay) {
-        return wrap(
-                factory.create(area.plainTextChanges(), TextChange::invert, applyPlainTextChange(area), TextChange::mergeWith, TextChange::isIdentity),
-                area.plainTextChanges(),
-                preventMergeDelay
-        );
+        return factory.create(area.plainTextChanges(), TextChange::invert, applyPlainTextChange(area),
+                TextChange::mergeWith, TextChange::isIdentity, preventMergeDelay);
     }
 
     /* ********************************************************************** *
@@ -162,7 +151,10 @@ public final class UndoUtils {
     /**
      * Wraps an {@link UndoManager} and prevents the next emitted change from merging with the previous one are a
      * period of inactivity (i.e., the {@code changeStream} has not emitted an event in {@code preventMergeDelay}
+     *
+     * @deprecated No longer needed since UndoFX 1.4.0
      */
+    @Deprecated
     public static <T> UndoManager<T> wrap(UndoManager<T> undoManager, EventStream<T> changeStream, Duration preventMergeDelay) {
         return new UndoManagerInactivityWrapper<>(undoManager, changeStream, preventMergeDelay);
     }
