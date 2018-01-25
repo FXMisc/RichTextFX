@@ -82,7 +82,7 @@ public class XMLEditor extends Application {
         codeArea.replaceText(0, 0, sampleCode);
 
 		Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
-        scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("xml-highlighting.css").toExternalForm());
+        scene.getStylesheets().add(XMLEditor.class.getResource("xml-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("XML Editor Demo");
         primaryStage.show();
