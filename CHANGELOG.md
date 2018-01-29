@@ -1,7 +1,52 @@
 # Change Log
 
+## [v0.8.2](https://github.com/FXMisc/RichTextFX/tree/v0.8.2) (2018-01-20)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/0.8.1...v0.8.2)
+
+**Implemented enhancements:**
+
+- Make more of ROSD's modification methods public [\#648](https://github.com/FXMisc/RichTextFX/issues/648)
+- Allow easier construction of a ReadOnlyStyledDocument with content [\#646](https://github.com/FXMisc/RichTextFX/issues/646)
+
+**Fixed bugs:**
+
+- RichText demo can not load sample document anymore [\#629](https://github.com/FXMisc/RichTextFX/issues/629)
+- Read only pseudo class is misspelled in GenericStyledArea [\#650](https://github.com/FXMisc/RichTextFX/issues/650)
+- ExceptionInInitializerError: EventType "MOUSE\_OVER\_TEXT\_ANY"with parent "EVENT" already exists [\#634](https://github.com/FXMisc/RichTextFX/issues/634)
+
+**Closed issues:**
+
+- Selection is no longer highlighted of inlineCssTextArea [\#670](https://github.com/FXMisc/RichTextFX/issues/670)
+- RuKey [\#662](https://github.com/FXMisc/RichTextFX/issues/662)
+- Empty CodeArea [\#660](https://github.com/FXMisc/RichTextFX/issues/660)
+- Regression of properties that could be set in FXML, fail in 0.8.1 [\#653](https://github.com/FXMisc/RichTextFX/issues/653)
+- moveTo\(\) not scrolling the StyleClassedTextArea [\#652](https://github.com/FXMisc/RichTextFX/issues/652)
+- Allow ReadOnlyStyledDocument to be created from list of paragraphs [\#644](https://github.com/FXMisc/RichTextFX/issues/644)
+- Using a CodeArea and `setStyle\(int, int, inlineCssStyleString\)` doesn't style that range of text with the inline CSS styling [\#640](https://github.com/FXMisc/RichTextFX/issues/640)
+- IndexOutOfBoundsException when editor is not shown but updated [\#637](https://github.com/FXMisc/RichTextFX/issues/637)
+- First test run on Mac fails with TimeoutException [\#608](https://github.com/FXMisc/RichTextFX/issues/608)
+- AZERTY keyboard on Windows OS: SHORTCUT+SLASH key event does not run its consumer [\#479](https://github.com/FXMisc/RichTextFX/issues/479)
+
+**Merged pull requests:**
+
+- Update XMLEditor.java [\#673](https://github.com/FXMisc/RichTextFX/pull/673) ([svkreml](https://github.com/svkreml))
+- Generate new sample rtfx binary file [\#672](https://github.com/FXMisc/RichTextFX/pull/672) ([JordanMartinez](https://github.com/JordanMartinez))
+- Update dependencies: WellBehavedFX and UndoFX [\#669](https://github.com/FXMisc/RichTextFX/pull/669) ([JordanMartinez](https://github.com/JordanMartinez))
+- Upgrade Gradle to 4.4.1-bin \(Binary-only\) and change hash code. And small changes in RichTextFx.java. [\#664](https://github.com/FXMisc/RichTextFX/pull/664) ([scientificware](https://github.com/scientificware))
+- Add support for FXML \(again\) [\#654](https://github.com/FXMisc/RichTextFX/pull/654) ([Jugen](https://github.com/Jugen))
+- Corrected misspelled read-only pseudo class [\#651](https://github.com/FXMisc/RichTextFX/pull/651) ([Jugen](https://github.com/Jugen))
+- Make more of ROSD's replace API public, not package-private [\#649](https://github.com/FXMisc/RichTextFX/pull/649) ([JordanMartinez](https://github.com/JordanMartinez))
+- Allow initializing an \[Editabled/ReadOnly\]StyledDocument with content [\#645](https://github.com/FXMisc/RichTextFX/pull/645) ([JordanMartinez](https://github.com/JordanMartinez))
+- Increase Mac build's TestFX setup timeout to 5 seconds [\#641](https://github.com/FXMisc/RichTextFX/pull/641) ([JordanMartinez](https://github.com/JordanMartinez))
+- Add JabRef to the projects using RichTextFX [\#639](https://github.com/FXMisc/RichTextFX/pull/639) ([koppor](https://github.com/koppor))
+- Remove duplicate class due to copy-and-paste error [\#636](https://github.com/FXMisc/RichTextFX/pull/636) ([JordanMartinez](https://github.com/JordanMartinez))
+
 ## [0.8.1](https://github.com/FXMisc/RichTextFX/tree/0.8.1) (2017-10-27)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.8.0...0.8.1)
+
+**Implemented enhancements:**
+
+- Feature: support tables [\#628](https://github.com/FXMisc/RichTextFX/issues/628)
 
 **Closed issues:**
 
