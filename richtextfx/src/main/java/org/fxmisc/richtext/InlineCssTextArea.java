@@ -6,6 +6,7 @@ import javafx.scene.text.TextFlow;
 
 import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
 import static org.fxmisc.richtext.model.Codec.styledTextCodec;
@@ -44,7 +45,7 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
     public InlineCssTextArea(@NamedArg("text") String text) {
         this();
 
-        replace(0, 0, text, "");
+        replace(0, 0, ReadOnlyStyledDocument.fromString(text, getInitialParagraphStyle(), getInitialTextStyle(), getSegOps()));
         getUndoManager().forgetHistory();
         getUndoManager().mark();
 
