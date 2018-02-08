@@ -270,9 +270,14 @@ class GenericStyledAreaBehavior {
     private final GenericStyledArea<?, ?, ?> view;
 
     /**
-     * Indicates whether selection is being dragged by the user.
+     * Indicates whether an existing selection is being dragged by the user.
      */
     private DragState dragSelection = DragState.NO_DRAG;
+
+    /**
+     * Indicates whether a new selection is being made by the user.
+     */
+    private DragState dragNewSelection = DragState.NO_DRAG;
 
     private final Var<Point2D> autoscrollTo = Var.newSimpleVar(null);
 
@@ -474,8 +479,10 @@ class GenericStyledAreaBehavior {
                 hit.getCharacterIndex().getAsInt() < selection.getEnd()) {
             // press inside selection
             dragSelection = DragState.POTENTIAL_DRAG;
+            dragNewSelection = DragState.NO_DRAG;
         } else {
             dragSelection = DragState.NO_DRAG;
+            dragNewSelection = DragState.NO_DRAG;
             view.getOnOutsideSelectionMousePressed().handle(e);
         }
     }
@@ -492,6 +499,7 @@ class GenericStyledAreaBehavior {
         if (dragSelection == DragState.POTENTIAL_DRAG) {
             dragSelection = DragState.DRAG;
         }
+        else dragNewSelection = DragState.DRAG;
     }
 
     private Result processPrimaryOnlyMouseDragged(MouseEvent e) {
@@ -537,9 +545,12 @@ class GenericStyledAreaBehavior {
                 view.getOnInsideSelectionMousePressReleased().handle(e);
             case DRAG:
                 view.getOnSelectionDropped().handle(e);
-            case NO_DRAG:
-                // do nothing, caret already repositioned in "handle[Number]Press(MouseEvent)"
+                break;
+            case NO_DRAG: if ( dragNewSelection == DragState.DRAG ) {
+                view.getOnNewSelectionDragFinished().handle(e);
+            }
         }
+        dragNewSelection = DragState.NO_DRAG;
         dragSelection = DragState.NO_DRAG;
 
         return Result.PROCEED;
