@@ -476,7 +476,7 @@ class GenericStyledAreaBehavior {
             dragSelection = DragState.POTENTIAL_DRAG;
         } else {
             dragSelection = DragState.NO_DRAG;
-            view.getOnOutsideSelectionMousePress().accept(e);
+            view.getOnOutsideSelectionMousePressed().handle(e);
         }
     }
 
@@ -534,9 +534,9 @@ class GenericStyledAreaBehavior {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // selection was not dragged, but clicked
-                view.getOnInsideSelectionMousePressRelease().accept(e);
+                view.getOnInsideSelectionMousePressReleased().handle(e);
             case DRAG:
-                view.getOnSelectionDrop().accept(e);
+                view.getOnSelectionDropped().handle(e);
             case NO_DRAG:
                 // do nothing, caret already repositioned in "handle[Number]Press(MouseEvent)"
         }

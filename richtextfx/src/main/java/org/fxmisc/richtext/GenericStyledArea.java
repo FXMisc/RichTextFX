@@ -35,6 +35,7 @@ import javafx.css.StyleConverter;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -182,8 +183,8 @@ import org.reactfx.value.Var;
  *     <li>
  *         <em>First (1 click count) Primary Button Mouse Pressed Events:</em>
  *         (<code>EventPattern.mousePressed(MouseButton.PRIMARY).onlyIf(e -&gt; e.getClickCount() == 1)</code>).
- *         Do not override. Instead, use {@link #onOutsideSelectionMousePress},
- *         {@link #onInsideSelectionMousePressRelease}, or see next item.
+ *         Do not override. Instead, use {@link #onOutsideSelectionMousePressed},
+ *         {@link #onInsideSelectionMousePressReleased}, or see next item.
  *     </li>
  *     <li>(
  *         <em>All Other Mouse Pressed Events (e.g., Primary with 2+ click count):</em>
@@ -223,7 +224,7 @@ import org.reactfx.value.Var;
  *     <li>
  *         <em>Primary-Button-only Mouse Released Events:</em>
  *         (<code>EventPattern.mouseReleased().onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>).
- *         Do not override. Instead, use {@link #onNewSelectionDragEnd}, {@link #onSelectionDrop}, or see next item.
+ *         Do not override. Instead, use {@link #onNewSelectionDragFinished}, {@link #onSelectionDropped}, or see next item.
  *     </li>
  *     <li>
  *         <em>All other Mouse Released Events:</em>
@@ -348,7 +349,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // Don't remove as FXMLLoader doesn't recognise default methods !
     @Override public void setWrapText(boolean value) { wrapText.set(value); }
     @Override public boolean isWrapText() { return wrapText.get(); }
-    
+
     // undo manager
     private UndoManager undoManager;
     @Override public UndoManager getUndoManager() { return undoManager; }
@@ -406,17 +407,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    @Override public final EventHandler<MouseEvent> getOnOutsideSelectionMousePressed() { return onOutsideSelectionMousePressed.get(); }
+    @Override public final void setOnOutsideSelectionMousePressed(EventHandler<MouseEvent> handler) { onOutsideSelectionMousePressed.set( handler ); }
+    @Override public final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressedProperty() { return onOutsideSelectionMousePressed; }
+    private final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressed = new SimpleObjectProperty<>( e -> {
+    	onOutsideSelectionMousePressProperty().get().accept(e);
     });
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty() { return onOutsideSelectionMousePress; }
 
-    private final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    @Override public final EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased() { return onInsideSelectionMousePressReleased.get(); }
+    @Override public final void setOnInsideSelectionMousePressReleased(EventHandler<MouseEvent> handler) { onInsideSelectionMousePressReleased.set( handler ); }
+    @Override public final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleasedProperty() { return onInsideSelectionMousePressReleased; }
+    private final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleased = new SimpleObjectProperty<>( e -> {
+    	onInsideSelectionMousePressReleaseProperty().get().accept(e);
     });
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty() { return onInsideSelectionMousePressRelease; }
 
     private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
@@ -424,11 +427,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     });
     @Override public final ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty() { return onNewSelectionDrag; }
 
-    private final ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEnd = new SimpleObjectProperty<>(e -> {
+    @Override public final EventHandler<MouseEvent> getOnNewSelectionDragFinished() { return onNewSelectionDragFinished.get(); }
+    @Override public final void setOnNewSelectionDragFinished(EventHandler<MouseEvent> handler) { onNewSelectionDragFinished.set( handler ); }
+    @Override public final ObjectProperty<EventHandler<MouseEvent>> onNewSelectionDragFinishedProperty() { return onNewSelectionDragFinished; }
+    private final ObjectProperty<EventHandler<MouseEvent>> onNewSelectionDragFinished = new SimpleObjectProperty<>( e -> {
         CharacterHit hit = hit(e.getX(), e.getY());
         moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
     });
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEndProperty() { return onNewSelectionDragEnd; }
 
     private final ObjectProperty<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
         CharacterHit hit = hit(p.getX(), p.getY());
@@ -436,11 +441,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     });
     @Override public final ObjectProperty<Consumer<Point2D>> onSelectionDragProperty() { return onSelectionDrag; }
 
-    private final ObjectProperty<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveSelectedText(hit.getInsertionIndex());
+    @Override public final EventHandler<MouseEvent> getOnSelectionDropped() { return onSelectionDropped.get(); }
+    @Override public final void setOnSelectionDropped(EventHandler<MouseEvent> handler) { onSelectionDropped.set( handler ); }
+    @Override public final ObjectProperty<EventHandler<MouseEvent>> onSelectionDroppedProperty() { return onSelectionDropped; }
+    private final ObjectProperty<EventHandler<MouseEvent>> onSelectionDropped = new SimpleObjectProperty<>( e -> {
+    	onSelectionDropProperty().get().accept(e);
     });
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty() { return onSelectionDrop; }
 
     // not a hook, but still plays a part in the default mouse behavior
     private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
@@ -1483,4 +1489,37 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return CSS_META_DATA_LIST;
     }
 
+
+    // Note: this code should be moved to `onOutsideSelectionMousePressed` property
+    // in the next major release before removing this deprecated field
+    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>( e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    @Deprecated
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty() {
+    	return onOutsideSelectionMousePress;
+    }
+
+    // Note: this code should be moved to `onInsideSelectionMouseReleased` property
+    // in the next major release before removing this deprecated field
+    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>( e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+    });
+    @Deprecated
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty() {
+    	return onInsideSelectionMousePressRelease;
+    }
+
+    // Note: this code should be moved to `onSelectionDropped` property
+    // in the next major release before removing this deprecated field
+    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>( e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveSelectedText(hit.getInsertionIndex());
+    });
+    @Deprecated
+    @Override public final ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty() {
+    	return onSelectionDrop;
+    }
 }
