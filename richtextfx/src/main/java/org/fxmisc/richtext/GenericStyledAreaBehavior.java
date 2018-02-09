@@ -270,9 +270,14 @@ class GenericStyledAreaBehavior {
     private final GenericStyledArea<?, ?, ?> view;
 
     /**
-     * Indicates whether selection is being dragged by the user.
+     * Indicates whether an existing selection is being dragged by the user.
      */
     private DragState dragSelection = DragState.NO_DRAG;
+
+    /**
+     * Indicates whether a new selection is being made by the user.
+     */
+    private DragState dragNewSelection = DragState.NO_DRAG;
 
     private final Var<Point2D> autoscrollTo = Var.newSimpleVar(null);
 
@@ -474,9 +479,11 @@ class GenericStyledAreaBehavior {
                 hit.getCharacterIndex().getAsInt() < selection.getEnd()) {
             // press inside selection
             dragSelection = DragState.POTENTIAL_DRAG;
+            dragNewSelection = DragState.NO_DRAG;
         } else {
             dragSelection = DragState.NO_DRAG;
-            view.getOnOutsideSelectionMousePress().accept(e);
+            dragNewSelection = DragState.NO_DRAG;
+            view.getOnOutsideSelectionMousePressed().handle(e);
         }
     }
 
@@ -492,6 +499,7 @@ class GenericStyledAreaBehavior {
         if (dragSelection == DragState.POTENTIAL_DRAG) {
             dragSelection = DragState.DRAG;
         }
+        else dragNewSelection = DragState.DRAG;
     }
 
     private Result processPrimaryOnlyMouseDragged(MouseEvent e) {
@@ -534,12 +542,15 @@ class GenericStyledAreaBehavior {
         switch(dragSelection) {
             case POTENTIAL_DRAG:
                 // selection was not dragged, but clicked
-                view.getOnInsideSelectionMousePressRelease().accept(e);
+                view.getOnInsideSelectionMousePressReleased().handle(e);
             case DRAG:
-                view.getOnSelectionDrop().accept(e);
-            case NO_DRAG:
-                // do nothing, caret already repositioned in "handle[Number]Press(MouseEvent)"
+                view.getOnSelectionDropped().handle(e);
+                break;
+            case NO_DRAG: if ( dragNewSelection == DragState.DRAG ) {
+                view.getOnNewSelectionDragFinished().handle(e);
+            }
         }
+        dragNewSelection = DragState.NO_DRAG;
         dragSelection = DragState.NO_DRAG;
 
         return Result.PROCEED;

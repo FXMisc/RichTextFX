@@ -3,12 +3,14 @@ package org.fxmisc.richtext;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.TextFlow;
+
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.event.MouseOverTextEvent;
 import org.reactfx.EventStream;
@@ -71,7 +73,7 @@ public interface ViewActions<PS, SEG, S> {
     BooleanProperty autoScrollOnDragDesiredProperty();
 
     /**
-     * Runs the consumer when the user pressed the mouse over unselected text within the area.
+     * Runs the EventHandler when the user pressed the mouse over unselected text within the area.
      *
      * <p>By default, this will {@link NavigationActions#moveTo(int) move the caret} to the position where
      * the mouse was pressed and clear out any selection via the code:
@@ -82,12 +84,12 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    default void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePressProperty().set(consumer); }
-    default Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePressProperty().get(); }
-    ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty();
+    void setOnOutsideSelectionMousePressed(EventHandler<MouseEvent> handler);
+    ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressedProperty();
+    EventHandler<MouseEvent> getOnOutsideSelectionMousePressed();
 
     /**
-     * Runs the consumer when the mouse is released in this scenario: the user has selected some text and then
+     * Runs the EventHandler when the mouse is released in this scenario: the user has selected some text and then
      * "clicked" the mouse somewhere in that selection (the use pressed the mouse, did not drag it,
      * and released the mouse). <em>Note:</em> this consumer is run on {@link MouseEvent#MOUSE_RELEASED},
      * not {@link MouseEvent#MOUSE_CLICKED}.
@@ -101,9 +103,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    default Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressReleaseProperty().get(); }
-    default void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressReleaseProperty().set(consumer); }
-    ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty();
+    void setOnInsideSelectionMousePressReleased(EventHandler<MouseEvent> handler);
+    ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleasedProperty();
+    EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased();
 
     /**
      * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
@@ -125,7 +127,7 @@ public interface ViewActions<PS, SEG, S> {
     ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty();
 
     /**
-     * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
+     * Runs the EventHandler when the mouse is released in this scenario: the user has selected some text,
      * pressed the mouse on top of the selection, dragged it to a new location within the area,
      * and released the mouse.
      *
@@ -138,9 +140,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    default Consumer<MouseEvent> getOnNewSelectionDragEnd() { return onNewSelectionDragEndProperty().get(); }
-    default void setOnNewSelectionDragEnd(Consumer<MouseEvent> consumer) { onNewSelectionDragEndProperty().set(consumer); }
-    ObjectProperty<Consumer<MouseEvent>> onNewSelectionDragEndProperty();
+    void setOnNewSelectionDragFinished(EventHandler<MouseEvent> handler);
+    ObjectProperty<EventHandler<MouseEvent>> onNewSelectionDragFinishedProperty();
+    EventHandler<MouseEvent> getOnNewSelectionDragFinished();
 
     /**
      * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
@@ -161,7 +163,7 @@ public interface ViewActions<PS, SEG, S> {
     ObjectProperty<Consumer<Point2D>> onSelectionDragProperty();
 
     /**
-     * Runs the consumer when the mouse is released in this scenario: the user has selected some text,
+     * Runs the EventHandler when the mouse is released in this scenario: the user has selected some text,
      * pressed the mouse on top of the selection, dragged it to a new location within the area,
      * and released the mouse within the area.
      *
@@ -174,9 +176,9 @@ public interface ViewActions<PS, SEG, S> {
      *     }
      * </code></pre>.
      */
-    default Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDropProperty().get(); }
-    default void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDropProperty().set(consumer); }
-    ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty();
+    void setOnSelectionDropped(EventHandler<MouseEvent> handler);
+    ObjectProperty<EventHandler<MouseEvent>> onSelectionDroppedProperty();
+    EventHandler<MouseEvent> getOnSelectionDropped();
 
     /**
      * Gets the function that maps a line index to a node that is positioned to the left of the first character
@@ -460,5 +462,26 @@ public interface ViewActions<PS, SEG, S> {
             menu.hide();
         }
     }
+
+    /** Use setOnOutsideSelectionMousePress<u>ed</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
+    @Deprecated default void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePressProperty().set(consumer); }
+    /** Use getOnOutsideSelectionMousePress<u>ed</u>() instead */
+    @Deprecated default Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePressProperty().get(); }
+    /** Use onOutsideSelectionMousePress<u>ed</u>Property() instead */
+    @Deprecated ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty();
+
+    /** Use getOnInsideSelectionMousePressRelease<u>d</u>() instead */
+    @Deprecated default Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressReleaseProperty().get(); }
+    /** Use setOnInsideSelectionMousePressRelease<u>d</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
+    @Deprecated default void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressReleaseProperty().set(consumer); }
+    /** Use onInsideSelectionMousePressRelease<u>d</u>Property() instead */
+    @Deprecated ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty();
+
+    /** Use getOnSelectionDrop<u>ped</u>() instead */
+    @Deprecated default Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDropProperty().get(); }
+    /** Use setOnSelectionDrop<u>ped</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
+    @Deprecated default void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDropProperty().set(consumer); }
+    /** Use onSelectionDrop<u>ped</u>Property() instead */
+    @Deprecated ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty();
 
 }

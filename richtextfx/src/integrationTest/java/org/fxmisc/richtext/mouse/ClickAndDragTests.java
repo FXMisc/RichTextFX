@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.mouse;
 
 import com.nitorcreations.junit.runners.NestedRunner;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Bounds;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
@@ -70,11 +71,15 @@ public class ClickAndDragTests {
         public void releasing_the_mouse_after_drag_does_nothing() {
             assertEquals(0, area.getCaretPosition());
 
+            SimpleIntegerProperty i = new SimpleIntegerProperty(0);
+            area.setOnNewSelectionDragFinished(e -> i.set(1));
+
             moveTo(firstLineOfArea())
                     .press(PRIMARY)
                     .dropBy(20, 0);
 
             assertEquals(0, area.getCaretPosition());
+            assertEquals(0, i.get());
         }
 
     }
@@ -128,6 +133,19 @@ public class ClickAndDragTests {
                 assertFalse(area.getSelectedText().isEmpty());
             }
 
+            @Test
+            public void pressing_mouse_over_text_and_dragging_and_releasing_mouse_triggers_new_selection_finished() {
+                SimpleIntegerProperty i = new SimpleIntegerProperty(0);
+                area.setOnNewSelectionDragFinished(e -> i.set(1));
+                moveTo(firstLineOfArea())
+                        .press(PRIMARY)
+                        .moveBy(20, 0)
+                        .release(PRIMARY);
+
+                assertFalse(area.getSelectedText().isEmpty());
+                assertEquals(1, i.get());
+            }
+
         }
 
         public class And_Text_Is_Selected extends InlineCssTextAreaAppTest {
@@ -179,6 +197,25 @@ public class ClickAndDragTests {
             }
 
             @Test
+            public void single_clicking_within_selected_text_does_not_trigger_new_selection_finished() {
+                // setup
+                interact(() -> {
+                    area.replaceText(firstParagraph);
+                    area.selectAll();
+                });
+
+                SimpleIntegerProperty i = new SimpleIntegerProperty(0);
+                area.setOnNewSelectionDragFinished(e -> i.set(1));
+
+                Bounds bounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
+
+                moveTo(bounds).clickOn(PRIMARY);
+
+                assertEquals(0, i.get());
+            }
+
+            @Test
             public void single_clicking_outside_of_selected_text_moves_caret_to_that_position() {
                 // setup
                 interact(() -> {
@@ -218,6 +255,25 @@ public class ClickAndDragTests {
                 tripleClickOnFirstLine();
 
                 assertEquals(firstParagraph, area.getSelectedText());
+            }
+
+            @Test
+            public void single_clicking_outside_of_selected_text_does_not_trigger_new_selection_finished() {
+                // setup
+                interact(() -> {
+                    area.replaceText(firstParagraph + "\n" + "this is the selected text");
+                    area.selectRange(1, 0, 2, -1);
+                });
+
+                SimpleIntegerProperty i = new SimpleIntegerProperty(0);
+                area.setOnNewSelectionDragFinished(e -> i.set(1));
+
+                Bounds bounds = area.getCharacterBoundsOnScreen(
+                        firstWord.length(), firstWord.length() + 1).get();
+
+                moveTo(bounds).clickOn(PRIMARY);
+
+                assertEquals(0, i.get());
             }
 
             @Test
@@ -290,6 +346,34 @@ public class ClickAndDragTests {
                 assertEquals(insertionPosition, area.getCaretPosition());
                 assertEquals(selText, area.getSelectedText());
                 assertEquals(expectedText, area.getText());
+            }
+
+            @Test
+            public void pressing_mouse_on_selection_and_dragging_and_releasing_does_not_trigger_new_selection_finished() {
+                // Linux passes; Mac/Windows uncertain
+                // TODO: update test to see if it works on Mac & Windows
+                run_only_on_linux();
+
+                // setup
+                String twoSpaces = "  ";
+                interact(() -> {
+                    area.replaceText(firstParagraph + "\n" + twoSpaces + extraText);
+                    area.selectRange(0, firstWord.length());
+                });
+
+                SimpleIntegerProperty i = new SimpleIntegerProperty(0);
+                area.setOnNewSelectionDragFinished(e -> i.set(1));
+
+                Bounds letterInFirstWord = area.getCharacterBoundsOnScreen(1, 2).get();
+
+                int insertionPosition = firstParagraph.length() + 2;
+                Bounds insertionBounds = area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get();
+
+                moveTo(letterInFirstWord)
+                        .press(PRIMARY)
+                        .dropTo(insertionBounds);
+
+                assertEquals(0, i.get());
             }
 
         }
