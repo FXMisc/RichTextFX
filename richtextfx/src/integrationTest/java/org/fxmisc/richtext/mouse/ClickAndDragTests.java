@@ -135,6 +135,9 @@ public class ClickAndDragTests {
 
             @Test
             public void pressing_mouse_over_text_and_dragging_and_releasing_mouse_triggers_new_selection_finished() {
+                // Doesn't work on Mac builds; works on Linux & Windows
+                skip_if_on_mac();
+
                 SimpleIntegerProperty i = new SimpleIntegerProperty(0);
                 area.setOnNewSelectionDragFinished(e -> i.set(1));
                 moveTo(firstLineOfArea())
