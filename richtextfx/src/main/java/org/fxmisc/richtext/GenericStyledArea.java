@@ -553,7 +553,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     private final TextOps<SEG, S> segmentOps;
-    @Override public final SegmentOps<SEG, S> getSegOps() { return segmentOps; }
+    @Override public final TextOps<SEG, S> getSegOps() { return segmentOps; }
 
     private final EventStream<Boolean> autoCaretBlinksSteam;
     final EventStream<Boolean> autoCaretBlink() { return autoCaretBlinksSteam; }
