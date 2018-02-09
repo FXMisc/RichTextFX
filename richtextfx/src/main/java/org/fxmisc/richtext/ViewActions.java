@@ -108,9 +108,9 @@ public interface ViewActions<PS, SEG, S> {
     EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased();
 
     /**
-     * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
-     * pressed the mouse on top of the selection, dragged it to a new location within the area,
-     * but has not yet released the mouse.
+     * Runs the consumer when the mouse is dragged in this scenario: the user has pressed the mouse over some
+     * unselected text, and dragged the mouse to a new location within the area, but has not yet released the mouse.
+     * Each time the user drags the mouse without releasing it, this hook's consumer gets called.
      *
      * <p>By default, this will create a new selection or
      * {@link NavigationActions.SelectionPolicy#ADJUST} the current one to be bigger or
@@ -127,9 +127,8 @@ public interface ViewActions<PS, SEG, S> {
     ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty();
 
     /**
-     * Runs the EventHandler when the mouse is released in this scenario: the user has selected some text,
-     * pressed the mouse on top of the selection, dragged it to a new location within the area,
-     * and released the mouse.
+     * Runs the EventHandler when the mouse is released in this scenario: the user has pressed the mouse over some
+     * unselected text, and dragged the mouse to a new location within the area, and released the mouse.
      *
      * <p>By default, this will {@link NavigationActions.SelectionPolicy#ADJUST} the
      * current selection to be bigger or smaller via the code:
@@ -147,7 +146,8 @@ public interface ViewActions<PS, SEG, S> {
     /**
      * Runs the consumer when the mouse is dragged in this scenario: the user has selected some text,
      * pressed the mouse on top of the selection, dragged it to a new location within the area,
-     * but has not yet released the mouse.
+     * but has not yet released the mouse. Each time the user drags the mouse without releasing it,
+     * this hook's consumer gets called.
      *
      * <p>By default, this will {@link GenericStyledArea#displaceCaret(int) displace the caret} to that position
      * within the area via the code:
