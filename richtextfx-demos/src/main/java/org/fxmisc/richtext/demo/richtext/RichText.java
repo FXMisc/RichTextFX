@@ -61,6 +61,9 @@ import org.reactfx.util.Tuple2;
 
 public class RichText extends Application {
 
+    // the saved/loaded files and their format are arbitrary and may change across versions
+    private static final String RTFX_FILE_EXTENSION = ".rtfx";
+
     public static void main(String[] args) {
         // The following properties are required on Linux for improved text rendering
         //System.setProperty("prism.lcdtext", "false");
@@ -94,8 +97,14 @@ public class RichText extends Application {
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
 
-        Button loadBtn = createButton("loadfile", this::loadDocument, "Load document");
-        Button saveBtn = createButton("savefile", this::saveDocument, "Save document");
+        Button loadBtn = createButton("loadfile", this::loadDocument,
+                "Load document.\n\n" +
+                        "Note: the demo will load only previously-saved \"" + RTFX_FILE_EXTENSION + "\" files. " +
+                        "This file format is abitrary and may change across versions.");
+        Button saveBtn = createButton("savefile", this::saveDocument,
+                "Save document.\n\n" +
+                        "Note: the demo will save the area's content to a \"" + RTFX_FILE_EXTENSION + "\" file. " +
+                        "This file format is abitrary and may change across versions.");
         CheckBox wrapToggle = new CheckBox("Wrap");
         wrapToggle.setSelected(true);
         area.wrapTextProperty().bind(wrapToggle.selectedProperty());
@@ -373,6 +382,8 @@ public class RichText extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Load document");
         fileChooser.setInitialDirectory(new File(initialDir));
+        fileChooser.setSelectedExtensionFilter(
+                new FileChooser.ExtensionFilter("Arbitrary RTFX file", "*" + RTFX_FILE_EXTENSION));
         File selectedFile = fileChooser.showOpenDialog(mainStage);
         if (selectedFile != null) {
             area.clear();
@@ -408,6 +419,7 @@ public class RichText extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save document");
         fileChooser.setInitialDirectory(new File(initialDir));
+        fileChooser.setInitialFileName("example rtfx file" + RTFX_FILE_EXTENSION);
         File selectedFile = fileChooser.showSaveDialog(mainStage);
         if (selectedFile != null) {
             save(selectedFile);
