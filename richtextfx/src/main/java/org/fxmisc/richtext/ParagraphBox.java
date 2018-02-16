@@ -16,6 +16,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableSet;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -82,12 +83,24 @@ class ParagraphBox<PS, SEG, S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
+    private final EventStream<Integer> indexStream;
+    public EventStream<Integer> indexValues() { return indexStream; }
+
+    public final ObservableSet<CaretNode> caretsProperty() { return text.caretsProperty(); }
+
     ParagraphBox(Paragraph<PS, SEG, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle,
                  Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
-        this.index = Var.newSimpleVar(0);
+
+        // start at -1 so that the first time it is displayed, the caret at pos 0 is not
+        // accidentally removed from its parent and moved to this node's ParagraphText
+        // before this node gets updated to its real index and therefore removes
+        // caret from the SceneGraph completely
+        this.index = Var.newSimpleVar(-1);
+        indexStream = index.values().filter(i -> i != -1);
+
         getChildren().add(text);
         graphic = Val.combine(
                 graphicFactory,
@@ -106,18 +119,15 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     @Override
     public String toString() {
-        return graphic.isPresent()
-                ? "[#|" + text.getParagraph() + "]"
-                : "["   + text.getParagraph() + "]";
+        return String.format(
+                "ParagraphBox@%s[%s|%s]",
+                hashCode(), (graphic.isPresent() ? "#" : ""), text.getParagraph()
+        );
     }
-
-    public Property<Boolean> caretVisibleProperty() { return text.caretVisibleProperty(); }
 
     public Property<Paint> highlightFillProperty() { return text.highlightFillProperty(); }
 
     public Property<Paint> highlightTextFillProperty() { return text.highlightTextFillProperty(); }
-
-    public Var<Integer> caretPositionProperty() { return text.caretPositionProperty(); }
 
     public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 
@@ -151,19 +161,19 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.hit(inText.getX() - textInsets.getLeft(), inText.getY() - textInsets.getTop());
     }
 
-    public CaretOffsetX getCaretOffsetX() {
+    public <T extends Node & Caret> CaretOffsetX getCaretOffsetX(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return new CaretOffsetX(text.getCaretOffsetX());
+        return new CaretOffsetX(text.getCaretOffsetX(caret));
     }
 
-    public int getCurrentLineStartPosition() {
+    public int getCurrentLineStartPosition(Caret caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.getCurrentLineStartPosition();
+        return text.getCurrentLineStartPosition(caret);
     }
 
-    public int getCurrentLineEndPosition() {
+    public int getCurrentLineEndPosition(Caret caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.getCurrentLineEndPosition();
+        return text.getCurrentLineEndPosition(caret);
     }
 
     public int getLineCount() {
@@ -171,9 +181,9 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.getLineCount();
     }
 
-    public int getCurrentLineIndex() {
+    public int getCurrentLineIndex(Caret caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.currentLineIndex();
+        return text.currentLineIndex(caret);
     }
 
     public int getCurrentLineIndex(int position) {
@@ -181,15 +191,15 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.currentLineIndex(position);
     }
 
-    public Bounds getCaretBounds() {
+    public <T extends Node & Caret> Bounds getCaretBounds(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        Bounds b = text.getCaretBounds();
+        Bounds b = text.getCaretBounds(caret);
         return text.localToParent(b);
     }
 
-    public Bounds getCaretBoundsOnScreen() {
+    public <T extends Node & Caret> Bounds getCaretBoundsOnScreen(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.getCaretBoundsOnScreen();
+        return text.getCaretBoundsOnScreen(caret);
     }
 
     public Optional<Bounds> getSelectionBoundsOnScreen() {

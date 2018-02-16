@@ -3,6 +3,8 @@ package org.fxmisc.richtext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +16,12 @@ import java.util.function.Supplier;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -33,7 +41,6 @@ import org.fxmisc.richtext.model.StyledSegment;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 /**
  * The class responsible for rendering the segments in an paragraph. It also renders additional RichTextFX-specific
@@ -45,6 +52,9 @@ import org.reactfx.value.Var;
  */
 class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
+    private final ObservableSet<CaretNode> carets = FXCollections.observableSet(new HashSet<>(1));
+    public final ObservableSet<CaretNode> caretsProperty() { return carets; }
+
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
@@ -53,40 +63,22 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return highlightTextFill;
     }
 
-    private final Var<Integer> caretPosition = Var.newSimpleVar(0);
-    public Var<Integer> caretPositionProperty() { return caretPosition; }
-    public void setCaretPosition(int pos) { caretPosition.setValue(pos); }
-    private final Val<Integer> clampedCaretPosition;
-
     private final ObjectProperty<IndexRange> selection = new SimpleObjectProperty<>(StyledTextArea.EMPTY_RANGE);
     public ObjectProperty<IndexRange> selectionProperty() { return selection; }
     public void setSelection(IndexRange sel) { selection.set(sel); }
 
     private final Paragraph<PS, SEG, S> paragraph;
 
-    private final Path caretShape = new CaretPath();
     private final Path selectionShape = new SelectionPath();
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
     private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
     private final CustomCssShapeHelper<UnderlineAttributes> underlineShapeHelper;
 
-    // proxy for caretShape.visibleProperty() that implements unbind() correctly.
-    // This is necessary due to a bug in BooleanPropertyBase#unbind().
-    // See https://bugs.openjdk.java.net/browse/JDK-8130458
-    private final Var<Boolean> caretVisible = Var.newSimpleVar(false);
-    {
-        caretShape.visibleProperty().bind(caretVisible);
-    }
-
     ParagraphText(Paragraph<PS, SEG, S> par, Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
-
-        int parLen = paragraph.length();
-        clampedCaretPosition = caretPosition.map(i -> Math.min(i, parLen));
-        clampedCaretPosition.addListener((obs, oldPos, newPos) -> requestLayout());
 
         selection.addListener((obs, old, sel) -> requestLayout());
 
@@ -101,13 +93,25 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         selectionShape.layoutYProperty().bind(topInset);
         getChildren().add(selectionShape);
 
-        // caret
-        caretShape.getStyleClass().add("caret");
-        caretShape.setManaged(false);
-        caretShape.setStrokeWidth(1);
-        caretShape.layoutXProperty().bind(leftInset);
-        caretShape.layoutYProperty().bind(topInset);
-        getChildren().add(caretShape);
+        ChangeListener<Integer> requestLayout = (obs, ov, nv) -> requestLayout();
+        carets.addListener((SetChangeListener.Change<? extends CaretNode> change) -> {
+            if (change.wasAdded()) {
+                CaretNode caret = change.getElementAdded();
+                caret.columnPositionProperty().addListener(requestLayout);
+                caret.layoutXProperty().bind(leftInset);
+                caret.layoutYProperty().bind(topInset);
+
+                getChildren().add(caret);
+                updateSingleCaret(caret);
+            } else if (change.wasRemoved()) {
+                CaretNode caret = change.getElementRemoved();
+                caret.columnPositionProperty().removeListener(requestLayout);
+                caret.layoutXProperty().unbind();
+                caret.layoutYProperty().unbind();
+
+                getChildren().remove(caret);
+            }
+        });
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
@@ -204,29 +208,28 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return paragraph;
     }
 
-    public Var<Boolean> caretVisibleProperty() {
-        return caretVisible;
-    }
-
     public ObjectProperty<Paint> highlightFillProperty() {
         return selectionShape.fillProperty();
     }
 
-    public double getCaretOffsetX() {
+    public <T extends Node & Caret> double getCaretOffsetX(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        Bounds bounds = caretShape.getLayoutBounds();
+        checkWithinParagraph(caret);
+        Bounds bounds = caret.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
 
-    public Bounds getCaretBounds() {
+    public <T extends Node & Caret> Bounds getCaretBounds(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        return caretShape.getBoundsInParent();
+        checkWithinParagraph(caret);
+        return caret.getBoundsInParent();
     }
 
-    public Bounds getCaretBoundsOnScreen() {
+    public <T extends Node & Caret> Bounds getCaretBoundsOnScreen(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        Bounds localBounds = caretShape.getBoundsInLocal();
-        return caretShape.localToScreen(localBounds);
+        checkWithinParagraph(caret);
+        Bounds localBounds = caret.getBoundsInLocal();
+        return caret.localToScreen(localBounds);
     }
 
     public Bounds getRangeBoundsOnScreen(int from, int to) {
@@ -254,25 +257,41 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         }
     }
 
-    public int getCurrentLineStartPosition() {
-        return getLineStartPosition(clampedCaretPosition.getValue());
+    public int getCurrentLineStartPosition(Caret caret) {
+        return getLineStartPosition(getClampedCaretPosition(caret));
     }
 
-    public int getCurrentLineEndPosition() {
-        return getLineEndPosition(clampedCaretPosition.getValue());
+    public int getCurrentLineEndPosition(Caret caret) {
+        return getLineEndPosition(getClampedCaretPosition(caret));
     }
 
-    public int currentLineIndex() {
-        return getLineOfCharacter(clampedCaretPosition.getValue());
+    public int currentLineIndex(Caret caret) {
+        return getLineOfCharacter(getClampedCaretPosition(caret));
     }
 
     public int currentLineIndex(int position) {
         return getLineOfCharacter(position);
     }
 
-    private void updateCaretShape() {
-        PathElement[] shape = getCaretShape(clampedCaretPosition.getValue(), true);
-        caretShape.getElements().setAll(shape);
+    private <T extends Node> void checkWithinParagraph(T shape) {
+        if (shape.getParent() != this) {
+            throw new IllegalArgumentException(String.format(
+                    "This ParagraphText is not the parent of the given shape (%s):\nExpected: %s\nActual:   %s",
+                    shape, this, shape.getParent()
+            ));
+        }
+    }
+    private int getClampedCaretPosition(Caret caret) {
+        return Math.min(caret.getColumnPosition(), paragraph.length());
+    }
+
+    private void updateAllCaretShapes() {
+        carets.forEach(this::updateSingleCaret);
+    }
+
+    private void updateSingleCaret(CaretNode caretNode) {
+        PathElement[] shape = getCaretShape(getClampedCaretPosition(caretNode), true);
+        caretNode.getElements().setAll(shape);
     }
 
     private void updateSelectionShape() {
@@ -380,11 +399,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         underlineShapeHelper.updateSharedShapes();
     }
 
+    @Override
+    public String toString() {
+        return String.format("ParagraphText@%s(paragraph=%s)", hashCode(), paragraph);
+    }
 
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        updateCaretShape();
+        updateAllCaretShapes();
         updateSelectionShape();
         updateBackgroundShapes();
     }

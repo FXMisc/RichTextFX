@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import javafx.util.Duration;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
@@ -50,6 +51,10 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public ObservableValue<Boolean> visibleProperty() { return delegateCaret.visibleProperty(); }
     @Override public boolean isVisible() { return delegateCaret.isVisible(); }
 
+    @Override public ObservableValue<Duration> blinkRateProperty() { return delegateCaret.blinkRateProperty(); }
+    @Override public Duration getBlinkRate() { return delegateCaret.getBlinkRate(); }
+    @Override public void setBlinkRate(Duration blinkRate) { delegateCaret.setBlinkRate(blinkRate); }
+
     @Override public ObservableValue<Optional<Bounds>> caretBoundsProperty() { return delegateCaret.caretBoundsProperty(); }
     @Override public Optional<Bounds> getCaretBounds() { return delegateCaret.getCaretBounds(); }
 
@@ -95,6 +100,14 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegateSelection.selectionBoundsProperty(); }
     @Override public Optional<Bounds> getSelectionBounds() { return delegateSelection.getSelectionBounds(); }
 
+    private final CaretNode delegateCaret;
+    @Override public CaretNode getUnderlyingCaret() { return delegateCaret; }
+
+    @Override public String getCaretName() { return delegateCaret.getCaretName(); }
+
+    private final GenericStyledArea<PS, SEG, S> area;
+    @Override public GenericStyledArea<?, ?, ?> getArea() { return area; }
+
     // caret selection bind
     private final Val<Integer> anchorPosition;
     @Override public int getAnchorPosition() { return anchorPosition.getValue(); }
@@ -116,20 +129,18 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private final SuspendableVal<Boolean> startedByAnchor = internalStartedByAnchor.suspendable();
     private boolean anchorIsStart() { return startedByAnchor.getValue(); }
 
-    private final GenericStyledArea<PS, SEG, S> area;
-    private final Caret delegateCaret;
     private final Selection<PS, SEG, S> delegateSelection;
 
     private Subscription subscription = () -> {};
 
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area) {
-        this(area, new IndexRange(0, 0));
+    CaretSelectionBindImpl(String caretName, GenericStyledArea<PS, SEG, S> area) {
+        this(caretName, area, new IndexRange(0, 0));
     }
 
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, IndexRange startingRange) {
+    CaretSelectionBindImpl(String caretName, GenericStyledArea<PS, SEG, S> area, IndexRange startingRange) {
         this.area = area;
         SuspendableNo delegateUpdater = new SuspendableNo();
-        this.delegateCaret = new CaretImpl(area, delegateUpdater, startingRange.getStart());
+        this.delegateCaret = new CaretNode(caretName, area, delegateUpdater, startingRange.getStart());
         delegateSelection = new SelectionImpl<>(area, delegateUpdater, startingRange);
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->

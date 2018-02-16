@@ -1,8 +1,13 @@
 package org.fxmisc.richtext;
 
-import javafx.beans.binding.Binding;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.css.CssMetaData;
+import javafx.css.StyleConverter;
+import javafx.css.Styleable;
+import javafx.css.StyleableObjectProperty;
 import javafx.geometry.Bounds;
+import javafx.scene.shape.Path;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -16,6 +21,9 @@ import org.reactfx.value.Var;
 
 import java.text.BreakIterator;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
@@ -25,7 +33,12 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-final class CaretImpl implements Caret {
+public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
+
+    private static final javafx.util.Duration HALF_A_SECOND = javafx.util.Duration.millis(500);
+
+    private static final EventStream<Boolean> ALWAYS_FALSE = Val.constant(false).values();
+    private static final EventStream<Boolean> ALWAYS_TRUE = Val.constant(true).values();
 
     /* ********************************************************************** *
      *                                                                        *
@@ -36,6 +49,17 @@ final class CaretImpl implements Caret {
      * in response to user input and/or API actions.                          *
      *                                                                        *
      * ********************************************************************** */
+
+    /**
+     * Controls the blink rate of the caret, when one is displayed. Setting
+     * the duration to zero disables blinking.
+     */
+    private final StyleableObjectProperty<javafx.util.Duration> blinkRate
+            = new CustomStyleableProperty<>(HALF_A_SECOND, "blinkRate", this, BLINK_RATE);
+
+    @Override public ObjectProperty<javafx.util.Duration> blinkRateProperty() { return blinkRate; }
+    @Override public javafx.util.Duration getBlinkRate() { return blinkRate.getValue(); }
+    @Override public void setBlinkRate(javafx.util.Duration rate) { blinkRate.set(rate); }
 
     private final SuspendableVal<Integer> position;
     @Override public final int getPosition() { return position.getValue(); }
@@ -58,11 +82,7 @@ final class CaretImpl implements Caret {
     @Override public final void setShowCaret(CaretVisibility value) { showCaret.setValue(value); }
     @Override public final Var<CaretVisibility> showCaretProperty() { return showCaret; }
 
-    private final Binding<Boolean> visible;
-    @Override public final boolean isVisible() { return visible.getValue(); }
-    @Override public final ObservableValue<Boolean> visibleProperty() { return visible; }
-
-    private final Val<Optional<Bounds>> bounds;
+    private final SuspendableVal<Optional<Bounds>> bounds;
     @Override public final Optional<Bounds> getCaretBounds() { return bounds.getValue(); }
     @Override public final ObservableValue<Optional<Bounds>> caretBoundsProperty() { return bounds; }
 
@@ -70,33 +90,43 @@ final class CaretImpl implements Caret {
     @Override public final void clearTargetOffset() { targetOffset = Optional.empty(); }
     @Override public final ParagraphBox.CaretOffsetX getTargetOffset() {
         if (!targetOffset.isPresent()) {
-            targetOffset = Optional.of(area.getCaretOffsetX(getParagraphIndex()));
+            targetOffset = Optional.of(area.getCaretOffsetX(this));
         }
         return targetOffset.get();
     }
 
     private final SuspendableNo beingUpdated = new SuspendableNo();
     @Override public final boolean isBeingUpdated() { return beingUpdated.get(); }
-    @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
+    @Override public final SuspendableNo beingUpdatedProperty() { return beingUpdated; }
 
-    private final EventStream<?> dirty;
     private final GenericStyledArea<?, ?, ?> area;
+    @Override public GenericStyledArea<?, ?, ?> getArea() { return area; }
+
+    private final String name;
+    @Override public final String getCaretName() { return name; }
+
     private final SuspendableNo dependentBeingUpdated;
+    private final EventStream<?> dirty;
     private final Var<Integer> internalTextPosition;
 
     private Subscription subscriptions = () -> {};
 
-    CaretImpl(GenericStyledArea<?, ?, ?> area) {
-        this(area, 0);
+    public CaretNode(String name, GenericStyledArea<?, ?, ?> area) {
+        this(name, area, 0);
     }
 
-    CaretImpl(GenericStyledArea<?, ?, ?> area, int startingPosition) {
-        this(area, area.beingUpdatedProperty(), startingPosition);
+    public CaretNode(String name, GenericStyledArea<?, ?, ?> area, int startingPosition) {
+        this(name, area, area.beingUpdatedProperty(), startingPosition);
     }
 
-    CaretImpl(GenericStyledArea<?, ?, ?> area, SuspendableNo dependentBeingUpdated, int startingPosition) {
+    public CaretNode(String name, GenericStyledArea<?, ?, ?> area, SuspendableNo dependentBeingUpdated, int startingPosition) {
+        this.name = name;
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
+
+        this.getStyleClass().add("caret");
+        this.setManaged(false);
+
         internalTextPosition = Var.newSimpleVar(startingPosition);
         position = internalTextPosition.suspendable();
 
@@ -133,8 +163,8 @@ final class CaretImpl implements Caret {
         EventStream<Boolean> blinkCaret = showCaret.values()
                 .flatMap(mode -> {
                     switch (mode) {
-                        case ON:   return Val.constant(true).values();
-                        case OFF:  return Val.constant(false).values();
+                        case ON:   return ALWAYS_TRUE;
+                        case OFF:  return ALWAYS_FALSE;
                         default:
                         case AUTO: return area.autoCaretBlink();
                     }
@@ -147,25 +177,27 @@ final class CaretImpl implements Caret {
 
         // The caret is visible in periodic intervals,
         // but only when blinkCaret is true.
-        visible = EventStreams.combine(blinkCaret, area.caretBlinkRateEvents())
-                .flatMap(tuple -> {
-                    Boolean blink = tuple.get1();
-                    javafx.util.Duration rate = tuple.get2();
-                    if(blink) {
-                        return rate.lessThanOrEqualTo(ZERO)
-                                ? Val.constant(true).values()
-                                : booleanPulse(rate, dirty);
-                    } else {
-                        return Val.constant(false).values();
-                    }
-                })
-                .toBinding(false);
-        manageBinding(visible);
+        EventStream<javafx.util.Duration> nonNullBlinkRates = EventStreams.valuesOf(blinkRate).filter(i -> i != null);
+        manageSubscription(
+                EventStreams.combine(blinkCaret, nonNullBlinkRates)
+                        .flatMap(tuple -> {
+                            Boolean blink = tuple.get1();
+                            javafx.util.Duration rate = tuple.get2();
+                            if(blink) {
+                                return rate.lessThanOrEqualTo(ZERO)
+                                        ? Val.constant(true).values()
+                                        : booleanPulse(rate, dirty);
+                            } else {
+                                return Val.constant(false).values();
+                            }
+                        })
+                        .feedTo(visibleProperty())
+        );
 
         bounds = Val.create(
-                () -> area.getCaretBoundsOnScreen(getParagraphIndex()),
-                area.boundsDirtyFor(dirty)
-        );
+                () -> area.getCaretBoundsOnScreen(this),
+                EventStreams.merge(area.viewportDirtyEvents(), dirty)
+        ).suspendable();
 
         lineIndex = Val.create(
                 () -> OptionalInt.of(area.lineIndex(getParagraphIndex(), getColumnPosition())),
@@ -174,6 +206,9 @@ final class CaretImpl implements Caret {
 
         Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated,
+
+                lineIndex,
+                bounds,
 
                 paragraphIndex,
                 columnPosition,
@@ -239,8 +274,31 @@ final class CaretImpl implements Caret {
         moveContentBreaks(numOfBreaks, breakIterator, true);
     }
 
+    @Override
+    public int compareTo(CaretNode o) {
+        return Integer.compare(hashCode(), o.hashCode());
+    }
+
     public void dispose() {
         subscriptions.unsubscribe();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "CaretNode(name=%s position=%s paragraphIndex=%s columnPosition=%s %s)",
+                getCaretName(), getPosition(), getParagraphIndex(), getColumnPosition(), super.toString()
+        );
     }
 
     /* ********************************************************************** *
@@ -255,10 +313,6 @@ final class CaretImpl implements Caret {
 
     private <T> void manageSubscription(EventStream<T> stream, Consumer<T> subscriber) {
         manageSubscription(stream.subscribe(subscriber));
-    }
-
-    private void manageBinding(Binding<?> binding) {
-        manageSubscription(binding::dispose);
     }
 
     private void manageSubscription(Subscription s) {
@@ -296,6 +350,36 @@ final class CaretImpl implements Caret {
             breakIterator.next();
         }
         moveTo(breakIterator.current());
+    }
+
+    /* ********************************************************************** *
+     *                                                                        *
+     * CSS                                                                    *
+     *                                                                        *
+     * ********************************************************************** */
+
+    private static final CssMetaData<CaretNode, javafx.util.Duration> BLINK_RATE
+            = new CustomCssMetaData<>("-fx-blink-rate", StyleConverter.getDurationConverter(),
+            javafx.util.Duration.millis(500), s -> s.blinkRate
+    );
+
+    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
+
+    static {
+        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Path.getClassCssMetaData());
+
+        styleables.add(BLINK_RATE);
+
+        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
+    }
+
+    @Override
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+        return CSS_META_DATA_LIST;
+    }
+
+    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
+        return CSS_META_DATA_LIST;
     }
 
 }

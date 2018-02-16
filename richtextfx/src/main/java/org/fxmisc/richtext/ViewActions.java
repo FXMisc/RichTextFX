@@ -324,7 +324,7 @@ public interface ViewActions<PS, SEG, S> {
      * Using the paragraph index of the "all paragraph" index system, returns the bounds of a caret on the
      * given paragraph or {@link Optional#empty()} if no caret is on that paragraph or the pragraph is not visible.
      */
-    public Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex);
+    public <T extends Node & Caret> Optional<Bounds> getCaretBoundsOnScreen(T caret);
 
     /**
      * Gets the character bounds on screen

@@ -6,6 +6,7 @@ import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.reactfx.EventStream;
+import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableNo;
@@ -161,7 +162,7 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
 
         bounds = Val.create(
                 () -> area.getSelectionBoundsOnScreen(this),
-                area.boundsDirtyFor(dirty)
+                EventStreams.merge(area.viewportDirtyEvents(), dirty)
         );
 
         manageSubscription(area.plainTextChanges(), plainTextChange -> {

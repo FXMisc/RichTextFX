@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
+import javafx.util.Duration;
 import org.reactfx.value.Var;
 
 import java.text.BreakIterator;
@@ -85,6 +86,10 @@ public interface Caret {
     /** Whether the caret is being shown in the viewport */
     public ObservableValue<Boolean> visibleProperty();
     public boolean isVisible();
+
+    public ObservableValue<Duration> blinkRateProperty();
+    public Duration getBlinkRate();
+    public void setBlinkRate(Duration blinkRate);
 
     /**
      * The selectionBoundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
@@ -204,4 +209,7 @@ public interface Caret {
      */
     public void dispose();
 
+    public GenericStyledArea<?, ?, ?> getArea();
+
+    public String getCaretName();
 }
