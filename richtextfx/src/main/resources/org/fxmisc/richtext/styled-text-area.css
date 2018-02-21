@@ -10,3 +10,8 @@
     -fx-blink-rate: 500ms;
     -fx-stroke-width: 1.0;
 }
+
+.styled-text-area .selection {
+    -fx-fill: dodgerblue;
+    -fx-stroke-width: 0;
+}

@@ -1,9 +1,16 @@
 package org.fxmisc.richtext;
 
-import javafx.scene.shape.Path;
+import javafx.scene.control.IndexRange;
+import org.reactfx.value.Val;
 
 /**
- * A path which describes a selection shape in the Scene graph.
+ * Default implementation for {@link SelectionPathBase}. It adds the style class {@code "selection"}.
  */
-public class SelectionPath extends Path {
+public class SelectionPath extends SelectionPathBase {
+
+    public SelectionPath(Val<IndexRange> range) {
+        super(range);
+        getStyleClass().add("selection");
+    }
+
 }

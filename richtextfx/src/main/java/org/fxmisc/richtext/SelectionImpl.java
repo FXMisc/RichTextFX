@@ -10,8 +10,6 @@ import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableNo;
-import org.reactfx.util.Tuple2;
-import org.reactfx.util.Tuples;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
@@ -22,12 +20,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 
+import static org.fxmisc.richtext.GenericStyledArea.EMPTY_RANGE;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
-final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
+public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Comparable<SelectionImpl<PS, SEG, S>> {
 
     /* ********************************************************************** *
      *                                                                        *
@@ -95,6 +94,11 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     @Override public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
     private final GenericStyledArea<PS, SEG, S> area;
+    @Override public GenericStyledArea<PS, SEG, S> getArea() { return area; }
+
+    private final String name;
+    @Override public String getSelectionName() { return name; }
+
     private final SuspendableNo dependentBeingUpdated;
     private final Var<IndexRange> internalRange;
     private final EventStream<?> dirty;
@@ -102,29 +106,50 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
     private final Var<Position> start2DPosition;
     private final Val<Position> end2DPosition;
 
+    private final Function<Val<IndexRange>, SelectionPathBase> createPath;
+
     private Subscription subscription = () -> {};
 
-    public SelectionImpl(GenericStyledArea<PS, SEG, S> area) {
-        this(area, 0, 0);
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area) {
+        this(name, area, 0, 0);
     }
 
-    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
-        this(area, area.beingUpdatedProperty(), new IndexRange(startPosition, endPosition));
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, Function<Val<IndexRange>, SelectionPathBase> createPath) {
+        this(name, area, 0, 0, area.beingUpdatedProperty(), createPath);
     }
 
-    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, int startPosition, int endPosition) {
-        this(area, dependentBeingUpdated, new IndexRange(startPosition, endPosition));
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
+        this(name, area, new IndexRange(startPosition, endPosition), area.beingUpdatedProperty());
     }
 
-    public SelectionImpl(GenericStyledArea<PS, SEG, S> area, SuspendableNo dependentBeingUpdated, IndexRange range) {
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
+                         SuspendableNo dependentBeingUpdated) {
+        this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated);
+    }
+
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
+                         SuspendableNo dependentBeingUpdated, Function<Val<IndexRange>, SelectionPathBase> createPath) {
+        this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated, createPath);
+    }
+
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
+                         SuspendableNo dependentBeingUpdated) {
+        this(name, area, range, dependentBeingUpdated, SelectionPath::new);
+    }
+
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
+                         SuspendableNo dependentBeingUpdated, Function<Val<IndexRange>, SelectionPathBase> createPath) {
+        this.name = name;
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
+        this.createPath = createPath;
         internalRange = Var.newSimpleVar(range);
 
         this.range = internalRange.suspendable();
         length = internalRange.map(IndexRange::getLength).suspendable();
 
-        Val<StyledDocument<PS, SEG, S>> documentVal = Val.create(() -> area.subDocument(internalRange.getValue()),
+        Val<StyledDocument<PS, SEG, S>> documentVal = Val.create(
+                () -> area.subDocument(internalRange.getValue()),
                 internalRange, area.getParagraphs()
         );
         selectedDocument = documentVal.suspendable();
@@ -332,6 +357,41 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
         selectRange(wordStart, wordEnd);
     }
 
+    public SelectionPathBase createSelectionPath(int paragraphIndex) {
+        return createPath.apply(
+                Val.create(
+                        () -> paragraphIndex != -1
+                                ? getParagraphSelection(paragraphIndex)
+                                : EMPTY_RANGE,
+                        range
+                ));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public int compareTo(SelectionImpl<PS, SEG, S> o) {
+        return Integer.compare(hashCode(), o.hashCode());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("SelectionImpl(name=%s startPar=%s startCol=%s " +
+                        "endPar=%s endCol=%s paragraphSpan=%s " +
+                        "selectedDocument=%s",
+                name, getStartParagraphIndex(), getStartColumnPosition(),
+                getEndParagraphIndex(), getEndColumnPosition(), getParagraphSpan(),
+                getSelectedDocument());
+    }
+
     @Override
     public void dispose() {
         subscription.unsubscribe();
@@ -349,6 +409,23 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
 
     private void manageSubscription(Subscription s) {
         subscription = subscription.and(s);
+    }
+
+    private IndexRange getParagraphSelection(int paragraph) {
+        int startPar = getStartParagraphIndex();
+        int endPar = getEndParagraphIndex();
+
+        if(paragraph < startPar || paragraph > endPar) {
+            return EMPTY_RANGE;
+        }
+
+        int start = paragraph == startPar ? getStartColumnPosition() : 0;
+        int end = paragraph == endPar ? getEndColumnPosition() : area.getParagraphLength(paragraph) + 1;
+
+        // force rangeProperty() to be valid
+        // selection.getRange(); // not sure why this line is even here...
+
+        return new IndexRange(start, end);
     }
 
     private Position position(int row, int col) {

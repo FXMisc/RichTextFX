@@ -16,6 +16,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -88,6 +89,10 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     public final ObservableSet<CaretNode> caretsProperty() { return text.caretsProperty(); }
 
+    public final ObservableMap<Selection<PS, SEG, S>, SelectionPathBase> selectionsProperty() {
+        return text.selectionsProperty();
+    }
+
     ParagraphBox(Paragraph<PS, SEG, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle,
                  Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
@@ -125,11 +130,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
         );
     }
 
-    public Property<Paint> highlightFillProperty() { return text.highlightFillProperty(); }
-
     public Property<Paint> highlightTextFillProperty() { return text.highlightTextFillProperty(); }
-
-    public Property<IndexRange> selectionProperty() { return text.selectionProperty(); }
 
     Paragraph<PS, SEG, S> getParagraph() {
         return text.getParagraph();
@@ -202,9 +203,9 @@ class ParagraphBox<PS, SEG, S> extends Region {
         return text.getCaretBoundsOnScreen(caret);
     }
 
-    public Optional<Bounds> getSelectionBoundsOnScreen() {
+    public Optional<Bounds> getSelectionBoundsOnScreen(Selection<PS, SEG, S> selection) {
         layout(); // ensure layout, is a no-op if not dirty
-        return text.getSelectionBoundsOnScreen();
+        return text.getSelectionBoundsOnScreen(selection);
     }
 
     public Bounds getRangeBoundsOnScreen(int from, int to) {

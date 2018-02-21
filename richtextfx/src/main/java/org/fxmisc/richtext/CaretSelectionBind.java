@@ -64,6 +64,8 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
 
     CaretNode getUnderlyingCaret();
 
+    Selection<PS, SEG, S> getUnderlyingSelection();
+
     /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *

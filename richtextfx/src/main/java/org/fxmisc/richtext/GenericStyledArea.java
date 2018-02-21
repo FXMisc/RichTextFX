@@ -17,8 +17,6 @@ import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
 import javafx.beans.NamedArg;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -392,6 +390,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
 
     private final SubscribeableContentsObsSet<CaretNode> caretSet;
+    private final SubscribeableContentsObsSet<Selection<PS, SEG, S>> selectionSet;
 
     public final boolean addCaret(CaretNode caret) {
         if (caret.getArea() != this) {
@@ -405,6 +404,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final boolean removeCaret(CaretNode caret) {
         if (caret != caretSelectionBind.getUnderlyingCaret()) {
             return caretSet.remove(caret);
+        } else {
+            return false;
+        }
+    }
+
+    public final boolean addSelection(Selection<PS, SEG, S> selection) {
+        if (selection.getArea() != this) {
+            throw new IllegalArgumentException(String.format(
+                    "The selection (%s) is associated with a different area (%s), " +
+                            "not this area (%s)", selection, selection.getArea(), this));
+        }
+        return selectionSet.add(selection);
+    }
+
+    public final boolean removeSelection(Selection<PS, SEG, S> selection) {
+        if (selection != caretSelectionBind.getUnderlyingSelection()) {
+            return selectionSet.remove(selection);
         } else {
             return false;
         }
@@ -686,6 +702,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             l.forEach(CaretNode::dispose);
         });
 
+        selectionSet = new SubscribeableContentsObsSet<>();
+        manageSubscription(() -> {
+            List<Selection<PS, SEG, S>> l = new ArrayList<>(selectionSet);
+            selectionSet.clear();
+            l.forEach(Selection::dispose);
+        });
+
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 getParagraphs(),
@@ -722,8 +745,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .and(disabledProperty().not())
         );
 
-        caretSelectionBind = new CaretSelectionBindImpl<>("main-caret", this);
+        caretSelectionBind = new CaretSelectionBindImpl<>("main-caret", "main-selection",this);
         caretSet.add(caretSelectionBind.getUnderlyingCaret());
+        selectionSet.add(caretSelectionBind.getUnderlyingSelection());
 
         visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
@@ -1279,19 +1303,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    final Optional<Bounds> getSelectionBoundsOnScreen(Selection selection) {
+    final Optional<Bounds> getSelectionBoundsOnScreen(Selection<PS, SEG, S> selection) {
         if (selection.getLength() == 0) {
             return Optional.empty();
         }
 
         List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
         for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
-            final int i0 = i;
-            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
-                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
-                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
-                bounds.add(b);
-            });
+            virtualFlow.getCellIfVisible(i)
+                    .ifPresent(c -> c.getNode()
+                            .getSelectionBoundsOnScreen(selection)
+                            .ifPresent(bounds::add)
+                    );
         }
 
         if(bounds.size() == 0) {
@@ -1325,7 +1348,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         ParagraphBox<PS, SEG, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, nodeFactory);
 
-        box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
         box.wrapTextProperty().bind(wrapTextProperty());
         box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
@@ -1360,14 +1382,32 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .map(t -> t.get1().equals(t.get2()))
                 .subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
 
-        // keep paragraph selection updated
-        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
-            int idx = box.getIndex();
-            return idx != -1
-                    ? getParagraphSelection(idx)
-                    : StyledTextArea.EMPTY_RANGE;
-        }, selectionProperty(), box.indexProperty());
-        box.selectionProperty().bind(cellSelection);
+        Function<Selection<PS, SEG, S>, Subscription> subscribeToSelection = selection -> {
+            EventStream<Integer> startParagraphValues = EventStreams.nonNullValuesOf(selection.startParagraphIndexProperty());
+            EventStream<Integer> endParagraphValues = EventStreams.nonNullValuesOf(selection.endParagraphIndexProperty());
+            return EventStreams.combine(startParagraphValues, endParagraphValues, box.indexValues())
+                    .subscribe(t -> {
+                        int startPar = t.get1();
+                        int endPar = t.get2();
+                        int boxIndex = t.get3();
+                        if (startPar <= boxIndex && boxIndex <= endPar) {
+                            //   So that we don't add multiple paths for the same selection,
+                            //   which leads to not removing the additional paths when selection is removed,
+                            // this is a `Map#putIfAbsent(Key, Value)` implementation that creates the path lazily
+                            SelectionPathBase p = box.selectionsProperty().get(selection);
+                            if (p == null) {
+                                box.selectionsProperty().put(selection, selection.createSelectionPath(boxIndex));
+                            }
+                        } else {
+                            // remove selection from set and dispose the returned path
+                            SelectionPathBase p = box.selectionsProperty().remove(selection);
+                            if (p != null) {
+                                p.dispose();
+                            }
+                        }
+                    });
+        };
+        Subscription selectionSubscription = selectionSet.addSubscriber(subscribeToSelection);
 
         return new Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>() {
             @Override
@@ -1382,7 +1422,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public void dispose() {
-                box.highlightFillProperty().unbind();
                 box.highlightTextFillProperty().unbind();
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
@@ -1394,8 +1433,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 caretSubscription.unsubscribe();
                 hasCaretPseudoClass.unsubscribe();
 
-                box.selectionProperty().unbind();
-                cellSelection.dispose();
+                selectionSubscription.unsubscribe();
             }
         };
     }
