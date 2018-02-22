@@ -1,18 +1,14 @@
 package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
-import javafx.geometry.Bounds;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.fxmisc.richtext.CaretNode;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.Selection;
 import org.fxmisc.richtext.SelectionImpl;
-import org.reactfx.EventStreams;
 
 public class MultiCaretAndSelectionDemo extends Application {
 
@@ -32,9 +28,7 @@ public class MultiCaretAndSelectionDemo extends Application {
 
         addExtraCaret();
 
-        Selection<String, String, String> extraSelection = addAndReturnExtraSelection();
-
-        createPopupThatFollowsSelection(extraSelection, primaryStage);
+        addExtraSelection();
 
         // select some other range with the regular caret/selection before showing area
         area.selectRange(2, 0, 2, 4);
@@ -62,40 +56,19 @@ public class MultiCaretAndSelectionDemo extends Application {
         extraCaret.setBlinkRate(Duration.millis(200));
     }
 
-    private Selection<String, String, String> addAndReturnExtraSelection() {
-        Selection<String, String, String> extraSelection = new SelectionImpl<>("another selection", area
-                ///*
-                ,
+    private void addExtraSelection() {
+        Selection<String, String, String> extraSelection = new SelectionImpl<>("another selection", area,
                 path -> {
                     // make rendered selection path look like a yellow highlighter
-                    path.setStrokeWidth(2.0);
+                    path.setStrokeWidth(0);
                     path.setFill(Color.YELLOW);
-                    System.out.println("creating selection path");
-                }//*/
+                }
         );
         if (!area.addSelection(extraSelection)) {
             throw new IllegalStateException("selection was not added to area");
         }
         // select something so it is visible
-        extraSelection.selectRange(5, 2, 9, 8);
-        return extraSelection;
-    }
-
-    private void createPopupThatFollowsSelection(Selection<String, String, String> extraSelection, Stage stage) {
-        Popup popup = new Popup();
-        popup.getContent().add(new Button("I am a popup!"));
-        EventStreams.valuesOf(extraSelection.selectionBoundsProperty())
-                .subscribe(optBounds -> {
-                    if (optBounds.isPresent()) {
-                        Bounds b = optBounds.get();
-
-                        popup.setAnchorX(b.getMaxX());
-                        popup.setAnchorY(b.getMaxY());
-                        popup.show(stage);
-                    } else {
-                        popup.hide();
-                    }
-                });
+        extraSelection.selectRange(7, 2, 7, 8);
     }
 
     /**
