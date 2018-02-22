@@ -33,6 +33,17 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
+/**
+ * Default implementation for a {@link Caret}. Since only one {@link Path} object is used per caret, the model
+ * and view were combined into one item to grant easier access to and modification of CSS-related
+ * properties. Caution must be exercised when depending on Path-related properties in any way (e.g.
+ * {@link #boundsInLocalProperty()}, {@link #parentProperty()}, etc.). Also, {@link #caretBoundsProperty()}
+ * is distinguishable from {@link #boundsInLocalProperty()}.
+ *
+ * <p>
+ *     This class adds the css property "-rtfx-blink-rate" ({@link #blinkRateProperty()}}
+ * </p>
+ */
 public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
     private static final javafx.util.Duration HALF_A_SECOND = javafx.util.Duration.millis(500);
@@ -57,6 +68,11 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
     private final StyleableObjectProperty<javafx.util.Duration> blinkRate
             = new CustomStyleableProperty<>(HALF_A_SECOND, "blinkRate", this, BLINK_RATE);
 
+    /**
+     * The blink rate of the caret.
+     *
+     * Can be styled from CSS using the "-rtfx-blink-rate" property.
+     */
     @Override public ObjectProperty<javafx.util.Duration> blinkRateProperty() { return blinkRate; }
     @Override public javafx.util.Duration getBlinkRate() { return blinkRate.getValue(); }
     @Override public void setBlinkRate(javafx.util.Duration rate) { blinkRate.set(rate); }
@@ -359,7 +375,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
      * ********************************************************************** */
 
     private static final CssMetaData<CaretNode, javafx.util.Duration> BLINK_RATE
-            = new CustomCssMetaData<>("-fx-blink-rate", StyleConverter.getDurationConverter(),
+            = new CustomCssMetaData<>("-rtfx-blink-rate", StyleConverter.getDurationConverter(),
             javafx.util.Duration.millis(500), s -> s.blinkRate
     );
 

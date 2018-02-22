@@ -7,7 +7,7 @@
 }
 
 .styled-text-area .caret {
-    -fx-blink-rate: 500ms;
+    -rtfx-blink-rate: 500ms;
     -fx-stroke-width: 1.0;
 }
 

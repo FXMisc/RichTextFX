@@ -177,8 +177,9 @@ public interface Selection<PS, SEG, S> {
     }
 
     /**
-     * Configures a {@link javafx.scene.shape.Path} that will be used to render a portion or all of this selection
-     * on a given paragraph.
+     * Configures a {@link SelectionPath} that will be used to render a portion or all of this selection
+     * on a single paragraph. When the selection is a multi-paragraph selection, one path will be used
+     * to render that portion of the selection on a paragraph.
      */
     void configureSelectionPath(SelectionPath path);
 
@@ -192,6 +193,9 @@ public interface Selection<PS, SEG, S> {
      */
     String getSelectionName();
 
+    /**
+     * Gets the area with which this selection is associated
+     */
     GenericStyledArea<PS, SEG, S> getArea();
 
 }

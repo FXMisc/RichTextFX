@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.css.CssMetaData;
 import javafx.css.StyleConverter;
 import javafx.css.Styleable;
@@ -15,16 +16,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A class for a path which describes a selection shape in the Scene graph; it does not have a style class
- * associated with it.
+ * A Path used to render a portion of a mulit-paragraph selection or all of a single-paragraph selection
+ * with additional CSS styling; it does not have a style class associated with it.
  */
 public class SelectionPath extends Path {
 
-    /**
-     * Background fill for highlighted text.
-     */
     private final StyleableObjectProperty<Paint> highlightFill
             = new CustomStyleableProperty<>(Color.DODGERBLUE, "highlightFill", this, HIGHLIGHT_FILL);
+
+    /**
+     * Background fill for highlighted/selected text. Can be styled using "-fx-highlight-fill".
+     */
+    public final ObjectProperty<Paint> highlightFillProperty() { return highlightFill; }
     public final Paint getHighlightFill() { return highlightFill.get(); }
     public final void setHighlightFill(Paint paint) { highlightFill.set(paint); }
 

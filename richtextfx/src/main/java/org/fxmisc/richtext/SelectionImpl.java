@@ -26,6 +26,9 @@ import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
 import static org.reactfx.EventStreams.merge;
 
+/**
+ * Default implementation for {@link Selection}.
+ */
 public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Comparable<SelectionImpl<PS, SEG, S>> {
 
     /* ********************************************************************** *
@@ -110,34 +113,58 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
 
     private Subscription subscription = () -> {};
 
+    /**
+     * Creates a selection with both the start and end position at 0.
+     */
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area) {
         this(name, area, 0, 0);
     }
 
+    /**
+     * Creates a selection with customized configuration via {@code configurePath}
+     * with both the start and end position at 0.
+     */
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, Consumer<SelectionPath> configurePath) {
         this(name, area, 0, 0, area.beingUpdatedProperty(), configurePath);
     }
 
+    /**
+     * Creates a selection
+     */
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
         this(name, area, new IndexRange(startPosition, endPosition), area.beingUpdatedProperty());
     }
 
-    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
+    /**
+     * Creates a selection that is to be used in a {@link CaretSelectionBind}.
+     */
+    SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
                          SuspendableNo dependentBeingUpdated) {
         this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated);
     }
 
-    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
+    /**
+     * Creates a selection that is to be used in a {@link CaretSelectionBind} with customized configuration.
+     */
+    SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
                          SuspendableNo dependentBeingUpdated, Consumer<SelectionPath> configurePath) {
         this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated, configurePath);
     }
 
-    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
+    /**
+     * Creates a selection that is to be used in a {@link CaretSelectionBind}. It adds the style class
+     * {@code selection} to any {@link SelectionPath} used to render this selection.
+     */
+    SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
                          SuspendableNo dependentBeingUpdated) {
         this(name, area, range, dependentBeingUpdated, path -> path.getStyleClass().add("selection"));
     }
 
-    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
+    /**
+     * Creates a selection that is to be used in a {@link CaretSelectionBind}
+     * with customized configuration and starting at the given range.
+     */
+    SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
                          SuspendableNo dependentBeingUpdated, Consumer<SelectionPath> configurePath) {
         this.name = name;
         this.area = area;
