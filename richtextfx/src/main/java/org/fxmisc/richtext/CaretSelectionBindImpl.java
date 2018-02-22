@@ -111,7 +111,10 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override public String getSelectionName() { return delegateSelection.getSelectionName(); }
 
-    @Override public SelectionPathBase createSelectionPath(int paragraphIndex) { return delegateSelection.createSelectionPath(paragraphIndex); }
+    @Override
+    public void configureSelectionPath(SelectionPath path) {
+        delegateSelection.configureSelectionPath(path);
+    }
 
     @Override public GenericStyledArea<PS, SEG, S> getArea() { return delegateSelection.getArea(); }
 

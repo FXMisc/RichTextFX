@@ -106,7 +106,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
     private final Var<Position> start2DPosition;
     private final Val<Position> end2DPosition;
 
-    private final Function<Val<IndexRange>, SelectionPathBase> createPath;
+    private final Consumer<SelectionPath> configurePath;
 
     private Subscription subscription = () -> {};
 
@@ -114,8 +114,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         this(name, area, 0, 0);
     }
 
-    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, Function<Val<IndexRange>, SelectionPathBase> createPath) {
-        this(name, area, 0, 0, area.beingUpdatedProperty(), createPath);
+    public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, Consumer<SelectionPath> configurePath) {
+        this(name, area, 0, 0, area.beingUpdatedProperty(), configurePath);
     }
 
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
@@ -128,21 +128,21 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
     }
 
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition,
-                         SuspendableNo dependentBeingUpdated, Function<Val<IndexRange>, SelectionPathBase> createPath) {
-        this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated, createPath);
+                         SuspendableNo dependentBeingUpdated, Consumer<SelectionPath> configurePath) {
+        this(name, area, new IndexRange(startPosition, endPosition), dependentBeingUpdated, configurePath);
     }
 
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
                          SuspendableNo dependentBeingUpdated) {
-        this(name, area, range, dependentBeingUpdated, SelectionPath::new);
+        this(name, area, range, dependentBeingUpdated, path -> path.getStyleClass().add("selection"));
     }
 
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, IndexRange range,
-                         SuspendableNo dependentBeingUpdated, Function<Val<IndexRange>, SelectionPathBase> createPath) {
+                         SuspendableNo dependentBeingUpdated, Consumer<SelectionPath> configurePath) {
         this.name = name;
         this.area = area;
         this.dependentBeingUpdated = dependentBeingUpdated;
-        this.createPath = createPath;
+        this.configurePath = configurePath;
         internalRange = Var.newSimpleVar(range);
 
         this.range = internalRange.suspendable();
@@ -357,14 +357,9 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         selectRange(wordStart, wordEnd);
     }
 
-    public SelectionPathBase createSelectionPath(int paragraphIndex) {
-        return createPath.apply(
-                Val.create(
-                        () -> paragraphIndex != -1
-                                ? getParagraphSelection(paragraphIndex)
-                                : EMPTY_RANGE,
-                        range
-                ));
+    @Override
+    public void configureSelectionPath(SelectionPath path) {
+        configurePath.accept(path);
     }
 
     @Override

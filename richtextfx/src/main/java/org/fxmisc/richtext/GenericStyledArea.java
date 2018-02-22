@@ -1400,16 +1400,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                             //   So that we don't add multiple paths for the same selection,
                             //   which leads to not removing the additional paths when selection is removed,
                             // this is a `Map#putIfAbsent(Key, Value)` implementation that creates the path lazily
-                            SelectionPathBase p = box.selectionsProperty().get(selection);
+                            SelectionPath p = box.selectionsProperty().get(selection);
                             if (p == null) {
-                                box.selectionsProperty().put(selection, selection.createSelectionPath(boxIndex));
+                                // create & configure path
+                                Val<IndexRange> range = Val.create(
+                                        () -> boxIndex != -1
+                                                ? getParagraphSelection(selection, boxIndex)
+                                                : EMPTY_RANGE,
+                                        selection.rangeProperty()
+                                );
+                                SelectionPath path = new SelectionPath(range);
+                                selection.configureSelectionPath(path);
+
+                                box.selectionsProperty().put(selection, path);
                             }
                         } else {
-                            // remove selection from set and dispose the returned path
-                            SelectionPathBase p = box.selectionsProperty().remove(selection);
-                            if (p != null) {
-                                p.dispose();
-                            }
+                            box.selectionsProperty().remove(selection);
                         }
                     });
         };

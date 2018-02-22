@@ -86,7 +86,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     public final ObservableSet<CaretNode> caretsProperty() { return text.caretsProperty(); }
 
-    public final ObservableMap<Selection<PS, SEG, S>, SelectionPathBase> selectionsProperty() {
+    public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() {
         return text.selectionsProperty();
     }
 

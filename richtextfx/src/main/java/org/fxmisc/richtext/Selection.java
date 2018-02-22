@@ -177,10 +177,10 @@ public interface Selection<PS, SEG, S> {
     }
 
     /**
-     * Creates a {@link javafx.scene.shape.Path} that will be used to render a portion or all of this selection
-     * on a given paragraph. This path will be disposed of once it is no longer being rendered.
+     * Configures a {@link javafx.scene.shape.Path} that will be used to render a portion or all of this selection
+     * on a given paragraph.
      */
-    SelectionPathBase createSelectionPath(int paragraphIndex);
+    void configureSelectionPath(SelectionPath path);
 
     /**
      * Disposes the selection and prevents memory leaks

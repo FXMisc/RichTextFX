@@ -54,9 +54,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final ObservableSet<CaretNode> carets = FXCollections.observableSet(new HashSet<>(1));
     public final ObservableSet<CaretNode> caretsProperty() { return carets; }
 
-    private final ObservableMap<Selection<PS, SEG, S>, SelectionPathBase> selections =
+    private final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selections =
             FXCollections.observableMap(new HashMap<>(1));
-    public final ObservableMap<Selection<PS, SEG, S>, SelectionPathBase> selectionsProperty() { return selections; }
+    public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() { return selections; }
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -93,9 +93,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         ChangeListener<IndexRange> requestLayout1 = (obs, ov, nv) -> requestLayout();
 
-        selections.addListener((MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPathBase> change) -> {
+        selections.addListener((MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPath> change) -> {
             if (change.wasAdded()) {
-                SelectionPathBase p = change.getValueAdded();
+                SelectionPath p = change.getValueAdded();
                 p.rangeProperty().addListener(requestLayout1);
 
                 p.layoutXProperty().bind(leftInset);
@@ -104,7 +104,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 getChildren().add(selectionShapeStartIndex, p);
                 updateSingleSelection(p);
             } else if (change.wasRemoved()) {
-                SelectionPathBase p = change.getValueRemoved();
+                SelectionPath p = change.getValueRemoved();
                 p.rangeProperty().removeListener(requestLayout1);
 
                 p.layoutXProperty().unbind();
@@ -277,7 +277,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             return Optional.empty();
         } else {
             layout(); // ensure layout, is a no-op if not dirty
-            SelectionPathBase selectionShape = selections.get(selection);
+            SelectionPath selectionShape = selections.get(selection);
             checkWithinParagraph(selectionShape);
             Bounds localBounds = selectionShape.getBoundsInLocal();
             return Optional.ofNullable(selectionShape.localToScreen(localBounds));
@@ -325,7 +325,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         selections.values().forEach(this::updateSingleSelection);
     }
 
-    private void updateSingleSelection(SelectionPathBase path) {
+    private void updateSingleSelection(SelectionPath path) {
         path.getElements().setAll(getRangeShapeSafely(path.rangeProperty().getValue()));
     }
 
