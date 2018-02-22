@@ -75,8 +75,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     // Note: order of children matters because later children cover up earlier children:
     // towards children's 0 index:
     //      background shapes
-    //      border shapes
     //      selection shapes - always add to selectionShapeStartIndex
+    //      border shapes
     //      text
     //      underline shapes
     //      caret shapes
@@ -179,10 +179,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
 
         Consumer<Collection<Path>> clearUnusedShapes = paths -> getChildren().removeAll(paths);
-        Consumer<Path> addToBackground = path -> {
-            getChildren().add(0, path);
-            selectionShapeStartIndex++;
-        };
+        Consumer<Path> addToBackground = path -> getChildren().add(0, path);
+        Consumer<Path> addToBackgroundAndIncrementSelectionIndex = addToBackground
+                .andThen(ignore -> selectionShapeStartIndex++);
         Consumer<Path> addToForeground = path -> getChildren().add(path);
         backgroundShapeHelper = new CustomCssShapeHelper<>(
                 createBackgroundShape,
@@ -191,7 +190,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                     backgroundShape.setFill(tuple._1);
                     backgroundShape.getElements().setAll(getRangeShape(tuple._2));
                 },
-                addToBackground,
+                addToBackgroundAndIncrementSelectionIndex,
                 clearUnusedShapes
         );
         borderShapeHelper = new CustomCssShapeHelper<>(
