@@ -166,7 +166,9 @@ final class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S> {
 
         manageSubscription(area.plainTextChanges(), plainTextChange -> {
             int netLength = plainTextChange.getNetLength();
-            if (netLength != 0) {
+            //if (netLength != 0)  Causes IndexOutOfBoundsException in ParagraphText.getRangeShapeSafely issue #689
+            // but can be safely reimplemented if this causes other issues. 
+            {
                 int indexOfChange = plainTextChange.getPosition();
                 // in case of a replacement: "hello there" -> "hi."
                 int endOfChange = indexOfChange + Math.abs(netLength);

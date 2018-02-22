@@ -315,11 +315,14 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 // We only need to adjust the top right and bottom right corners to extend to the
                 // width/height of the line, simulating a full line selection.
                 int length = shape.length;
-                int bottomRightIndex = length - 3;
-                int topRightIndex = bottomRightIndex - 1;
-                LineTo lineToTopRight = (LineTo) shape[topRightIndex];
-                shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
-                shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
+                if ( length > 3 )  // Prevent IndexOutOfBoundsException accessing shape[] issue #689
+                {
+                    int bottomRightIndex = length - 3;
+                    int topRightIndex = bottomRightIndex - 1;
+                    LineTo lineToTopRight = (LineTo) shape[topRightIndex];
+                    shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
+                    shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
+                }
             }
         }
 
