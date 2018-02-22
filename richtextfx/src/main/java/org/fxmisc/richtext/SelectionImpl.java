@@ -85,7 +85,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
     @Override public final ObservableValue<Integer> endColumnPositionProperty() { return endColumnPosition; }
 
 
-    private final Val<Optional<Bounds>> bounds;
+    private final SuspendableVal<Optional<Bounds>> bounds;
     @Override public final Optional<Bounds> getSelectionBounds() { return bounds.getValue(); }
     @Override public final ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return bounds; }
 
@@ -188,7 +188,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         bounds = Val.create(
                 () -> area.getSelectionBoundsOnScreen(this),
                 EventStreams.merge(area.viewportDirtyEvents(), dirty)
-        );
+        ).suspendable();
 
         manageSubscription(area.plainTextChanges(), plainTextChange -> {
             int netLength = plainTextChange.getNetLength();
@@ -231,6 +231,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         Suspendable omniSuspendable = Suspendable.combine(
                 // first, so it's released last
                 beingUpdated,
+
+                bounds,
 
                 endPosition,
                 startPosition,
