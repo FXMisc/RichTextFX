@@ -9,7 +9,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class CaretTests extends InlineCssTextAreaAppTest {
+public class SingleCaretTests extends InlineCssTextAreaAppTest {
 
     private static final String MANY_PARS_OF_TEXT;
 
