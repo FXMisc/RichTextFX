@@ -1353,16 +1353,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
         box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
 
-        Subscription firstParPseudoClass = box.indexValues().subscribe(idx -> box.pseudoClassStateChanged(FIRST_PAR, idx == 0));
+        EventStream<Integer> boxIndexValues = box.indexProperty().values().filter(i -> i != -1);
+
+        Subscription firstParPseudoClass = boxIndexValues.subscribe(idx -> box.pseudoClassStateChanged(FIRST_PAR, idx == 0));
         Subscription lastParPseudoClass = EventStreams.combine(
-                box.indexValues(),
+                boxIndexValues,
                 getParagraphs().sizeProperty().values()
         ).subscribe(in -> in.exec((i, n) -> box.pseudoClassStateChanged(LAST_PAR, i == n-1)));
 
         // set up caret
         Function<CaretNode, Subscription> subscribeToCaret = caret -> {
             EventStream<Integer> caretIndexStream = EventStreams.nonNullValuesOf(caret.paragraphIndexProperty());
-            return EventStreams.combine(caretIndexStream, box.indexValues())
+
+            // a new event stream needs to be created for each caret added, so that it will immediately
+            // fire the box's current index value as an event, thereby running the code in the subscribe block
+            // Reusing boxIndexValues will not fire its most recent event, leading to a caret not being added
+            // Thus, we'll call the new event stream "fresh" box index values
+            EventStream<Integer> freshBoxIndexValues = box.indexProperty().values().filter(i -> i != -1);
+
+            return EventStreams.combine(caretIndexStream, freshBoxIndexValues)
                     .subscribe(t -> {
                         int caretParagraphIndex = t.get1();
                         int boxIndex = t.get2();
@@ -1377,7 +1386,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         // TODO: how should 'hasCaret' be handled now?
         Subscription hasCaretPseudoClass = EventStreams
-                .combine(box.indexValues(), Val.wrap(currentParagraphProperty()).values())
+                .combine(boxIndexValues, Val.wrap(currentParagraphProperty()).values())
                 // box index (t1) == caret paragraph index (t2)
                 .map(t -> t.get1().equals(t.get2()))
                 .subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
@@ -1385,7 +1394,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Function<Selection<PS, SEG, S>, Subscription> subscribeToSelection = selection -> {
             EventStream<Integer> startParagraphValues = EventStreams.nonNullValuesOf(selection.startParagraphIndexProperty());
             EventStream<Integer> endParagraphValues = EventStreams.nonNullValuesOf(selection.endParagraphIndexProperty());
-            return EventStreams.combine(startParagraphValues, endParagraphValues, box.indexValues())
+
+            // see comment in caret section about why a new box index EventStream is needed
+            EventStream<Integer> freshBoxIndexValues = box.indexProperty().values().filter(i -> i != -1);
+            return EventStreams.combine(startParagraphValues, endParagraphValues, freshBoxIndexValues)
                     .subscribe(t -> {
                         int startPar = t.get1();
                         int endPar = t.get2();

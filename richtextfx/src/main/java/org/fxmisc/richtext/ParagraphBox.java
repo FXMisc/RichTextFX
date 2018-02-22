@@ -84,9 +84,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
     public void setIndex(int index) { this.index.setValue(index); }
     public int getIndex() { return index.getValue(); }
 
-    private final EventStream<Integer> indexStream;
-    public EventStream<Integer> indexValues() { return indexStream; }
-
     public final ObservableSet<CaretNode> caretsProperty() { return text.caretsProperty(); }
 
     public final ObservableMap<Selection<PS, SEG, S>, SelectionPathBase> selectionsProperty() {
@@ -104,7 +101,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
         // before this node gets updated to its real index and therefore removes
         // caret from the SceneGraph completely
         this.index = Var.newSimpleVar(-1);
-        indexStream = index.values().filter(i -> i != -1);
 
         getChildren().add(text);
         graphic = Val.combine(
