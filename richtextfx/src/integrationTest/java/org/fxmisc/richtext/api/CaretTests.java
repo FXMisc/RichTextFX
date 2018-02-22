@@ -40,8 +40,10 @@ public class CaretTests extends InlineCssTextAreaAppTest {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport
-        area.moveTo(area.getLength());
-        area.requestFollowCaret();
+        interact(() -> {
+            area.moveTo(area.getLength());
+            area.requestFollowCaret();
+        });
 
         // needed for test to pass
         WaitForAsyncUtils.waitForFxEvents();
@@ -55,7 +57,7 @@ public class CaretTests extends InlineCssTextAreaAppTest {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport
-        area.moveTo(area.getLength());
+        interact(() -> area.moveTo(area.getLength()));
 
         // caret should not be visible
         assertFalse(area.getCaretBounds().isPresent());
