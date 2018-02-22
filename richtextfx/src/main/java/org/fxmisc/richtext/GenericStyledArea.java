@@ -765,12 +765,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        manageSubscription(() -> {
-            List<CaretNode> caretList = new ArrayList<>(caretSet);
-            caretSet.clear();
-            caretList.forEach(CaretNode::dispose);
-        });
-
         new GenericStyledAreaBehavior(this);
     }
 
