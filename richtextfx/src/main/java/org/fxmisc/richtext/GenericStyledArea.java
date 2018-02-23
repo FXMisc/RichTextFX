@@ -17,9 +17,6 @@ import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
 import javafx.beans.NamedArg;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -64,7 +61,6 @@ import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
-import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledSegment;
@@ -72,6 +68,7 @@ import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 import org.fxmisc.richtext.event.MouseOverTextEvent;
+import org.fxmisc.richtext.util.SubscribeableContentsObsSet;
 import org.fxmisc.richtext.util.UndoUtils;
 import org.fxmisc.undo.UndoManager;
 import org.reactfx.EventStream;
@@ -324,13 +321,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final StyleableObjectProperty<Paint> highlightTextFill
             = new CustomStyleableProperty<>(Color.WHITE, "highlightTextFill", this, HIGHLIGHT_TEXT_FILL);
 
-    /**
-     * Controls the blink rate of the caret, when one is displayed. Setting
-     * the duration to zero disables blinking.
-     */
-    private final StyleableObjectProperty<javafx.util.Duration> caretBlinkRate
-            = new CustomStyleableProperty<>(javafx.util.Duration.millis(500), "caretBlinkRate", this, CARET_BLINK_RATE);
-
     // editable property
     private final BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true) {
         @Override
@@ -399,6 +389,43 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override public Var<Double> estimatedScrollYProperty() { return virtualFlow.estimatedScrollYProperty(); }
 
+    private final SubscribeableContentsObsSet<CaretNode> caretSet;
+    private final SubscribeableContentsObsSet<Selection<PS, SEG, S>> selectionSet;
+
+    public final boolean addCaret(CaretNode caret) {
+        if (caret.getArea() != this) {
+            throw new IllegalArgumentException(String.format(
+                    "The caret (%s) is associated with a different area (%s), " +
+                            "not this area (%s)", caret, caret.getArea(), this));
+        }
+        return caretSet.add(caret);
+    }
+
+    public final boolean removeCaret(CaretNode caret) {
+        if (caret != caretSelectionBind.getUnderlyingCaret()) {
+            return caretSet.remove(caret);
+        } else {
+            return false;
+        }
+    }
+
+    public final boolean addSelection(Selection<PS, SEG, S> selection) {
+        if (selection.getArea() != this) {
+            throw new IllegalArgumentException(String.format(
+                    "The selection (%s) is associated with a different area (%s), " +
+                            "not this area (%s)", selection, selection.getArea(), this));
+        }
+        return selectionSet.add(selection);
+    }
+
+    public final boolean removeSelection(Selection<PS, SEG, S> selection) {
+        if (selection != caretSelectionBind.getUnderlyingSelection()) {
+            return selectionSet.remove(selection);
+        } else {
+            return false;
+        }
+    }
+
     /* ********************************************************************** *
      *                                                                        *
      * Mouse Behavior Hooks                                                   *
@@ -411,14 +438,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setOnOutsideSelectionMousePressed(EventHandler<MouseEvent> handler) { onOutsideSelectionMousePressed.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressedProperty() { return onOutsideSelectionMousePressed; }
     private final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressed = new SimpleObjectProperty<>( e -> {
-    	onOutsideSelectionMousePressProperty().get().accept(e);
+        onOutsideSelectionMousePressProperty().get().accept(e);
     });
 
     @Override public final EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased() { return onInsideSelectionMousePressReleased.get(); }
     @Override public final void setOnInsideSelectionMousePressReleased(EventHandler<MouseEvent> handler) { onInsideSelectionMousePressReleased.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleasedProperty() { return onInsideSelectionMousePressReleased; }
     private final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleased = new SimpleObjectProperty<>( e -> {
-    	onInsideSelectionMousePressReleaseProperty().get().accept(e);
+        onInsideSelectionMousePressReleaseProperty().get().accept(e);
     });
 
     private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
@@ -445,7 +472,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setOnSelectionDropped(EventHandler<MouseEvent> handler) { onSelectionDropped.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onSelectionDroppedProperty() { return onSelectionDropped; }
     private final ObjectProperty<EventHandler<MouseEvent>> onSelectionDropped = new SimpleObjectProperty<>( e -> {
-    	onSelectionDropProperty().get().accept(e);
+        onSelectionDropProperty().get().accept(e);
     });
 
     // not a hook, but still plays a part in the default mouse behavior
@@ -471,7 +498,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // rich text
     @Override public final StyledDocument<PS, SEG, S> getDocument() { return content; }
 
-    private final CaretSelectionBind<PS, SEG, S> caretSelectionBind;
+    private CaretSelectionBind<PS, SEG, S> caretSelectionBind;
     @Override public final CaretSelectionBind<PS, SEG, S> getCaretSelectionBind() { return caretSelectionBind; }
 
     // length
@@ -557,13 +584,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final EventStream<Boolean> autoCaretBlinksSteam;
     final EventStream<Boolean> autoCaretBlink() { return autoCaretBlinksSteam; }
-
-    private final EventStream<javafx.util.Duration> caretBlinkRateStream;
-    final EventStream<javafx.util.Duration> caretBlinkRateEvents() { return caretBlinkRateStream; }
-
-    final EventStream<?> boundsDirtyFor(EventStream<?> dirtyStream) {
-        return EventStreams.merge(viewportDirty, dirtyStream).suppressWhen(beingUpdatedProperty());
-    }
 
     /* ********************************************************************** *
      *                                                                        *
@@ -675,6 +695,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         @SuppressWarnings("unchecked")
         ObservableSet<ParagraphBox<PS, SEG, S>> nonEmptyCells = FXCollections.observableSet();
 
+        caretSet = new SubscribeableContentsObsSet<>();
+        manageSubscription(() -> {
+            List<CaretNode> l = new ArrayList<>(caretSet);
+            caretSet.clear();
+            l.forEach(CaretNode::dispose);
+        });
+
+        selectionSet = new SubscribeableContentsObsSet<>();
+        manageSubscription(() -> {
+            List<Selection<PS, SEG, S>> l = new ArrayList<>(selectionSet);
+            selectionSet.clear();
+            l.forEach(Selection::dispose);
+        });
+
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 getParagraphs(),
@@ -710,10 +744,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .and(editableProperty())
                 .and(disabledProperty().not())
         );
-        caretBlinkRateStream = EventStreams.valuesOf(caretBlinkRate);
 
-        caretSelectionBind = new CaretSelectionBindImpl<>(this);
-        manageSubscription(caretSelectionBind::dispose);
+        caretSelectionBind = new CaretSelectionBindImpl<>("main-caret", "main-selection",this);
+        caretSet.add(caretSelectionBind.getUnderlyingCaret());
+        selectionSet.add(caretSelectionBind.getUnderlyingSelection());
 
         visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
@@ -987,9 +1021,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     @Override
-    public final Optional<Bounds> getCaretBoundsOnScreen(int paragraphIndex) {
-        return virtualFlow.getCellIfVisible(paragraphIndex)
-                .map(c -> c.getNode().getCaretBoundsOnScreen());
+    public final <T extends Node & Caret> Optional<Bounds> getCaretBoundsOnScreen(T caret) {
+        return virtualFlow.getCellIfVisible(caret.getParagraphIndex())
+                .map(c -> c.getNode().getCaretBoundsOnScreen(caret));
     }
 
 
@@ -1055,13 +1089,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void lineStart(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition();
+        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition(caretSelectionBind.getUnderlyingCaret());
         moveTo(getCurrentParagraph(), columnPos, policy);
     }
 
     @Override
     public void lineEnd(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition();
+        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition(caretSelectionBind.getUnderlyingCaret());
         moveTo(getCurrentParagraph(), columnPos, policy);
     }
 
@@ -1212,14 +1246,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     TwoDimensional.Position currentLine() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        int lineIdx = cell.getNode().getCurrentLineIndex();
+        int lineIdx = cell.getNode().getCurrentLineIndex(caretSelectionBind.getUnderlyingCaret());
         return paragraphLineNavigator.position(parIdx, lineIdx);
     }
 
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
+        Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double y = caretBounds.getMaxY();
         suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, getViewportHeight() - y));
     }
@@ -1227,7 +1261,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     void showCaretAtTop() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
+        Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double y = caretBounds.getMinY();
         suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, -y));
     }
@@ -1235,8 +1269,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     /**
      * Returns x coordinate of the caret in the current paragraph.
      */
-    final ParagraphBox.CaretOffsetX getCaretOffsetX(int paragraphIndex) {
-        return getCell(paragraphIndex).getCaretOffsetX();
+    final ParagraphBox.CaretOffsetX getCaretOffsetX(CaretNode caret) {
+        return getCell(caret.getParagraphIndex()).getCaretOffsetX(caret);
     }
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
@@ -1263,19 +1297,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    final Optional<Bounds> getSelectionBoundsOnScreen(Selection selection) {
+    final Optional<Bounds> getSelectionBoundsOnScreen(Selection<PS, SEG, S> selection) {
         if (selection.getLength() == 0) {
             return Optional.empty();
         }
 
         List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
         for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
-            final int i0 = i;
-            virtualFlow.getCellIfVisible(i).ifPresent(c -> {
-                IndexRange rangeWithinPar = getParagraphSelection(selection, i0);
-                Bounds b = c.getNode().getRangeBoundsOnScreen(rangeWithinPar);
-                bounds.add(b);
-            });
+            virtualFlow.getCellIfVisible(i)
+                    .ifPresent(c -> c.getNode()
+                            .getSelectionBoundsOnScreen(selection)
+                            .ifPresent(bounds::add)
+                    );
         }
 
         if(bounds.size() == 0) {
@@ -1309,42 +1342,84 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         ParagraphBox<PS, SEG, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, nodeFactory);
 
-        box.highlightFillProperty().bind(highlightFill);
         box.highlightTextFillProperty().bind(highlightTextFill);
         box.wrapTextProperty().bind(wrapTextProperty());
         box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
         box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
 
-        Val<Boolean> hasCaret = Val.combine(
-                box.indexProperty(),
-                currentParagraphProperty(),
-                (bi, cp) -> bi.intValue() == cp.intValue());
+        EventStream<Integer> boxIndexValues = box.indexProperty().values().filter(i -> i != -1);
 
-        Subscription hasCaretPseudoClass = hasCaret.values().subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
-        Subscription firstParPseudoClass = box.indexProperty().values().subscribe(idx -> box.pseudoClassStateChanged(FIRST_PAR, idx == 0));
+        Subscription firstParPseudoClass = boxIndexValues.subscribe(idx -> box.pseudoClassStateChanged(FIRST_PAR, idx == 0));
         Subscription lastParPseudoClass = EventStreams.combine(
-                box.indexProperty().values(),
+                boxIndexValues,
                 getParagraphs().sizeProperty().values()
         ).subscribe(in -> in.exec((i, n) -> box.pseudoClassStateChanged(LAST_PAR, i == n-1)));
 
-        // caret is visible only in the paragraph with the caret
-        Val<Boolean> cellCaretVisible = hasCaret.flatMap(x -> x ? caretSelectionBind.visibleProperty() : Val.constant(false));
-        box.caretVisibleProperty().bind(cellCaretVisible);
+        // set up caret
+        Function<CaretNode, Subscription> subscribeToCaret = caret -> {
+            EventStream<Integer> caretIndexStream = EventStreams.nonNullValuesOf(caret.paragraphIndexProperty());
 
-        // bind cell's caret position to area's caret column,
-        // when the cell is the one with the caret
-        box.caretPositionProperty().bind(hasCaret.flatMap(has -> has
-                ? caretColumnProperty()
-                : Val.constant(0)));
+            // a new event stream needs to be created for each caret added, so that it will immediately
+            // fire the box's current index value as an event, thereby running the code in the subscribe block
+            // Reusing boxIndexValues will not fire its most recent event, leading to a caret not being added
+            // Thus, we'll call the new event stream "fresh" box index values
+            EventStream<Integer> freshBoxIndexValues = box.indexProperty().values().filter(i -> i != -1);
 
-        // keep paragraph selection updated
-        ObjectBinding<IndexRange> cellSelection = Bindings.createObjectBinding(() -> {
-            int idx = box.getIndex();
-            return idx != -1
-                    ? getParagraphSelection(idx)
-                    : StyledTextArea.EMPTY_RANGE;
-        }, selectionProperty(), box.indexProperty());
-        box.selectionProperty().bind(cellSelection);
+            return EventStreams.combine(caretIndexStream, freshBoxIndexValues)
+                    .subscribe(t -> {
+                        int caretParagraphIndex = t.get1();
+                        int boxIndex = t.get2();
+                        if (caretParagraphIndex == boxIndex) {
+                            box.caretsProperty().add(caret);
+                        } else {
+                            box.caretsProperty().remove(caret);
+                        }
+                    });
+        };
+        Subscription caretSubscription = caretSet.addSubscriber(subscribeToCaret);
+
+        // TODO: how should 'hasCaret' be handled now?
+        Subscription hasCaretPseudoClass = EventStreams
+                .combine(boxIndexValues, Val.wrap(currentParagraphProperty()).values())
+                // box index (t1) == caret paragraph index (t2)
+                .map(t -> t.get1().equals(t.get2()))
+                .subscribe(value -> box.pseudoClassStateChanged(HAS_CARET, value));
+
+        Function<Selection<PS, SEG, S>, Subscription> subscribeToSelection = selection -> {
+            EventStream<Integer> startParagraphValues = EventStreams.nonNullValuesOf(selection.startParagraphIndexProperty());
+            EventStream<Integer> endParagraphValues = EventStreams.nonNullValuesOf(selection.endParagraphIndexProperty());
+
+            // see comment in caret section about why a new box index EventStream is needed
+            EventStream<Integer> freshBoxIndexValues = box.indexProperty().values().filter(i -> i != -1);
+            return EventStreams.combine(startParagraphValues, endParagraphValues, freshBoxIndexValues)
+                    .subscribe(t -> {
+                        int startPar = t.get1();
+                        int endPar = t.get2();
+                        int boxIndex = t.get3();
+                        if (startPar <= boxIndex && boxIndex <= endPar) {
+                            //   So that we don't add multiple paths for the same selection,
+                            //   which leads to not removing the additional paths when selection is removed,
+                            // this is a `Map#putIfAbsent(Key, Value)` implementation that creates the path lazily
+                            SelectionPath p = box.selectionsProperty().get(selection);
+                            if (p == null) {
+                                // create & configure path
+                                Val<IndexRange> range = Val.create(
+                                        () -> boxIndex != -1
+                                                ? getParagraphSelection(selection, boxIndex)
+                                                : EMPTY_RANGE,
+                                        selection.rangeProperty()
+                                );
+                                SelectionPath path = new SelectionPath(range);
+                                selection.configureSelectionPath(path);
+
+                                box.selectionsProperty().put(selection, path);
+                            }
+                        } else {
+                            box.selectionsProperty().remove(selection);
+                        }
+                    });
+        };
+        Subscription selectionSubscription = selectionSet.addSubscriber(subscribeToSelection);
 
         return new Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>() {
             @Override
@@ -1359,21 +1434,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public void dispose() {
-                box.highlightFillProperty().unbind();
                 box.highlightTextFillProperty().unbind();
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
                 box.graphicOffset.unbind();
 
-                hasCaretPseudoClass.unsubscribe();
                 firstParPseudoClass.unsubscribe();
                 lastParPseudoClass.unsubscribe();
 
-                box.caretVisibleProperty().unbind();
-                box.caretPositionProperty().unbind();
+                caretSubscription.unsubscribe();
+                hasCaretPseudoClass.unsubscribe();
 
-                box.selectionProperty().unbind();
-                cellSelection.dispose();
+                selectionSubscription.unsubscribe();
             }
         };
     }
@@ -1382,7 +1454,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private void followCaret() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds();
+        Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         virtualFlow.show(parIdx, region);
@@ -1463,11 +1535,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
     );
 
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, javafx.util.Duration> CARET_BLINK_RATE
-            = new CustomCssMetaData<>("-fx-caret-blink-rate", StyleConverter.getDurationConverter(),
-            javafx.util.Duration.millis(500), s -> s.caretBlinkRate
-    );
-
     private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
 
     static {
@@ -1475,7 +1542,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         styleables.add(HIGHLIGHT_FILL);
         styleables.add(HIGHLIGHT_TEXT_FILL);
-        styleables.add(CARET_BLINK_RATE);
 
         CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
     }
@@ -1498,7 +1564,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     });
     @Deprecated
     @Override public final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty() {
-    	return onOutsideSelectionMousePress;
+        return onOutsideSelectionMousePress;
     }
 
     // Note: this code should be moved to `onInsideSelectionMouseReleased` property
@@ -1509,7 +1575,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     });
     @Deprecated
     @Override public final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty() {
-    	return onInsideSelectionMousePressRelease;
+        return onInsideSelectionMousePressRelease;
     }
 
     // Note: this code should be moved to `onSelectionDropped` property
@@ -1520,6 +1586,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     });
     @Deprecated
     @Override public final ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty() {
-    	return onSelectionDrop;
+        return onSelectionDrop;
     }
 }

@@ -8,11 +8,14 @@ import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.ExecutionException;
+
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.MouseButton.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.testfx.util.WaitForAsyncUtils.asyncFx;
 
 @RunWith(NestedRunner.class)
 public class ClickAndDragTests {
@@ -99,11 +102,13 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void single_clicking_area_moves_caret_to_that_position() {
+            public void single_clicking_area_moves_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 assertEquals(0, area.getCaretPosition());
 
-                Bounds bounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(firstWord.length(), firstWord.length() + 1).get())
+                        .get();
 
                 moveTo(bounds).clickOn(PRIMARY);
 
@@ -158,15 +163,18 @@ public class ClickAndDragTests {
             private String extraText = "This is extra text";
 
             @Test
-            public void single_clicking_within_selected_text_moves_caret_to_that_position() {
+            public void single_clicking_within_selected_text_moves_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph);
                     area.selectAll();
                 });
 
-                Bounds bounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(
+                                firstWord.length(), firstWord.length() + 1).get())
+                        .get();
 
                 moveTo(bounds).clickOn(PRIMARY);
 
@@ -200,7 +208,8 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void single_clicking_within_selected_text_does_not_trigger_new_selection_finished() {
+            public void single_clicking_within_selected_text_does_not_trigger_new_selection_finished()
+                    throws InterruptedException, ExecutionException {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph);
@@ -210,8 +219,10 @@ public class ClickAndDragTests {
                 SimpleIntegerProperty i = new SimpleIntegerProperty(0);
                 area.setOnNewSelectionDragFinished(e -> i.set(1));
 
-                Bounds bounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(
+                                firstWord.length(), firstWord.length() + 1).get())
+                        .get();
 
                 moveTo(bounds).clickOn(PRIMARY);
 
@@ -219,16 +230,18 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void single_clicking_outside_of_selected_text_moves_caret_to_that_position() {
+            public void single_clicking_outside_of_selected_text_moves_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
                     area.selectRange(1, 0, 2, -1);
                 });
 
-                Bounds bounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
-
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(
+                                firstWord.length(), firstWord.length() + 1).get())
+                        .get();
                 moveTo(bounds).clickOn(PRIMARY);
 
                 assertEquals(firstWord.length(), area.getCaretPosition());
@@ -261,7 +274,8 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void single_clicking_outside_of_selected_text_does_not_trigger_new_selection_finished() {
+            public void single_clicking_outside_of_selected_text_does_not_trigger_new_selection_finished()
+                    throws InterruptedException, ExecutionException {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + "this is the selected text");
@@ -271,8 +285,9 @@ public class ClickAndDragTests {
                 SimpleIntegerProperty i = new SimpleIntegerProperty(0);
                 area.setOnNewSelectionDragFinished(e -> i.set(1));
 
-                Bounds bounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(firstWord.length(), firstWord.length() + 1).get())
+                        .get();
 
                 moveTo(bounds).clickOn(PRIMARY);
 
@@ -297,7 +312,8 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressing_mouse_on_selection_and_dragging_displaces_caret() {
+            public void pressing_mouse_on_selection_and_dragging_displaces_caret()
+                    throws InterruptedException, ExecutionException {
                 // setup
                 interact(() -> {
                     area.replaceText(firstParagraph + "\n" + extraText);
@@ -306,9 +322,12 @@ public class ClickAndDragTests {
 
                 String selText = area.getSelectedText();
 
-                Bounds firstLetterBounds = area.getCharacterBoundsOnScreen(1, 2).get();
-                Bounds firstWordEndBounds = area.getCharacterBoundsOnScreen(
-                        firstWord.length(), firstWord.length() + 1).get();
+                Bounds firstLetterBounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(1, 2).get())
+                        .get();
+                Bounds firstWordEndBounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(firstWord.length(), firstWord.length() + 1).get())
+                        .get();
 
                 moveTo(firstLetterBounds)
                         .press(PRIMARY)
@@ -319,7 +338,8 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressing_mouse_on_selection_and_dragging_and_releasing_moves_selected_text_to_that_position() {
+            public void pressing_mouse_on_selection_and_dragging_and_releasing_moves_selected_text_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 // Linux passes; Mac fails at "assertEquals(selText, area.getSelectedText())"; Windows is untested
                 // so only run on Linux
                 // TODO: update test to see if it works on Windows
@@ -334,11 +354,13 @@ public class ClickAndDragTests {
 
                 String selText = area.getSelectedText();
 
-                Bounds letterInFirstWord = area.getCharacterBoundsOnScreen(1, 2).get();
-
+                Bounds letterInFirstWord =
+                        asyncFx(() -> area.getCharacterBoundsOnScreen(1, 2).get())
+                        .get();
                 int insertionPosition = firstParagraph.length() + 2;
-                Bounds insertionBounds = area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get();
-
+                Bounds insertionBounds =
+                        asyncFx(() -> area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get())
+                        .get();
                 moveTo(letterInFirstWord)
                         .press(PRIMARY)
                         .dropTo(insertionBounds);
@@ -352,7 +374,8 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void pressing_mouse_on_selection_and_dragging_and_releasing_does_not_trigger_new_selection_finished() {
+            public void pressing_mouse_on_selection_and_dragging_and_releasing_does_not_trigger_new_selection_finished()
+                    throws InterruptedException, ExecutionException {
                 // Linux passes; Mac/Windows uncertain
                 // TODO: update test to see if it works on Mac & Windows
                 run_only_on_linux();
@@ -367,10 +390,13 @@ public class ClickAndDragTests {
                 SimpleIntegerProperty i = new SimpleIntegerProperty(0);
                 area.setOnNewSelectionDragFinished(e -> i.set(1));
 
-                Bounds letterInFirstWord = area.getCharacterBoundsOnScreen(1, 2).get();
-
-                int insertionPosition = firstParagraph.length() + 2;
-                Bounds insertionBounds = area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get();
+                Bounds letterInFirstWord = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(1, 2).get())
+                        .get();
+                final int insertionPosition = firstParagraph.length() + 2;
+                Bounds insertionBounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(insertionPosition, insertionPosition + 1).get())
+                        .get();
 
                 moveTo(letterInFirstWord)
                         .press(PRIMARY)

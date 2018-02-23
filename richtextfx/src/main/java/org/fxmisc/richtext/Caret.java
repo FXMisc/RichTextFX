@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
+import javafx.util.Duration;
 import org.reactfx.value.Var;
 
 import java.text.BreakIterator;
@@ -35,9 +36,9 @@ import java.util.OptionalInt;
 public interface Caret {
 
     /**
-     * Determines whether the caret is visible. Those who wish to use the default configuartion should use
+     * Determines whether the caret is visible. Those who wish to use the default configuration should use
      * {@link #AUTO} while those who want a more custom configuration should make a caret's {@code CaretVisibility}
-     * value oscilate between {@link #ON} and {@link #OFF}.
+     * value oscillate between {@link #ON} and {@link #OFF}.
      */
     public static enum CaretVisibility {
         /** Caret is displayed. */
@@ -85,6 +86,10 @@ public interface Caret {
     /** Whether the caret is being shown in the viewport */
     public ObservableValue<Boolean> visibleProperty();
     public boolean isVisible();
+
+    public ObservableValue<Duration> blinkRateProperty();
+    public Duration getBlinkRate();
+    public void setBlinkRate(Duration blinkRate);
 
     /**
      * The selectionBoundsProperty of the caret in the Screen's coordinate system or {@link Optional#empty()} if caret is not visible
@@ -204,4 +209,14 @@ public interface Caret {
      */
     public void dispose();
 
+    /**
+     * Gets the area with which this caret is associated.
+     */
+    public GenericStyledArea<?, ?, ?> getArea();
+
+    /**
+     * Gets the name of this caret. Each caret that is added to an area must have a unique name since it is used
+     * to distinguish it from others in a Set.
+     */
+    public String getCaretName();
 }

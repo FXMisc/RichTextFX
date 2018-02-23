@@ -303,7 +303,7 @@ public class CutCopyPasteTests extends InlineCssTextAreaAppTest {
 
             @Before
             public void setup() {
-                area.selectRange(2, 4);
+                interact(() -> area.selectRange(2, 4));
             }
 
             @Test

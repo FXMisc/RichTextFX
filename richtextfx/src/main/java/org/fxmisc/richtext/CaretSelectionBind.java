@@ -62,6 +62,10 @@ import java.text.BreakIterator;
  */
 public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, Caret {
 
+    CaretNode getUnderlyingCaret();
+
+    Selection<PS, SEG, S> getUnderlyingSelection();
+
     /* ********************************************************************** *
      *                                                                        *
      * Observables                                                            *

@@ -9,7 +9,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class CaretTests extends InlineCssTextAreaAppTest {
+public class SingleCaretTests extends InlineCssTextAreaAppTest {
 
     private static final String MANY_PARS_OF_TEXT;
 
@@ -40,8 +40,10 @@ public class CaretTests extends InlineCssTextAreaAppTest {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport
-        area.moveTo(area.getLength());
-        area.requestFollowCaret();
+        interact(() -> {
+            area.moveTo(area.getLength());
+            area.requestFollowCaret();
+        });
 
         // needed for test to pass
         WaitForAsyncUtils.waitForFxEvents();
@@ -55,7 +57,7 @@ public class CaretTests extends InlineCssTextAreaAppTest {
         assertTrue(area.getCaretBounds().isPresent());
 
         // move caret outside of viewport
-        area.moveTo(area.getLength());
+        interact(() -> area.moveTo(area.getLength()));
 
         // caret should not be visible
         assertFalse(area.getCaretBounds().isPresent());

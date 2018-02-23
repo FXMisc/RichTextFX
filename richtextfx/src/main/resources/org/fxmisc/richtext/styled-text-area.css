@@ -5,3 +5,13 @@
 .styled-text-area .paragraph-box .paragraph-text {
     -fx-padding: 0 2px;
 }
+
+.styled-text-area .caret {
+    -rtfx-blink-rate: 500ms;
+    -fx-stroke-width: 1.0;
+}
+
+.styled-text-area .selection {
+    -fx-fill: dodgerblue;
+    -fx-stroke-width: 0;
+}

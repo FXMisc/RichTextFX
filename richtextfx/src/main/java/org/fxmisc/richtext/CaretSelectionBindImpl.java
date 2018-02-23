@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import javafx.util.Duration;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
@@ -16,6 +17,7 @@ import org.reactfx.value.Var;
 import java.text.BreakIterator;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Function;
 
 final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS, SEG, S> {
 
@@ -49,6 +51,10 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override public ObservableValue<Boolean> visibleProperty() { return delegateCaret.visibleProperty(); }
     @Override public boolean isVisible() { return delegateCaret.isVisible(); }
+
+    @Override public ObservableValue<Duration> blinkRateProperty() { return delegateCaret.blinkRateProperty(); }
+    @Override public Duration getBlinkRate() { return delegateCaret.getBlinkRate(); }
+    @Override public void setBlinkRate(Duration blinkRate) { delegateCaret.setBlinkRate(blinkRate); }
 
     @Override public ObservableValue<Optional<Bounds>> caretBoundsProperty() { return delegateCaret.caretBoundsProperty(); }
     @Override public Optional<Bounds> getCaretBounds() { return delegateCaret.getCaretBounds(); }
@@ -95,6 +101,23 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override public ObservableValue<Optional<Bounds>> selectionBoundsProperty() { return delegateSelection.selectionBoundsProperty(); }
     @Override public Optional<Bounds> getSelectionBounds() { return delegateSelection.getSelectionBounds(); }
 
+    private final CaretNode delegateCaret;
+    @Override public CaretNode getUnderlyingCaret() { return delegateCaret; }
+
+    @Override public String getCaretName() { return delegateCaret.getCaretName(); }
+
+    private final Selection<PS, SEG, S> delegateSelection;
+    @Override public Selection<PS, SEG, S> getUnderlyingSelection() { return delegateSelection; }
+
+    @Override public String getSelectionName() { return delegateSelection.getSelectionName(); }
+
+    @Override
+    public void configureSelectionPath(SelectionPath path) {
+        delegateSelection.configureSelectionPath(path);
+    }
+
+    @Override public GenericStyledArea<PS, SEG, S> getArea() { return delegateSelection.getArea(); }
+
     // caret selection bind
     private final Val<Integer> anchorPosition;
     @Override public int getAnchorPosition() { return anchorPosition.getValue(); }
@@ -116,21 +139,31 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private final SuspendableVal<Boolean> startedByAnchor = internalStartedByAnchor.suspendable();
     private boolean anchorIsStart() { return startedByAnchor.getValue(); }
 
-    private final GenericStyledArea<PS, SEG, S> area;
-    private final Caret delegateCaret;
-    private final Selection<PS, SEG, S> delegateSelection;
-
     private Subscription subscription = () -> {};
 
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area) {
-        this(area, new IndexRange(0, 0));
+    CaretSelectionBindImpl(String caretName, String selectionName, GenericStyledArea<PS, SEG, S> area) {
+        this(caretName, selectionName, area, new IndexRange(0, 0));
     }
 
-    CaretSelectionBindImpl(GenericStyledArea<PS, SEG, S> area, IndexRange startingRange) {
-        this.area = area;
+    CaretSelectionBindImpl(String caretName, String selectionName, GenericStyledArea<PS, SEG, S> area,
+                           IndexRange startingRange) {
+        this(
+                (updater) -> new CaretNode(caretName, area, updater, startingRange.getStart()),
+                (updater) -> new SelectionImpl<>(selectionName, area, startingRange, updater)
+        );
+    }
+
+    CaretSelectionBindImpl(Function<SuspendableNo, ? extends CaretNode> createCaret,
+                           Function<SuspendableNo, Selection<PS, SEG, S>> createSelection) {
         SuspendableNo delegateUpdater = new SuspendableNo();
-        this.delegateCaret = new CaretImpl(area, delegateUpdater, startingRange.getStart());
-        delegateSelection = new SelectionImpl<>(area, delegateUpdater, startingRange);
+        delegateCaret = createCaret.apply(delegateUpdater);
+        delegateSelection = createSelection.apply(delegateUpdater);
+        if (delegateCaret.getArea() != delegateSelection.getArea()) {
+            throw new IllegalArgumentException(String.format(
+                    "Caret and Selection must be asociated with the same area. Caret area = %s | Selection area = %s",
+                    delegateCaret.getArea(), delegateSelection.getArea()
+            ));
+        }
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
                 b
@@ -152,7 +185,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
                 delegateUpdater
         );
 
-        subscription = omniSuspendable.suspendWhen(area.beingUpdatedProperty());
+        subscription = omniSuspendable.suspendWhen(getArea().beingUpdatedProperty());
     }
 
     /* ********************************************************************** *
@@ -171,7 +204,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getPosition());
         moveTo(position, NavigationActions.SelectionPolicy.CLEAR);
     }
@@ -182,7 +215,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getPosition());
         moveTo(position, NavigationActions.SelectionPolicy.CLEAR);
     }
@@ -230,7 +263,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getStartPosition());
         updateStartTo(position);
     }
@@ -241,7 +274,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getStartPosition());
         updateStartTo(position);
     }
@@ -262,7 +295,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingForwards(numOfBreaks, breakIterator, getStartPosition());
         updateEndTo(position);
     }
@@ -273,7 +306,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
         int position = calculatePositionViaBreakingBackwards(numOfBreaks, breakIterator, getStartPosition());
         updateEndTo(position);
     }
@@ -286,7 +319,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override
     public void selectParagraph(int paragraphIndex) {
         int start = textPosition(paragraphIndex, 0);
-        int end = area.getParagraphLength(paragraphIndex);
+        int end = getArea().getParagraphLength(paragraphIndex);
         selectRange(start, end);
     }
 
@@ -297,7 +330,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         }
 
         BreakIterator breakIterator = BreakIterator.getWordInstance();
-        breakIterator.setText(area.getText());
+        breakIterator.setText(getArea().getText());
 
         int start = calculatePositionViaBreakingBackwards(1, breakIterator, wordPositionInArea);
         int end = calculatePositionViaBreakingForwards(1, breakIterator, wordPositionInArea);
@@ -356,7 +389,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override
     public void moveToPrevChar(NavigationActions.SelectionPolicy selectionPolicy) {
         if (getPosition() > 0) {
-            int newCaretPos = Character.offsetByCodePoints(area.getText(), getPosition(), -1);
+            int newCaretPos = Character.offsetByCodePoints(getArea().getText(), getPosition(), -1);
             moveTo(newCaretPos, selectionPolicy);
         }
     }
@@ -364,7 +397,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     @Override
     public void moveToNextChar(NavigationActions.SelectionPolicy selectionPolicy) {
         if (getPosition() < getAreaLength()) {
-            int newCaretPos = Character.offsetByCodePoints(area.getText(), getPosition(), 1);
+            int newCaretPos = Character.offsetByCodePoints(getArea().getText(), getPosition(), 1);
             moveTo(newCaretPos, selectionPolicy);
         }
     }
@@ -376,7 +409,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveToParEnd(NavigationActions.SelectionPolicy selectionPolicy) {
-        int newPos = area.getParagraphLength(getParagraphIndex());
+        int newPos = getArea().getParagraphLength(getParagraphIndex());
         moveTo(newPos, selectionPolicy);
     }
 
@@ -387,7 +420,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveToAreaEnd(NavigationActions.SelectionPolicy selectionPolicy) {
-        moveTo(area.getLength(), selectionPolicy);
+        moveTo(getArea().getLength(), selectionPolicy);
     }
 
     @Override
@@ -427,17 +460,17 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         if (isBeingUpdated()) {
             updater.run();
         } else {
-            area.beingUpdatedProperty().suspendWhile(updater);
+            getArea().beingUpdatedProperty().suspendWhile(updater);
         }
     }
 
     private int textPosition(int paragraphIndex, int columnPosition) {
-        return area.position(paragraphIndex, columnPosition).toOffset();
+        return getArea().position(paragraphIndex, columnPosition).toOffset();
     }
 
-    private int getAreaLength() { return area.getLength(); }
+    private int getAreaLength() { return getArea().getLength(); }
 
-    /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
+    /** Assumes that {@code getArea().getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
     private int calculatePositionViaBreakingForwards(int numOfBreaks, BreakIterator breakIterator, int position) {
         breakIterator.following(position);
         for (int i = 1; i < numOfBreaks; i++) {
@@ -446,7 +479,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         return breakIterator.current();
     }
 
-    /** Assumes that {@code area.getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
+    /** Assumes that {@code getArea().getLength != 0} is true and {@link BreakIterator#setText(String)} has been called */
     private int calculatePositionViaBreakingBackwards(int numOfBreaks, BreakIterator breakIterator, int position) {
         breakIterator.preceding(position);
         for (int i = 1; i < numOfBreaks; i++) {

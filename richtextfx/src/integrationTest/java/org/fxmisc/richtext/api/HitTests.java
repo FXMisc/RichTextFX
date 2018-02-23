@@ -12,10 +12,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static javafx.scene.input.MouseButton.PRIMARY;
 import static org.junit.Assert.assertEquals;
+import static org.testfx.util.WaitForAsyncUtils.asyncFx;
 
 @RunWith(NestedRunner.class)
 public class HitTests extends InlineCssTextAreaAppTest {
@@ -64,13 +66,14 @@ public class HitTests extends InlineCssTextAreaAppTest {
 
             @Test
             public void clicking_in_top_padding_moves_caret_to_top_line() {
-                interact(() -> area.setPadding(new Insets(PADDING_AMOUNT, 0, 0, 0)));
-
-                moveCaretToAreaEnd();
+                interact(() -> {
+                    area.setPadding(new Insets(PADDING_AMOUNT, 0, 0, 0));
+                    moveCaretToAreaEnd();
+                });
                 moveTo(position(Pos.TOP_LEFT, 1, 2)).clickOn(PRIMARY);
                 assertEquals(0, area.getCurrentParagraph());
 
-                moveCaretToAreaEnd();
+                interact(() -> moveCaretToAreaEnd());
                 moveTo(position(Pos.TOP_CENTER, 0, 0)).clickOn(PRIMARY);
                 assertEquals(0, area.getCurrentParagraph());
             }
@@ -126,9 +129,12 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void clicking_character_should_move_caret_to_that_position() {
+            public void clicking_character_should_move_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 int start = area.getAbsolutePosition(3, 8);
-                Bounds b = area.getCharacterBoundsOnScreen(start, start + 1).get();
+                Bounds b = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(start, start + 1).get())
+                        .get();
                 moveTo(b).clickOn(PRIMARY);
                 assertEquals(start, area.getCaretPosition());
             }
@@ -151,9 +157,9 @@ public class HitTests extends InlineCssTextAreaAppTest {
             @Test
             public void next_page_moves_caret_to_bottom_of_page() {
                 area.showParagraphAtTop(0);
-                area.moveTo(0);
 
                 interact(() -> {
+                    area.moveTo(0);
                     // hit is called here
                     area.nextPage(NavigationActions.SelectionPolicy.CLEAR);
                 });
@@ -177,9 +183,11 @@ public class HitTests extends InlineCssTextAreaAppTest {
             });
         }
 
-        private void runTest() {
+        private void runTest() throws InterruptedException, ExecutionException {
             int start = area.getAbsolutePosition(3, 8);
-            Bounds b = area.getCharacterBoundsOnScreen(start, start + 1).get();
+            Bounds b = asyncFx(
+                    () -> area.getCharacterBoundsOnScreen(start, start + 1).get())
+                    .get();
             moveTo(b).clickOn(PRIMARY);
             assertEquals(start, area.getCaretPosition());
         }
@@ -187,7 +195,8 @@ public class HitTests extends InlineCssTextAreaAppTest {
         public class And_Area_Is_Padded {
 
             @Test
-            public void clicking_character_should_move_caret_to_that_position() {
+            public void clicking_character_should_move_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 interact(() -> area.setPadding(new Insets(PADDING_AMOUNT)));
 
                 runTest();
@@ -197,7 +206,8 @@ public class HitTests extends InlineCssTextAreaAppTest {
         public class And_Area_Is_Not_Padded {
 
             @Test
-            public void clicking_character_should_move_caret_to_that_position() {
+            public void clicking_character_should_move_caret_to_that_position()
+                    throws InterruptedException, ExecutionException {
                 runTest();
             }
 

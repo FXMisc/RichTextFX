@@ -177,8 +177,25 @@ public interface Selection<PS, SEG, S> {
     }
 
     /**
+     * Configures a {@link SelectionPath} that will be used to render a portion or all of this selection
+     * on a single paragraph. When the selection is a multi-paragraph selection, one path will be used
+     * to render that portion of the selection on a paragraph.
+     */
+    void configureSelectionPath(SelectionPath path);
+
+    /**
      * Disposes the selection and prevents memory leaks
      */
     void dispose();
+
+    /**
+     * Gets the name of this selection. Each selection in an area must have a unique name.
+     */
+    String getSelectionName();
+
+    /**
+     * Gets the area with which this selection is associated
+     */
+    GenericStyledArea<PS, SEG, S> getArea();
 
 }
