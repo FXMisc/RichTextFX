@@ -18,8 +18,6 @@ import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.collection.QuasiListModification;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.collection.UnmodifiableByDefaultLiveList;
-import org.reactfx.util.BiIndex;
-import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 
@@ -131,36 +129,28 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
     @Override
     public void replace(int start, int end, StyledDocument<PS, SEG, S> replacement) {
-        ensureValidRange(start, end);
         doc.replace(start, end, ReadOnlyStyledDocument.from(replacement)).exec(this::update);
     }
 
     @Override
     public void setStyle(int from, int to, S style) {
-        ensureValidRange(from, to);
         doc.replace(from, to, removed -> removed.mapParagraphs(par -> par.restyle(style))).exec(this::update);
     }
 
     @Override
     public void setStyle(int paragraphIndex, S style) {
-        ensureValidParagraphIndex(paragraphIndex);
         doc.replaceParagraph(paragraphIndex, p -> p.restyle(style)).exec(this::update);
     }
 
     @Override
     public void setStyle(int paragraphIndex, int fromCol, int toCol, S style) {
-        ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
-        doc.replace(
-            new BiIndex(paragraphIndex, fromCol),
-            new BiIndex(paragraphIndex, toCol),
-            d -> d.mapParagraphs(p -> p.restyle(style))
-        ).exec(this::update);
+        doc.replace(paragraphIndex, fromCol, toCol, d -> d.mapParagraphs(p -> p.restyle(style)))
+                .exec(this::update);
     }
 
     @Override
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
-        ensureValidRange(from, from + len);
         doc.replace(from, from + len, d -> {
             Position i = styleSpans.position(0, 0);
             List<Paragraph<PS, SEG, S>> pars = new ArrayList<>(d.getParagraphs().size());
@@ -181,7 +171,6 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
     @Override
     public void setParagraphStyle(int paragraphIndex, PS style) {
-        ensureValidParagraphIndex(paragraphIndex);
         doc.replaceParagraph(paragraphIndex, p -> p.setParagraphStyle(style)).exec(this::update);
     }
 
@@ -201,24 +190,6 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
      * Private and package private methods                                    *
      *                                                                        *
      * ********************************************************************** */
-
-    private void ensureValidParagraphIndex(int parIdx) {
-        Lists.checkIndex(parIdx, doc.getParagraphCount());
-    }
-
-    private void ensureValidRange(int start, int end) {
-        Lists.checkRange(start, end, length());
-    }
-
-    private void ensureValidParagraphRange(int par, int start, int end) {
-        ensureValidParagraphIndex(par);
-        Lists.checkRange(start, end, fullLength(par));
-    }
-
-    private int fullLength(int par) {
-        int n = doc.getParagraphCount();
-        return doc.getParagraph(par).length() + (par == n-1 ? 0 : 1);
-    }
 
     private void update(
             ReadOnlyStyledDocument<PS, SEG, S> newValue,
