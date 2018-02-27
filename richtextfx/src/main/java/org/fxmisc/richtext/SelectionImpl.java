@@ -3,6 +3,7 @@ package org.fxmisc.richtext;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
+import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 import org.reactfx.EventStream;
@@ -217,44 +218,47 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                 EventStreams.merge(area.viewportDirtyEvents(), dirty)
         ).suspendable();
 
-        manageSubscription(area.plainTextChanges(), plainTextChange -> {
-            int netLength = plainTextChange.getNetLength();
-            //if (netLength != 0)  Causes IndexOutOfBoundsException in ParagraphText.getRangeShapeSafely issue #689
-            // but can be safely reimplemented if this causes other issues. 
-            {
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(netLength);
+        manageSubscription(area.multiPlainChanges(), list -> {
+            int finalStart = getStartPosition();
+            int finalEnd = getEndPosition();
+            for (PlainTextChange plainTextChange : list) {
+                int netLength = plainTextChange.getNetLength();
+                //if (netLength != 0)  Causes IndexOutOfBoundsException in ParagraphText.getRangeShapeSafely issue #689
+                // but can be safely reimplemented if this causes other issues.
+                {
+                    int indexOfChange = plainTextChange.getPosition();
+                    // in case of a replacement: "hello there" -> "hi."
+                    int endOfChange = indexOfChange + Math.abs(netLength);
 
-                if (getLength() != 0) {
-                    int selectionStart = getStartPosition();
-                    int selectionEnd = getEndPosition();
+                    if (getLength() != 0) {
 
-                    // if start/end is within the changed content, move it to indexOfChange
-                    // otherwise, offset it by netLength
-                    // Note: if both are moved to indexOfChange, selection is empty.
-                    if (indexOfChange < selectionStart) {
-                        selectionStart = selectionStart < endOfChange
-                                ? indexOfChange
-                                : selectionStart + netLength;
-                    }
-                    if (indexOfChange < selectionEnd) {
-                        selectionEnd = selectionEnd < endOfChange
-                                ? indexOfChange
-                                : selectionEnd + netLength;
-                    }
-                    selectRange(selectionStart, selectionEnd);
-                } else {
-                    // force-update internalSelection in case empty selection is
-                    // at the end of area and a character was deleted
-                    // (prevents a StringIndexOutOfBoundsException because
-                    // end is one char farther than area's length).
+                        // if start/end is within the changed content, move it to indexOfChange
+                        // otherwise, offset it by netLength
+                        // Note: if both are moved to indexOfChange, selection is empty.
+                        if (indexOfChange < finalStart) {
+                            finalStart = finalStart < endOfChange
+                                    ? indexOfChange
+                                    : finalStart + netLength;
+                        }
+                        if (indexOfChange < finalEnd) {
+                            finalEnd = finalEnd < endOfChange
+                                    ? indexOfChange
+                                    : finalEnd + netLength;
+                        }
+                    } else {
+                        // force-update internalSelection in case empty selection is
+                        // at the end of area and a character was deleted
+                        // (prevents a StringIndexOutOfBoundsException because
+                        // end is one char farther than area's length).
 
-                    if (getLength() < getEndPosition()) {
-                        selectRange(getLength(), getLength());
+                        if (getLength() < getEndPosition()) {
+                            finalStart = getLength();
+                            finalEnd = getLength();
+                        }
                     }
                 }
             }
+            selectRange(finalStart, finalEnd);
         });
 
         Suspendable omniSuspendable = Suspendable.combine(

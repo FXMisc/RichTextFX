@@ -25,6 +25,7 @@ import org.reactfx.util.Lists;
 import org.reactfx.util.ToSemigroup;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuple3;
+import org.reactfx.util.Tuples;
 
 /**
  * An immutable implementation of {@link StyledDocument} that does not allow editing. For a {@link StyledDocument}
@@ -312,6 +313,50 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     @Override
     public StyledDocument<PS, SEG, S> subSequence(int start, int end) {
         return split(end)._1.split(start)._2;
+    }
+
+    /**
+     * Replaces multiple portions of this document in an efficient manner and returns
+     * <ol>
+     *     <li>
+     *         the updated version of this document that includes all of the replacements,
+     *     </li>
+     *     <li>
+     *         the List of {@link RichTextChange} that represent all the changes from this document
+     *         to the returned one, and
+     *     </li>
+     *     <li>
+     *         the List of modifications used to update an area's list of paragraphs for each change.
+     *     </li>
+     * </ol>
+     */
+    public Tuple3<
+            ReadOnlyStyledDocument<PS, SEG, S>,
+            List<RichTextChange<PS, SEG, S>>,
+            List<MaterializedListModification<Paragraph<PS, SEG, S>>>> replaceMulti(List<Replacement<PS, SEG, S>> replacements) {
+        ReadOnlyStyledDocument<PS, SEG, S> updatedDoc = this;
+        List<RichTextChange<PS, SEG, S>> richChangeList = new ArrayList<>(replacements.size());
+        List<MaterializedListModification<Paragraph<PS, SEG, S>>> parChangeList = new ArrayList<>(replacements.size());
+        for (Replacement<PS, SEG, S> r : replacements) {
+            Tuple3<
+                ReadOnlyStyledDocument<PS, SEG, S>,
+                RichTextChange<PS, SEG, S>,
+                MaterializedListModification<Paragraph<PS, SEG, S>>
+            > postReplacement = updatedDoc.replace(r);
+            updatedDoc = postReplacement.get1();
+            richChangeList.add(postReplacement.get2());
+            parChangeList.add(postReplacement.get3());
+        }
+        return Tuples.t(updatedDoc, richChangeList, parChangeList);
+    }
+
+    /**
+     * Convenience method for calling {@link #replace(int, int, ReadOnlyStyledDocument)} with a {@link Replacement}
+     * argument.
+     */
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            Replacement<PS, SEG, S> replacement) {
+        return replace(replacement.getStart(), replacement.getEnd(), replacement.getDocument());
     }
 
     /**

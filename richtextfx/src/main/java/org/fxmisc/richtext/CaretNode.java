@@ -8,6 +8,7 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.scene.shape.Path;
+import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
@@ -155,25 +156,28 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         // when content is updated by an area, update the caret of all the other
         // clones that also display the same document
-        manageSubscription(area.plainTextChanges(), (plainTextChange -> {
-            int netLength = plainTextChange.getNetLength();
-            if (netLength != 0) {
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(netLength);
+        manageSubscription(area.multiPlainChanges(), list -> {
+            int finalPosition = getPosition();
+            for (PlainTextChange plainTextChange : list) {
+                int netLength = plainTextChange.getNetLength();
+                if (netLength != 0) {
+                    int indexOfChange = plainTextChange.getPosition();
+                    // in case of a replacement: "hello there" -> "hi."
+                    int endOfChange = indexOfChange + Math.abs(netLength);
 
-                int caretPosition = getPosition();
-                if (indexOfChange < caretPosition) {
-                    // if caret is within the changed content, move it to indexOfChange
-                    // otherwise offset it by netLength
-                    moveTo(
-                            caretPosition < endOfChange
-                                    ? indexOfChange
-                                    : caretPosition + netLength
-                    );
+                    if (indexOfChange < finalPosition) {
+                        // if caret is within the changed content, move it to indexOfChange
+                        // otherwise offset it by netLength
+                        finalPosition = finalPosition < endOfChange
+                                        ? indexOfChange
+                                        : finalPosition + netLength;
+                    }
                 }
             }
-        }));
+            if (finalPosition != getPosition()) {
+                moveTo(finalPosition);
+            }
+        });
 
         // whether or not to display the caret
         EventStream<Boolean> blinkCaret = showCaret.values()
