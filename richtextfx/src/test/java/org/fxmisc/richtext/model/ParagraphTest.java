@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.fxmisc.richtext.StyleClassedTextArea;
 import org.junit.Test;
 
 public class ParagraphTest {
@@ -42,18 +41,25 @@ public class ParagraphTest {
     }
 
     // Relates to #696 (caused by #685, coming from #449) where an empty
-    // style being applied to an empty paragraph results in an Exception
+    // StyleSpans being applied to an empty paragraph results in an Exception
     @Test
     public void restylingEmptyParagraphViaEmptyStyleSpansWorks() {
 
-        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
-        spansBuilder.add(Collections.singleton("cls1"), 1);
-        spansBuilder.add(Collections.singleton("cls2"), 3);
-        spansBuilder.add(Collections.emptyList(), 1);		// critical trigger
-        StyleSpans ss = spansBuilder.create();
+    	Collection<String> test = Collections.singleton("test");
+        TextOps<String, Collection<String>> segOps = SegmentOps.styledTextOps();
+        Paragraph<Void, String, Collection<String>> p = new Paragraph<>(null, segOps, "", test);
+        assertEquals( 0, p.length() );
 
-        StyleClassedTextArea area = new StyleClassedTextArea();
-        area.replaceText("* a\n\n");
-        area.setStyleSpans(0, ss);							// would fail here
+        StyleSpans<Collection<String>> spans = new StyleSpans<Collection<String>>()
+		{
+			@Override public Position position( int major, int minor ) { return null; }
+			@Override public Position offsetToPosition( int offset, Bias bias ) { return null; }
+			@Override public StyleSpan<Collection<String>> getStyleSpan( int index ) { return null; }
+			@Override public int getSpanCount() { return 0; }
+			@Override public int length() { return 0; }
+		};
+
+        Paragraph<Void, String, Collection<String>> restyledP = p.restyle(0, spans);
+        assertEquals( test, restyledP.getStyleSpans().getStyleSpan( 0 ).getStyle() );
     }
 }
