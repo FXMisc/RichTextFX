@@ -2,6 +2,9 @@ package org.fxmisc.richtext.model;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.junit.Test;
 
 public class ParagraphTest {
@@ -37,4 +40,26 @@ public class ParagraphTest {
         assertTrue(restyledP.getStyleSpans().styleStream().allMatch( b -> b ));
     }
 
+    // Relates to #696 (caused by #685, coming from #449) where an empty
+    // StyleSpans being applied to an empty paragraph results in an Exception
+    @Test
+    public void restylingEmptyParagraphViaEmptyStyleSpansWorks() {
+
+    	Collection<String> test = Collections.singleton("test");
+        TextOps<String, Collection<String>> segOps = SegmentOps.styledTextOps();
+        Paragraph<Void, String, Collection<String>> p = new Paragraph<>(null, segOps, "", test);
+        assertEquals( 0, p.length() );
+
+        StyleSpans<Collection<String>> spans = new StyleSpans<Collection<String>>()
+		{
+			@Override public Position position( int major, int minor ) { return null; }
+			@Override public Position offsetToPosition( int offset, Bias bias ) { return null; }
+			@Override public StyleSpan<Collection<String>> getStyleSpan( int index ) { return null; }
+			@Override public int getSpanCount() { return 0; }
+			@Override public int length() { return 0; }
+		};
+
+        Paragraph<Void, String, Collection<String>> restyledP = p.restyle(0, spans);
+        assertEquals( test, restyledP.getStyleSpans().getStyleSpan( 0 ).getStyle() );
+    }
 }
