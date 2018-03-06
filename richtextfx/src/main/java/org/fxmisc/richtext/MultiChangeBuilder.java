@@ -19,6 +19,7 @@ import java.util.List;
  *     Let's say that a document has the text {@code |(|t|e|x|t||)|} where each {@code |} represents a position
  *     in-between the characters of the text . If one wants to remove the opening
  *     and closing parenthesis in two update calls, they would write:
+ * </p>
  * <pre><code>
  * // Text:     |(|t|e|x|t|)|
  * // Position: 0 1 2 3 4 5 6
@@ -29,14 +30,14 @@ import java.util.List;
  * // Position: 0 1 2 3 4 5
  * area.deleteText(4, 5); // delete the second parenthesis
  * </code></pre>
- * </p>
  * <p>
  *     {@code MultiChangeBuilder} can do the same thing in one call and works by applying earlier changes before
  *     later ones. However, this creates a problem. Later changes' start and end positions must be updated to still
  *     point to the correct spot in the text. Wouldn't it be easier to be able to define both changes in the original
  *     coordinate system of the document before any changes were applied? Returning to the previous example,
  *     wouldn't it be better if one could write:
- *     <pre><code>
+ * </p>
+ * <pre><code>
  * // Text:     |(|t|e|x|t|)|
  * // Position: 0 1 2 3 4 5 6
  *
@@ -45,11 +46,11 @@ import java.util.List;
  * area.deleteText(5, 6); // delete the 2nd parenthesis
  * // end multi change
  * </code></pre>
- * </p>
  * <p>
  *     Fortunately, that is already handled for you. Such changes are known as "relative" changes: their
  *     start and end positions are updated to point to where they should point once all the earlier changes before
  *     them have been applied. To execute the same code as before, we would write:
+ * </p>
  * <pre><code>
  * area.createMultiChange()
  *      // deletes the 1st parenthesis
@@ -61,18 +62,17 @@ import java.util.List;
  *      // executes the call and updates the document
  *      .commit();
  * </code></pre>
- * </p>
  * <p>
  *     However, a developer may sometimes want an "absolute" change: their start and end positions
  *     are exactly what the developer specifies regardless of how changes before them modify the underlying document.
  *     For example, the following code would still delete both parenthesis:
+ * </p>
  * <pre><code>
  * area.createMultiChange()
  *      .deleteText(0, 1) // deletes the 1st parenthesis
  *      .deleteTextAbsolutely(4, 5) // deletes the 2nd parenthesis
  *      .commit();
  * </code></pre>
- * </p>
  * <p>
  *     Thus, absolute changes (e.g. {@link #replaceAbsolutely(int, int, StyledDocument)}) are all the methods
  *     which have "absolute" as a suffix and relative changes (e.g. {@link #replace(int, int, StyledDocument)})
