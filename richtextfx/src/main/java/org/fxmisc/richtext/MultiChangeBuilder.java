@@ -372,12 +372,12 @@ public class MultiChangeBuilder<PS, SEG, S> {
             int realStart = start;
             int realEnd = end;
             for (Replacement<PS, SEG, S> r : list) {
-                if (r.getStart() < realStart) {
+                if (r.getStart() <= realStart) {
                     realStart += r.getNetLength();
-                    if (r.getEnd() < realEnd) {
+                    if (r.getEnd() <= realEnd) {
                         realEnd += r.getNetLength();
                     }
-                } else if (r.getEnd() < realEnd) {
+                } else if (r.getEnd() <= realEnd) {
                     realEnd += r.getNetLength();
                 }
             }
