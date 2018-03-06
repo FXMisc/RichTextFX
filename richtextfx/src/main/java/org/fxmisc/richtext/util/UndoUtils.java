@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.util;
 
 import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.MultiChangeBuilder;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.TextChange;
@@ -9,11 +10,11 @@ import org.fxmisc.undo.UndoManagerFactory;
 import org.reactfx.EventStream;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
  * A class filled with factory methods to help easily construct an {@link UndoManager} for a {@link GenericStyledArea}.
- *
  */
 public final class UndoUtils {
 
@@ -26,7 +27,7 @@ public final class UndoUtils {
     /**
      * Constructs an UndoManager with an unlimited history:
      * if {@link GenericStyledArea#isPreserveStyle() the area's preserveStyle flag is true}, the returned UndoManager
-     * can undo/redo {@link RichTextChange}s; otherwise, it can undo/redo {@link PlainTextChange}s.
+     * can undo/redo multiple {@link RichTextChange}s; otherwise, it can undo/redo multiple {@link PlainTextChange}s.
      */
     public static <PS, SEG, S> UndoManager defaultUndoManager(GenericStyledArea<PS, SEG, S> area) {
         return area.isPreserveStyle()
@@ -47,7 +48,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@link #DEFAULT_PREVENT_MERGE_DELAY}
      */
-    public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area) {
+    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area) {
         return richTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory());
     }
 
@@ -56,8 +58,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@code preventMergeDelay}
      */
-    public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                                           Duration preventMergeDelay) {
+    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, Duration preventMergeDelay) {
         return richTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory(), preventMergeDelay);
     };
 
@@ -66,8 +68,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@link #DEFAULT_PREVENT_MERGE_DELAY}
      */
-    public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                                           UndoManagerFactory factory) {
+    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory) {
         return richTextUndoManager(area, factory, DEFAULT_PREVENT_MERGE_DELAY);
     };
 
@@ -76,11 +78,15 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@code preventMergeDelay}
      */
-    public static <PS, SEG, S> UndoManager<RichTextChange<PS, SEG, S>> richTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                                           UndoManagerFactory factory,
-                                                                                           Duration preventMergeDelay) {
-        return factory.create(area.richChanges(), TextChange::invert, applyRichTextChange(area),
-                TextChange::mergeWith, TextChange::isIdentity, preventMergeDelay);
+    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory, Duration preventMergeDelay) {
+        return factory.createMultiChangeUM(area.multiRichChanges(),
+                TextChange::invert,
+                undoMultiRichTextChange(area),
+                redoMultiRichTextChange(area),
+                TextChange::mergeWith,
+                TextChange::isIdentity,
+                preventMergeDelay);
     };
 
     /**
@@ -88,7 +94,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@link #DEFAULT_PREVENT_MERGE_DELAY}
      */
-    public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area) {
+    public static <PS, SEG, S> UndoManager<List<PlainTextChange>> plainTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area) {
         return plainTextUndoManager(area, DEFAULT_PREVENT_MERGE_DELAY);
     }
 
@@ -97,8 +104,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@code preventMergeDelay}
      */
-    public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                                 Duration preventMergeDelay) {
+    public static <PS, SEG, S> UndoManager<List<PlainTextChange>> plainTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, Duration preventMergeDelay) {
         return plainTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory(), preventMergeDelay);
     }
 
@@ -107,8 +114,8 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@link #DEFAULT_PREVENT_MERGE_DELAY}
      */
-    public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                UndoManagerFactory factory) {
+    public static <PS, SEG, S> UndoManager<List<PlainTextChange>> plainTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory) {
         return plainTextUndoManager(area, factory, DEFAULT_PREVENT_MERGE_DELAY);
     }
 
@@ -117,11 +124,15 @@ public final class UndoUtils {
      * emitted from the stream will not be merged with the previous change
      * after {@code preventMergeDelay}
      */
-    public static <PS, SEG, S> UndoManager<PlainTextChange> plainTextUndoManager(GenericStyledArea<PS, SEG, S> area,
-                                                                                 UndoManagerFactory factory,
-                                                                                 Duration preventMergeDelay) {
-        return factory.create(area.plainTextChanges(), TextChange::invert, applyPlainTextChange(area),
-                TextChange::mergeWith, TextChange::isIdentity, preventMergeDelay);
+    public static <PS, SEG, S> UndoManager<List<PlainTextChange>> plainTextUndoManager(
+            GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory, Duration preventMergeDelay) {
+        return factory.createMultiChangeUM(area.multiPlainChanges(),
+                TextChange::invert,
+                undoMultiPlainTextChange(area),
+                redoMultiPlainTextChange(area),
+                TextChange::mergeWith,
+                TextChange::isIdentity,
+                preventMergeDelay);
     }
 
     /* ********************************************************************** *
@@ -141,11 +152,64 @@ public final class UndoUtils {
     }
 
     /**
-     * Applies a {@link PlainTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
+     * Applies a {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
      * by {@code area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
      */
-    public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(GenericStyledArea<PS, SEG, S> area) {
+    public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(
+            GenericStyledArea<PS, SEG, S> area) {
         return change -> area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+    }
+
+    public static <PS, SEG, S> Consumer<List<PlainTextChange>> undoMultiPlainTextChange(
+            GenericStyledArea<PS, SEG, S> area) {
+        return changeList -> {
+            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
+            for (PlainTextChange c : changeList) {
+                builder.replaceText(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+            }
+            builder.commit();
+        };
+    }
+
+    public static <PS, SEG, S> Consumer<List<PlainTextChange>> redoMultiPlainTextChange(
+            GenericStyledArea<PS, SEG, S> area) {
+        return changeList -> {
+            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
+            for (PlainTextChange c : changeList) {
+                builder.replaceTextAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+            }
+            builder.commit();
+        };
+    }
+
+    /**
+     * Undoes a list of {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
+     * by {@code area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
+     */
+    public static <PS, SEG, S> Consumer<List<RichTextChange<PS, SEG, S>>> undoMultiRichTextChange(
+            GenericStyledArea<PS, SEG, S> area) {
+        return changeList -> {
+            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
+            for (RichTextChange<PS, SEG, S> c : changeList) {
+                builder.replace(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+            }
+            builder.commit();
+        };
+    }
+
+    /**
+     * Redoes a list of {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
+     * by {@code area.replaceAbsolutely(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
+     */
+    public static <PS, SEG, S> Consumer<List<RichTextChange<PS, SEG, S>>> redoMultiRichTextChange(
+            GenericStyledArea<PS, SEG, S> area) {
+        return changeList -> {
+            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
+            for (RichTextChange<PS, SEG, S> c : changeList) {
+                builder.replaceAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+            }
+            builder.commit();
+        };
     }
 
     /**
@@ -155,7 +219,8 @@ public final class UndoUtils {
      * @deprecated No longer needed since UndoFX 1.4.0
      */
     @Deprecated
-    public static <T> UndoManager<T> wrap(UndoManager<T> undoManager, EventStream<T> changeStream, Duration preventMergeDelay) {
+    public static <T> UndoManager<T> wrap(UndoManager<T> undoManager, EventStream<T> changeStream,
+                                          Duration preventMergeDelay) {
         return new UndoManagerInactivityWrapper<>(undoManager, changeStream, preventMergeDelay);
     }
 }
