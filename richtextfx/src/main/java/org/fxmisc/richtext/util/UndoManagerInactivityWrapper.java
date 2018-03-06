@@ -58,28 +58,8 @@ final class UndoManagerInactivityWrapper<C> implements UndoManager<C> {
     }
 
     @Override
-    public Val<C> nextToUndoProperty() {
-        return delegate.nextToUndoProperty();
-    }
-
-    @Override
-    public C getNextToUndo() {
-        return delegate.getNextToUndo();
-    }
-
-    @Override
     public Val<C> nextRedoProperty() {
         return delegate.nextRedoProperty();
-    }
-
-    @Override
-    public Val<C> nextToRedoProperty() {
-        return delegate.nextToRedoProperty();
-    }
-
-    @Override
-    public C getNextToRedo() {
-        return delegate.getNextToRedo();
     }
 
     @Override

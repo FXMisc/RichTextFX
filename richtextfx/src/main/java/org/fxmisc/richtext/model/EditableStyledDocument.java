@@ -3,9 +3,14 @@ package org.fxmisc.richtext.model;
 import javafx.beans.value.ObservableValue;
 
 import org.reactfx.EventStream;
+import org.reactfx.EventStreamBase;
+import org.reactfx.Subscription;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Content model for {@link org.fxmisc.richtext.GenericStyledArea}. Specifies edit operations
@@ -48,22 +53,52 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
      * ********************************************************************** */
 
     /**
-     * Returns an {@link EventStream} that emits a {@link PlainTextChange} every time a non-style change is made
-     * to this document. A style change would include setting a segment's style, but not changing that segment
-     * or setting a paragraph's style. A non-style change would include adding/removing/modifying a segment itself
+     * Returns an {@link EventStream} that emits a {@link List} of {@link RichTextChange}s every time a change is made
+     * to this document, even when such a change does not modify the underlying document in any way. The emitted
+     * list will only have one item in it unless one used {@link #replaceMulti(List)}.
      */
-    default EventStream<PlainTextChange> plainChanges() {
-        return richChanges()
-                .map(RichTextChange::toPlainTextChange)
-                // filter out rich changes where the style was changed but text wasn't added/removed
-                .filter(pc -> !pc.isIdentity());
+    EventStream<List<RichTextChange<PS, SEG, S>>> multiRichChanges();
+
+    /**
+     * Returns an {@link EventStream} that emits a {@link List} of {@link PlainTextChange}s every time a non-style
+     * change is made to this document. A style change would include setting a segment's style, but not changing
+     * that segment or setting a paragraph's style. A non-style change would include adding/removing/modifying a
+     * segment itself. The emitted list will only have one item in it unless one used {@link #replaceMulti(List)}.
+     */
+    default EventStream<List<PlainTextChange>> multiPlainChanges() {
+        return multiRichChanges()
+                .map(list -> Arrays.asList(list.stream()
+                        .map(RichTextChange::toPlainTextChange)
+                        // filter out rich changes where the style was changed but text wasn't added/removed
+                        .filter(pc -> !pc.isIdentity())
+                        .toArray(PlainTextChange[]::new)));
     }
 
     /**
-     * Returns an {@link EventStream} that emits a {@link RichTextChange} every time a change is made
-     * to this document, even when such a change does not modify the underlying document in any way.
+     * Returns an {@link EventStream} that emits each {@link PlainTextChange} in {@link #multiPlainChanges()}'s
+     * emitted list.
      */
-    EventStream<RichTextChange<PS, SEG, S>> richChanges();
+    default EventStream<PlainTextChange> plainChanges() {
+        return new EventStreamBase<PlainTextChange>() {
+            @Override
+            protected Subscription observeInputs() {
+                return multiPlainChanges().subscribe(l -> l.forEach(this::emit));
+            }
+        };
+    }
+
+    /**
+     * Returns an {@link EventStream} that emits each {@link RichTextChange} in {@link #multiRichChanges()}'s
+     * emitted list.
+     */
+    default EventStream<RichTextChange<PS, SEG, S>> richChanges() {
+        return new EventStreamBase<RichTextChange<PS, SEG, S>>() {
+            @Override
+            protected Subscription observeInputs() {
+                return multiRichChanges().subscribe(list -> list.forEach(this::emit));
+            }
+        };
+    }
 
     SuspendableNo beingUpdatedProperty();
     boolean isBeingUpdated();
@@ -76,6 +111,18 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
      * of one or more observables and/or produce an event.                    *
      *                                                                        *
      * ********************************************************************** */
+
+    /**
+     * Replaces multiple portions of this document in one update.
+     */
+    void replaceMulti(List<Replacement<PS, SEG, S>> replacements);
+
+    /**
+     * Convenience method for {@link #replace(int, int, StyledDocument)} using a {@link Replacement} argument.
+     */
+    default void replace(Replacement<PS, SEG, S> replacement) {
+        replace(replacement.getStart(), replacement.getEnd(), replacement.getDocument());
+    }
 
     /**
      * Replaces the portion of this document {@code "from..to"} with the given {@code replacement}.

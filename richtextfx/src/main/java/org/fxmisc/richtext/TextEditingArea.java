@@ -8,6 +8,7 @@ import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
+import org.fxmisc.richtext.model.Replacement;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -15,6 +16,7 @@ import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.value.Var;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -155,9 +157,19 @@ public interface TextEditingArea<PS, SEG, S> {
      *********************/
 
     /**
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#multiPlainChanges()}
+     */
+    EventStream<List<PlainTextChange>> multiPlainChanges();
+
+    /**
      * See {@link org.fxmisc.richtext.model.EditableStyledDocument#plainChanges()}
      */
     EventStream<PlainTextChange> plainTextChanges();
+
+    /**
+     * See {@link org.fxmisc.richtext.model.EditableStyledDocument#multiRichChanges()}
+     */
+    EventStream<List<RichTextChange<PS, SEG, S>>> multiRichChanges();
 
     /**
      * See {@link org.fxmisc.richtext.model.EditableStyledDocument#richChanges()}
@@ -309,6 +321,18 @@ public interface TextEditingArea<PS, SEG, S> {
      * Replaces a range of characters with the given rich-text document.
      */
     void replace(int start, int end, StyledDocument<PS, SEG, S> replacement);
+
+    /**
+     * Starts building a list of changes to be used to update multiple portions of the underlying document
+     * in one call. To execute the changes, call {@link MultiChangeBuilder#commit()}. If the number of
+     * changes are known at compile time, use {@link #createMultiChange(int)} for better memory efficiency.
+     */
+    MultiChangeBuilder<PS, SEG, S> createMultiChange();
+
+    /**
+     * Same as {@link #createMultiChange()} but the number of changes are specified to be more memory efficient.
+     */
+    MultiChangeBuilder<PS, SEG, S> createMultiChange(int numOfChanges);
 
     /**
      * Replaces a range of characters with the given segment.

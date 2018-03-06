@@ -60,6 +60,7 @@ import org.fxmisc.richtext.model.GenericEditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.PlainTextChange;
+import org.fxmisc.richtext.model.Replacement;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -251,6 +252,9 @@ import org.reactfx.value.Var;
  *     To distinguish the actual operations one can do on this area from the boilerplate methods
  *     within this area (e.g. properties and their getters/setters, etc.), look at the interfaces
  *     this area implements. Each lists and documents methods that fall under that category.
+ * </p>
+ * <p>
+ *     To update multiple portions of the area's underlying document in one call, see {@link #createMultiChange()}.
  * </p>
  *
  * <h3>Calculating a Position Within the Area</h3>
@@ -525,6 +529,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * Event streams                                                          *
      *                                                                        *
      * ********************************************************************** */
+
+    @Override public EventStream<List<RichTextChange<PS, SEG, S>>> multiRichChanges() { return content.multiRichChanges(); }
+
+    @Override public EventStream<List<PlainTextChange>> multiPlainChanges() { return content.multiPlainChanges(); }
 
     // text changes
     @Override public final EventStream<PlainTextChange> plainTextChanges() { return content.plainChanges(); }
@@ -1188,6 +1196,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         int newCaretPos = start + replacement.length();
         selectRange(newCaretPos, newCaretPos);
+    }
+
+    void replaceMulti(List<Replacement<PS, SEG, S>> replacements) {
+        content.replaceMulti(replacements);
+
+        // don't update selection as this is not the main method through which the area is updated
+        // leave that up to the developer using it to determine what to do
+    }
+
+    @Override
+    public MultiChangeBuilder<PS, SEG, S> createMultiChange() {
+        return new MultiChangeBuilder<>(this);
+    }
+
+    @Override
+    public MultiChangeBuilder<PS, SEG, S> createMultiChange(int initialNumOfChanges) {
+        return new MultiChangeBuilder<>(this, initialNumOfChanges);
     }
 
     /* ********************************************************************** *

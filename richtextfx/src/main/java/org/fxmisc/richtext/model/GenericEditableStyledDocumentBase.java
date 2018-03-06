@@ -12,14 +12,13 @@ import org.reactfx.Subscription;
 import org.reactfx.Suspendable;
 import org.reactfx.SuspendableEventStream;
 import org.reactfx.SuspendableNo;
+import org.reactfx.collection.ListChangeAccumulator;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.LiveListBase;
 import org.reactfx.collection.MaterializedListModification;
 import org.reactfx.collection.QuasiListModification;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.collection.UnmodifiableByDefaultLiveList;
-import org.reactfx.util.BiIndex;
-import org.reactfx.util.Lists;
 import org.reactfx.value.SuspendableVal;
 import org.reactfx.value.Val;
 
@@ -41,34 +40,38 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
         @Override
         protected Subscription observeInputs() {
-            return parChanges.subscribe(mod -> {
-                mod = mod.trim();
-                QuasiListModification<Paragraph<PS, SEG, S>> qmod =
-                        QuasiListModification.create(mod.getFrom(), mod.getRemoved(), mod.getAddedSize());
-                notifyObservers(qmod.asListChange());
+            return parChangesList.subscribe(list -> {
+                ListChangeAccumulator<Paragraph<PS, SEG, S>> accumulator = new ListChangeAccumulator<>();
+                for (MaterializedListModification<Paragraph<PS, SEG, S>> mod : list) {
+                    mod = mod.trim();
+
+                    // add the quasiListModification itself, not as a quasiListChange, in case some overlap
+                    accumulator.add(QuasiListModification.create(mod.getFrom(), mod.getRemoved(), mod.getAddedSize()));
+                }
+                notifyObservers(accumulator.asListChange());
             });
         }
     }
 
     private ReadOnlyStyledDocument<PS, SEG, S> doc;
 
-    private final EventSource<RichTextChange<PS, SEG, S>> internalRichChanges = new EventSource<>();
-    private final SuspendableEventStream<RichTextChange<PS, SEG, S>> richChanges = internalRichChanges.pausable();
-    @Override public EventStream<RichTextChange<PS, SEG, S>> richChanges() { return richChanges; }
+    private final EventSource<List<RichTextChange<PS, SEG, S>>> internalRichChangeList = new EventSource<>();
+    private final SuspendableEventStream<List<RichTextChange<PS, SEG, S>>> richChangeList = internalRichChangeList.pausable();
+    @Override public EventStream<List<RichTextChange<PS, SEG, S>>> multiRichChanges() { return richChangeList; }
 
-    private final Val<String> internalText = Val.create(() -> doc.getText(), internalRichChanges);
+    private final Val<String> internalText = Val.create(() -> doc.getText(), internalRichChangeList);
     private final SuspendableVal<String> text = internalText.suspendable();
     @Override public String getText() { return text.getValue(); }
     @Override public Val<String> textProperty() { return text; }
 
 
-    private final Val<Integer> internalLength = Val.create(() -> doc.length(), internalRichChanges);
+    private final Val<Integer> internalLength = Val.create(() -> doc.length(), internalRichChangeList);
     private final SuspendableVal<Integer> length = internalLength.suspendable();
     @Override public int getLength() { return length.getValue(); }
     @Override public Val<Integer> lengthProperty() { return length; }
     @Override public int length() { return length.getValue(); }
 
-    private final EventSource<MaterializedListModification<Paragraph<PS, SEG, S>>> parChanges =
+    private final EventSource<List<MaterializedListModification<Paragraph<PS, SEG, S>>>> parChangesList =
             new EventSource<>();
 
     private final SuspendableList<Paragraph<PS, SEG, S>> paragraphs = new ParagraphList().suspendable();
@@ -97,7 +100,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
                 length,
 
                 // add streams after properties, to be released before them
-                richChanges,
+                richChangeList,
 
                 // paragraphs to be released first
                 paragraphs);
@@ -130,37 +133,33 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
     }
 
     @Override
+    public void replaceMulti(List<Replacement<PS, SEG, S>> replacements) {
+        doc.replaceMulti(replacements).exec(this::updateMulti);
+    }
+
+    @Override
     public void replace(int start, int end, StyledDocument<PS, SEG, S> replacement) {
-        ensureValidRange(start, end);
-        doc.replace(start, end, ReadOnlyStyledDocument.from(replacement)).exec(this::update);
+        doc.replace(start, end, ReadOnlyStyledDocument.from(replacement)).exec(this::updateSingle);
     }
 
     @Override
     public void setStyle(int from, int to, S style) {
-        ensureValidRange(from, to);
-        doc.replace(from, to, removed -> removed.mapParagraphs(par -> par.restyle(style))).exec(this::update);
+        doc.replace(from, to, removed -> removed.mapParagraphs(par -> par.restyle(style))).exec(this::updateSingle);
     }
 
     @Override
     public void setStyle(int paragraphIndex, S style) {
-        ensureValidParagraphIndex(paragraphIndex);
-        doc.replaceParagraph(paragraphIndex, p -> p.restyle(style)).exec(this::update);
+        doc.replaceParagraph(paragraphIndex, p -> p.restyle(style)).exec(this::updateSingle);
     }
 
     @Override
     public void setStyle(int paragraphIndex, int fromCol, int toCol, S style) {
-        ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
-        doc.replace(
-            new BiIndex(paragraphIndex, fromCol),
-            new BiIndex(paragraphIndex, toCol),
-            d -> d.mapParagraphs(p -> p.restyle(style))
-        ).exec(this::update);
+        doc.replace(paragraphIndex, fromCol, toCol, d -> d.mapParagraphs(p -> p.restyle(style))).exec(this::updateSingle);
     }
 
     @Override
     public void setStyleSpans(int from, StyleSpans<? extends S> styleSpans) {
         int len = styleSpans.length();
-        ensureValidRange(from, from + len);
         doc.replace(from, from + len, d -> {
             Position i = styleSpans.position(0, 0);
             List<Paragraph<PS, SEG, S>> pars = new ArrayList<>(d.getParagraphs().size());
@@ -171,7 +170,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
                 i = j.offsetBy(1, Forward); // skip the newline
             }
             return new ReadOnlyStyledDocument<>(pars);
-        }).exec(this::update);
+        }).exec(this::updateSingle);
     }
 
     @Override
@@ -181,8 +180,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
 
     @Override
     public void setParagraphStyle(int paragraphIndex, PS style) {
-        ensureValidParagraphIndex(paragraphIndex);
-        doc.replaceParagraph(paragraphIndex, p -> p.setParagraphStyle(style)).exec(this::update);
+        doc.replaceParagraph(paragraphIndex, p -> p.setParagraphStyle(style)).exec(this::updateSingle);
     }
 
     @Override
@@ -202,32 +200,21 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
      *                                                                        *
      * ********************************************************************** */
 
-    private void ensureValidParagraphIndex(int parIdx) {
-        Lists.checkIndex(parIdx, doc.getParagraphCount());
-    }
-
-    private void ensureValidRange(int start, int end) {
-        Lists.checkRange(start, end, length());
-    }
-
-    private void ensureValidParagraphRange(int par, int start, int end) {
-        ensureValidParagraphIndex(par);
-        Lists.checkRange(start, end, fullLength(par));
-    }
-
-    private int fullLength(int par) {
-        int n = doc.getParagraphCount();
-        return doc.getParagraph(par).length() + (par == n-1 ? 0 : 1);
-    }
-
-    private void update(
+    private void updateSingle(
             ReadOnlyStyledDocument<PS, SEG, S> newValue,
             RichTextChange<PS, SEG, S> change,
             MaterializedListModification<Paragraph<PS, SEG, S>> parChange) {
+        updateMulti(newValue, Collections.singletonList(change), Collections.singletonList(parChange));
+    }
+
+    private void updateMulti(
+            ReadOnlyStyledDocument<PS, SEG, S> newValue,
+            List<RichTextChange<PS, SEG, S>> richChanges,
+            List<MaterializedListModification<Paragraph<PS, SEG, S>>> parChanges) {
         this.doc = newValue;
         beingUpdated.suspendWhile(() -> {
-            internalRichChanges.push(change);
-            parChanges.push(parChange);
+            internalRichChangeList.push(richChanges);
+            parChangesList.push(parChanges);
         });
     }
 }

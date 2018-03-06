@@ -21,9 +21,11 @@ import org.reactfx.util.BiIndex;
 import org.reactfx.util.Either;
 import org.reactfx.util.FingerTree;
 import org.reactfx.util.FingerTree.NonEmptyFingerTree;
+import org.reactfx.util.Lists;
 import org.reactfx.util.ToSemigroup;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuple3;
+import org.reactfx.util.Tuples;
 
 /**
  * An immutable implementation of {@link StyledDocument} that does not allow editing. For a {@link StyledDocument}
@@ -314,6 +316,50 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     }
 
     /**
+     * Replaces multiple portions of this document in an efficient manner and returns
+     * <ol>
+     *     <li>
+     *         the updated version of this document that includes all of the replacements,
+     *     </li>
+     *     <li>
+     *         the List of {@link RichTextChange} that represent all the changes from this document
+     *         to the returned one, and
+     *     </li>
+     *     <li>
+     *         the List of modifications used to update an area's list of paragraphs for each change.
+     *     </li>
+     * </ol>
+     */
+    public Tuple3<
+            ReadOnlyStyledDocument<PS, SEG, S>,
+            List<RichTextChange<PS, SEG, S>>,
+            List<MaterializedListModification<Paragraph<PS, SEG, S>>>> replaceMulti(List<Replacement<PS, SEG, S>> replacements) {
+        ReadOnlyStyledDocument<PS, SEG, S> updatedDoc = this;
+        List<RichTextChange<PS, SEG, S>> richChangeList = new ArrayList<>(replacements.size());
+        List<MaterializedListModification<Paragraph<PS, SEG, S>>> parChangeList = new ArrayList<>(replacements.size());
+        for (Replacement<PS, SEG, S> r : replacements) {
+            Tuple3<
+                ReadOnlyStyledDocument<PS, SEG, S>,
+                RichTextChange<PS, SEG, S>,
+                MaterializedListModification<Paragraph<PS, SEG, S>>
+            > postReplacement = updatedDoc.replace(r);
+            updatedDoc = postReplacement.get1();
+            richChangeList.add(postReplacement.get2());
+            parChangeList.add(postReplacement.get3());
+        }
+        return Tuples.t(updatedDoc, richChangeList, parChangeList);
+    }
+
+    /**
+     * Convenience method for calling {@link #replace(int, int, ReadOnlyStyledDocument)} with a {@link Replacement}
+     * argument.
+     */
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            Replacement<PS, SEG, S> replacement) {
+        return replace(replacement.getStart(), replacement.getEnd(), replacement.getDocument());
+    }
+
+    /**
      * Replaces the given portion {@code "from..to"} with the given replacement and returns
      * <ol>
      *     <li>
@@ -349,12 +395,20 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
      */
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> mapper) {
+        ensureValidRange(from, to);
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
         return replace(start, end, mapper);
     }
 
-    Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+    public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
+            int paragraphIndex, int fromCol, int toCol, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
+        ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
+        return replace(new BiIndex(paragraphIndex, fromCol), new BiIndex(paragraphIndex, toCol), f);
+    }
+
+    // Note: there must be a "ensureValid_()" call preceding the call of this method
+    private Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
 
@@ -390,6 +444,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
      */
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
             int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> mapper) {
+        ensureValidParagraphIndex(parIdx);
         return replace(
                 new BiIndex(parIdx, 0),
                 new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
@@ -500,4 +555,24 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
             }
         }
     }
+
+    private void ensureValidParagraphIndex(int parIdx) {
+        Lists.checkIndex(parIdx, getParagraphCount());
+    }
+
+    private void ensureValidRange(int start, int end) {
+        Lists.checkRange(start, end, length());
+    }
+
+    private void ensureValidParagraphRange(int par, int start, int end) {
+        ensureValidParagraphIndex(par);
+        Lists.checkRange(start, end, fullLength(par));
+    }
+
+    private int fullLength(int par) {
+        int n = getParagraphCount();
+        return getParagraph(par).length() + (par == n-1 ? 0 : 1);
+    }
+
+
 }
