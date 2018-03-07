@@ -1156,6 +1156,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         content.setParagraphStyle(paragraph, paragraphStyle);
     }
 
+    public void setParagraphBoxStyle(int paragraph, String paragraphStyle) {
+        virtualFlow.getCell(paragraph).getNode().setStyle(paragraphStyle);
+    }
+
     @Override
     public final S getTextStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
