@@ -190,8 +190,11 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
             StyledDocument<PS, SEG, S> text = this.subDocument(sel.getStart(), sel.getEnd());
             if(position > sel.getEnd())
                 position -= sel.getLength();
-            deleteText(sel);
-            insert(position, text);
+
+            createMultiChange(2)
+                    .deleteText(sel)
+                    .insertAbsolutely(position, text)
+                    .commit();
 
             // select moved text
             selectRange(position, position + text.length());
