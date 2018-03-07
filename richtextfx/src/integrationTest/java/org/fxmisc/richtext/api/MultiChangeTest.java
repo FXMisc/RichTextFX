@@ -46,6 +46,24 @@ public class MultiChangeTest extends InlineCssTextAreaAppTest {
     }
 
     @Test
+    public void committing_relative_change_backToFront_works() {
+        interact(() -> {
+            String text = area.getText();
+            String hello = "hello";
+            String world = "world";
+            area.createMultiChange(2)
+                    .insertText(6, world)
+                    .insertText(0, hello)
+                    .commit();
+
+            assertEquals(hello + text + world, area.getText());
+
+            area.undo();
+            assertEquals(text, area.getText());
+        });
+    }
+
+    @Test
     public void committing_absolute_change_works() {
         interact(() -> {
             String text = area.getText();
