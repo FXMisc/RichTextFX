@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import org.fxmisc.richtext.StyleClassedTextArea?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.MenuItem?>
+
+<StyleClassedTextArea xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.fxmisc.richtext.api.FxmlController"
+    editable="true" wrapText="true" autoScrollOnDragDesired="true"
+    onInsideSelectionMousePressReleased="#testWithMouseEvent" onOutsideSelectionMousePressed="#testWithOutMouseEvent" 
+    onNewSelectionDragFinished="#testWithMouseEvent" onSelectionDropped="#testWithOutMouseEvent"
+    contextMenuXOffset="12.0" contextMenuYOffset="34.0" >
+    <contextMenu>
+        <ContextMenu>
+            <items><MenuItem text="Test Item" /></items>
+        </ContextMenu>
+    </contextMenu>
+</StyleClassedTextArea>
