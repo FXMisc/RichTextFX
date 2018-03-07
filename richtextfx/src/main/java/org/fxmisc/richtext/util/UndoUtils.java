@@ -190,15 +190,4 @@ public final class UndoUtils {
         };
     }
 
-    /**
-     * Wraps an {@link UndoManager} and prevents the next emitted change from merging with the previous one are a
-     * period of inactivity (i.e., the {@code changeStream} has not emitted an event in {@code preventMergeDelay}
-     *
-     * @deprecated No longer needed since UndoFX 1.4.0
-     */
-    @Deprecated
-    public static <T> UndoManager<T> wrap(UndoManager<T> undoManager, EventStream<T> changeStream,
-                                          Duration preventMergeDelay) {
-        return new UndoManagerInactivityWrapper<>(undoManager, changeStream, preventMergeDelay);
-    }
 }
