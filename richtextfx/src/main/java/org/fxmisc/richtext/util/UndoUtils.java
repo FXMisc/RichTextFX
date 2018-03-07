@@ -82,8 +82,8 @@ public final class UndoUtils {
             GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory, Duration preventMergeDelay) {
         return factory.createMultiChangeUM(area.multiRichChanges(),
                 TextChange::invert,
-                undoMultiRichTextChange(area),
-                redoMultiRichTextChange(area),
+                applyMultiRichTextChange(area),
+                applyMultiRichTextChange(area),
                 TextChange::mergeWith,
                 TextChange::isIdentity,
                 preventMergeDelay);
@@ -128,8 +128,8 @@ public final class UndoUtils {
             GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory, Duration preventMergeDelay) {
         return factory.createMultiChangeUM(area.multiPlainChanges(),
                 TextChange::invert,
-                undoMultiPlainTextChange(area),
-                redoMultiPlainTextChange(area),
+                applyMultiPlainTextChange(area),
+                applyMultiPlainTextChange(area),
                 TextChange::mergeWith,
                 TextChange::isIdentity,
                 preventMergeDelay);
@@ -160,18 +160,11 @@ public final class UndoUtils {
         return change -> area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
     }
 
-    public static <PS, SEG, S> Consumer<List<PlainTextChange>> undoMultiPlainTextChange(
-            GenericStyledArea<PS, SEG, S> area) {
-        return changeList -> {
-            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
-            for (PlainTextChange c : changeList) {
-                builder.replaceText(c.getPosition(), c.getRemovalEnd(), c.getInserted());
-            }
-            builder.commit();
-        };
-    }
-
-    public static <PS, SEG, S> Consumer<List<PlainTextChange>> redoMultiPlainTextChange(
+    /**
+     * Applies a list of {@link PlainTextChange}s to the given area when the {@link UndoManager}'s change stream emits
+     * an event by {@code area.replaceAbsolutely(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
+     */
+    public static <PS, SEG, S> Consumer<List<PlainTextChange>> applyMultiPlainTextChange(
             GenericStyledArea<PS, SEG, S> area) {
         return changeList -> {
             MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
@@ -183,25 +176,10 @@ public final class UndoUtils {
     }
 
     /**
-     * Undoes a list of {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
-     * by {@code area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
+     * Applies a list of {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits
+     * an event by {@code area.replaceAbsolutely(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
      */
-    public static <PS, SEG, S> Consumer<List<RichTextChange<PS, SEG, S>>> undoMultiRichTextChange(
-            GenericStyledArea<PS, SEG, S> area) {
-        return changeList -> {
-            MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
-            for (RichTextChange<PS, SEG, S> c : changeList) {
-                builder.replace(c.getPosition(), c.getRemovalEnd(), c.getInserted());
-            }
-            builder.commit();
-        };
-    }
-
-    /**
-     * Redoes a list of {@link RichTextChange} to the given area when the {@link UndoManager}'s change stream emits an event
-     * by {@code area.replaceAbsolutely(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
-     */
-    public static <PS, SEG, S> Consumer<List<RichTextChange<PS, SEG, S>>> redoMultiRichTextChange(
+    public static <PS, SEG, S> Consumer<List<RichTextChange<PS, SEG, S>>> applyMultiRichTextChange(
             GenericStyledArea<PS, SEG, S> area) {
         return changeList -> {
             MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
