@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -26,6 +27,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
+import javafx.scene.layout.Background;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
@@ -413,17 +415,17 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
             Paint backgroundColor = text.getBackgroundColor();
             if (backgroundColor != null) {
-                backgroundShapeHelper.updateSharedShapeRange(backgroundColor, start, end);
+                backgroundShapeHelper.updateSharedShapeRange(backgroundColor, start, end, Paint::equals);
             }
 
             BorderAttributes border = new BorderAttributes(text);
             if (!border.isNullValue()) {
-                borderShapeHelper.updateSharedShapeRange(border, start, end);
+                borderShapeHelper.updateSharedShapeRange(border, start, end, BorderAttributes::equalsFaster);
             }
 
             UnderlineAttributes underline = new UnderlineAttributes(text);
             if (!underline.isNullValue()) {
-                underlineShapeHelper.updateSharedShapeRange(underline, start, end);
+                underlineShapeHelper.updateSharedShapeRange(underline, start, end, UnderlineAttributes::equalsFaster);
             }
 
             start = end;
@@ -469,7 +471,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
          * Calculates the range of a value (background color, underline, etc.) that is shared between multiple
          * consecutive {@link TextExt} nodes
          */
-        private void updateSharedShapeRange(T value, int start, int end) {
+        private void updateSharedShapeRange(T value, int start, int end, BiFunction<T, T, Boolean> equals) {
             Runnable addNewValueRange = () -> ranges.add(Tuples.t(value, new IndexRange(start, end)));
 
             if (ranges.isEmpty()) {
@@ -482,7 +484,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 // calculate smallest possible position which is consecutive to the given start position
                 final int prevEndNext = lastShapeValueRange.get2().getEnd() + 1;
                 if (start <= prevEndNext &&         // Consecutive?
-                    lastShapeValue.equals(value)) { // Same style?
+                    equals.apply(lastShapeValue, value)) { // Same style?
 
                     IndexRange lastRange = lastShapeValueRange._2;
                     IndexRange extendedRange = new IndexRange(lastRange.getStart(), end);
@@ -494,8 +496,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         }
 
         /**
-         * Updates the shapes calculated in {@link #updateSharedShapeRange(Object, int, int)} and configures them
-         * via {@code configureShape}.
+         * Updates the shapes calculated in {@link #updateSharedShapeRange(Object, int, int, BiFunction)} and
+         * configures them via {@code configureShape}.
          */
         private void updateSharedShapes() {
             // remove or add shapes, depending on what's needed
@@ -534,11 +536,18 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             type = text.getBorderStrokeType();
         }
 
+        /**
+         * Same as {@link #equals(Object)} but no need to check the object for its class
+         */
+        public boolean equalsFaster(BorderAttributes attr) {
+            return super.equalsFaster(attr) && Objects.equals(type, attr.type);
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof BorderAttributes) {
                 BorderAttributes attributes = (BorderAttributes) obj;
-                return super.equals(attributes) && Objects.equals(type, attributes.type);
+                return equalsFaster(attributes);
             } else {
                 return false;
             }
@@ -559,11 +568,18 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             cap = text.getUnderlineCap();
         }
 
+        /**
+         * Same as {@link #equals(Object)} but no need to check the object for its class
+         */
+        public boolean equalsFaster(UnderlineAttributes attr) {
+            return super.equalsFaster(attr) && Objects.equals(cap, attr.cap);
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof UnderlineAttributes) {
                 UnderlineAttributes attr = (UnderlineAttributes) obj;
-                return super.equals(attr) && Objects.equals(cap, attr.cap);
+                return equalsFaster(attr);
             } else {
                 return false;
             }
@@ -620,13 +636,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
         }
 
+        /**
+         * Same as {@link #equals(Object)} but no need to check the object for its class
+         */
+        public boolean equalsFaster(LineAttributesBase attr) {
+            return Objects.equals(width, attr.width)
+                    && Objects.equals(color, attr.color)
+                    && Arrays.equals(dashArray, attr.dashArray);
+        }
+
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof UnderlineAttributes) {
-                UnderlineAttributes attr = (UnderlineAttributes) obj;
-                return Objects.equals(width, attr.width)
-                        && Objects.equals(color, attr.color)
-                        && Arrays.equals(dashArray, attr.dashArray);
+            if (obj instanceof LineAttributesBase) {
+                LineAttributesBase attr = (LineAttributesBase) obj;
+                return equalsFaster(attr);
             } else {
                 return false;
             }
