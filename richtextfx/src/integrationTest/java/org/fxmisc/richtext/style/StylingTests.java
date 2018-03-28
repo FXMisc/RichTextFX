@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.fxmisc.richtext.SceneGraphTests;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.junit.Test;
 
 import javafx.scene.shape.Path;
@@ -96,5 +97,80 @@ public class StylingTests extends SceneGraphTests {
         // determine the underline paths - need to be two of them!
         List<Path> underlineNodes = getUnderlinePaths(0);
         assertEquals(2, underlineNodes.size());
+    }
+
+    @Test
+    public void consecutive_border_styles_that_are_the_same_are_rendered_with_one_shape() {
+        final String boxed = "-rtfx-border-stroke-width: .75pt;"
+                           + "-rtfx-border-stroke-type: outside;"
+                           + "-rtfx-border-stroke-color: darkgoldenrod;"
+                           + "-rtfx-background-color: antiquewhite;";
+
+        final String other = "-fx-font-weight: bolder;"
+                           + "-fx-fill: blue;";
+
+        String text = "Lorem ipsum dolor sit amet consectetuer adipiscing elit";
+        interact(() -> area.replaceText(text));
+
+        // split the text up for easier style adding using String#length
+        String first = text.substring(0, "Lorem ".length());
+        int offset = first.length();
+        String second = text.substring(offset, offset + "ipsum dolo".length());
+        offset += second.length();
+        String third = text.substring(offset, offset + "r sit amet".length());
+        offset += third.length();
+        String fourth = text.substring(offset);
+
+        // create the styleSpans object with overlayed styles at the second span
+        StyleSpansBuilder<String> builder = new StyleSpansBuilder<>();
+        builder.add(boxed, first.length());
+        builder.add(boxed + other, second.length());
+        builder.add(boxed, third.length());
+        builder.add("", fourth.length());
+        interact(() -> area.setStyleSpans(0, builder.create()));
+
+        // end result: 1 path should be used for Boxed, not three
+        // Text:  "Lorem ipsum dolor sit amet consectetuer adipiscing elit
+        // Boxed: |**************************|
+        // Other:       |**********|
+
+        assertEquals(1, getBorderPaths(0).size());
+    }
+
+    @Test
+    public void consecutive_underline_styles_that_are_the_same_are_rendered_with_one_shape() {
+        final String underline = "-rtfx-underline-width: .75pt;" +
+                                 "-rtfx-underline-color: red;" +
+                                 "-rtfx-underline-dash-array: 2 2;";
+
+        final String other = "-fx-font-weight: bolder;" +
+                             "-fx-fill: blue;";
+
+        String text = "Lorem ipsum dolor sit amet consectetuer adipiscing elit";
+        interact(() -> area.replaceText(text));
+
+        // split the text up for easier style adding using String#length
+        String first = text.substring(0, "Lorem ".length());
+        int offset = first.length();
+        String second = text.substring(offset, offset + "ipsum dolo".length());
+        offset += second.length();
+        String third = text.substring(offset, offset + "r sit amet".length());
+        offset += third.length();
+        String fourth = text.substring(offset);
+
+        // create the styleSpans object with overlayed styles at the second span
+        StyleSpansBuilder<String> builder = new StyleSpansBuilder<>();
+        builder.add(underline, first.length());
+        builder.add(underline + other, second.length());
+        builder.add(underline, third.length());
+        builder.add("", fourth.length());
+        interact(() -> area.setStyleSpans(0, builder.create()));
+
+        // end result: 1 path should be used for Underline, not three
+        // Text:      "Lorem ipsum dolor sit amet consectetuer adipiscing elit
+        // Underline: |**************************|
+        // Other:           |**********|
+
+        assertEquals(1, getUnderlinePaths(0).size());
     }
 }
