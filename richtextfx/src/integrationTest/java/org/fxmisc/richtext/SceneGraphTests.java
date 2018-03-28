@@ -4,6 +4,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
@@ -28,8 +30,9 @@ public abstract class SceneGraphTests extends InlineCssTextAreaAppTest {
      */
     protected Region getParagraphBox(int index) {
         @SuppressWarnings("unchecked")
-        VirtualFlow<String, Cell<String, Node>> flow = (VirtualFlow<String, Cell<String, Node>>) area.getChildrenUnmodifiable().get(index);
-        Cell<String, Node> gsa = flow.getCell(0);
+        VirtualFlow<String, Cell<String, Node>> flow = (VirtualFlow<String, Cell<String, Node>>) area.getChildrenUnmodifiable().get(0);
+        Cell<String, Node> gsa = flow.getCellIfVisible(index)
+                .orElseThrow(() -> new IllegalArgumentException("paragraph " + index + " is not rendered on the screen"));
 
         // get the ParagraphBox (protected subclass of Region) 
         return (Region) gsa.getNode();
@@ -45,11 +48,10 @@ public abstract class SceneGraphTests extends InlineCssTextAreaAppTest {
         Region paragraphBox = getParagraphBox(index);
 
         // get the ParagraphText (protected subclass of TextFlow)
-        TextFlow tf = (TextFlow) paragraphBox.getChildrenUnmodifiable().stream().filter(n -> n instanceof TextFlow)
-                                 .findFirst().orElse(null);
-        assertNotNull("No TextFlow node found in rich text area", tf);
-
-        return tf;
+        return (TextFlow) paragraphBox.getChildrenUnmodifiable().stream()
+                .filter(n -> n instanceof TextFlow)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No TextFlow node found in area at index: " + index));
     }
 
 
@@ -73,10 +75,21 @@ public abstract class SceneGraphTests extends InlineCssTextAreaAppTest {
      *         specified by the given index.
      */
     protected List<Path> getUnderlinePaths(int index) {
+        return getParagraphTextChildren(index, n -> n instanceof UnderlinePath, n -> (UnderlinePath) n);
+    }
+
+    protected List<Path> getBorderPaths(int index) {
+        return getParagraphTextChildren(index, n -> n instanceof BorderPath, n -> (BorderPath) n);
+    }
+
+    private <T> List<T> getParagraphTextChildren(int index, Predicate<Node> instanceOfCheck, Function<Node, T> cast) {
         TextFlow tf = getParagraphText(index);
 
-        List<Path> result = new ArrayList<>();
-        tf.getChildrenUnmodifiable().filtered(n -> n instanceof UnderlinePath).forEach(n -> result.add((Path) n));
+        List<T> result = new ArrayList<>();
+        tf.getChildrenUnmodifiable()
+                .filtered(instanceOfCheck)
+                .forEach(n -> result.add(cast.apply(n)));
         return result;
+
     }
 }
