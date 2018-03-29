@@ -1,6 +1,8 @@
 package org.fxmisc.richtext.model;
 
 import static org.junit.Assert.*;
+
+import javafx.scene.control.IndexRange;
 import org.junit.Test;
 
 public class SimpleEditableStyledDocumentTest {
@@ -110,5 +112,25 @@ public class SimpleEditableStyledDocumentTest {
         String newParStyle = "new style";
         document.setParagraphStyle(0, newParStyle);
         assertEquals(newParStyle, document.getParagraphStyle(0));
+    }
+
+    @Test
+    public void testGetStyleRangeAtPosition() {
+        SimpleEditableStyledDocument<String, String> document = new SimpleEditableStyledDocument<>("", "");
+        String first = "some";
+        String second = " text";
+        replaceText(document, 0, 0, first + second);
+        document.setStyle(0, first.length(), "abc");
+
+        IndexRange range = document.getStyleRangeAtPosition(0);
+        IndexRange expected = new IndexRange(0, first.length());
+        assertEquals(expected, range);
+
+        range = document.getStyleRangeAtPosition(first.length());
+        assertEquals(expected, range);
+
+        range = document.getStyleRangeAtPosition(first.length() + 1);
+        expected = new IndexRange(first.length(), (first + second).length());
+        assertEquals(expected, range);
     }
 }
