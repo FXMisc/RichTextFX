@@ -46,6 +46,7 @@ Who uses RichTextFX?
 - [JuliarFuture](https://juliar.org)
 - [BlueJ](https://www.bluej.org/)
 - [JabRef](http://www.jabref.org/)
+- [PsychSQL](http://softbydoc.dx.am/?page_id=135)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
