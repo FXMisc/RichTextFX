@@ -389,7 +389,7 @@ public final class Paragraph<PS, SEG, S> {
      * then the range preceding {@code position} is returned.
      */
     public IndexRange getStyleRangeAtPosition(int position) {
-        Position pos = navigator.offsetToPosition(position, Backward);
+        Position pos = styles.offsetToPosition(position, Backward);
         int start = position - pos.getMinor();
         int end = start + styles.getStyleSpan(pos.getMajor()).getLength();
         return new IndexRange(start, end);
