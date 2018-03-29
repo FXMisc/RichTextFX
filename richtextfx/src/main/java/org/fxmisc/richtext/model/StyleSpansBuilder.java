@@ -181,7 +181,7 @@ public class StyleSpansBuilder<S> {
 
     private void ensureNotCreated() {
         if(created) {
-            throw new IllegalStateException("Cannot reus StyleRangesBuilder after StyleRanges have been created.");
+            throw new IllegalStateException("Cannot reuse StyleRangesBuilder after StyleRanges have been created.");
         }
     }
 }
