@@ -173,4 +173,21 @@ public class StylingTests extends SceneGraphTests {
 
         assertEquals(1, getUnderlinePaths(0).size());
     }
+
+    @Test
+    public void unconsecutive_background_styles_should_each_be_rendered_with_their_own_shape() {
+        String style = "-rtfx-background-color: #ccc;";
+        interact(() -> {
+            // Text:  |aba abba|
+            // Style: |x x x  x|
+
+            area.replaceText("aba abba");
+            area.setStyle(0, 1, style);
+            area.setStyle(2, 3, style);
+            area.setStyle(4, 5, style);
+            area.setStyle(7, 8, style);
+        });
+        List<Path> paths = getBackgroundPaths(0);
+        assertEquals(4, paths.size());
+    }
 }

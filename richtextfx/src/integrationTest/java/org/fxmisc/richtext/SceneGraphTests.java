@@ -82,6 +82,10 @@ public abstract class SceneGraphTests extends InlineCssTextAreaAppTest {
         return getParagraphTextChildren(index, n -> n instanceof BorderPath, n -> (BorderPath) n);
     }
 
+    protected List<Path> getBackgroundPaths(int index) {
+        return getParagraphTextChildren(index, n -> n instanceof BackgroundPath, n -> (BackgroundPath) n);
+    }
+
     private <T> List<T> getParagraphTextChildren(int index, Predicate<Node> instanceOfCheck, Function<Node, T> cast) {
         TextFlow tf = getParagraphText(index);
 
