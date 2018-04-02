@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -27,7 +28,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.layout.Background;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
@@ -158,27 +158,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         });
 
         // set up custom css shape helpers
-        Supplier<Path> createBackgroundShape = () -> {
-            Path shape = new BackgroundPath();
+        UnaryOperator<Path> configurePath = shape -> {
             shape.setManaged(false);
             shape.layoutXProperty().bind(leftInset);
             shape.layoutYProperty().bind(topInset);
             return shape;
         };
-        Supplier<Path> createBorderShape = () -> {
-            Path shape = new BorderPath();
-            shape.setManaged(false);
-            shape.layoutXProperty().bind(leftInset);
-            shape.layoutYProperty().bind(topInset);
-            return shape;
-        };
-        Supplier<Path> createUnderlineShape = () -> {
-            Path shape = new UnderlinePath();
-            shape.setManaged(false);
-            shape.layoutXProperty().bind(leftInset);
-            shape.layoutYProperty().bind(topInset);
-            return shape;
-        };
+        Supplier<Path> createBackgroundShape = () -> configurePath.apply(new BackgroundPath());
+        Supplier<Path> createBorderShape = () -> configurePath.apply(new BorderPath());
+        Supplier<Path> createUnderlineShape = () -> configurePath.apply(new UnderlinePath());
 
         Consumer<Collection<Path>> clearUnusedShapes = paths -> getChildren().removeAll(paths);
         Consumer<Path> addToBackground = path -> getChildren().add(0, path);
@@ -482,8 +470,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 T lastShapeValue = lastShapeValueRange._1;
 
                 // calculate smallest possible position which is consecutive to the given start position
-                final int prevEndNext = lastShapeValueRange.get2().getEnd() + 1;
-                if (start <= prevEndNext &&         // Consecutive?
+                final int prevEndNext = lastShapeValueRange.get2().getEnd();
+                if (start == prevEndNext &&                // Consecutive?
                     equals.apply(lastShapeValue, value)) { // Same style?
 
                     IndexRange lastRange = lastShapeValueRange._2;
