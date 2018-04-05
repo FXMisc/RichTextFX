@@ -67,11 +67,14 @@ public interface EditableStyledDocument<PS, SEG, S> extends StyledDocument<PS, S
      */
     default EventStream<List<PlainTextChange>> multiPlainChanges() {
         return multiRichChanges()
+                // map to a List<PlainTextChange>
                 .map(list -> Arrays.asList(list.stream()
-                        .map(RichTextChange::toPlainTextChange)
                         // filter out rich changes where the style was changed but text wasn't added/removed
-                        .filter(pc -> !pc.isIdentity())
-                        .toArray(PlainTextChange[]::new)));
+                        .filter(rtc -> !rtc.isPlainTextIdentity())
+                        .map(RichTextChange::toPlainTextChange)
+                        .toArray(PlainTextChange[]::new)))
+                // only emit non-empty lists
+                .filter(list -> !list.isEmpty());
     }
 
     /**

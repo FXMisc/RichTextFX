@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.BreakIterator;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.reactfx.Subscription;
 
 public class SpellChecking extends Application {
 
@@ -33,11 +35,13 @@ public class SpellChecking extends Application {
         StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.setWrapText(true);
 
-        textArea.richChanges()
-                .filter(ch -> !ch.getInserted().equals(ch.getRemoved())) // XXX
+        Subscription cleanupWhenFinished = textArea.multiPlainChanges()
+                .successionEnds(Duration.ofMillis(500))
                 .subscribe(change -> {
                     textArea.setStyleSpans(0, computeHighlighting(textArea.getText()));
                 });
+
+        // call when no longer need it: `cleanupWhenFinished.unsubscribe();`
 
         // load the dictionary
         try (InputStream input = getClass().getResourceAsStream("spellchecking.dict");

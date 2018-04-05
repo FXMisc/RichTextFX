@@ -1,5 +1,6 @@
 package org.fxmisc.richtext.demo;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Matcher;
@@ -15,6 +16,7 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.reactfx.Subscription;
 
 public class JavaKeywords extends Application {
 
@@ -80,13 +82,27 @@ public class JavaKeywords extends Application {
     @Override
     public void start(Stage primaryStage) {
         CodeArea codeArea = new CodeArea();
+
+        // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
-        codeArea.richChanges()
-                .filter(ch -> !ch.getInserted().equals(ch.getRemoved())) // XXX
-                .subscribe(change -> {
-                    codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
-                });
+        // recompute the syntax highlighting 500 ms after user stops editing area
+        Subscription cleanupWhenNoLongerNeedIt = codeArea
+
+                // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
+                // multi plain changes = save computation by not rerunning the code multiple times
+                //   when making multiple changes (e.g. renaming a method at multiple parts in file)
+                .multiPlainChanges()
+
+                // do not emit an event until 500 ms have passed since the last emission of previous stream
+                .successionEnds(Duration.ofMillis(500))
+
+                // run the following code block when previous stream emits an event
+                .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
+
+        // when no longer need syntax highlighting and wish to clean up memory leaks
+        // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
+
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);

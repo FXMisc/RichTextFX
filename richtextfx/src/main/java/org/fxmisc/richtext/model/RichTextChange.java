@@ -37,4 +37,12 @@ public class RichTextChange<PS, SEG, S> extends TextChange<StyledDocument<PS, SE
     public final PlainTextChange toPlainTextChange() {
         return new PlainTextChange(position, removed.getText(), inserted.getText());
     }
+
+    /**
+     * Equivalent to {@code richChange.toPlainTextChange().isIdentity()} but without the additional object
+     * creation via {@link #toPlainTextChange()}.
+     */
+    public final boolean isPlainTextIdentity() {
+        return removed.getText().equals(inserted.getText());
+    }
 }

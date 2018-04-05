@@ -20,6 +20,7 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.reactfx.Subscription;
 
 public class JavaKeywordsAsync extends Application {
 
@@ -90,11 +91,10 @@ public class JavaKeywordsAsync extends Application {
         executor = Executors.newSingleThreadExecutor();
         codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.richChanges()
-                .filter(ch -> !ch.getInserted().equals(ch.getRemoved())) // XXX
+        Subscription cleanupWhenDone = codeArea.multiPlainChanges()
                 .successionEnds(Duration.ofMillis(500))
                 .supplyTask(this::computeHighlightingAsync)
-                .awaitLatest(codeArea.richChanges())
+                .awaitLatest(codeArea.multiPlainChanges())
                 .filterMap(t -> {
                     if(t.isSuccess()) {
                         return Optional.of(t.get());
@@ -104,6 +104,9 @@ public class JavaKeywordsAsync extends Application {
                     }
                 })
                 .subscribe(this::applyHighlighting);
+
+        // call when no longer need it: `cleanupWhenFinished.unsubscribe();`
+
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
