@@ -1,5 +1,63 @@
 # Change Log
 
+## [v0.9.0](https://github.com/FXMisc/RichTextFX/tree/v0.9.0) (2018-04-12)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.8.2...v0.9.0)
+
+**Implemented enhancements:**
+
+- Make mouse behavior override properties FXML-friendly [\#655](https://github.com/FXMisc/RichTextFX/issues/655)
+- Feature: Drag-and-drop text should only be one change, allowing a single `undo` to undo it [\#574](https://github.com/FXMisc/RichTextFX/issues/574)
+- Add support for multiple carets and selection ranges [\#222](https://github.com/FXMisc/RichTextFX/issues/222)
+
+**Fixed bugs:**
+
+- MultiPlainChanges emits an empty list [\#720](https://github.com/FXMisc/RichTextFX/issues/720)
+- rtfx-background-color spans if there is only one character between two styles [\#717](https://github.com/FXMisc/RichTextFX/issues/717)
+- Incorrect result of GenericStyledArea.getStyleRangeAtPosition\(int position\) in 0.8.\* [\#711](https://github.com/FXMisc/RichTextFX/issues/711)
+- Consecutive border/underline styles that are the same are rendered with multiple shapes, not one [\#709](https://github.com/FXMisc/RichTextFX/issues/709)
+- Overriding default KeyEvent behavior runs default and then overriding handler [\#707](https://github.com/FXMisc/RichTextFX/issues/707)
+- ArrayIndexOutOfBoundsException in ParagraphText::getRangeShapeSafely [\#689](https://github.com/FXMisc/RichTextFX/issues/689)
+- Constructor `InlineCssTextArea\(String text\)` initializes area with 1 paragraph with newline characters rather than multiple paragraphs [\#676](https://github.com/FXMisc/RichTextFX/issues/676)
+- RichText demo can not load sample document anymore [\#629](https://github.com/FXMisc/RichTextFX/issues/629)
+- \[0.7-M3\] OutOfMemoryError Loading Documents in the RichText Demo [\#452](https://github.com/FXMisc/RichTextFX/issues/452)
+- IndexOutOfBoundsException in RichText demo [\#449](https://github.com/FXMisc/RichTextFX/issues/449)
+- Trackpad scrolling with momentum doesn't work on OS X. [\#265](https://github.com/FXMisc/RichTextFX/issues/265)
+
+**Closed issues:**
+
+- Bug: Overlaying StyleSpans causes the edited line to move up [\#724](https://github.com/FXMisc/RichTextFX/issues/724)
+- Using in commercial project [\#723](https://github.com/FXMisc/RichTextFX/issues/723)
+- PsychSQL [\#708](https://github.com/FXMisc/RichTextFX/issues/708)
+- IllegalArgumentException: Cannot construct a Paragraph with an empty list of segments [\#705](https://github.com/FXMisc/RichTextFX/issues/705)
+- Undoing a multi change that modifies a later portion of the document before an earlier one fails [\#701](https://github.com/FXMisc/RichTextFX/issues/701)
+- Exception: Cannot construct a Paragraph with StyleSpans object that contains no StyleSpan objects [\#696](https://github.com/FXMisc/RichTextFX/issues/696)
+- Question: replaceText/insertText without calling richChanges [\#684](https://github.com/FXMisc/RichTextFX/issues/684)
+- Incorrect documentation for some mouse hooks [\#680](https://github.com/FXMisc/RichTextFX/issues/680)
+- Mac test fails: pressing mouse over text and dragging and releasing mouse triggers `onNewSelectionFinished` [\#679](https://github.com/FXMisc/RichTextFX/issues/679)
+
+**Merged pull requests:**
+
+- Cleanup codebase [\#727](https://github.com/FXMisc/RichTextFX/pull/727) ([JordanMartinez](https://github.com/JordanMartinez))
+- Update WellBehavedFX to 0.3.3 [\#726](https://github.com/FXMisc/RichTextFX/pull/726) ([JordanMartinez](https://github.com/JordanMartinez))
+- Prevent `multiPlainChanges\(\)` from emitting an empty list [\#721](https://github.com/FXMisc/RichTextFX/pull/721) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix unconsecutive style issue [\#718](https://github.com/FXMisc/RichTextFX/pull/718) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix `getStyleRangeAtPosition\(\)` bug [\#716](https://github.com/FXMisc/RichTextFX/pull/716) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix typo in exception message. [\#714](https://github.com/FXMisc/RichTextFX/pull/714) ([Gerardwx](https://github.com/Gerardwx))
+- Add PsychSQL to list of projects that use RichTextFX [\#713](https://github.com/FXMisc/RichTextFX/pull/713) ([tmptmpuser](https://github.com/tmptmpuser))
+- Use correct class in `instanceOf` check; provide faster equals method [\#710](https://github.com/FXMisc/RichTextFX/pull/710) ([JordanMartinez](https://github.com/JordanMartinez))
+- Use absolute replacements for undo and redo [\#702](https://github.com/FXMisc/RichTextFX/pull/702) ([JordanMartinez](https://github.com/JordanMartinez))
+- Move selected text should be one change [\#700](https://github.com/FXMisc/RichTextFX/pull/700) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix for \#696 [\#697](https://github.com/FXMisc/RichTextFX/pull/697) ([Jugen](https://github.com/Jugen))
+- Allow multiple portions of an area's document to be updated in one call [\#695](https://github.com/FXMisc/RichTextFX/pull/695) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix replaceText IOOBE [\#690](https://github.com/FXMisc/RichTextFX/pull/690) ([Jugen](https://github.com/Jugen))
+- Allow area to display multiple carets and selections [\#687](https://github.com/FXMisc/RichTextFX/pull/687) ([JordanMartinez](https://github.com/JordanMartinez))
+- Only save/load ".rtfx" files; warn about file format changes [\#686](https://github.com/FXMisc/RichTextFX/pull/686) ([JordanMartinez](https://github.com/JordanMartinez))
+- Updated Paragraph to apply styles to empty paragraphs. [\#685](https://github.com/FXMisc/RichTextFX/pull/685) ([Jugen](https://github.com/Jugen))
+- Skip failing Mac test; correct Javadoc for some mouse hooks [\#681](https://github.com/FXMisc/RichTextFX/pull/681) ([JordanMartinez](https://github.com/JordanMartinez))
+- Use correct replace method when SEG is String [\#678](https://github.com/FXMisc/RichTextFX/pull/678) ([JordanMartinez](https://github.com/JordanMartinez))
+- Update XMLEditor.java [\#673](https://github.com/FXMisc/RichTextFX/pull/673) ([svkreml](https://github.com/svkreml))
+- RFE implementation for \#653 / \#655 [\#656](https://github.com/FXMisc/RichTextFX/pull/656) ([Jugen](https://github.com/Jugen))
+
 ## [v0.8.2](https://github.com/FXMisc/RichTextFX/tree/v0.8.2) (2018-01-20)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/0.8.1...v0.8.2)
 
@@ -10,7 +68,6 @@
 
 **Fixed bugs:**
 
-- RichText demo can not load sample document anymore [\#629](https://github.com/FXMisc/RichTextFX/issues/629)
 - Read only pseudo class is misspelled in GenericStyledArea [\#650](https://github.com/FXMisc/RichTextFX/issues/650)
 - ExceptionInInitializerError: EventType "MOUSE\_OVER\_TEXT\_ANY"with parent "EVENT" already exists [\#634](https://github.com/FXMisc/RichTextFX/issues/634)
 
@@ -29,7 +86,6 @@
 
 **Merged pull requests:**
 
-- Update XMLEditor.java [\#673](https://github.com/FXMisc/RichTextFX/pull/673) ([svkreml](https://github.com/svkreml))
 - Generate new sample rtfx binary file [\#672](https://github.com/FXMisc/RichTextFX/pull/672) ([JordanMartinez](https://github.com/JordanMartinez))
 - Update dependencies: WellBehavedFX and UndoFX [\#669](https://github.com/FXMisc/RichTextFX/pull/669) ([JordanMartinez](https://github.com/JordanMartinez))
 - Upgrade Gradle to 4.4.1-bin \(Binary-only\) and change hash code. And small changes in RichTextFx.java. [\#664](https://github.com/FXMisc/RichTextFX/pull/664) ([scientificware](https://github.com/scientificware))
