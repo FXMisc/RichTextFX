@@ -59,7 +59,7 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.util.Either;
 import org.reactfx.util.Tuple2;
 
-public class RichText extends Application {
+public class RichTextDemo extends Application {
 
     // the saved/loaded files and their format are arbitrary and may change across versions
     private static final String RTFX_FILE_EXTENSION = ".rtfx";
@@ -293,7 +293,7 @@ public class RichText extends Application {
         vbox.getChildren().addAll(toolBar1, toolBar2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
-        scene.getStylesheets().add(RichText.class.getResource("rich-text.css").toExternalForm());
+        scene.getStylesheets().add(RichTextDemo.class.getResource("rich-text.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
         primaryStage.setTitle("Rich Text Demo");

@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
-public class ManualHighlighting extends Application {
+public class ManualHighlightingDemo extends Application {
 
     public static void main(String[] args) {
         launch(args);
@@ -38,7 +38,7 @@ public class ManualHighlighting extends Application {
         VBox vbox = new VBox(panel, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
-        scene.getStylesheets().add(ManualHighlighting.class.getResource("manual-highlighting.css").toExternalForm());
+        scene.getStylesheets().add(ManualHighlightingDemo.class.getResource("manual-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Manual Highlighting Demo");
         primaryStage.show();

@@ -3,14 +3,10 @@ package org.fxmisc.richtext.demo;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.application.Application;
-import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -22,7 +18,7 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
-public class JavaKeywordsAsync extends Application {
+public class JavaKeywordsDemo extends Application {
 
     private static final String[] KEYWORDS = new String[] {
             "abstract", "assert", "boolean", "break", "byte",
@@ -56,26 +52,26 @@ public class JavaKeywordsAsync extends Application {
     );
 
     private static final String sampleCode = String.join("\n", new String[] {
-            "package com.example;",
-            "",
-            "import java.util.*;",
-            "",
-            "public class Foo extends Bar implements Baz {",
-            "",
-            "    /*",
-            "     * multi-line comment",
-            "     */",
-            "    public static void main(String[] args) {",
-            "        // single-line comment",
-            "        for(String arg: args) {",
-            "            if(arg.length() != 0)",
-            "                System.out.println(arg);",
-            "            else",
-            "                System.err.println(\"Warning: empty string as argument\");",
-            "        }",
-            "    }",
-            "",
-            "}"
+        "package com.example;",
+        "",
+        "import java.util.*;",
+        "",
+        "public class Foo extends Bar implements Baz {",
+        "",
+        "    /*",
+        "     * multi-line comment",
+        "     */",
+        "    public static void main(String[] args) {",
+        "        // single-line comment",
+        "        for(String arg: args) {",
+        "            if(arg.length() != 0)",
+        "                System.out.println(arg);",
+        "            else",
+        "                System.err.println(\"Warning: empty string as argument\");",
+        "        }",
+        "    }",
+        "",
+        "}"
     });
 
 
@@ -83,58 +79,37 @@ public class JavaKeywordsAsync extends Application {
         launch(args);
     }
 
-    private CodeArea codeArea;
-    private ExecutorService executor;
-
     @Override
     public void start(Stage primaryStage) {
-        executor = Executors.newSingleThreadExecutor();
-        codeArea = new CodeArea();
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        Subscription cleanupWhenDone = codeArea.multiPlainChanges()
-                .successionEnds(Duration.ofMillis(500))
-                .supplyTask(this::computeHighlightingAsync)
-                .awaitLatest(codeArea.multiPlainChanges())
-                .filterMap(t -> {
-                    if(t.isSuccess()) {
-                        return Optional.of(t.get());
-                    } else {
-                        t.getFailure().printStackTrace();
-                        return Optional.empty();
-                    }
-                })
-                .subscribe(this::applyHighlighting);
+        CodeArea codeArea = new CodeArea();
 
-        // call when no longer need it: `cleanupWhenFinished.unsubscribe();`
+        // add line numbers to the left of area
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
+
+        // recompute the syntax highlighting 500 ms after user stops editing area
+        Subscription cleanupWhenNoLongerNeedIt = codeArea
+
+                // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
+                // multi plain changes = save computation by not rerunning the code multiple times
+                //   when making multiple changes (e.g. renaming a method at multiple parts in file)
+                .multiPlainChanges()
+
+                // do not emit an event until 500 ms have passed since the last emission of previous stream
+                .successionEnds(Duration.ofMillis(500))
+
+                // run the following code block when previous stream emits an event
+                .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
+
+        // when no longer need syntax highlighting and wish to clean up memory leaks
+        // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
-        scene.getStylesheets().add(JavaKeywordsAsync.class.getResource("java-keywords.css").toExternalForm());
+        scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Java Keywords Async Demo");
+        primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();
-    }
-
-    @Override
-    public void stop() {
-        executor.shutdown();
-    }
-
-    private Task<StyleSpans<Collection<String>>> computeHighlightingAsync() {
-        String text = codeArea.getText();
-        Task<StyleSpans<Collection<String>>> task = new Task<StyleSpans<Collection<String>>>() {
-            @Override
-            protected StyleSpans<Collection<String>> call() throws Exception {
-                return computeHighlighting(text);
-            }
-        };
-        executor.execute(task);
-        return task;
-    }
-
-    private void applyHighlighting(StyleSpans<Collection<String>> highlighting) {
-        codeArea.setStyleSpans(0, highlighting);
     }
 
     private static StyleSpans<Collection<String>> computeHighlighting(String text) {

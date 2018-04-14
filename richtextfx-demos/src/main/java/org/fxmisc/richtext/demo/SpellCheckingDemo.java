@@ -22,7 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.reactfx.Subscription;
 
-public class SpellChecking extends Application {
+public class SpellCheckingDemo extends Application {
 
     private static final Set<String> dictionary = new HashSet<String>();
 

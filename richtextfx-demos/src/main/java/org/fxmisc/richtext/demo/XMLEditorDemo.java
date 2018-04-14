@@ -16,7 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-public class XMLEditor extends Application {
+public class XMLEditorDemo extends Application {
 	
     private static final Pattern XML_TAG = Pattern.compile("(?<ELEMENT>(</?\\h*)(\\w+)([^<>]*)(\\h*/?>))"
     		+"|(?<COMMENT><!--[^<>]+-->)");
@@ -82,7 +82,7 @@ public class XMLEditor extends Application {
         codeArea.replaceText(0, 0, sampleCode);
 
 		Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
-        scene.getStylesheets().add(XMLEditor.class.getResource("xml-highlighting.css").toExternalForm());
+        scene.getStylesheets().add(XMLEditorDemo.class.getResource("xml-highlighting.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("XML Editor Demo");
         primaryStage.show();
