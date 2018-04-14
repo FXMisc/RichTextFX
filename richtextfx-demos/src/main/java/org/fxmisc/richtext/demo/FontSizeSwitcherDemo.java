@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
-public class FontSizeSwitcher extends Application {
+public class FontSizeSwitcherDemo extends Application {
 
     public static void main(String[] args) {
         launch(args);
