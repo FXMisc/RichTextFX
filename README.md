@@ -12,7 +12,7 @@ For a greater explanation of RichTextFX, its design principles, how it works, an
 Demos
 -----
 
-Stand-alone Applications that demonstrate some of the features of RichTextFX have been moved to their own folder [here](./richtextfx-demos/README.md)
+Stand-alone Applications that demonstrate some of the features of RichTextFX have been moved to their own folder [here](./richtextfx-demos/)
 
 Table of Contents
 -----------------
