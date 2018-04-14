@@ -20,37 +20,70 @@ task fatJar(type: Jar, dependsOn: classes) {
 
 assemble.dependsOn fatJar
 
-task JavaKeywords(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.JavaKeywords'
+task demos(description: "Lists the names and the descriptions of the demos that can be run via a Gradle task") {
+    doLast {
+        // sort the demos first, so they can be added in the build file in any order
+        def list = []
+        tasks.withType(JavaExec) {
+            if (it.name.endsWith("Demo")) {
+                list.add(it)
+            }
+        }
+        list.sort { first, next -> first.name <=> next.name }
+                .each {
+            println "  ${it.name} - ${it.description}"
+        }
+    }
+}
+
+// To add a task for a demo, use the following template:
+/*
+task ClassNameDemo(type: JavaExec, dependsOn: classes,
+        description: "A description of what the demo does") {
+    main = 'org.fxmisc.richtext.demo.ClassNameDemo'
+    classpath = files(sourceSets.main.output, configurations.runtime)
+}
+ */
+
+task JavaKeywordsDemo(type: JavaExec, dependsOn: classes,
+        description: "A CodeArea with Java syntax highlighting that is computed on the JavaFX Application Thread") {
+    main = 'org.fxmisc.richtext.demo.JavaKeywordsDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task JavaKeywordsAsync(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.JavaKeywordsAsync'
+task JavaKeywordsAsyncDemo(type: JavaExec, dependsOn: classes,
+        description: "A CodeArea with Java syntax highlighting that is computed on a background thread") {
+    main = 'org.fxmisc.richtext.demo.JavaKeywordsAsyncDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task XMLEditor(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.XMLEditor'
+task XMLEditorDemo(type: JavaExec, dependsOn: classes,
+        description: "An area with XML syntax highlighting") {
+    main = 'org.fxmisc.richtext.demo.XMLEditorDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task ManualHighlighting(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.ManualHighlighting'
+task ManualHighlightingDemo(type: JavaExec, dependsOn: classes,
+        description: "Manually highlight various parts of the text in an area via buttons") {
+    main = 'org.fxmisc.richtext.demo.ManualHighlightingDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task RichText(type: JavaExec, dependsOn: classes) {
-    main = 'org.fxmisc.richtext.demo.richtext.RichText'
+task RichTextDemo(type: JavaExec, dependsOn: classes,
+        description: "An area showing a large number of RichTextFX's features: " +
+                "inlined images, rich text (e.g. text alignment and background colors, etc.), and save/load capabilities") {
+    main = 'org.fxmisc.richtext.demo.richtext.RichTextDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task PopupDemo(type: JavaExec, dependsOn: classes) {
+task PopupDemo(type: JavaExec, dependsOn: classes,
+        description: "A popup that follows the caret and selection when they move") {
     main = 'org.fxmisc.richtext.demo.PopupDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
 
-task TooltipDemo(type: JavaExec, dependsOn: classes) {
+task TooltipDemo(type: JavaExec, dependsOn: classes,
+        description: "Tells you the letter over which the mouse is hovering") {
     main = 'org.fxmisc.richtext.demo.TooltipDemo'
     classpath = files(sourceSets.main.output, configurations.runtime)
 }
