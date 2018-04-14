@@ -1,14 +1,17 @@
 Demos
 -----
 
+Note: This page does not show all the demos in the package. Follow the instructions below to see them all.
+
 ### Table of Contents
 
 * [Instructions for Running Demos](#instructions-for-running-demos)
 * [Structure of the Demos package](#structure-of-the-demos-package)
-* All Demos
+* Some Demos
   * [Rich-text editor](#rich-text-editor)
   * [Highlighting of Java keywords](#automatic-highlighting-of-java-keywords)
   * [XML Editor](#xml-editor)
+  * [Multiple Carets and Selections](#multiple-carets-and-selections)
   * [Custom tooltips](#custom-tooltips)
 
 ### Instructions for running demos
@@ -27,17 +30,13 @@ Demos
 
 ### Rich-text editor
 
-![Screenshot of the RichText demo](https://cloud.githubusercontent.com/assets/8413037/24158984/22d36a10-0e1b-11e7-95e0-f4546cb528c3.png)
+Source Code: [RichText.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/richtext/RichText.java)
 
-#### Source code
-
-[RichText.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/richtext/RichText.java)
+![Screenshot of the RichText demo](./screenshots/RichTextDemo.jpg)
 
 ### Automatic highlighting of Java keywords
 
-![Screenshot of the JavaKeywords demo](https://cloud.githubusercontent.com/assets/8413037/24158979/1ef7af14-0e1b-11e7-8c06-69cb9e5a2dd7.png)
-
-#### Source code
+Source Code:
 
 [JavaKeywords.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywords.java)
 
@@ -45,20 +44,26 @@ Demos
 
 The former computes highlighting on the JavaFX application thread, while the latter computes highlighting on a background thread.
 
+![Screenshot of the JavaKeywords demo](./screenshots/JavaKeywordsDemo.jpg)
+
 ### XML Editor
 
 Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo above, this demo highlights XML syntax. Courtesy of @cemartins.
 
-#### Source code
+Source Code: [XMLEditor.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/XMLEditorDemo.java)
 
-[XMLEditor.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/XMLEditor.java)
+![Screenshot of the XML Editor demo](./screenshots/XMLEditorDemo.jpg)
+
+### Multiple Carets and Selections
+
+Source Code: [MultiCaretAndSelectionDemo.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/MultiCaretAndSelectionDemo.java)
+
+![Screenshot of the Multiple Carets and Selections demo](./screenshots/MultiCaretAndSelectionDemo.jpg)
 
 ### Custom tooltips
 
 When the mouse pauses over the text area, you can get index of the character under the mouse. This allows you to implement, for example, custom tooltips whose content depends on the text under the mouse.
 
-![Screenshot of the RichText demo](https://cloud.githubusercontent.com/assets/8413037/24158992/2741225e-0e1b-11e7-9d6b-6040dc30cee1.png)
+Source Code: [TooltipDemo.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
 
-#### Source code
-
-[TooltipDemo.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
+![Screenshot of the Tooltip demo](./screenshots/TooltipDemo.jpg)
