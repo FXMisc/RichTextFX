@@ -30,7 +30,7 @@ Note: This page does not show all the demos in the package. Follow the instructi
 
 ### Rich-text editor
 
-Source Code: [RichText.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/richtext/RichText.java)
+Source Code: [RichTextDemo.java](src/main/java/org/fxmisc/richtext/demo/richtext/RichTextDemo.java)
 
 ![Screenshot of the RichText demo](./screenshots/RichTextDemo.jpg)
 
@@ -38,9 +38,9 @@ Source Code: [RichText.java](https://github.com/FXMisc/RichTextFX/blob/master/ri
 
 Source Code:
 
-[JavaKeywords.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywords.java)
+[JavaKeywordsDemo.java](src/main/java/org/fxmisc/richtext/demo/JavaKeywordsDemo.java)
 
-[JavaKeywordsAsync.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/JavaKeywordsAsync.java)
+[JavaKeywordsAsyncDemo.java](src/main/java/org/fxmisc/richtext/demo/JavaKeywordsAsyncDemo.java)
 
 The former computes highlighting on the JavaFX application thread, while the latter computes highlighting on a background thread.
 
@@ -50,13 +50,13 @@ The former computes highlighting on the JavaFX application thread, while the lat
 
 Similar to the [Java Keywords](#automatic-highlighting-of-java-keywords) demo above, this demo highlights XML syntax. Courtesy of @cemartins.
 
-Source Code: [XMLEditor.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/XMLEditorDemo.java)
+Source Code: [XMLEditorDemo.java](src/main/java/org/fxmisc/richtext/demo/XMLEditorDemo.java)
 
 ![Screenshot of the XML Editor demo](./screenshots/XMLEditorDemo.jpg)
 
 ### Multiple Carets and Selections
 
-Source Code: [MultiCaretAndSelectionDemo.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/MultiCaretAndSelectionDemo.java)
+Source Code: [MultiCaretAndSelectionDemo.java](src/main/java/org/fxmisc/richtext/demo/MultiCaretAndSelectionDemo.java)
 
 ![Screenshot of the Multiple Carets and Selections demo](./screenshots/MultiCaretAndSelectionDemo.jpg)
 
@@ -64,6 +64,6 @@ Source Code: [MultiCaretAndSelectionDemo.java](https://github.com/FXMisc/RichTex
 
 When the mouse pauses over the text area, you can get index of the character under the mouse. This allows you to implement, for example, custom tooltips whose content depends on the text under the mouse.
 
-Source Code: [TooltipDemo.java](https://github.com/FXMisc/RichTextFX/blob/master/richtextfx-demos/src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
+Source Code: [TooltipDemo.java](src/main/java/org/fxmisc/richtext/demo/TooltipDemo.java)
 
 ![Screenshot of the Tooltip demo](./screenshots/TooltipDemo.jpg)
