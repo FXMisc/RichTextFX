@@ -81,7 +81,7 @@ It has three parameter types:
 
 Functional programming via lambdas specify how to apply styles, how to create a `Node` for a given segment, and how to operate on a given segment (e.g., getting its length, combining it with another segment, etc.).
 
-`GenericStyledArea` is used in the [Rich-text demo](#rich-text-editor) below.
+`GenericStyledArea` is used in the [Rich-text demo](richtextfx-demos/README.md#rich-text-editor).
 
 See the wiki for a basic pattern that one must follow to implement custom objects correctly.
 
@@ -123,7 +123,7 @@ This renders the text in the range `[from, to)` in red.
 
 #### CodeArea
 
-`CodeArea` is a variant of `StyleClassedTextArea` that uses a fixed width font by default, making it a convenient base for source code editors. `CodeArea` is used in the [Java Keywords demo](#automatic-highlighting-of-java-keywords) below.
+`CodeArea` is a variant of `StyleClassedTextArea` that uses a fixed width font by default, making it a convenient base for source code editors. `CodeArea` is used in the [Java Keywords demo](richtextfx-demos/README.md#automatic-highlighting-of-java-keywords).
 
 Requirements
 ------------
