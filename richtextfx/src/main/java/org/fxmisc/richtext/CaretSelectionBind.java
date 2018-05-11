@@ -322,8 +322,9 @@ public interface CaretSelectionBind<PS, SEG, S> extends Selection<PS, SEG, S>, C
     void moveToAreaEnd(NavigationActions.SelectionPolicy selectionPolicy);
 
     default void selectParagraph() {
-        moveToParStart(NavigationActions.SelectionPolicy.CLEAR);
-        moveToParEnd(NavigationActions.SelectionPolicy.ADJUST);
+        int parStartPosition = getPosition() - getColumnPosition();
+        int parEndPosition = parStartPosition + getArea().getParagraphLength(getParagraphIndex());
+        selectRange(parStartPosition, parEndPosition);
     }
 
     /**
