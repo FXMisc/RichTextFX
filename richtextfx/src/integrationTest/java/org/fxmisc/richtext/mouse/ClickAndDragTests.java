@@ -93,11 +93,13 @@ public class ClickAndDragTests {
 
             private String firstWord = "Some";
             private String firstParagraph = firstWord + " text goes here";
+            private String secondWord = "More";
+            private String secondParagraph = secondWord + " text goes here";
 
             @Override
             public void start(Stage stage) throws Exception {
                 super.start(stage);
-                area.replaceText(firstParagraph);
+                area.replaceText(firstParagraph + "\n" + secondParagraph);
                 area.moveTo(0);
             }
 
@@ -123,10 +125,17 @@ public class ClickAndDragTests {
             }
 
             @Test
-            public void triple_clicking_line_in_area_selects_paragraph() {
-                tripleClickOnFirstLine();
+            public void triple_clicking_line_in_area_selects_paragraph()
+                    throws InterruptedException, ExecutionException {
 
-                assertEquals(firstParagraph, area.getSelectedText());
+                int wordStart = firstParagraph.length() + 1;
+                Bounds bounds = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(wordStart, wordStart + 1).get())
+                        .get();
+
+                moveTo(bounds).doubleClickOn(PRIMARY).clickOn(PRIMARY);
+
+                assertEquals(secondParagraph, area.getSelectedText());
             }
 
             @Test

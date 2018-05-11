@@ -409,8 +409,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
 
     @Override
     public void moveToParEnd(NavigationActions.SelectionPolicy selectionPolicy) {
-        int newPos = getArea().getParagraphLength(getParagraphIndex());
-        moveTo(newPos, selectionPolicy);
+        moveTo(getPosition() - getColumnPosition() + getArea().getParagraphLength(getParagraphIndex()), selectionPolicy);
     }
 
     @Override

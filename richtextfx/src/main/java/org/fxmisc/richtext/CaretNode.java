@@ -266,7 +266,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
     @Override
     public void moveToParEnd() {
-        moveTo(area.getParagraphLength(getParagraphIndex()));
+        moveTo(getPosition() - getColumnPosition() + area.getParagraphLength(getParagraphIndex()));
     }
 
     @Override
