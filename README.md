@@ -51,6 +51,7 @@ Who uses RichTextFX?
 - [JabRef](http://www.jabref.org/)
 - [PsychSQL](http://softbydoc.dx.am/?page_id=135)
 - [Greenfoot](https://www.greenfoot.org/)
+- [Everest REST client](https://github.com/RohitAwate/Everest)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
