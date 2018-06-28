@@ -792,9 +792,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public final Optional<Integer> allParToVisibleParIndex(int allParIndex) {
         if (allParIndex < 0) {
-            throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + allParIndex);
+            throw new IllegalArgumentException("The given paragraph index (allParIndex) cannot be negative but was " + allParIndex);
         }
-        if (allParIndex >= getVisibleParagraphs().size()) {
+        if (allParIndex >= getParagraphs().size()) {
             throw new IllegalArgumentException(String.format(
                     "Paragraphs' last index is [%s] but allParIndex was [%s]",
                     getParagraphs().size() - 1, allParIndex)

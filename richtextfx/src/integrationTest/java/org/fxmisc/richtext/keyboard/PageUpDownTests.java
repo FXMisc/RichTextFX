@@ -3,6 +3,7 @@ package org.fxmisc.richtext.keyboard;
 import javafx.geometry.Bounds;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
+import org.fxmisc.richtext.TextBuildingUtils;
 import org.junit.Test;
 
 import static javafx.scene.input.KeyCode.PAGE_DOWN;
@@ -13,17 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
-    private static final String EIGHT_LINES;
-
-    static {
-        StringBuilder sb = new StringBuilder();
-        int totalLines = 8;
-        for (int i = 0; i < totalLines - 1; i++) {
-            sb.append(i).append("\n");
-        }
-        sb.append(totalLines);
-        EIGHT_LINES = sb.toString();
-    }
+    private static final String EIGHT_LINES = TextBuildingUtils.buildLines(8);
 
     @Override
     public void start(Stage stage) throws Exception {
