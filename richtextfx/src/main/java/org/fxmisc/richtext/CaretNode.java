@@ -165,9 +165,23 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
                     // in case of a replacement: "hello there" -> "hi."
                     int endOfChange = indexOfChange + Math.abs(netLength);
 
-                    if (indexOfChange < finalPosition) {
-                        // if caret is within the changed content, move it to indexOfChange
-                        // otherwise offset it by netLength
+                    /*
+                        "->" means add (positive) netLength to position
+                        "<-" means add (negative) netLength to position
+                        "x" means don't update position
+
+                        "+c" means caret was included in the deleted portion of content
+                        "-c" means caret was not included in the deleted portion of content
+                        Before/At/After means indexOfChange "<" / "==" / ">" position
+
+                               |   Before +c   | Before -c | At | After
+                        -------+---------------+-----------+----+------
+                        Add    |      N/A      |    ->     | -> | x
+                        Delete | indexOfChange |    <-     | x  | x
+                     */
+                    if (indexOfChange == finalPosition && netLength > 0) {
+                        finalPosition = finalPosition + netLength;
+                    } else if (indexOfChange < finalPosition) {
                         finalPosition = finalPosition < endOfChange
                                         ? indexOfChange
                                         : finalPosition + netLength;
