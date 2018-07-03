@@ -232,10 +232,25 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
 
                     if (getLength() != 0) {
 
-                        // if start/end is within the changed content, move it to indexOfChange
-                        // otherwise, offset it by netLength
-                        // Note: if both are moved to indexOfChange, selection is empty.
-                        if (indexOfChange < finalStart) {
+                        /*
+                            "->" means add (positive) netLength to position
+                            "<-" means add (negative) netLength to position
+                            "x" means don't update position
+
+                            "start / end" means what should be done in each case for each anchor if they differ
+
+                            "+a" means one of the anchors was included in the deleted portion of content
+                            "-a" means one of the anchors was not included in the deleted portion of content
+                            Before/At/After means indexOfChange "<" / "==" / ">" position
+
+                                   |   Before +a   | Before -a |   At   | After
+                            -------+---------------+-----------+--------+------
+                            Add    |      N/A      |    ->     | -> / x | x
+                            Delete | indexOfChange |    <-     |    x   | x
+                         */
+                        if (indexOfChange == finalStart && netLength > 0) {
+                            finalStart = finalStart + netLength;
+                        } else if (indexOfChange < finalStart) {
                             finalStart = finalStart < endOfChange
                                     ? indexOfChange
                                     : finalStart + netLength;

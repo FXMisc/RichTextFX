@@ -1,27 +1,18 @@
-package org.fxmisc.richtext.api;
+package org.fxmisc.richtext.api.caret;
 
 import javafx.stage.Stage;
 import org.fxmisc.richtext.Caret;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
+import org.fxmisc.richtext.TextBuildingUtils;
 import org.junit.Test;
 import org.testfx.util.WaitForAsyncUtils;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class SingleCaretTests extends InlineCssTextAreaAppTest {
+public class BoundsTests extends InlineCssTextAreaAppTest {
 
-    private static final String MANY_PARS_OF_TEXT;
-
-    static {
-        int totalLines = 20;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < totalLines; i++) {
-            sb.append(i).append("\n");
-        }
-        sb.append(totalLines);
-        MANY_PARS_OF_TEXT = sb.toString();
-    }
+    private static final String MANY_PARS_OF_TEXT = TextBuildingUtils.buildLines(20);
 
     @Override
     public void start(Stage stage) throws Exception {
