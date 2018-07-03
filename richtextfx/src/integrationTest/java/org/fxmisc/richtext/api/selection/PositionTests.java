@@ -158,4 +158,13 @@ public class PositionTests extends InlineCssTextAreaAppTest {
             assertEquals(leftText.length(), selection.getEndPosition());
         });
     }
+
+    public void deletion_which_includes_selection_and_which_occurs_at_end_of_area_moves_selection_to_new_area_end() {
+        interact(() -> {
+           selection.selectRange(area.getLength(), area.getLength());
+           area.deleteText(leftText.length(), area.getLength());
+           assertEquals(area.getLength(), selection.getStartPosition());
+           assertEquals(area.getLength(), selection.getEndPosition());
+        });
+    }
 }
