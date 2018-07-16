@@ -83,7 +83,6 @@ public final class UndoUtils {
         return factory.createMultiChangeUM(area.multiRichChanges(),
                 TextChange::invert,
                 applyMultiRichTextChange(area),
-                applyMultiRichTextChange(area),
                 TextChange::mergeWith,
                 TextChange::isIdentity,
                 preventMergeDelay);
@@ -128,7 +127,6 @@ public final class UndoUtils {
             GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory, Duration preventMergeDelay) {
         return factory.createMultiChangeUM(area.multiPlainChanges(),
                 TextChange::invert,
-                applyMultiPlainTextChange(area),
                 applyMultiPlainTextChange(area),
                 TextChange::mergeWith,
                 TextChange::isIdentity,
