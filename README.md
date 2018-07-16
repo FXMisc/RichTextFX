@@ -32,7 +32,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.9.0](http://fxmisc.github.io/richtext/javadoc/0.9.0/org/fxmisc/richtext/package-summary.html)
+  * [0.9.1](http://fxmisc.github.io/richtext/javadoc/0.9.1/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -143,31 +143,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.9.0.
+Current stable release is 0.9.1.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.9.0  |
+| org.fxmisc.richtext | richtextfx  | 0.9.1  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.0'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.1'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.9.0"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.9.1"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.0/richtextfx-0.9.0.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.0/richtextfx-fat-0.9.0.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.1/richtextfx-0.9.1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.1/richtextfx-fat-0.9.1.jar) and place it on your classpath.
 
 ### Snapshot releases
 

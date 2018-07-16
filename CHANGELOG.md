@@ -1,5 +1,53 @@
 # Change Log
 
+## [v0.9.1](https://github.com/FXMisc/RichTextFX/tree/v0.9.1) (2018-07-16)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.0...v0.9.1)
+
+**Implemented enhancements:**
+
+- Add a setFont method to CodeArea [\#754](https://github.com/FXMisc/RichTextFX/issues/754)
+- Feature: Set padding between lines in multi-line paragraph [\#749](https://github.com/FXMisc/RichTextFX/issues/749)
+
+**Fixed bugs:**
+
+- Position of Caret and Selection are not updated correctly when change occurs at their current position [\#761](https://github.com/FXMisc/RichTextFX/issues/761)
+- Bug: `allParToVisibleParIndex` throws Exception when allParIndex is \>= size of visible paragraphs but \<= area's last paragraph index [\#758](https://github.com/FXMisc/RichTextFX/issues/758)
+- Triple click doesn't select paragraph; CaretSelectionBindImpl.moveToParEnd wrongly calculates position [\#742](https://github.com/FXMisc/RichTextFX/issues/742)
+
+**Closed issues:**
+
+- Question: CTRL-Z Behavior with highlighted text [\#765](https://github.com/FXMisc/RichTextFX/issues/765)
+- Question: disabling new line functionality \(pressing return\) [\#763](https://github.com/FXMisc/RichTextFX/issues/763)
+- StyleClassedTextArea: clear\(\), then insertText\(\), doesn't work consistently [\#762](https://github.com/FXMisc/RichTextFX/issues/762)
+- Question: Change StyleClassedTextArea Text Color [\#760](https://github.com/FXMisc/RichTextFX/issues/760)
+- Who uses RichTextFX \( XR3Player\)  [\#756](https://github.com/FXMisc/RichTextFX/issues/756)
+- Ineffective input method [\#753](https://github.com/FXMisc/RichTextFX/issues/753)
+- Question: Is it possible to use RichTextFX as a backlog view in a chat application? [\#752](https://github.com/FXMisc/RichTextFX/issues/752)
+- Question: how to make a text subscript and superscript [\#751](https://github.com/FXMisc/RichTextFX/issues/751)
+- Question: using version 0.9.0, ParagraphGraphicFactory generates -1 values, is this by design? [\#750](https://github.com/FXMisc/RichTextFX/issues/750)
+- Putting the caret behind the character and pressing the enter causes the creation of an empty space at first [\#748](https://github.com/FXMisc/RichTextFX/issues/748)
+- Error: When I set style to the second line, I get IndexOutOfBoundsException [\#741](https://github.com/FXMisc/RichTextFX/issues/741)
+- CSS selection color from 0.7 to 0.9 [\#736](https://github.com/FXMisc/RichTextFX/issues/736)
+- Links to the demo source code and demo page are broken [\#733](https://github.com/FXMisc/RichTextFX/issues/733)
+- CodeArea not support Chinese [\#732](https://github.com/FXMisc/RichTextFX/issues/732)
+- Request to re open \#724 [\#728](https://github.com/FXMisc/RichTextFX/issues/728)
+- the demo JavaKeywordsAsync.java have a bug [\#725](https://github.com/FXMisc/RichTextFX/issues/725)
+- \[Problem\] richChanges is called by setStyle [\#719](https://github.com/FXMisc/RichTextFX/issues/719)
+- Trouble building project using NetBeans IDE due to ReactFX dependency [\#583](https://github.com/FXMisc/RichTextFX/issues/583)
+
+**Merged pull requests:**
+
+- Update UndoFX \(2.1.0\); stop maintaining project [\#769](https://github.com/FXMisc/RichTextFX/pull/769) ([JordanMartinez](https://github.com/JordanMartinez))
+- Add JDialogue to Readme [\#767](https://github.com/FXMisc/RichTextFX/pull/767) ([SkyAphid](https://github.com/SkyAphid))
+- Fix bug: Caret/Selection positions should be updated correctly when change occurs at their position [\#766](https://github.com/FXMisc/RichTextFX/pull/766) ([JordanMartinez](https://github.com/JordanMartinez))
+- Fix all par index bug [\#759](https://github.com/FXMisc/RichTextFX/pull/759) ([JordanMartinez](https://github.com/JordanMartinez))
+- XR3Player uses RichTextFX [\#757](https://github.com/FXMisc/RichTextFX/pull/757) ([goxr3plus](https://github.com/goxr3plus))
+- Added Everest to 'Who uses RichTextFX?' [\#755](https://github.com/FXMisc/RichTextFX/pull/755) ([RohitAwate](https://github.com/RohitAwate))
+- Fix bug: wrongly calculated value used for `moveToParEnd` [\#746](https://github.com/FXMisc/RichTextFX/pull/746) ([JordanMartinez](https://github.com/JordanMartinez))
+- Updates README.md to add Greenfoot as a project that uses RichTextFX [\#744](https://github.com/FXMisc/RichTextFX/pull/744) ([amjdhsn](https://github.com/amjdhsn))
+- Fixed the links pointing to the demo source pages [\#734](https://github.com/FXMisc/RichTextFX/pull/734) ([creativeArtie](https://github.com/creativeArtie))
+- Make it easier to run and maintain demos [\#729](https://github.com/FXMisc/RichTextFX/pull/729) ([JordanMartinez](https://github.com/JordanMartinez))
+
 ## [v0.9.0](https://github.com/FXMisc/RichTextFX/tree/v0.9.0) (2018-04-12)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.8.2...v0.9.0)
 
@@ -25,7 +73,6 @@
 
 **Closed issues:**
 
-- Bug: Overlaying StyleSpans causes the edited line to move up [\#724](https://github.com/FXMisc/RichTextFX/issues/724)
 - Using in commercial project [\#723](https://github.com/FXMisc/RichTextFX/issues/723)
 - PsychSQL [\#708](https://github.com/FXMisc/RichTextFX/issues/708)
 - IllegalArgumentException: Cannot construct a Paragraph with an empty list of segments [\#705](https://github.com/FXMisc/RichTextFX/issues/705)
@@ -338,7 +385,6 @@
 - Styling the caret \(not just colour\) [\#397](https://github.com/FXMisc/RichTextFX/issues/397)
 - Scroll position/moveTo\(\) issue [\#395](https://github.com/FXMisc/RichTextFX/issues/395)
 - Link to "Arduino Harp" \(http://www.avrharp.org/\) in README is dead. [\#392](https://github.com/FXMisc/RichTextFX/issues/392)
-- CodeArea - attempt to scroll content programatically after moveTo operation fails [\#389](https://github.com/FXMisc/RichTextFX/issues/389)
 - Demo with Jygments [\#387](https://github.com/FXMisc/RichTextFX/issues/387)
 - Feature request: Caret line position vs. paragraph position [\#386](https://github.com/FXMisc/RichTextFX/issues/386)
 - WYSIWYG Document Writer like Office [\#383](https://github.com/FXMisc/RichTextFX/issues/383)
@@ -810,6 +856,8 @@
 **Closed issues:**
 
 - Hitting ESC while text is selected, erases it. \(tested with richtextfx demo\) [\#68](https://github.com/FXMisc/RichTextFX/issues/68)
+- Scene update error when closing a stage that has a popup. [\#67](https://github.com/FXMisc/RichTextFX/issues/67)
+- paragraph.getSegments\(\) duplicates. [\#65](https://github.com/FXMisc/RichTextFX/issues/65)
 - Text moves when paragraphsize exceedes the editorwindow. [\#25](https://github.com/FXMisc/RichTextFX/issues/25)
 
 ## [v0.3](https://github.com/FXMisc/RichTextFX/tree/v0.3) (2014-06-19)
@@ -825,7 +873,9 @@
 
 **Closed issues:**
 
+- End greater than length error [\#61](https://github.com/FXMisc/RichTextFX/issues/61)
 - Missing dependencies   [\#59](https://github.com/FXMisc/RichTextFX/issues/59)
+- Scrolling Issue. [\#58](https://github.com/FXMisc/RichTextFX/issues/58)
 - Can't compile JavaKeywords Demo [\#57](https://github.com/FXMisc/RichTextFX/issues/57)
 -  Testing a matching algorithm [\#56](https://github.com/FXMisc/RichTextFX/issues/56)
 - Tool tip support [\#54](https://github.com/FXMisc/RichTextFX/issues/54)
@@ -845,11 +895,14 @@
 
 **Closed issues:**
 
+- Coping style spans [\#52](https://github.com/FXMisc/RichTextFX/issues/52)
 - Undo Issues.  [\#51](https://github.com/FXMisc/RichTextFX/issues/51)
 - IndexRange of style span [\#50](https://github.com/FXMisc/RichTextFX/issues/50)
 - Enhancement: Style Match [\#49](https://github.com/FXMisc/RichTextFX/issues/49)
 - Q: How to apply multiple styles at the same time ? [\#48](https://github.com/FXMisc/RichTextFX/issues/48)
 - Dependency issue with reactfx [\#47](https://github.com/FXMisc/RichTextFX/issues/47)
+- ENTER key + typing.. [\#45](https://github.com/FXMisc/RichTextFX/issues/45)
+- ENTER key behavior [\#44](https://github.com/FXMisc/RichTextFX/issues/44)
 - Out of bounds error on applying style to a selection [\#43](https://github.com/FXMisc/RichTextFX/issues/43)
 - Enhancement: provide IndexRange for Paragraph [\#42](https://github.com/FXMisc/RichTextFX/issues/42)
 - "OutOfBoundsException" When hitting Enter [\#39](https://github.com/FXMisc/RichTextFX/issues/39)
