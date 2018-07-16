@@ -1,3 +1,5 @@
+**This project is no longer being maintained. See [this issue](https://github.com/FXMisc/RichTextFX/issues/768) for more details.**
+
 RichTextFX
 ==========
 
