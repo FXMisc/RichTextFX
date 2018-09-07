@@ -248,7 +248,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                             Add    |      N/A      |    ->     | -> / x | x
                             Delete | indexOfChange |    <-     |    x   | x
                          */
-                        if (finalEnd < endOfChange) {
+                        if (finalEnd < endOfChange &&
+                                finalStart == indexOfChange) {
                             finalEnd = endOfChange;
                         } else {
                             if (indexOfChange == finalStart && netLength > 0) {
