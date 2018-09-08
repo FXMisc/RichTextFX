@@ -248,22 +248,19 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                             Add    |      N/A      |    ->     | -> / x | x
                             Delete | indexOfChange |    <-     |    x   | x
                          */
-                        if (finalEnd < endOfChange &&
-                                finalStart == indexOfChange) {
-                            finalEnd = endOfChange;
-                        } else {
-                            if (indexOfChange == finalStart && netLength > 0) {
-                                finalStart = finalStart + netLength;
-                            } else if (indexOfChange < finalStart) {
-                                finalStart = finalStart < endOfChange
-                                        ? indexOfChange
-                                        : finalStart + netLength;
-                            }
-                            if (indexOfChange < finalEnd) {
-                                finalEnd = finalEnd < endOfChange
-                                        ? indexOfChange
-                                        : finalEnd + netLength;
-                            }
+                        if (endOfChange <= finalEnd &&
+                                indexOfChange == finalStart &&
+                                netLength > 0) {
+                            finalStart = finalStart + netLength;
+                        } else if (indexOfChange < finalStart) {
+                            finalStart = finalStart < endOfChange
+                                    ? indexOfChange
+                                    : finalStart + netLength;
+                        }
+                        if (indexOfChange < finalEnd) {
+                            finalEnd = finalEnd < endOfChange
+                                    ? indexOfChange
+                                    : finalEnd + netLength;
                         }
                     } else {
                         // force-update internalSelection in case empty selection is
