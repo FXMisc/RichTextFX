@@ -248,9 +248,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                             Add    |      N/A      |    ->     | -> / x | x
                             Delete | indexOfChange |    <-     |    x   | x
                          */
-                        if (endOfChange <= finalEnd &&
-                                indexOfChange == finalStart &&
-                                netLength > 0) {
+                        if (indexOfChange == finalStart && netLength > 0) {
                             finalStart = finalStart + netLength;
                         } else if (indexOfChange < finalStart) {
                             finalStart = finalStart < endOfChange
@@ -261,6 +259,9 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                             finalEnd = finalEnd < endOfChange
                                     ? indexOfChange
                                     : finalEnd + netLength;
+                        }
+                        if (finalStart > finalEnd) {
+                            finalStart = finalEnd;
                         }
                     } else {
                         // force-update internalSelection in case empty selection is
