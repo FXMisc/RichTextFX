@@ -1,5 +1,6 @@
 package org.fxmisc.richtext;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.function.UnaryOperator;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -93,48 +95,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
-        ChangeListener<IndexRange> requestLayout1 = (obs, ov, nv) -> requestLayout();
+        ChangeListener<IndexRange> requestLayout1 = new SelectionRangeChangeListener<>(this);
+        selections.addListener(new SelectionsSetListener<>(leftInset, requestLayout1, topInset, this));
 
-        selections.addListener((MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPath> change) -> {
-            if (change.wasAdded()) {
-                SelectionPath p = change.getValueAdded();
-                p.rangeProperty().addListener(requestLayout1);
-
-                p.layoutXProperty().bind(leftInset);
-                p.layoutYProperty().bind(topInset);
-
-                getChildren().add(selectionShapeStartIndex, p);
-                updateSingleSelection(p);
-            } else if (change.wasRemoved()) {
-                SelectionPath p = change.getValueRemoved();
-                p.rangeProperty().removeListener(requestLayout1);
-
-                p.layoutXProperty().unbind();
-                p.layoutYProperty().unbind();
-
-                getChildren().remove(p);
-            }
-        });
-
-        ChangeListener<Integer> requestLayout2 = (obs, ov, nv) -> requestLayout();
-        carets.addListener((SetChangeListener.Change<? extends CaretNode> change) -> {
-            if (change.wasAdded()) {
-                CaretNode caret = change.getElementAdded();
-                caret.columnPositionProperty().addListener(requestLayout2);
-                caret.layoutXProperty().bind(leftInset);
-                caret.layoutYProperty().bind(topInset);
-
-                getChildren().add(caret);
-                updateSingleCaret(caret);
-            } else if (change.wasRemoved()) {
-                CaretNode caret = change.getElementRemoved();
-                caret.columnPositionProperty().removeListener(requestLayout2);
-                caret.layoutXProperty().unbind();
-                caret.layoutYProperty().unbind();
-
-                getChildren().remove(caret);
-            }
-        });
+        ChangeListener<Integer> requestLayout2 = new CaretPositionChangeListener<>(this);
+        carets.addListener(new CaretsChangeListener<>(leftInset, requestLayout2, topInset, this));
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
@@ -435,6 +400,131 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         updateAllCaretShapes();
         updateAllSelectionShapes();
         updateBackgroundShapes();
+    }
+
+    private static final class SelectionsSetListener<PS, SEG, S> implements
+                MapChangeListener<Selection<PS, SEG, S>, SelectionPath> {
+        private final Val<Double> leftInset;
+        private final ChangeListener<IndexRange> requestLayout1;
+        private final Val<Double> topInset;
+        private final WeakReference<ParagraphText<PS, SEG, S>> ref;
+
+        public SelectionsSetListener(
+                    Val<Double> leftInset,
+                    ChangeListener<IndexRange> requestLayout1,
+                    Val<Double> topInset,
+                    ParagraphText<PS, SEG, S> paragraphText) {
+            this.leftInset = leftInset;
+            this.requestLayout1 = requestLayout1;
+            this.topInset = topInset;
+            ref = new WeakReference<>(paragraphText);
+        }
+
+        @Override
+        public void onChanged(
+                    javafx.collections.MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPath> change) {
+            ParagraphText<PS, SEG, S> paragraphText = ref.get();
+            if (null == paragraphText) {
+                change.getMap().removeListener(this);
+                return;
+            }
+
+            if (change.wasAdded()) {
+                SelectionPath p = change.getValueAdded();
+                p.rangeProperty().addListener(requestLayout1);
+
+                p.layoutXProperty().bind(leftInset);
+                p.layoutYProperty().bind(topInset);
+
+                paragraphText.getChildren().add(paragraphText.selectionShapeStartIndex, p);
+                paragraphText.updateSingleSelection(p);
+            } else if (change.wasRemoved()) {
+                SelectionPath p = change.getValueRemoved();
+                p.rangeProperty().removeListener(requestLayout1);
+
+                p.layoutXProperty().unbind();
+                p.layoutYProperty().unbind();
+
+                paragraphText.getChildren().remove(p);
+            }
+        }
+    }
+
+    private static final class SelectionRangeChangeListener<PS, SEG, S> implements ChangeListener<IndexRange> {
+        private final WeakReference<ParagraphText<PS, SEG, S>> ref;
+
+        public SelectionRangeChangeListener(ParagraphText<PS, SEG, S> paragraphText) {
+            ref = new WeakReference<>(paragraphText);
+        }
+
+        @Override
+        public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldValue, IndexRange newValue) {
+            if (null == ref.get()) {
+                observable.removeListener(this);
+            } else {
+                ref.get().requestLayout();
+            }
+        }
+    }
+
+    private static final class CaretPositionChangeListener<PS, SEG, S> implements ChangeListener<Integer> {
+        private final WeakReference<ParagraphText<PS, SEG, S>> ref;
+
+        public CaretPositionChangeListener(ParagraphText<PS, SEG, S> paragraphText) {
+            ref = new WeakReference<>(paragraphText);
+        }
+
+        @Override
+        public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
+            if (null == ref.get()) {
+                observable.removeListener(this);
+            } else {
+                ref.get().requestLayout();
+            }
+        }
+    }
+
+    private static final class CaretsChangeListener<PS, SEG, S> implements SetChangeListener<CaretNode> {
+        private final Val<Double> leftInset;
+        private final ChangeListener<Integer> requestLayout2;
+        private final Val<Double> topInset;
+        private final WeakReference<ParagraphText<PS, SEG, S>> ref;
+
+        private CaretsChangeListener(
+                    Val<Double> leftInset,
+                    ChangeListener<Integer> requestLayout2,
+                    Val<Double> topInset,
+                    ParagraphText<PS, SEG, S> paragraphText) {
+            ref = new WeakReference<>(paragraphText);
+            this.leftInset = leftInset;
+            this.requestLayout2 = requestLayout2;
+            this.topInset = topInset;
+        }
+
+        @Override
+        public void onChanged(Change<? extends CaretNode> change) {
+            ParagraphText<PS, SEG, S> paragraphText = ref.get();
+            if (null == paragraphText) {
+                change.getSet().removeListener(this);
+                return;
+            }
+            if (change.wasAdded()) {
+                CaretNode caret = change.getElementAdded();
+                caret.columnPositionProperty().addListener(requestLayout2);
+                caret.layoutXProperty().bind(leftInset);
+                caret.layoutYProperty().bind(topInset);
+
+                paragraphText.getChildren().add(caret);
+                paragraphText.updateSingleCaret(caret);
+            } else if (change.wasRemoved()) {
+                CaretNode caret = change.getElementRemoved();
+                caret.columnPositionProperty().removeListener(requestLayout2);
+                caret.layoutXProperty().unbind();
+                caret.layoutYProperty().unbind();
+
+                paragraphText.getChildren().remove(caret);
+            }
+        }
     }
 
     private static class CustomCssShapeHelper<T> {
