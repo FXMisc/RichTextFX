@@ -57,6 +57,7 @@ Who uses RichTextFX?
 - [XR3Player](https://github.com/goxr3plus/XR3Player)
 - [JDialogue](https://github.com/SkyAphid/JDialogue)
 - [George](http://www.george.andante.no)
+- [Nearde IDE](https://github.com/VenityStudio/Nearde-IDE)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
