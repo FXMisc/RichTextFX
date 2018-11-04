@@ -260,6 +260,9 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                                     ? indexOfChange
                                     : finalEnd + netLength;
                         }
+                        if (finalStart > finalEnd) {
+                            finalStart = finalEnd;
+                        }
                     } else {
                         // force-update internalSelection in case empty selection is
                         // at the end of area and a character was deleted
