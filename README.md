@@ -56,6 +56,7 @@ Who uses RichTextFX?
 - [Everest REST client](https://github.com/RohitAwate/Everest)
 - [XR3Player](https://github.com/goxr3plus/XR3Player)
 - [JDialogue](https://github.com/SkyAphid/JDialogue)
+- [George](http://www.george.andante.no)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
