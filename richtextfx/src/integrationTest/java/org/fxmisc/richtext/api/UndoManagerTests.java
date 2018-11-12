@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(NestedRunner.class)
 public class UndoManagerTests {
@@ -38,6 +39,22 @@ public class UndoManagerTests {
 
             interact(area::undo);
             assertEquals("", area.getText());
+        }
+
+        @Test  // After undo, text insertion point jumps to the start of the text area #780
+        public void undo_leaves_correct_insertion_point() {
+            long periodOfUserInactivity = UndoUtils.DEFAULT_PREVENT_MERGE_DELAY.toMillis() + 300L;
+
+            write("abc def ");
+            sleep(periodOfUserInactivity);
+
+            write("xyz");
+            interact(area::undo);
+
+            write('g');
+
+            sleep(periodOfUserInactivity);
+            assertTrue(area.getText().endsWith("g"));
         }
 
         @Test

@@ -269,9 +269,9 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                         // (prevents a StringIndexOutOfBoundsException because
                         // end is one char farther than area's length).
 
-                        if (getLength() < getEndPosition()) {
-                            finalStart = getLength();
-                            finalEnd = getLength();
+                        if (getEndPosition() > 0) {
+                            finalStart = area.getLength();
+                            finalEnd = finalStart;
                         }
                     }
                 }
