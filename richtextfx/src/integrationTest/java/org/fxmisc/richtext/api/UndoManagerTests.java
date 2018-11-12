@@ -40,6 +40,22 @@ public class UndoManagerTests {
             assertEquals("", area.getText());
         }
 
+        @Test  // After undo, text insertion point jumps to the start of the text area #780
+        public void undo_leaves_correct_insertion_point() {
+            long periodOfUserInactivity = UndoUtils.DEFAULT_PREVENT_MERGE_DELAY.toMillis() + 300L;
+
+            write("abc def ");
+            sleep(periodOfUserInactivity);
+
+            write("xyz");
+            interact(area::undo);
+
+            write('g');
+
+            sleep(periodOfUserInactivity);
+            assertTrue(area.getText().endsWith("g"));
+        }
+
         @Test
         public void testUndoWithWinNewlines() {
             String text1 = "abc\r\ndef";
