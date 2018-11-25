@@ -1,4 +1,3 @@
-**This project is no longer being maintained. See [this issue](https://github.com/FXMisc/RichTextFX/issues/768) for more details.**
 
 RichTextFX
 ==========
@@ -32,7 +31,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.9.1](http://fxmisc.github.io/richtext/javadoc/0.9.1/org/fxmisc/richtext/package-summary.html)
+  * [0.9.2](http://fxmisc.github.io/richtext/javadoc/0.9.1/org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -138,38 +137,36 @@ Requirements
 
 [JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line. Also, there's a heavy use of lambdas, defender methods and the stream API in the code base.
 
-JDK 8u40 is recommended, because it fixes some text rendering bugs.
-
 Download
 --------
 
 ### Stable release
 
-Current stable release is 0.9.1.
+Current stable release is 0.9.2.
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.9.1  |
+| org.fxmisc.richtext | richtextfx  | 0.9.2  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.1'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.2'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.9.1"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.9.2"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.1/richtextfx-0.9.1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.1/richtextfx-fat-0.9.1.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.2/richtextfx-0.9.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.9.2/richtextfx-fat-0.9.2.jar) and place it on your classpath.
 
 ### Snapshot releases
 

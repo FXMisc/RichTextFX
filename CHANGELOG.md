@@ -1,5 +1,22 @@
 # Change Log
 
+## [v0.9.2](https://github.com/FXMisc/RichTextFX/tree/v0.9.2) (2018-11-23)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.1...v0.9.2)
+
+**Fixed bugs:**
+
+- Issue: Extreme memory usage with large blocks of text [\#627](https://github.com/FXMisc/RichTextFX/issues/627)
+- Bug: Replace selected text with pasted text causes exception [\#774](https://github.com/FXMisc/RichTextFX/issues/774)
+- Bug: After undo (ctrl-Z), text insertion point jumps to the start [\#780](https://github.com/FXMisc/RichTextFX/issues/780)
+
+**Merged pull requests:**
+
+- Fixed issue: Extreme memory usage with large blocks of text [\#779](https://github.com/FXMisc/RichTextFX/pull/779) ([JonathanMarchand](https://github.com/JonathanMarchand))
+- Fix bug: Replace selected text with pasted text causes exception [\#775](https://github.com/FXMisc/RichTextFX/pull/775) ([MrChebik](https://github.com/MrChebik))
+- Fix bug: After undo (ctrl-Z), text insertion point jumps to the start [\#785](https://github.com/FXMisc/RichTextFX/pull/785) ([Jugen](https://github.com/Jugen))
+- Added George to 'Who uses RichTextFX?' [\#778](https://github.com/FXMisc/RichTextFX/pull/778) ([terjedahl](https://github.com/terjedahl))
+- Added Nearde IDE to 'Who uses RichTextFX?' [\#784](https://github.com/FXMisc/RichTextFX/pull/784) ([MWGuy](https://github.com/MWGuy))
+
 ## [v0.9.1](https://github.com/FXMisc/RichTextFX/tree/v0.9.1) (2018-07-16)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.0...v0.9.1)
 
