@@ -62,6 +62,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             FXCollections.observableMap(new HashMap<>(1));
     public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() { return selections; }
 
+    private final ChangeListener<IndexRange> selectionRangeListener;
+    private final ChangeListener<Integer> caretPositionListener;
+
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
@@ -95,11 +98,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
-        ChangeListener<IndexRange> requestLayout1 = new SelectionRangeChangeListener<>(this);
-        selections.addListener(new SelectionsSetListener<>(leftInset, requestLayout1, topInset, this));
+        selectionRangeListener = new SelectionRangeChangeListener<>(this);
+        selections.addListener(new SelectionsSetListener<>(leftInset, selectionRangeListener, topInset, this));
 
-        ChangeListener<Integer> requestLayout2 = new CaretPositionChangeListener<>(this);
-        carets.addListener(new CaretsChangeListener<>(leftInset, requestLayout2, topInset, this));
+        caretPositionListener = new CaretPositionChangeListener<>(this);
+        carets.addListener(new CaretsChangeListener<>(leftInset, caretPositionListener, topInset, this));
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
@@ -180,6 +183,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 addToForeground,
                 clearUnusedShapes
         );
+    }
+
+    void dispose() {
+        for (SelectionPath p : selections.values()) {
+            p.rangeProperty().removeListener(selectionRangeListener);
+            p.layoutXProperty().unbind();
+            p.layoutYProperty().unbind();
+        }
+
+        for (CaretNode caret : carets) {
+            caret.columnPositionProperty().removeListener(caretPositionListener);
+            caret.layoutXProperty().unbind();
+            caret.layoutYProperty().unbind();
+        }
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
