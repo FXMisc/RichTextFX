@@ -98,6 +98,14 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         selectionRangeListener = (obs, ov, nv) -> requestLayout();
         selections.addListener((MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPath> change) -> {
+            if (change.wasRemoved()) {
+                SelectionPath p = change.getValueRemoved();
+                p.rangeProperty().removeListener(selectionRangeListener);
+                p.layoutXProperty().unbind();
+                p.layoutYProperty().unbind();
+
+                getChildren().remove(p);
+            }
             if (change.wasAdded()) {
                 SelectionPath p = change.getValueAdded();
                 p.rangeProperty().addListener(selectionRangeListener);
@@ -106,18 +114,19 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
                 getChildren().add(selectionShapeStartIndex, p);
                 updateSingleSelection(p);
-            } else if (change.wasRemoved()) {
-                SelectionPath p = change.getValueRemoved();
-                p.rangeProperty().removeListener(selectionRangeListener);
-                p.layoutXProperty().unbind();
-                p.layoutYProperty().unbind();
-
-                getChildren().remove(p);
             }
         });
 
         caretPositionListener = (obs, ov, nv) -> requestLayout();
         carets.addListener((SetChangeListener.Change<? extends CaretNode> change) -> {
+            if (change.wasRemoved()) {
+                CaretNode caret = change.getElementRemoved();
+                caret.columnPositionProperty().removeListener(caretPositionListener);
+                caret.layoutXProperty().unbind();
+                caret.layoutYProperty().unbind();
+
+                getChildren().remove(caret);
+            }
             if (change.wasAdded()) {
                 CaretNode caret = change.getElementAdded();
                 caret.columnPositionProperty().addListener(caretPositionListener);
@@ -126,13 +135,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
                 getChildren().add(caret);
                 updateSingleCaret(caret);
-            } else if (change.wasRemoved()) {
-                CaretNode caret = change.getElementRemoved();
-                caret.columnPositionProperty().removeListener(caretPositionListener);
-                caret.layoutXProperty().unbind();
-                caret.layoutYProperty().unbind();
-
-                getChildren().remove(caret);
             }
         });
 
