@@ -459,10 +459,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         @Override
         public void changed(ObservableValue<? extends IndexRange> observable, IndexRange oldValue, IndexRange newValue) {
-            if (null == ref.get()) {
+            ParagraphText<PS, SEG, S> paragraphText = ref.get();
+            if (null == paragraphText) {
                 observable.removeListener(this);
             } else {
-                ref.get().requestLayout();
+                paragraphText.requestLayout();
             }
         }
     }
@@ -476,10 +477,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         @Override
         public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
-            if (null == ref.get()) {
+            ParagraphText<PS, SEG, S> paragraphText = ref.get();
+            if (null == paragraphText) {
                 observable.removeListener(this);
             } else {
-                ref.get().requestLayout();
+                paragraphText.requestLayout();
             }
         }
     }
