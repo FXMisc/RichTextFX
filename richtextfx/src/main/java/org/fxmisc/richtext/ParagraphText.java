@@ -220,17 +220,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     }
 
     void dispose() {
-        for (SelectionPath p : selections.values()) {
-            p.rangeProperty().removeListener(selectionRangeListener);
-            p.layoutXProperty().unbind();
-            p.layoutYProperty().unbind();
-        }
-
-        for (CaretNode caret : carets) {
-            caret.columnPositionProperty().removeListener(caretPositionListener);
-            caret.layoutXProperty().unbind();
-            caret.layoutYProperty().unbind();
-        }
+        // this removes listeners (in selections and carets listeners) and avoids memory leaks
+        selections.clear();
+        carets.clear();
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
