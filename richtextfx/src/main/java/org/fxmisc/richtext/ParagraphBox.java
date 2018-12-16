@@ -22,7 +22,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.IndexRange;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
@@ -116,6 +115,10 @@ class ParagraphBox<PS, SEG, S> extends Region {
             }
         });
         graphicOffset.addListener(obs -> requestLayout());
+    }
+
+    void dispose() {
+        text.dispose();
     }
 
     @Override

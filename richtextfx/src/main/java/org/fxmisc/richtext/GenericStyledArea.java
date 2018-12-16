@@ -1463,6 +1463,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
                 box.graphicOffset.unbind();
+                box.dispose();
 
                 firstParPseudoClass.unsubscribe();
                 lastParPseudoClass.unsubscribe();
