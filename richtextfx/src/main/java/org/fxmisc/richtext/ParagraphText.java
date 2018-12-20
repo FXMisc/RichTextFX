@@ -23,7 +23,6 @@ import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -404,8 +403,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         int start = 0;
 
         // calculate shared values among consecutive nodes
-        FilteredList<Node> nodeList = getChildren().filtered(node -> node instanceof TextExt);
-        for (Node node : nodeList) {
+        for (Node node : getManagedChildren()) {
+            if (!(node instanceof TextExt)) {
+                // node is a custom objects (e.g. image)
+                // - custom objects do not support background color, border and underline
+                // - text length of custom objects is always 1
+                start += 1;
+                continue;
+            }
+
             TextExt text = (TextExt) node;
             int end = start + text.getText().length();
 
