@@ -1479,6 +1479,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
     private void followCaret() {
         int parIdx = getCurrentParagraph();
+
+        // Make sure that cells are up-to-date to avoid scrolling current line to top when
+        // start editing, which may occur under certain circumstances. E.g. if having embedded
+        // images, which results in some lines that are much higher then the average line height.
+        virtualFlow.layout();
+
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
         Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
