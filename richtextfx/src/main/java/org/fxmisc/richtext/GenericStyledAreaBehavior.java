@@ -16,6 +16,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -49,6 +50,22 @@ class GenericStyledAreaBehavior {
                 ? SelectionPolicy.EXTEND
                 : SelectionPolicy.ADJUST;
 
+        /*
+         * KeyCodes are misinterpreted when using a different keyboard layout, for example:
+         * on Dvorak: C results in KeyCode I, X -> B, and V -> . 
+         * and on German layouts: Z and Y are reportedly switched
+         * so then editing commands such as Ctrl+C, or CMD+Z are incorrectly processed.
+         * KeyCharacterCombination however does keyboard translation before matching.
+         * This resolves issue #799
+         */
+        KeyCharacterCombination SHORTCUT_A = new KeyCharacterCombination( "a", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_C = new KeyCharacterCombination( "c", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_V = new KeyCharacterCombination( "v", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_X = new KeyCharacterCombination( "x", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
+        KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
+		
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
                 consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
@@ -57,19 +74,19 @@ class GenericStyledAreaBehavior {
                 consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN),  GenericStyledAreaBehavior::deletePrevWord),
                 // cut
                 consume(
-                        anyOf(keyPressed(CUT),   keyPressed(X, SHORTCUT_DOWN), keyPressed(DELETE, SHIFT_DOWN)),
+                        anyOf(keyPressed(CUT),   keyPressed(SHORTCUT_X), keyPressed(DELETE, SHIFT_DOWN)),
                         (b, e) -> b.view.cut()),
                 // paste
                 consume(
-                        anyOf(keyPressed(PASTE), keyPressed(V, SHORTCUT_DOWN), keyPressed(INSERT, SHIFT_DOWN)),
+                        anyOf(keyPressed(PASTE), keyPressed(SHORTCUT_V), keyPressed(INSERT, SHIFT_DOWN)),
                         (b, e) -> b.view.paste()),
                 // tab & newline
                 consume(keyPressed(ENTER), (b, e) -> b.view.replaceSelection("\n")),
                 consume(keyPressed(TAB),   (b, e) -> b.view.replaceSelection("\t")),
                 // undo/redo
-                consume(keyPressed(Z, SHORTCUT_DOWN), (b, e) -> b.view.undo()),
+                consume(keyPressed(SHORTCUT_Z), (b, e) -> b.view.undo()),
                 consume(
-                        anyOf(keyPressed(Y, SHORTCUT_DOWN), keyPressed(Z, SHORTCUT_DOWN, SHIFT_DOWN)),
+                        anyOf(keyPressed(SHORTCUT_Y), keyPressed(SHORTCUT_SHIFT_Z)),
                         (b, e) -> b.view.redo())
         );
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> edits = when(b -> b.view.isEditable(), editsBase);
@@ -138,13 +155,13 @@ class GenericStyledAreaBehavior {
                                 keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN),
                                 keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)
                         ), (b, e) -> b.skipToPrevWord(selPolicy)),
-                consume(keyPressed(A, SHORTCUT_DOWN), (b, e) -> b.view.selectAll())
+                consume(keyPressed(SHORTCUT_A), (b, e) -> b.view.selectAll())
         );
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> copyAction = consume(
                 anyOf(
                         keyPressed(COPY),
-                        keyPressed(C, SHORTCUT_DOWN),
+                        keyPressed(SHORTCUT_C),
                         keyPressed(INSERT, SHORTCUT_DOWN)
                 ), (b, e) -> b.view.copy()
         );
