@@ -1,5 +1,23 @@
 # Change Log
 
+## [v0.9.3](https://github.com/FXMisc/RichTextFX/tree/v0.9.3) (2019-03-01)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.2...v0.9.3)
+
+**Fixed bugs:**
+
+- Bug: Alternate keyboard layouts (eg: Dvorak, or German) not supported [\#799](https://github.com/FXMisc/RichTextFX/issues/799)
+- Bug: Background color is applied in the wrong place when rendered segment type is not a TextExt [\#638](https://github.com/FXMisc/RichTextFX/issues/638)
+- Bug: Random crashes in GenericStyleArea.visibleParToAllParIndex [\#777](https://github.com/FXMisc/RichTextFX/issues/777)
+- Bug: Replace selected text with pasted text causes exception [\#788](https://github.com/FXMisc/RichTextFX/issues/788)
+
+**Merged pull requests:**
+
+- Fixed issue: Immediately remove listeners in ParagraphText from selections and carets on disposal [\#791](https://github.com/FXMisc/RichTextFX/pull/791) ([JFormDesigner](https://github.com/JFormDesigner))
+- Fix bug: Position of background, border and underline shapes in case that the line contains custom objects [\#793](https://github.com/FXMisc/RichTextFX/pull/793) ([JFormDesigner](https://github.com/JFormDesigner))
+- Fix bug: Paragraph list trim using object comparison [\#795](https://github.com/FXMisc/RichTextFX/pull/795) ([JFormDesigner](https://github.com/JFormDesigner))
+- Fix bug: Alternate keyboard layouts not supported [\#801](https://github.com/FXMisc/RichTextFX/pull/801) ([Jugen](https://github.com/Jugen))
+- Added Astro IDE Project to 'Who uses RichTextFX?' [\#802](https://github.com/FXMisc/RichTextFX/pull/802) ([AmrDeveloper](https://github.com/AmrDeveloper))
+
 ## [v0.9.2](https://github.com/FXMisc/RichTextFX/tree/v0.9.2) (2018-11-23)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.1...v0.9.2)
 
