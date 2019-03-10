@@ -11,7 +11,7 @@ import javafx.scene.text.Text;
 /**
  * Uses reflection to make this project's code work on Java 8 and Java 9 in a single jar
  */
-class JavaFXCompatibility {
+public class JavaFXCompatibility {
 
     private static boolean isJava9orLater;
 
@@ -26,6 +26,14 @@ class JavaFXCompatibility {
         }
     }
 
+    /**
+     * There is a Java 9 version of this that returns false in src/main/java9/...
+     * and is used to check if tests are running against a multi-release jar.
+     */
+    public static boolean isJavaEight() {
+    	return true;
+    }
+    
     /**
      * Java 8:  javafx.scene.text.Text.impl_selectionFillProperty()
      * Java 9+: javafx.scene.text.Text.selectionFillProperty()
