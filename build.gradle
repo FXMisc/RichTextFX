@@ -12,18 +12,9 @@ subprojects {
         }
     }
 
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
-
-    // allow setting source/target compatibility from command line
-    // for checking Java 9+ compatibility in Travis CI
-    def checkSourceCompatibility = System.properties["checkSourceCompatibility"]
-    if (checkSourceCompatibility != null) {
-        sourceCompatibility = checkSourceCompatibility
-        targetCompatibility = checkSourceCompatibility
-    }
-
-    compileJava.options.deprecation = true
+    // Unless Java 9 is used source/target compatibility will be that of the compiling JDK
+    // With JDK 9 src/main/java compiles with source/target compatibility of Java 8 (eight)
+    // while src/main/java9 compiles with 9 and multi-release jars are created.  
 
     if (it.name.equals("richtextfx")) {
         task("getProjectVersion") {

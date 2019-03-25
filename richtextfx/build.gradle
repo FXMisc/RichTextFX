@@ -2,15 +2,15 @@ buildscript {
     repositories {
         jcenter()
     }
-    dependencies {
-        classpath 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.3.2'
-    }
+}
+
+plugins {
+    id 'org.unbroken-dome.test-sets' version '2.1.1'
 }
 
 apply plugin: 'osgi'
 apply plugin: 'maven'
 apply plugin: 'signing'
-apply plugin: 'org.unbroken-dome.test-sets'
 
 group = 'org.fxmisc.richtext'
 
@@ -20,22 +20,30 @@ testSets {
 
 check.dependsOn integrationTest
 integrationTest.mustRunAfter test
-if (gradle.gradleVersion.substring(0, 1) >= "4") {
-    // required for Gradle 4 to see custom integrationTest test suite
-    integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
+integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
+
+sourceSets {
+   java9 {
+      java {
+         srcDirs = ['src/main/java9']
+      }
+   }
 }
+
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     compile group: 'org.fxmisc.undo', name: 'undofx', version: '2.1.0'
     compile group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6'
     compile group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
+    java9Implementation files(sourceSets.main.output.classesDirs) { builtBy compileJava }
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     integrationTestCompile group: 'junit', name: 'junit', version: '4.12'
     integrationTestCompile group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
     integrationTestCompile "org.testfx:testfx-core:4.0.8-alpha"
-    if (org.gradle.api.JavaVersion.current().isJava9()) {
+    if ( JavaVersion.current() >= JavaVersion.VERSION_1_9 ) {
         integrationTestCompile "org.testfx:testfx-internal-java9:4.0.8-alpha"
     }
     integrationTestCompile ("org.testfx:testfx-junit:4.0.8-alpha") {
@@ -44,14 +52,30 @@ dependencies {
     integrationTestCompile "org.testfx:openjfx-monocle:8u76-b04"
 }
 
+compileJava {
+   if ( JavaVersion.current() == JavaVersion.VERSION_1_9 ) {
+      sourceCompatibility = 8
+      targetCompatibility = 8
+   }
+   options.deprecation = true
+}
+
+compileJava9Java {
+   onlyIf { JavaVersion.current() == JavaVersion.VERSION_1_9 }
+   sourceCompatibility = 9
+   targetCompatibility = 9
+   options.deprecation = true
+}
 
 jar {
+    into 'META-INF/versions/9', { from sourceSets.java9.output }
     manifest {
         attributes(
             'Specification-Title': 'RichTextFX',
             'Specification-Version': project.specificationVersion,
             'Implementation-Title': 'RichTextFX',
-            'Implementation-Version': project.version)
+            'Implementation-Version': project.version,
+            'Multi-Release': 'true')
     }
 }
 
@@ -82,6 +106,9 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 test {
+    dependsOn jar
+    // run tests against jar in case it's a  multi-release jar
+    classpath = files(jar.archivePath, classpath) - sourceSets.main.output
     testLogging {
         // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
         // set options for log level LIFECYCLE
@@ -111,6 +138,9 @@ test {
 }
 
 integrationTest {
+    dependsOn jar
+    // run tests against jar in case it's a  multi-release jar
+    classpath = files(jar.archivePath, classpath) - sourceSets.main.output
     testLogging {
         // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
         // set options for log level LIFECYCLE
@@ -145,13 +175,13 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 task sourcesJar(type: Jar) {
+    into 'java9', { from sourceSets.java9.allSource }
     from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 artifacts {
     archives jar
-
     archives javadocJar
     archives sourcesJar
 }
@@ -218,6 +248,8 @@ uploadArchives.onlyIf { doUploadArchives }
 
 task fatJar(type: Jar, dependsOn: classes) {
     appendix = 'fat'
+    manifest.attributes( 'Multi-Release': 'true' )
+    into 'META-INF/versions/9', { from sourceSets.java9.output }
     from sourceSets.main.output
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

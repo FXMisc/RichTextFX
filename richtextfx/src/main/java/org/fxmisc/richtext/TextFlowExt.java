@@ -21,6 +21,9 @@ import javafx.scene.shape.MoveTo;
 
 /**
  * Adds additional API to {@link TextFlow}.
+ * 
+ * PLEASE NOTE that is has a Java 9+ version in src/main/java9 !!!
+ * 
  */
 class TextFlowExt extends TextFlow {
 
