@@ -1,5 +1,21 @@
 # Change Log
 
+## [v0.10.0](https://github.com/FXMisc/RichTextFX/tree/v0.10.0) (2019-04-18)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.3...v0.10.0)
+
+**Implemented enhancements:**
+
+- RichTextFX with Java 11 [\#776](https://github.com/FXMisc/RichTextFX/issues/776)
+
+**Fixed bugs:**
+
+- Bug: Lines sometimes overlap when one wraps by a small amount [\#809](https://github.com/FXMisc/RichTextFX/issues/809)
+
+**Merged pull requests:**
+
+- Enhancement: Mrjar config and source [\#804](https://github.com/FXMisc/RichTextFX/pull/804) ([Jurgen Doll](https://github.com/Jugen))
+- Fix bug: Fix height paragraph box height calculation [\#810](https://github.com/FXMisc/RichTextFX/pull/810) ([Chris Smith](https://github.com/csmith))
+
 ## [v0.9.3](https://github.com/FXMisc/RichTextFX/tree/v0.9.3) (2019-03-01)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.2...v0.9.3)
 
