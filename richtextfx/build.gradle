@@ -213,7 +213,7 @@ if(doUploadArchives) {
                 name 'RichTextFX'
                 packaging 'jar'
                 description 'Rich-text area for JavaFX'
-                url 'http://www.fxmisc.org/richtext/'
+                url 'https://github.com/FXMisc/RichTextFX/#richtextfx'
            
                 scm {
                     url 'scm:git@github.com:FXMisc/RichTextFX.git'
