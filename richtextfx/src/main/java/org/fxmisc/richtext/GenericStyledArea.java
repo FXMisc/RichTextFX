@@ -442,14 +442,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setOnOutsideSelectionMousePressed(EventHandler<MouseEvent> handler) { onOutsideSelectionMousePressed.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressedProperty() { return onOutsideSelectionMousePressed; }
     private final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressed = new SimpleObjectProperty<>( e -> {
-        onOutsideSelectionMousePressProperty().get().accept(e);
+        moveTo( hit( e.getX(), e.getY() ).getInsertionIndex(), SelectionPolicy.CLEAR );
     });
 
     @Override public final EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased() { return onInsideSelectionMousePressReleased.get(); }
     @Override public final void setOnInsideSelectionMousePressReleased(EventHandler<MouseEvent> handler) { onInsideSelectionMousePressReleased.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleasedProperty() { return onInsideSelectionMousePressReleased; }
     private final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleased = new SimpleObjectProperty<>( e -> {
-        onInsideSelectionMousePressReleaseProperty().get().accept(e);
+        moveTo( hit( e.getX(), e.getY() ).getInsertionIndex(), SelectionPolicy.CLEAR );
     });
 
     private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
@@ -476,7 +476,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public final void setOnSelectionDropped(EventHandler<MouseEvent> handler) { onSelectionDropped.set( handler ); }
     @Override public final ObjectProperty<EventHandler<MouseEvent>> onSelectionDroppedProperty() { return onSelectionDropped; }
     private final ObjectProperty<EventHandler<MouseEvent>> onSelectionDropped = new SimpleObjectProperty<>( e -> {
-        onSelectionDropProperty().get().accept(e);
+        moveSelectedText( hit( e.getX(), e.getY() ).getInsertionIndex() );
     });
 
     // not a hook, but still plays a part in the default mouse behavior
@@ -1581,37 +1581,4 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return CSS_META_DATA_LIST;
     }
 
-
-    // Note: this code should be moved to `onOutsideSelectionMousePressed` property
-    // in the next major release before removing this deprecated field
-    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePress = new SimpleObjectProperty<>( e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
-    @Deprecated
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty() {
-        return onOutsideSelectionMousePress;
-    }
-
-    // Note: this code should be moved to `onInsideSelectionMouseReleased` property
-    // in the next major release before removing this deprecated field
-    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressRelease = new SimpleObjectProperty<>( e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
-    @Deprecated
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty() {
-        return onInsideSelectionMousePressRelease;
-    }
-
-    // Note: this code should be moved to `onSelectionDropped` property
-    // in the next major release before removing this deprecated field
-    @Deprecated private final ObjectProperty<Consumer<MouseEvent>> onSelectionDrop = new SimpleObjectProperty<>( e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveSelectedText(hit.getInsertionIndex());
-    });
-    @Deprecated
-    @Override public final ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty() {
-        return onSelectionDrop;
-    }
 }
