@@ -15,9 +15,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyledSegment;
+import org.reactfx.util.Tuple2;
+import org.reactfx.util.Tuples;
+import org.reactfx.value.Val;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -34,13 +39,7 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
 import javafx.scene.shape.StrokeLineCap;
-
 import javafx.scene.shape.StrokeType;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyledSegment;
-import org.reactfx.util.Tuple2;
-import org.reactfx.util.Tuples;
-import org.reactfx.value.Val;
 
 /**
  * The class responsible for rendering the segments in an paragraph. It also renders additional RichTextFX-specific
@@ -59,8 +58,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             FXCollections.observableMap(new HashMap<>(1));
     public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() { return selections; }
 
-    private final ChangeListener<IndexRange> selectionRangeListener;
-    private final ChangeListener<Integer> caretPositionListener;
+    private final MapChangeListener<? super Selection<PS, SEG, S>, ? super SelectionPath> selectionPathListener;
+    private final SetChangeListener<? super CaretNode> caretNodeListener;
 
     // FIXME: changing it currently has not effect, because
     // Text.impl_selectionFillProperty().set(newFill) doesn't work
@@ -95,11 +94,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
-        selectionRangeListener = (obs, ov, nv) -> requestLayout();
-        selections.addListener((MapChangeListener.Change<? extends Selection<PS, SEG, S>, ? extends SelectionPath> change) -> {
+        selectionPathListener = change -> {
             if (change.wasRemoved()) {
                 SelectionPath p = change.getValueRemoved();
-                p.rangeProperty().removeListener(selectionRangeListener);
+                p.rangeProperty().removeListener( (obs, ov, nv) -> requestLayout() );
                 p.layoutXProperty().unbind();
                 p.layoutYProperty().unbind();
 
@@ -107,20 +105,20 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
             if (change.wasAdded()) {
                 SelectionPath p = change.getValueAdded();
-                p.rangeProperty().addListener(selectionRangeListener);
+                p.rangeProperty().addListener( (obs, ov, nv) -> requestLayout() );
                 p.layoutXProperty().bind(leftInset);
                 p.layoutYProperty().bind(topInset);
 
                 getChildren().add(selectionShapeStartIndex, p);
                 updateSingleSelection(p);
             }
-        });
+        };
+        selections.addListener( selectionPathListener );
 
-        caretPositionListener = (obs, ov, nv) -> requestLayout();
-        carets.addListener((SetChangeListener.Change<? extends CaretNode> change) -> {
+        caretNodeListener = change -> {
             if (change.wasRemoved()) {
                 CaretNode caret = change.getElementRemoved();
-                caret.columnPositionProperty().removeListener(caretPositionListener);
+                caret.columnPositionProperty().removeListener( (obs, ov, nv) -> requestLayout() );
                 caret.layoutXProperty().unbind();
                 caret.layoutYProperty().unbind();
 
@@ -128,14 +126,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
             if (change.wasAdded()) {
                 CaretNode caret = change.getElementAdded();
-                caret.columnPositionProperty().addListener(caretPositionListener);
+                caret.columnPositionProperty().addListener( (obs, ov, nv) -> requestLayout() );
                 caret.layoutXProperty().bind(leftInset);
                 caret.layoutYProperty().bind(topInset);
 
                 getChildren().add(caret);
                 updateSingleCaret(caret);
             }
-        });
+        };
+        carets.addListener( caretNodeListener );
 
         // XXX: see the note at highlightTextFill
 //        highlightTextFill.addListener(new ChangeListener<Paint>() {
@@ -220,6 +219,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     void dispose() {
         // this removes listeners (in selections and carets listeners) and avoids memory leaks
+    	selections.removeListener( selectionPathListener );
+    	carets.removeListener( caretNodeListener );
         selections.clear();
         carets.clear();
     }
