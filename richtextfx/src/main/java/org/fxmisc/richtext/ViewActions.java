@@ -463,25 +463,4 @@ public interface ViewActions<PS, SEG, S> {
         }
     }
 
-    /** Use setOnOutsideSelectionMousePress<u>ed</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
-    @Deprecated default void setOnOutsideSelectionMousePress(Consumer<MouseEvent> consumer) { onOutsideSelectionMousePressProperty().set(consumer); }
-    /** Use getOnOutsideSelectionMousePress<u>ed</u>() instead */
-    @Deprecated default Consumer<MouseEvent> getOnOutsideSelectionMousePress() { return onOutsideSelectionMousePressProperty().get(); }
-    /** Use onOutsideSelectionMousePress<u>ed</u>Property() instead */
-    @Deprecated ObjectProperty<Consumer<MouseEvent>> onOutsideSelectionMousePressProperty();
-
-    /** Use getOnInsideSelectionMousePressRelease<u>d</u>() instead */
-    @Deprecated default Consumer<MouseEvent> getOnInsideSelectionMousePressRelease() { return onInsideSelectionMousePressReleaseProperty().get(); }
-    /** Use setOnInsideSelectionMousePressRelease<u>d</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
-    @Deprecated default void setOnInsideSelectionMousePressRelease(Consumer<MouseEvent> consumer) { onInsideSelectionMousePressReleaseProperty().set(consumer); }
-    /** Use onInsideSelectionMousePressRelease<u>d</u>Property() instead */
-    @Deprecated ObjectProperty<Consumer<MouseEvent>> onInsideSelectionMousePressReleaseProperty();
-
-    /** Use getOnSelectionDrop<u>ped</u>() instead */
-    @Deprecated default Consumer<MouseEvent> getOnSelectionDrop() { return onSelectionDropProperty().get(); }
-    /** Use setOnSelectionDrop<u>ped</u>(<i>EventHandler&gt;MouseEvent&lt;</i>) instead, which is FXML compatible */
-    @Deprecated default void setOnSelectionDrop(Consumer<MouseEvent> consumer) { onSelectionDropProperty().set(consumer); }
-    /** Use onSelectionDrop<u>ped</u>Property() instead */
-    @Deprecated ObjectProperty<Consumer<MouseEvent>> onSelectionDropProperty();
-
 }
