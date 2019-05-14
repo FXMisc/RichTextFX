@@ -62,4 +62,19 @@ public class ParagraphTest {
         Paragraph<Void, String, Collection<String>> restyledP = p.restyle(0, spans);
         assertEquals( test, restyledP.getStyleSpans().getStyleSpan( 0 ).getStyle() );
     }
+	
+    // Relates to #815 where an undo after deleting a portion of styled text in a multi-
+    // styled paragraph causes an exception in UndoManager receiving an unexpected change.
+    @Test
+    public void multiStyleParagraphReturnsCorrect_subSequenceOfLength() {
+
+    	Collection<String> test = Collections.singleton("test");
+        TextOps<String, Collection<String>> segOps = SegmentOps.styledTextOps();
+        StyleSpansBuilder ssb = new StyleSpansBuilder<>(2);
+        ssb.add( Collections.EMPTY_LIST, 8 );
+        ssb.add( test, 8 );
+        
+        Paragraph<Void, String, Collection<String>> p = new Paragraph<>(null, segOps, "noStyle hasStyle", ssb.create());
+        assertEquals( test, p.subSequence( p.length() ).getStyleOfChar(0) );
+    }
 }

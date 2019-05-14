@@ -272,7 +272,7 @@ public final class Paragraph<PS, SEG, S> {
         } else if (start == length()) {
             // in case one is using EitherOps<SegmentOps, SegmentOps>, force the empty segment
             // to use the left ops' default empty seg, not the right one's empty seg
-            return new Paragraph<>(paragraphStyle, segmentOps, segmentOps.createEmptySeg(), styles.subView(0, 0));
+            return new Paragraph<>(paragraphStyle, segmentOps, segmentOps.createEmptySeg(), styles.subView(start,start));
         } else if(start < length()) {
             Position pos = navigator.offsetToPosition(start, Forward);
             int segIdx = pos.getMajor();
