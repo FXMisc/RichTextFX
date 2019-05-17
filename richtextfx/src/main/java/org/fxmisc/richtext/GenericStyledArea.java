@@ -557,7 +557,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // paragraphs and on the lower level are lines within a paragraph
     private final TwoLevelNavigator paragraphLineNavigator;
 
-    private boolean followCaretRequested = false;
+    private boolean paging, followCaretRequested = false;
 
     /* ********************************************************************** *
      *                                                                        *
@@ -1109,16 +1109,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void prevPage(SelectionPolicy selectionPolicy) {
-        showCaretAtBottom();
-        CharacterHit hit = hit(getTargetCaretOffset(), 1.0);
-        moveTo(hit.getInsertionIndex(), selectionPolicy);
+    	page( -1, selectionPolicy );
     }
 
     @Override
     public void nextPage(SelectionPolicy selectionPolicy) {
-        showCaretAtTop();
-        CharacterHit hit = hit(getTargetCaretOffset(), getViewportHeight() - 1.0);
-        moveTo(hit.getInsertionIndex(), selectionPolicy);
+    	page( +1, selectionPolicy );
+    }
+    
+    private void page(int direction, SelectionPolicy selectionPolicy)
+    {
+    	// Use underlying caret to get the same behaviour as navigating up/down a line where the x position is sticky
+    	Optional<Bounds> cb = caretSelectionBind.getUnderlyingCaret().getCaretBounds();
+    	
+    	paging = true; // Prevent scroll from reverting back to the current caret position
+    	scrollYBy( direction * getViewportHeight() );
+    	
+    	cb.map( this::screenToLocal ) // Place caret near the same on screen position as before
+			.map( b -> hit( b.getMinX(), b.getMinY()+b.getHeight()/2.0 ).getInsertionIndex() )
+			.ifPresent( i -> caretSelectionBind.moveTo( i, selectionPolicy ) );
+
+    	// Adjust scroll by a few pixels to get the caret at the exact on screen location as before 
+    	cb.ifPresent( prev -> getCaretBounds().map( newB -> newB.getMinY() - prev.getMinY() )
+    		.filter( delta -> delta != 0.0 ).ifPresent( delta -> scrollYBy( delta ) ) ); 
     }
 
     @Override
@@ -1245,12 +1258,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     getWidth() - ins.getLeft() - ins.getRight(),
                     getHeight() - ins.getTop() - ins.getBottom());
 
-            if(followCaretRequested) {
-                followCaretRequested = false;
+            if(followCaretRequested && ! paging) {
                 try (Guard g = viewportDirty.suspend()) {
                     followCaret();
                 }
             }
+            followCaretRequested = false;
+            paging = false;
         });
     }
 
