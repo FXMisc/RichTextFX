@@ -1123,19 +1123,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     private void page(int pgCount, SelectionPolicy selectionPolicy)
     {
-    	// Use underlying caret to get the same behaviour as navigating up/down a line where the x position is sticky
-    	Optional<Bounds> cb = caretSelectionBind.getUnderlyingCaret().getCaretBounds();
+        // Use underlying caret to get the same behaviour as navigating up/down a line where the x position is sticky
+        Optional<Bounds> cb = caretSelectionBind.getUnderlyingCaret().getCaretBounds();
     	
-    	paging = true; // Prevent scroll from reverting back to the current caret position
-    	scrollYBy( pgCount * getViewportHeight() );
-    	
-    	cb.map( this::screenToLocal ) // Place caret near the same on screen position as before
-			.map( b -> hit( b.getMinX(), b.getMinY()+b.getHeight()/2.0 ).getInsertionIndex() )
-			.ifPresent( i -> caretSelectionBind.moveTo( i, selectionPolicy ) );
+        paging = true; // Prevent scroll from reverting back to the current caret position
+        scrollYBy( pgCount * getViewportHeight() );
 
-    	// Adjust scroll by a few pixels to get the caret at the exact on screen location as before 
-    	cb.ifPresent( prev -> getCaretBounds().map( newB -> newB.getMinY() - prev.getMinY() )
-    		.filter( delta -> delta != 0.0 ).ifPresent( delta -> scrollYBy( delta ) ) ); 
+        cb.map( this::screenToLocal ) // Place caret near the same on screen position as before
+            .map( b -> hit( b.getMinX(), b.getMinY()+b.getHeight()/2.0 ).getInsertionIndex() )
+            .ifPresent( i -> caretSelectionBind.moveTo( i, selectionPolicy ) );
+
+        // Adjust scroll by a few pixels to get the caret at the exact on screen location as before 
+        cb.ifPresent( prev -> getCaretBounds().map( newB -> newB.getMinY() - prev.getMinY() )
+            .filter( delta -> delta != 0.0 ).ifPresent( delta -> scrollYBy( delta ) ) ); 
     }
 
     @Override
