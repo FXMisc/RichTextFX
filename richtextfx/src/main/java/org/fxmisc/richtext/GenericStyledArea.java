@@ -1117,13 +1117,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     	page( +1, selectionPolicy );
     }
     
-    private void page(int direction, SelectionPolicy selectionPolicy)
+    /**
+     * @param pgCount the number of pages to page up/down.
+     * <br>Negative numbers for paging up and positive for down.
+     */
+    private void page(int pgCount, SelectionPolicy selectionPolicy)
     {
     	// Use underlying caret to get the same behaviour as navigating up/down a line where the x position is sticky
     	Optional<Bounds> cb = caretSelectionBind.getUnderlyingCaret().getCaretBounds();
     	
     	paging = true; // Prevent scroll from reverting back to the current caret position
-    	scrollYBy( direction * getViewportHeight() );
+    	scrollYBy( pgCount * getViewportHeight() );
     	
     	cb.map( this::screenToLocal ) // Place caret near the same on screen position as before
 			.map( b -> hit( b.getMinX(), b.getMinY()+b.getHeight()/2.0 ).getInsertionIndex() )
