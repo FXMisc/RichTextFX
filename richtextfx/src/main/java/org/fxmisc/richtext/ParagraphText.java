@@ -23,6 +23,7 @@ import org.reactfx.value.Val;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -94,10 +95,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
+        ChangeListener<IndexRange> selectionRangeListener = (obs, ov, nv) -> requestLayout();
         selectionPathListener = change -> {
             if (change.wasRemoved()) {
                 SelectionPath p = change.getValueRemoved();
-                p.rangeProperty().removeListener( (obs, ov, nv) -> requestLayout() );
+                p.rangeProperty().removeListener(selectionRangeListener);
                 p.layoutXProperty().unbind();
                 p.layoutYProperty().unbind();
 
@@ -105,7 +107,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
             if (change.wasAdded()) {
                 SelectionPath p = change.getValueAdded();
-                p.rangeProperty().addListener( (obs, ov, nv) -> requestLayout() );
+                p.rangeProperty().addListener(selectionRangeListener);
                 p.layoutXProperty().bind(leftInset);
                 p.layoutYProperty().bind(topInset);
 
@@ -115,10 +117,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
         selections.addListener( selectionPathListener );
 
+        ChangeListener<Integer> caretPositionListener = (obs, ov, nv) -> requestLayout();
         caretNodeListener = change -> {
             if (change.wasRemoved()) {
                 CaretNode caret = change.getElementRemoved();
-                caret.columnPositionProperty().removeListener( (obs, ov, nv) -> requestLayout() );
+                caret.columnPositionProperty().removeListener(caretPositionListener);
                 caret.layoutXProperty().unbind();
                 caret.layoutYProperty().unbind();
 
@@ -126,7 +129,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
             if (change.wasAdded()) {
                 CaretNode caret = change.getElementAdded();
-                caret.columnPositionProperty().addListener( (obs, ov, nv) -> requestLayout() );
+                caret.columnPositionProperty().addListener(caretPositionListener);
                 caret.layoutXProperty().bind(leftInset);
                 caret.layoutYProperty().bind(topInset);
 
