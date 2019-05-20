@@ -1,5 +1,24 @@
 # Change Log
 
+## [v0.10.1](https://github.com/FXMisc/RichTextFX/tree/v0.10.1) (2019-05-20)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.0...v0.10.1)
+
+**Implemented enhancements:**
+
+- Changed page up and down behaviour [\#688](https://github.com/FXMisc/RichTextFX/issues/688)
+- Remove deprecated methods [\#818](https://github.com/FXMisc/RichTextFX/issues/818)
+
+**Fixed bugs:**
+
+- Bug: CodeArea caretBounds graphic bug [\#812](https://github.com/FXMisc/RichTextFX/issues/812)
+- Bug: Undo after deleting styled text causes exception [\#815](https://github.com/FXMisc/RichTextFX/issues/815)
+
+**Merged pull requests:**
+
+- Enhancement: Changed page up and down behaviour [\#821](https://github.com/FXMisc/RichTextFX/pull/821) ([Jurgen Doll](https://github.com/Jugen))
+- Fix bug: Fix Paragraph returning incorrectly styled subsequence [\#817](https://github.com/FXMisc/RichTextFX/pull/817) ([Jugen](https://github.com/Jugen))
+- Fix bug: Fix for #812 caretBounds graphic bug [\#819 and \#822](https://github.com/FXMisc/RichTextFX/pull/819) ([Jugen](https://github.com/Jugen))
+
 ## [v0.10.0](https://github.com/FXMisc/RichTextFX/tree/v0.10.0) (2019-04-18)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.9.3...v0.10.0)
 
