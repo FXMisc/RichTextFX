@@ -140,7 +140,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
             }
 
             @Test
-            public void prev_page_moves_caret_to_top_of_page() {
+            public void prev_page_leaves_caret_at_bottom_of_page() {
                 area.showParagraphAtBottom(area.getParagraphs().size() - 1);
                 // move to last line, column 0
                 area.moveTo(area.getParagraphs().size() - 1, 0);
@@ -151,11 +151,11 @@ public class HitTests extends InlineCssTextAreaAppTest {
                 });
 
                 assertEquals(0, area.getCaretColumn());
-                assertEquals(area.firstVisibleParToAllParIndex(), area.getCurrentParagraph());
+                assertEquals(area.lastVisibleParToAllParIndex(), area.getCurrentParagraph() + (IS_LINUX?0:1));
             }
 
             @Test
-            public void next_page_moves_caret_to_bottom_of_page() {
+            public void next_page_leaves_caret_at_top_of_page() {
                 area.showParagraphAtTop(0);
 
                 interact(() -> {
@@ -165,7 +165,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
                 });
 
                 assertEquals(0, area.getCaretColumn());
-                assertEquals(area.lastVisibleParToAllParIndex(), area.getCurrentParagraph());
+                assertEquals(area.firstVisibleParToAllParIndex(), area.getCurrentParagraph() - (IS_LINUX?0:1));
             }
 
         }
