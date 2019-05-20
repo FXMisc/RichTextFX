@@ -151,7 +151,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
                 });
 
                 assertEquals(0, area.getCaretColumn());
-                assertEquals(area.lastVisibleParToAllParIndex(), area.getCurrentParagraph()+1);
+                assertEquals(area.lastVisibleParToAllParIndex(), area.getCurrentParagraph() + (IS_WINDOWS?1:0));
             }
 
             @Test
@@ -165,7 +165,7 @@ public class HitTests extends InlineCssTextAreaAppTest {
                 });
 
                 assertEquals(0, area.getCaretColumn());
-                assertEquals(area.firstVisibleParToAllParIndex(), area.getCurrentParagraph()-1);
+                assertEquals(area.firstVisibleParToAllParIndex(), area.getCurrentParagraph() - (IS_WINDOWS?1:0));
             }
 
         }
