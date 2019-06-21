@@ -6,7 +6,8 @@
 
 package org.fxmisc.richtext.demo.richtext;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -18,6 +19,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.StyledTextArea;
+import org.fxmisc.richtext.TextExt;
+import org.fxmisc.richtext.model.Codec;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledSegment;
+import org.fxmisc.richtext.model.TextOps;
+import org.reactfx.SuspendableNo;
+import org.reactfx.util.Either;
+import org.reactfx.util.Tuple2;
 
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
@@ -43,22 +60,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.GenericStyledArea;
-import org.fxmisc.richtext.StyledTextArea;
-import org.fxmisc.richtext.TextExt;
-import org.fxmisc.richtext.model.Codec;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.SegmentOps;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyledDocument;
-import org.fxmisc.richtext.model.StyledSegment;
-import org.fxmisc.richtext.model.TextOps;
-import org.reactfx.SuspendableNo;
-import org.reactfx.util.Either;
-import org.reactfx.util.Tuple2;
-
 public class RichTextDemo extends Application {
 
     // the saved/loaded files and their format are arbitrary and may change across versions
@@ -77,16 +78,21 @@ public class RichTextDemo extends Application {
     private final GenericStyledArea<ParStyle, Either<String, LinkedImage>, TextStyle> area =
             new GenericStyledArea<>(
                     ParStyle.EMPTY,                                                 // default paragraph style
-                    (paragraph, style) -> paragraph.setStyle(style.toCss()),        // paragraph style setter
+                    (txtFlow,pstyle) -> txtFlow.setStyle(pstyle.toCss()),        	// paragraph style setter
 
                     TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),  // default segment style
                     styledTextOps._or(linkedImageOps, (s1, s2) -> Optional.empty()),                            // segment operations
                     seg -> createNode(seg, (text, style) -> text.setStyle(style.toCss())));                     // Node creator and segment style setter
     {
         area.setWrapText(true);
-        area.setStyleCodecs(
-                ParStyle.CODEC,
-                Codec.styledSegmentCodec(Codec.eitherCodec(Codec.STRING_CODEC, LinkedImage.codec()), TextStyle.CODEC));
+        area.setStyleCodecs
+        (
+            ParStyle.CODEC, Codec.styledSegmentCodec
+            (
+            	Codec.eitherCodec(Codec.STRING_CODEC, LinkedImage.codec()), TextStyle.CODEC
+            )
+        );
+        area.setParagraphGraphicFactory( new BulletFactory( area ) );
     }
 
     private Stage mainStage;
@@ -118,6 +124,8 @@ public class RichTextDemo extends Application {
         Button underlineBtn = createButton("underline", this::toggleUnderline, "Underline");
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough, "Strike Trough");
         Button insertImageBtn = createButton("insertimage", this::insertImage, "Insert Image");
+        Button increaseIndentBtn = createButton("increaseIndent", this::increaseIndent, "Increase indent");
+        Button decreaseIndentBtn = createButton("decreaseIndent", this::decreaseIndent, "Decrease indent");
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft, "Align left");
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter, "Align center");
@@ -282,6 +290,7 @@ public class RichTextDemo extends Application {
                 cutBtn, copyBtn, pasteBtn, new Separator(Orientation.VERTICAL),
                 boldBtn, italicBtn, underlineBtn, strikeBtn, new Separator(Orientation.VERTICAL),
                 alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, new Separator(Orientation.VERTICAL),
+                increaseIndentBtn, decreaseIndentBtn, new Separator(Orientation.VERTICAL),
                 insertImageBtn, new Separator(Orientation.VERTICAL),
                 paragraphBackgroundPicker);
         
@@ -293,7 +302,7 @@ public class RichTextDemo extends Application {
         vbox.getChildren().addAll(toolBar1, toolBar2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
-        scene.getStylesheets().add(RichTextDemo.class.getResource("rich-text.css").toExternalForm());
+        scene.getStylesheets().add(RichTextDemo2.class.getResource("rich-text.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
         primaryStage.setTitle("Rich Text Demo");
@@ -307,11 +316,6 @@ public class RichTextDemo extends Application {
                 text -> StyledTextArea.createStyledTextNode(text, seg.getStyle(), applyStyle),
                 LinkedImage::createNode
         );
-    }
-
-    @Deprecated
-    private Button createButton(String styleClass, Runnable action) {
-        return createButton(styleClass, action, null);
     }
 
     private Button createButton(String styleClass, Runnable action, String toolTip) {
@@ -463,6 +467,14 @@ public class RichTextDemo extends Application {
                                                        ParStyle.EMPTY, TextStyle.EMPTY, area.getSegOps());
             area.replaceSelection(ros);
         }
+    }
+
+    private void increaseIndent() {
+    	updateParagraphStyleInSelection( ps -> ps.increaseIndent() );
+    }
+
+    private void decreaseIndent() {
+    	updateParagraphStyleInSelection( ps -> ps.decreaseIndent() );
     }
 
     private void updateStyleInSelection(Function<StyleSpans<TextStyle>, TextStyle> mixinGetter) {
