@@ -302,7 +302,7 @@ public class RichTextDemo extends Application {
         vbox.getChildren().addAll(toolBar1, toolBar2, vsPane);
 
         Scene scene = new Scene(vbox, 600, 400);
-        scene.getStylesheets().add(RichTextDemo2.class.getResource("rich-text.css").toExternalForm());
+        scene.getStylesheets().add(RichTextDemo.class.getResource("rich-text.css").toExternalForm());
         primaryStage.setScene(scene);
         area.requestFocus();
         primaryStage.setTitle("Rich Text Demo");
