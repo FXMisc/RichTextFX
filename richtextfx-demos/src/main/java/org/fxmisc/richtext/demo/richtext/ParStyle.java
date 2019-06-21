@@ -1,6 +1,9 @@
 package org.fxmisc.richtext.demo.richtext;
 
-import static javafx.scene.text.TextAlignment.*;
+import static javafx.scene.text.TextAlignment.CENTER;
+import static javafx.scene.text.TextAlignment.JUSTIFY;
+import static javafx.scene.text.TextAlignment.LEFT;
+import static javafx.scene.text.TextAlignment.RIGHT;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,10 +11,10 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.fxmisc.richtext.model.Codec;
+
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-
-import org.fxmisc.richtext.model.Codec;
 
 /**
  * Holds information about the style of a paragraph.
@@ -55,14 +58,20 @@ class ParStyle {
 
     final Optional<TextAlignment> alignment;
     final Optional<Color> backgroundColor;
+    final Optional<Indent> indent;
 
     public ParStyle() {
-        this(Optional.empty(), Optional.empty());
+        this(Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public ParStyle(Optional<TextAlignment> alignment, Optional<Color> backgroundColor) {
+        this(alignment, backgroundColor, Optional.empty());
+    }
+
+    public ParStyle(Optional<TextAlignment> alignment, Optional<Color> backgroundColor, Optional<Indent> indent) {
         this.alignment = alignment;
         this.backgroundColor = backgroundColor;
+        this.indent = indent;
     }
 
     @Override
@@ -111,15 +120,33 @@ class ParStyle {
     public ParStyle updateWith(ParStyle mixin) {
         return new ParStyle(
                 mixin.alignment.isPresent() ? mixin.alignment : alignment,
-                mixin.backgroundColor.isPresent() ? mixin.backgroundColor : backgroundColor);
+                mixin.backgroundColor.isPresent() ? mixin.backgroundColor : backgroundColor,
+                mixin.indent.isPresent() ? mixin.indent : indent );
     }
 
     public ParStyle updateAlignment(TextAlignment alignment) {
-        return new ParStyle(Optional.of(alignment), backgroundColor);
+        return new ParStyle(Optional.of(alignment), backgroundColor, indent);
     }
 
     public ParStyle updateBackgroundColor(Color backgroundColor) {
-        return new ParStyle(alignment, Optional.of(backgroundColor));
+        return new ParStyle(alignment, Optional.of(backgroundColor), indent);
+    }
+
+    public ParStyle updateIndent(Indent indent) {
+        return new ParStyle(alignment, backgroundColor, Optional.ofNullable(indent));
+    }
+
+    public ParStyle increaseIndent() {
+    	if ( indent.isPresent() )  indent.get().level++;
+    	else return updateIndent( new Indent() );
+    	return this; 
+    }
+
+    public ParStyle decreaseIndent() {
+    	if ( indent.isPresent() && --indent.get().level == 0 ) {
+   			return updateIndent( null );
+    	}
+    	return this; 
     }
 
 }
