@@ -59,6 +59,7 @@ Who uses RichTextFX?
 - [Nearde IDE](https://github.com/VenityStudio/Nearde-IDE)
 - [Astro IDE](https://github.com/AmrDeveloper/Astro) 
 - [Chorus](https://github.com/iAmGio/chorus)
+- [EpubFx](https://gitlab.com/finanzer/epubfx/)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
