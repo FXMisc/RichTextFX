@@ -8,29 +8,30 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 public class BulletFactory implements IntFunction<Node>
 {
-	private GenericStyledArea<ParStyle,?,?> area;
-	
-	public BulletFactory( GenericStyledArea<ParStyle,?,?> area )
-	{
-		this.area = area;
-	} 
+    private GenericStyledArea<ParStyle,?,?> area;
+    
+    public BulletFactory( GenericStyledArea<ParStyle,?,?> area )
+    {
+        this.area = area;
+    } 
 
-	@Override
-	public Node apply( int value )
-	{
-		if ( value < 0 ) return null;
-		
-		ParStyle ps = area.getParagraph( value ).getParagraphStyle();
-		if ( ! ps.indent.isPresent() ) return null;
+    @Override
+    public Node apply( int value )
+    {
+        if ( value < 0 ) return null;
+        
+        ParStyle ps = area.getParagraph( value ).getParagraphStyle();
+        if ( ! ps.indent.isPresent() ) return null;
 
-		return createBullet( ps.indent.get() );
-	}
+        return createBullet( ps.indent.get() );
+    }
 
     private Node createBullet(Indent in) {
         Node result;
@@ -71,6 +72,6 @@ public class BulletFactory implements IntFunction<Node>
         Label l = new Label( " ", result );
         l.setPadding( new Insets( 0, 0, 0, in.level*in.width ) );
         l.setContentDisplay( ContentDisplay.LEFT );
-        return l;
+        return new VBox( 0, l );
     }
 }

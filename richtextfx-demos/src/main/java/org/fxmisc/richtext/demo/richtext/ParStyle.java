@@ -1,9 +1,6 @@
 package org.fxmisc.richtext.demo.richtext;
 
-import static javafx.scene.text.TextAlignment.CENTER;
-import static javafx.scene.text.TextAlignment.JUSTIFY;
-import static javafx.scene.text.TextAlignment.LEFT;
-import static javafx.scene.text.TextAlignment.RIGHT;
+import static javafx.scene.text.TextAlignment.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,10 +8,10 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.fxmisc.richtext.model.Codec;
-
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+
+import org.fxmisc.richtext.model.Codec;
 
 /**
  * Holds information about the style of a paragraph.
@@ -137,16 +134,16 @@ class ParStyle {
     }
 
     public ParStyle increaseIndent() {
-    	if ( indent.isPresent() )  indent.get().level++;
-    	else return updateIndent( new Indent() );
-    	return this; 
+        if ( indent.isPresent() ) indent.get().level++;
+        else return updateIndent( new Indent() );
+        return this; 
     }
 
     public ParStyle decreaseIndent() {
-    	if ( indent.isPresent() && --indent.get().level == 0 ) {
-   			return updateIndent( null );
-    	}
-    	return this; 
+        if ( indent.isPresent() && --indent.get().level == 0 ) {
+            return updateIndent( null );
+        }
+        return this; 
     }
 
 }
