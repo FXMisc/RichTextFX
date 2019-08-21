@@ -314,12 +314,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     /**
-     * Background fill for highlighted text.
-     */
-    private final StyleableObjectProperty<Paint> highlightFill
-            = new CustomStyleableProperty<>(Color.DODGERBLUE, "highlightFill", this, HIGHLIGHT_FILL);
-
-    /**
      * Text color for highlighted text.
      */
     private final StyleableObjectProperty<Paint> highlightTextFill
@@ -1571,10 +1565,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_FILL = new CustomCssMetaData<>(
-            "-fx-highlight-fill", StyleConverter.getPaintConverter(), Color.DODGERBLUE, s -> s.highlightFill
-    );
-
     private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL = new CustomCssMetaData<>(
             "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
     );
@@ -1584,7 +1574,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     static {
         List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
 
-        styleables.add(HIGHLIGHT_FILL);
         styleables.add(HIGHLIGHT_TEXT_FILL);
 
         CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
