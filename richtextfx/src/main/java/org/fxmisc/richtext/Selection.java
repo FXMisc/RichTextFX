@@ -189,7 +189,9 @@ public interface Selection<PS, SEG, S> {
     void dispose();
 
     /**
-     * Gets the name of this selection. Each selection in an area must have a unique name.
+     * Gets the name of this selection. Each selection in an area must have a unique name.<br>
+     * The name is also used as a StyleClass, so the Selection can be styled using CSS selectors
+     * from Path, Shape, and Node eg:<br>.styled-text-area .my-selection { -fx-fill: lime; }
      */
     String getSelectionName();
 

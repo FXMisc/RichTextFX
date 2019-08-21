@@ -116,6 +116,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
 
     /**
      * Creates a selection with both the start and end position at 0.
+     * @param name must be unique and is also used as a StyleClass for
+     * configuration via CSS using selectors from Path, Shape, and Node.
      */
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area) {
         this(name, area, 0, 0);
@@ -130,7 +132,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
     }
 
     /**
-     * Creates a selection
+     * Creates a selection. Name must be unique and is also used as a StyleClass
+     * for configuration via CSS using selectors from Path, Shape, and Node. 
      */
     public SelectionImpl(String name, GenericStyledArea<PS, SEG, S> area, int startPosition, int endPosition) {
         this(name, area, new IndexRange(startPosition, endPosition), area.beingUpdatedProperty());
