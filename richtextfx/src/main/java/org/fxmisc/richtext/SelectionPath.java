@@ -37,6 +37,9 @@ public class SelectionPath extends Path {
     SelectionPath(Val<IndexRange> range) {
         setManaged(false);
         this.range = range;
+        highlightFill.addListener( (ob,ov,nv) -> setFill( nv ) );
+        setFill( getHighlightFill() );
+        setStrokeWidth( 0.0 );
     }
 
     @Override
