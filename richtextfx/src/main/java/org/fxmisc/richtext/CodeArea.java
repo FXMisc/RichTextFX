@@ -1,6 +1,6 @@
 package org.fxmisc.richtext;
 
-
+import java.text.BreakIterator;
 import java.util.Collection;
 
 import javafx.beans.NamedArg;
@@ -21,7 +21,7 @@ public class CodeArea extends StyleClassedTextArea {
         // don't apply preceding style to typed text
         setUseInitialStyleForInsertion(true);
     }
-
+    
     /**
      * Creates an area that can render and edit the same {@link EditableStyledDocument} as another {@link CodeArea}.
      */
@@ -51,5 +51,51 @@ public class CodeArea extends StyleClassedTextArea {
 
         // position the caret at the beginning
         selectRange(0, 0);
+    }
+    
+    @Override // to select words containing underscores
+    public void selectWord()
+    {
+        if ( getLength() == 0 ) return;
+
+        CaretSelectionBind<?,?,?> csb = getCaretSelectionBind();
+        int paragraph = csb.getParagraphIndex();
+        int position = csb.getColumnPosition(); 
+        
+        String paragraphText = getText( paragraph );
+        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        breakIterator.setText( paragraphText );
+
+        breakIterator.preceding( position );
+        int start = breakIterator.current();
+        
+        while ( start > 0 && paragraphText.charAt( start-1 ) == '_' )
+        {
+            if ( --start > 0 && ! breakIterator.isBoundary( start-1 ) )
+            {
+                breakIterator.preceding( start );
+                start = breakIterator.current();
+            }
+        }
+        
+        breakIterator.following( position );
+        int end = breakIterator.current();
+        int len = paragraphText.length();
+        
+        while ( end < len && paragraphText.charAt( end ) == '_' )
+        {
+            if ( ++end < len && ! breakIterator.isBoundary( end+1 ) )
+            {
+                breakIterator.following( end );
+                end = breakIterator.current();
+            }
+            // For some reason single digits aren't picked up so ....
+            else if ( Character.isDigit( paragraphText.charAt( end ) ) )
+            {
+                end++;
+            }
+        }
+        
+        csb.selectRange( paragraph, start, paragraph, end );
     }
 }
