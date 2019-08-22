@@ -25,6 +25,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableSet;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
@@ -47,6 +48,8 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
 import org.fxmisc.flowless.Cell;
@@ -1091,14 +1094,98 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void lineStart(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition(caretSelectionBind.getUnderlyingCaret());
-        moveTo(getCurrentParagraph(), columnPos, policy);
+        moveTo(getCurrentParagraph(), getCurrentLineStartInParargraph(), policy);
     }
 
     @Override
     public void lineEnd(SelectionPolicy policy) {
-        int columnPos = virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition(caretSelectionBind.getUnderlyingCaret());
-        moveTo(getCurrentParagraph(), columnPos, policy);
+        moveTo(getCurrentParagraph(), getCurrentLineEndInParargraph(), policy);
+    }
+
+    public int getCurrentLineStartInParargraph() {
+        return virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition(caretSelectionBind.getUnderlyingCaret());
+    }
+
+    public int getCurrentLineEndInParargraph() {
+        return virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition(caretSelectionBind.getUnderlyingCaret());
+    }
+    
+    private double caretPrevY = -1;
+    private Selection<PS, SEG, S> lineHighlighter;
+    private ObjectProperty<Paint> lineHighlighterFill; 
+    
+    /**
+     * The default fill is "highlighter" yellow. It can also be styled using CSS with:<br>
+     * <code>.styled-text-area .line-highlighter { -fx-fill: lime; }</code><br>
+     * CSS selectors from Path, Shape, and Node can also be used.
+     */
+    public void setLineHighlighterFill( Paint highlight )
+    {
+        if ( lineHighlighterFill != null && highlight != null ) {
+            lineHighlighterFill.set( highlight );
+        }
+        else {
+            boolean lineHighlightOn = isLineHighlighterOn();
+            if ( lineHighlightOn ) setLineHighlighterOn( false );
+            
+            if ( highlight == null ) lineHighlighterFill = null;
+            else lineHighlighterFill = new SimpleObjectProperty( highlight );
+            
+            if ( lineHighlightOn ) setLineHighlighterOn( true );
+        }
+    }
+    
+    public boolean isLineHighlighterOn() {
+        return lineHighlighter != null && selectionSet.contains( lineHighlighter ) ;
+    }
+    
+    /**
+     * Highlights the line that the main caret is on.<br>
+     * Line highlighting automatically follows the caret.
+     */
+    public void setLineHighlighterOn( boolean show )
+    {
+        if ( show )
+        {
+            if ( lineHighlighter != null ) return;
+            
+            lineHighlighter = new SelectionImpl<>( "line-highlighter", this, path ->
+            {
+                if ( lineHighlighterFill == null ) path.setHighlightFill( Color.YELLOW );
+                else path.highlightFillProperty().bind( lineHighlighterFill );
+                
+                path.getElements().addListener( (Change<? extends PathElement> chg) -> 
+                {
+                    if ( chg.next() && chg.wasAdded() || chg.wasReplaced() ) {
+                        double maxX = getLayoutBounds().getMaxX();
+                        // The path is limited to the bounds of the text, so here it's altered to the area's width
+                        chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( maxX ) );
+                        // The path can wrap onto another line if enough text is inserted, so here it's trimmed
+                        if ( chg.getAddedSize() > 5 ) path.getElements().remove( 5, 10 );
+                    }
+                } );
+            } );
+            
+            Consumer<Bounds> caretListener = b -> 
+            {
+                if ( b.getMinY() != caretPrevY && lineHighlighter != null )
+                {
+                    int p = getCurrentParagraph();
+                    lineHighlighter.selectRange( p, getCurrentLineStartInParargraph(), p, getCurrentLineEndInParargraph() );
+                    caretPrevY = b.getMinY();
+                }
+            };
+            
+            caretBoundsProperty().addListener( (ob,ov,nv) -> nv.ifPresent( caretListener ) );
+            getCaretBounds().ifPresent( caretListener );
+            selectionSet.add( lineHighlighter );
+        }
+        else if ( lineHighlighter != null ) {
+            selectionSet.remove( lineHighlighter );
+            lineHighlighter.deselect();
+            lineHighlighter = null;
+            caretPrevY = -1;
+        }
     }
 
     @Override
@@ -1447,6 +1534,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                                         selection.rangeProperty()
                                 );
                                 SelectionPath path = new SelectionPath(range);
+                                path.getStyleClass().add( selection.getSelectionName() );
                                 selection.configureSelectionPath(path);
 
                                 box.selectionsProperty().put(selection, path);
