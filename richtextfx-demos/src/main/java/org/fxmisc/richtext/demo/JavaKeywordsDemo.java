@@ -7,7 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -103,6 +106,20 @@ public class JavaKeywordsDemo extends Application {
         // when no longer need syntax highlighting and wish to clean up memory leaks
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 
+
+        // auto-indent: insert previous line's indents on enter
+        final Pattern whiteSpace = Pattern.compile( "^\\s+" );
+        codeArea.addEventHandler( KeyEvent.KEY_PRESSED, KE ->
+        {
+            if ( KE.getCode() == KeyCode.ENTER ) {
+            	int caretPosition = codeArea.getCaretPosition();
+            	int currentParagraph = codeArea.getCurrentParagraph();
+                Matcher m0 = whiteSpace.matcher( codeArea.getParagraph( currentParagraph-1 ).getSegments().get( 0 ) );
+                if ( m0.find() ) Platform.runLater( () -> codeArea.insertText( caretPosition, m0.group() ) );
+            }
+        });
+
+        
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
