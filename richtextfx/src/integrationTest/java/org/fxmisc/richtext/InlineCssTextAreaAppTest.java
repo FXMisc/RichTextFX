@@ -23,6 +23,7 @@ public class InlineCssTextAreaAppTest extends RichTextFXTestBase {
         scene = new Scene(area);
         this.stage = stage;
 
+        stage.setAlwaysOnTop(true);
         stage.setScene(scene);
         stage.setWidth(400);
         stage.setHeight(400);
