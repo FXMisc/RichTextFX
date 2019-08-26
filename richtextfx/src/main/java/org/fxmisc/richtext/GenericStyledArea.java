@@ -1171,7 +1171,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 if ( b.getMinY() != caretPrevY && lineHighlighter != null )
                 {
                     int p = getCurrentParagraph();
-                    lineHighlighter.selectRange( p, getCurrentLineStartInParargraph(), p, getCurrentLineEndInParargraph() );
+                    int start = getCurrentLineStartInParargraph();
+                    int end = getCurrentLineEndInParargraph() + 1; // +1 for empty lines
+                    lineHighlighter.selectRange( p, start, p, end );
                     caretPrevY = b.getMinY();
                 }
             };
