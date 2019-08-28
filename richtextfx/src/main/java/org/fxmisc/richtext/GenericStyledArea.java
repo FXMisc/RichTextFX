@@ -1157,11 +1157,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 path.getElements().addListener( (Change<? extends PathElement> chg) -> 
                 {
                     if ( chg.next() && chg.wasAdded() || chg.wasReplaced() ) {
-                        double maxX = getLayoutBounds().getMaxX();
+                        double width = getLayoutBounds().getWidth();
                         // The path is limited to the bounds of the text, so here it's altered to the area's width
-                        chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( maxX ) );
+                        chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( width ) );
                         // The path can wrap onto another line if enough text is inserted, so here it's trimmed
                         if ( chg.getAddedSize() > 5 ) path.getElements().remove( 5, 10 );
+                        // Highlight masks the downward selection of text on the last line, so move it behind
+                        path.toBack();
                     }
                 } );
             } );
