@@ -1,5 +1,24 @@
 # Change Log
 
+## [v0.10.2](https://github.com/FXMisc/RichTextFX/tree/v0.10.2) (2019-08-29)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.1...v0.10.2)
+
+**Implemented enhancements:**
+
+- Added line highlighter enhancement [\#845](https://github.com/FXMisc/RichTextFX/issues/845)
+- Enhanced CodeArea selection to include underscore [\#837](https://github.com/FXMisc/RichTextFX/issues/837)
+- Added auto-indent on enter to JavaKeywordsDemo  [\#846](https://github.com/FXMisc/RichTextFX/issues/846)
+
+**Fixed bugs:**
+
+- Bug: Fixed caret position off by one on wrapped multiline [\#834](https://github.com/FXMisc/RichTextFX/issues/834)
+- Bug: Fix highlight fill property not working since 0.9.0 [\#844](https://github.com/FXMisc/RichTextFX/issues/844)
+
+**Merged pull requests:**
+
+- Added Chorus to 'Who uses RichTextFX?' [\#825](https://github.com/FXMisc/RichTextFX/pull/825) ([iAmGio](https://github.com/iAmGio))
+- Added EpubFx 'Who uses RichTextFX?' [\#828](https://github.com/FXMisc/RichTextFX/pull/828) ([finanzer](https://github.com/finanzer))
+
 ## [v0.10.1](https://github.com/FXMisc/RichTextFX/tree/v0.10.1) (2019-05-20)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.0...v0.10.1)
 

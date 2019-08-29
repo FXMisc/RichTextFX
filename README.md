@@ -145,31 +145,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.10.1 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.10.2 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.10.1  |
+| org.fxmisc.richtext | richtextfx  | 0.10.2  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.1'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.2'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.1"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.2"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.1/richtextfx-0.10.1.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.1/richtextfx-fat-0.10.1.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.2/richtextfx-0.10.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.2/richtextfx-fat-0.10.2.jar) and place it on your classpath.
 
 ### Snapshot releases
 
