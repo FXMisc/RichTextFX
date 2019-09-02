@@ -31,7 +31,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.10.1](http://fxmisc.github.io/richtext/javadoc/0.9.1/org/fxmisc/richtext/package-summary.html)
+  * [0.10.2](http://fxmisc.github.io/richtext/javadoc/0.10.2/index.html?org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
