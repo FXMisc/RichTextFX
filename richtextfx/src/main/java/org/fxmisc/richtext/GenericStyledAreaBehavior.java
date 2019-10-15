@@ -70,6 +70,7 @@ class GenericStyledAreaBehavior {
                 // deletion
                 consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
                 consume(keyPressed(BACK_SPACE),                 GenericStyledAreaBehavior::deleteBackward),
+                consume(keyPressed(BACK_SPACE, SHIFT_DOWN),     GenericStyledAreaBehavior::deleteBackward),
                 consume(keyPressed(DELETE,     SHORTCUT_DOWN),  GenericStyledAreaBehavior::deleteNextWord),
                 consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN),  GenericStyledAreaBehavior::deletePrevWord),
                 // cut
