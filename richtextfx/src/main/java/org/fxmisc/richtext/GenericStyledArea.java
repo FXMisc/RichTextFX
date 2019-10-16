@@ -16,6 +16,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
+import javafx.application.Platform;
 import javafx.beans.NamedArg;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -52,6 +53,7 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
+import javafx.application.Platform;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -1168,18 +1170,26 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 } );
             } );
             
-            Consumer<Bounds> caretListener = b -> 
+            Runnable adjustHighlighterRange = () ->
             {
-                if ( b.getMinY() != caretPrevY && lineHighlighter != null )
+                if ( lineHighlighter != null )
                 {
                     int p = getCurrentParagraph();
                     int start = getCurrentLineStartInParargraph();
                     int end = getCurrentLineEndInParargraph() + 1; // +1 for empty lines
                     lineHighlighter.selectRange( p, start, p, end );
+                }
+            };
+            
+            Consumer<Bounds> caretListener = b -> 
+            {
+                if ( b.getMinY() != caretPrevY ) {
+                	adjustHighlighterRange.run();
                     caretPrevY = b.getMinY();
                 }
             };
             
+            widthProperty().addListener( (ob,ov,nv) -> Platform.runLater( adjustHighlighterRange ) );
             caretBoundsProperty().addListener( (ob,ov,nv) -> nv.ifPresent( caretListener ) );
             getCaretBounds().ifPresent( caretListener );
             selectionSet.add( lineHighlighter );
