@@ -134,6 +134,14 @@ class ParagraphBox<PS, SEG, S> extends Region {
     Paragraph<PS, SEG, S> getParagraph() {
         return text.getParagraph();
     }
+    
+    Node getGraphic() {
+        if(graphic.isPresent()) {
+            return graphic.getValue();
+        } else {
+            return null;
+        }
+    }
 
     public EventStream<Either<Tuple2<Point2D, Integer>, Object>> stationaryIndices(Duration delay) {
         EventStream<Either<Point2D, Void>> stationaryEvents = new MouseStationaryHelper(this).events(delay);

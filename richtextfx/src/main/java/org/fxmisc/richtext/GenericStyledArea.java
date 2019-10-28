@@ -354,6 +354,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
+    
+    public void recreateParagraghGraphic( int parNdx ) {
+        ObjectProperty<IntFunction<? extends Node>> gProp;
+        gProp = getCell(parNdx).graphicFactoryProperty();
+        gProp.unbind();
+        gProp.bind(paragraphGraphicFactoryProperty());
+    }
+
+    public Node getParagraghGraphic( int parNdx ) {
+        return getCell(parNdx).getGraphic();
+    }
 
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
