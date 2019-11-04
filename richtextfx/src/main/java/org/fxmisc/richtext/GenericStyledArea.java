@@ -357,14 +357,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
     
-    public void recreateParagraghGraphic( int parNdx ) {
+    public void recreateParagraphGraphic( int parNdx ) {
         ObjectProperty<IntFunction<? extends Node>> gProp;
         gProp = getCell(parNdx).graphicFactoryProperty();
         gProp.unbind();
         gProp.bind(paragraphGraphicFactoryProperty());
     }
 
-    public Node getParagraghGraphic( int parNdx ) {
+    public Node getParagraphGraphic( int parNdx ) {
         return getCell(parNdx).getGraphic();
     }
 
