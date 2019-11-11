@@ -94,7 +94,10 @@ class ParagraphBox<PS, SEG, S> extends Region {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
-
+        
+        // Apply line-spacing (in a paragraph) to between paragraphs as well. Can be overriden with -fx-padding CSS.
+        text.lineSpacingProperty().addListener( (ob,ov,nv) -> setPadding( new Insets( 0, 0, nv.doubleValue(), 0 ) ) );
+        
         // start at -1 so that the first time it is displayed, the caret at pos 0 is not
         // accidentally removed from its parent and moved to this node's ParagraphText
         // before this node gets updated to its real index and therefore removes
@@ -250,7 +253,8 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
         text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop(), w - graphicWidth, h);
 
-        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h));
+        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h + ins.getBottom()));
+        // h + ins.getBottom() so that there aren't gaps when -fx-line-spacing or -fx-padding is active.
     }
 
     double getGraphicPrefWidth() {
