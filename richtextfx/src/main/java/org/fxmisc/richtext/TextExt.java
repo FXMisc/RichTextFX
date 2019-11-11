@@ -141,7 +141,7 @@ public class TextExt extends Text {
      * the fill may be used multiple times on separate lines even for the same
      * segment of text.</p>
      *
-     * Can be styled from CSS using the "-rtfx-border-color" property.
+     * Can be styled from CSS using the "-rtfx-border-stroke-color" property.
      */
     public ObjectProperty<Paint> borderStrokeColorProperty() {
         return borderStrokeColor;
