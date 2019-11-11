@@ -1194,7 +1194,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             
             Consumer<Bounds> caretListener = b -> 
             {
-                if ( b.getMinY() != caretPrevY ) {
+                if ( b.getMinY() != caretPrevY || getCaretColumn() == 1 ) {
                 	adjustHighlighterRange.run();
                     caretPrevY = b.getMinY();
                 }
