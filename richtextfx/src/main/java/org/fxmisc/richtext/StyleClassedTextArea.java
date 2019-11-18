@@ -42,9 +42,30 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
     }
 
     /**
+     * Convenient method to append text together with a single style class.
+     */
+    public void append( String text, String styleClass ) {
+        insert( getLength(), text, styleClass );
+    }
+
+    /**
+     * Convenient method to insert text together with a single style class.
+     */
+    public void insert( int position, String text, String styleClass ) {
+        replace( position, position, text, Collections.singleton( styleClass ) );
+    }
+
+    /**
+     * Convenient method to replace text together with a single style class.
+     */
+    public void replace( int start, int end, String text, String styleClass ) {
+        replace( start, end, text, Collections.singleton( styleClass ) );
+    }
+
+    /**
      * Convenient method to assign a single style class.
      */
-    public void setStyleClass(int from, int to, String styleClass) {
-        setStyle(from, to, Collections.singletonList(styleClass));
+    public void setStyleClass( int from, int to, String styleClass ) {
+        setStyle( from, to, Collections.singletonList( styleClass ) );
     }
 }
