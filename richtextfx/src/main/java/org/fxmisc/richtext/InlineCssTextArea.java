@@ -54,4 +54,19 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         // position the caret at the beginning
         selectRange(0, 0);
     }
+
+    /**
+     * Convenient method to append text together with an inline style.
+     */
+    public void append( String text, String styleClass ) {
+        insert( getLength(), text, styleClass );
+    }
+
+    /**
+     * Convenient method to insert text together with an inline style.
+     */
+    public void insert( int position, String text, String styleClass ) {
+        replace( position, position, text, styleClass );
+    }
+
 }
