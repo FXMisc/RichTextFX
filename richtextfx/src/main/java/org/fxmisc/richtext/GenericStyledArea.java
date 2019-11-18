@@ -1279,19 +1279,37 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         content.setParagraphStyle(paragraph, paragraphStyle);
     }
 
+    /**
+     * If you want to preset the style to be used for inserted text. Note that useInitialStyleForInsertion overrides this if true.
+     */
+    public final void setTextInsertionStyle( S txtStyle ) { insertionTextStyle = txtStyle; }
+    public final S getTextInsertionStyle() { return insertionTextStyle; }
+    private S insertionTextStyle;
+
     @Override
     public final S getTextStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
             return initialTextStyle;
+        } else if ( insertionTextStyle != null ) {
+        	return insertionTextStyle;
         } else {
             return content.getStyleAtPosition(pos);
         }
     }
 
+    private PS insertionParagraphStyle;
+    /**
+     * If you want to preset the style to be used. Note that useInitialStyleForInsertion overrides this if true.
+     */
+    public final void setParagraphInsertionStyle( PS paraStyle ) { insertionParagraphStyle = paraStyle; }
+    public final PS getParagraphInsertionStyle() { return insertionParagraphStyle; }
+
     @Override
     public final PS getParagraphStyleForInsertionAt(int pos) {
         if(useInitialStyleForInsertion.get()) {
             return initialParagraphStyle;
+        } else if ( insertionParagraphStyle != null ) {
+        	return insertionParagraphStyle;
         } else {
             return content.getParagraphStyleAtPosition(pos);
         }
