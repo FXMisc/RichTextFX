@@ -58,15 +58,15 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
     /**
      * Convenient method to append text together with an inline style.
      */
-    public void append( String text, String styleClass ) {
-        insert( getLength(), text, styleClass );
+    public void append( String text, String style ) {
+        insert( getLength(), text, style );
     }
 
     /**
      * Convenient method to insert text together with an inline style.
      */
-    public void insert( int position, String text, String styleClass ) {
-        replace( position, position, text, styleClass );
+    public void insert( int position, String text, String style ) {
+        replace( position, position, text, style );
     }
 
 }
