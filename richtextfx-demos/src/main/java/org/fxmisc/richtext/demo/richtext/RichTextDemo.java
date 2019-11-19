@@ -87,6 +87,7 @@ public class RichTextDemo extends Application {
         area.setStyleCodecs(
                 ParStyle.CODEC,
                 Codec.styledSegmentCodec(Codec.eitherCodec(Codec.STRING_CODEC, LinkedImage.codec()), TextStyle.CODEC));
+        area.setParagraphGraphicFactory( new BulletFactory( area ) );
     }
 
     private Stage mainStage;
@@ -118,6 +119,8 @@ public class RichTextDemo extends Application {
         Button underlineBtn = createButton("underline", this::toggleUnderline, "Underline");
         Button strikeBtn = createButton("strikethrough", this::toggleStrikethrough, "Strike Trough");
         Button insertImageBtn = createButton("insertimage", this::insertImage, "Insert Image");
+        Button increaseIndentBtn = createButton("increaseIndent", this::increaseIndent, "Increase indent");
+        Button decreaseIndentBtn = createButton("decreaseIndent", this::decreaseIndent, "Decrease indent");
         ToggleGroup alignmentGrp = new ToggleGroup();
         ToggleButton alignLeftBtn = createToggleButton(alignmentGrp, "align-left", this::alignLeft, "Align left");
         ToggleButton alignCenterBtn = createToggleButton(alignmentGrp, "align-center", this::alignCenter, "Align center");
@@ -282,6 +285,7 @@ public class RichTextDemo extends Application {
                 cutBtn, copyBtn, pasteBtn, new Separator(Orientation.VERTICAL),
                 boldBtn, italicBtn, underlineBtn, strikeBtn, new Separator(Orientation.VERTICAL),
                 alignLeftBtn, alignCenterBtn, alignRightBtn, alignJustifyBtn, new Separator(Orientation.VERTICAL),
+                increaseIndentBtn, decreaseIndentBtn, new Separator(Orientation.VERTICAL),
                 insertImageBtn, new Separator(Orientation.VERTICAL),
                 paragraphBackgroundPicker);
         
@@ -307,11 +311,6 @@ public class RichTextDemo extends Application {
                 text -> StyledTextArea.createStyledTextNode(text, seg.getStyle(), applyStyle),
                 LinkedImage::createNode
         );
-    }
-
-    @Deprecated
-    private Button createButton(String styleClass, Runnable action) {
-        return createButton(styleClass, action, null);
     }
 
     private Button createButton(String styleClass, Runnable action, String toolTip) {
@@ -463,6 +462,14 @@ public class RichTextDemo extends Application {
                                                        ParStyle.EMPTY, TextStyle.EMPTY, area.getSegOps());
             area.replaceSelection(ros);
         }
+    }
+
+    private void increaseIndent() {
+        updateParagraphStyleInSelection( ps -> ps.increaseIndent() );
+    }
+
+    private void decreaseIndent() {
+        updateParagraphStyleInSelection( ps -> ps.decreaseIndent() );
     }
 
     private void updateStyleInSelection(Function<StyleSpans<TextStyle>, TextStyle> mixinGetter) {

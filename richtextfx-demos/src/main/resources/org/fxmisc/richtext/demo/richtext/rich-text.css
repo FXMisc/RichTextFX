@@ -17,6 +17,8 @@
 .button.underline { -fx-background-image: url(underline.png); }
 .button.strikethrough { -fx-background-image: url(strikethrough.png); }
 .button.insertimage { -fx-background-image: url(insertimage.png); }
+.button.increaseIndent { -fx-background-image: url(increaseIndent.png); }
+.button.decreaseIndent { -fx-background-image: url(decreaseIndent.png); }
 
 .toggle-button.align-left { -fx-background-image: url(align-left.png); }
 .toggle-button.align-center { -fx-background-image: url(align-center.png); }
