@@ -55,18 +55,4 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         selectRange(0, 0);
     }
 
-    /**
-     * Convenient method to append text together with an inline style.
-     */
-    public void append( String text, String style ) {
-        insert( getLength(), text, style );
-    }
-
-    /**
-     * Convenient method to insert text together with an inline style.
-     */
-    public void insert( int position, String text, String style ) {
-        replace( position, position, text, style );
-    }
-
 }

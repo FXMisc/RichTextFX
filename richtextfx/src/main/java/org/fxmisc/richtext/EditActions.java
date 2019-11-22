@@ -23,6 +23,13 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
     }
 
     /**
+     * Append text with a style.
+     */
+    default void append(SEG seg, S style) {
+        insert(getLength(), seg, style);
+    }
+
+    /**
      * Inserts the given text at the given position.
      *
      * @param position The position to insert the text.
@@ -54,6 +61,13 @@ public interface EditActions<PS, SEG, S> extends TextEditingArea<PS, SEG, S> {
      */
     default void insert(int position, StyledDocument<PS, SEG, S> document) {
         replace(position, position, document);
+    }
+
+    /**
+     * Inserts text with a style at the given position.
+     */
+    default void insert(int position, SEG seg, S style) {
+        replace(position, position, seg, style);
     }
 
     /**
