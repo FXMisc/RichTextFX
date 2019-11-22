@@ -1288,10 +1288,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final S getTextStyleForInsertionAt(int pos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialTextStyle;
-        } else if ( insertionTextStyle != null ) {
+    	if ( insertionTextStyle != null ) {
         	return insertionTextStyle;
+        } else if ( useInitialStyleForInsertion.get() ) {
+            return initialTextStyle;
         } else {
             return content.getStyleAtPosition(pos);
         }
@@ -1306,10 +1306,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final PS getParagraphStyleForInsertionAt(int pos) {
-        if(useInitialStyleForInsertion.get()) {
-            return initialParagraphStyle;
-        } else if ( insertionParagraphStyle != null ) {
+    	if ( insertionParagraphStyle != null ) {
         	return insertionParagraphStyle;
+        } else if ( useInitialStyleForInsertion.get() ) {
+            return initialParagraphStyle;
         } else {
             return content.getParagraphStyleAtPosition(pos);
         }
