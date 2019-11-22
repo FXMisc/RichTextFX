@@ -1187,7 +1187,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 {
                     int p = getCurrentParagraph();
                     int start = getCurrentLineStartInParargraph();
-                    int end = getCurrentLineEndInParargraph() + 1; // +1 for empty lines
+                    int end = getCurrentLineEndInParargraph();
+                    if (end == 0) end++;// +1 for empty lines
                     lineHighlighter.selectRange( p, start, p, end );
                 }
             };
