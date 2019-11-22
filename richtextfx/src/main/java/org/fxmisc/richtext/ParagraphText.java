@@ -361,7 +361,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             } else {
                 shape = getRangeShape(start, paragraph.length());
                 // Since this might be a wrapped multi-line paragraph,
-                // there may be multiple groups of (1 MoveTo, 3 LineTo objects) for each line:
+                // there may be multiple groups of (1 MoveTo, 4 LineTo objects) for each line:
                 // MoveTo(topLeft), LineTo(topRight), LineTo(bottomRight), LineTo(bottomLeft)
 
                 // We only need to adjust the top right and bottom right corners to extend to the
@@ -375,6 +375,22 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                     shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
                     shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
                 }
+            }
+        }
+
+        if ( getLineSpacing() > 0 ) {
+            double half = getLineSpacing() / 2.0;
+            for ( int g = 0; g < shape.length; g += 5 ) {
+                MoveTo tl = (MoveTo) shape[g];
+                tl.setY( tl.getY()-half );
+                LineTo tr = (LineTo) shape[g+1];
+                tr.setY( tl.getY() );
+                LineTo br = (LineTo) shape[g+2];
+                br.setY( br.getY()+half );
+                LineTo bl = (LineTo) shape[g+3];
+                bl.setY( br.getY() );
+                LineTo t2 = (LineTo) shape[g+4];
+                t2.setY( tl.getY() );
             }
         }
 

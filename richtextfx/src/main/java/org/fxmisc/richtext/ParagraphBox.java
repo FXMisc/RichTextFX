@@ -95,9 +95,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
         this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         
-        // Apply line-spacing (in a paragraph) to between paragraphs as well. Can be overriden with -fx-padding CSS.
-        text.lineSpacingProperty().addListener( (ob,ov,nv) -> setPadding( new Insets( 0, 0, nv.doubleValue(), 0 ) ) );
-        
         // start at -1 so that the first time it is displayed, the caret at pos 0 is not
         // accidentally removed from its parent and moved to this node's ParagraphText
         // before this node gets updated to its real index and therefore removes
@@ -240,21 +237,20 @@ class ParagraphBox<PS, SEG, S> extends Region {
     protected double computePrefHeight(double width) {
         Insets insets = getInsets();
         double overhead = getGraphicPrefWidth() + insets.getLeft() + insets.getRight();
-        return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom();
+        return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom() + text.getLineSpacing();
     }
 
     @Override
-    protected
-    void layoutChildren() {
+    protected void layoutChildren() {
         Insets ins = getInsets();
         double w = getWidth() - ins.getLeft() - ins.getRight();
         double h = getHeight() - ins.getTop() - ins.getBottom();
         double graphicWidth = getGraphicPrefWidth();
+        double half = text.getLineSpacing() / 2.0;
 
-        text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop(), w - graphicWidth, h);
+        text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
 
-        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h + ins.getBottom()));
-        // h + ins.getBottom() so that there aren't gaps when -fx-line-spacing or -fx-padding is active.
+        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h));
     }
 
     double getGraphicPrefWidth() {
