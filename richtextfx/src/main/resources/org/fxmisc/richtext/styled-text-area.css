@@ -2,8 +2,12 @@
     -fx-cursor: text;
 }
 
+.styled-text-area .paragraph-box {
+    -fx-padding: -0.5 0 -0.5 0;
+}
+
 .styled-text-area .paragraph-box .paragraph-text {
-    -fx-padding: 0 2px;
+    -fx-line-spacing: 1;
 }
 
 .styled-text-area .caret {
