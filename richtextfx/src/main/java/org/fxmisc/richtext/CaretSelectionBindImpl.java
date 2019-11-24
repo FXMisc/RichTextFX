@@ -135,9 +135,15 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     public final boolean isBeingUpdated() { return beingUpdated.get(); }
     public final ObservableValue<Boolean> beingUpdatedProperty() { return beingUpdated; }
 
-    private final Var<Boolean> internalStartedByAnchor = Var.newSimpleVar(true);
-    private final SuspendableVal<Boolean> startedByAnchor = internalStartedByAnchor.suspendable();
-    private boolean anchorIsStart() { return startedByAnchor.getValue(); }
+    private final Var<BooleanEvent> internalStartedByAnchor = Var.newSimpleVar( new BooleanEvent( true ) );
+    private final SuspendableVal<BooleanEvent> startedByAnchor = internalStartedByAnchor.suspendable();
+    private boolean anchorIsStart() { return startedByAnchor.getValue().get(); }
+
+    private class BooleanEvent {  // See #874
+        public BooleanEvent( boolean b ) { value = b; }
+        public boolean get() { return value; }
+        private final boolean value;
+    }
 
     private Subscription subscription = () -> {};
 
@@ -166,7 +172,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
         }
 
         Val<Tuple3<Integer, Integer, Integer>> anchorPositions = startedByAnchor.flatMap(b ->
-                b
+                b.get()
                     ? Val.constant(Tuples.t(getStartPosition(), getStartParagraphIndex(), getStartColumnPosition()))
                     : Val.constant(Tuples.t(getEndPosition(), getEndParagraphIndex(), getEndColumnPosition()))
         );
@@ -431,7 +437,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     public void displaceSelection(int startPosition, int endPosition) {
         doUpdate(() -> {
             delegateSelection.selectRange(startPosition, endPosition);
-            internalStartedByAnchor.setValue(startPosition < endPosition);
+            internalStartedByAnchor.setValue( new BooleanEvent( startPosition < endPosition ) );
         });
     }
 
@@ -449,8 +455,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
         doUpdate(() -> {
             delegateSelection.selectRange(startPosition, endPosition);
-            internalStartedByAnchor.setValue(anchorIsStart);
-
+            internalStartedByAnchor.setValue( new BooleanEvent( anchorIsStart ) );
             delegateCaret.moveTo(anchorIsStart ? endPosition : startPosition);
         });
     }
