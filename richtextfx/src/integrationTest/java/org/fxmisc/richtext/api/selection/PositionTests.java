@@ -159,7 +159,6 @@ public class PositionTests extends InlineCssTextAreaAppTest {
         });
     }
 
-    @Test
     public void deletion_which_includes_selection_and_which_occurs_at_end_of_area_moves_selection_to_new_area_end() {
         interact(() -> {
            selection.selectRange(area.getLength(), area.getLength());
@@ -167,17 +166,5 @@ public class PositionTests extends InlineCssTextAreaAppTest {
            assertEquals(area.getLength(), selection.getStartPosition());
            assertEquals(area.getLength(), selection.getEndPosition());
         });
-    }
-    
-    @Test
-    public void anchor_updates_correctly_with_listener_attached() {
-        interact(() -> {
-        	area.clear();
-        	area.anchorProperty().addListener( (ob,ov,nv) -> nv++ );
-        	area.appendText("asdf");
-            area.selectRange(1,2);
-            assertEquals("s",area.getSelectedText());
-            assertEquals(1,area.getAnchor());
-         });
     }
 }
