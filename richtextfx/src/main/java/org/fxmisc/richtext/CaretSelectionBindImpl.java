@@ -431,10 +431,6 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     public void displaceSelection(int startPosition, int endPosition) {
         doUpdate(() -> {
             delegateSelection.selectRange(startPosition, endPosition);
-
-            if ( startPosition < endPosition && internalStartedByAnchor.getValue() ) {
-            	internalStartedByAnchor.setValue( false ); // See #874
-            }
             internalStartedByAnchor.setValue(startPosition < endPosition);
         });
     }
@@ -453,10 +449,6 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
     private void doSelect(int startPosition, int endPosition, boolean anchorIsStart) {
         doUpdate(() -> {
             delegateSelection.selectRange(startPosition, endPosition);
-
-            if ( anchorIsStart && internalStartedByAnchor.getValue() ) {
-                internalStartedByAnchor.setValue( false ); // See #874
-            }
             internalStartedByAnchor.setValue(anchorIsStart);
 
             delegateCaret.moveTo(anchorIsStart ? endPosition : startPosition);
