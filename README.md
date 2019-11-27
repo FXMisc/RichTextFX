@@ -31,7 +31,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.10.2](http://fxmisc.github.io/richtext/javadoc/0.10.2/index.html?org/fxmisc/richtext/package-summary.html)
+  * [0.10.3](http://fxmisc.github.io/richtext/javadoc/0.10.3/index.html?org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -145,31 +145,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.10.2 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.10.3 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.10.2  |
+| org.fxmisc.richtext | richtextfx  | 0.10.3  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.2'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.3'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.2"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.3"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.2/richtextfx-0.10.2.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.2/richtextfx-fat-0.10.2.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.3/richtextfx-0.10.3.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.3/richtextfx-fat-0.10.3.jar) and place it on your classpath.
 
 ### Snapshot releases
 

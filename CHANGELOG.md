@@ -1,5 +1,28 @@
 # Change Log
 
+## [v0.10.3](https://github.com/FXMisc/RichTextFX/tree/v0.10.3) (2019-11-27)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.2...v0.10.3)
+
+**Implemented enhancements:**
+
+- Added shift backspace to delete backward [\#855](https://github.com/FXMisc/RichTextFX/issues/855)
+- Added methods to recreate or get a paragraph graphic [\#854](https://github.com/FXMisc/RichTextFX/issues/854)
+- Added methods to preset the style of inserted text and paragraphs [\#864](https://github.com/FXMisc/RichTextFX/issues/864)
+- Added convenience API to EditActions and StyleClassedTextArea [\#868](https://github.com/FXMisc/RichTextFX/issues/868)
+- Added Bullet Lists to RichTextDemo [\#826](https://github.com/FXMisc/RichTextFX/issues/826) 
+
+**Fixed bugs:**
+
+- Bug: Fixed line highlighter not adjusting to area's width changes [\#845](https://github.com/FXMisc/RichTextFX/pull/845#issuecomment-540535109)
+- Bug: Fixed not highlighting from beginning of line after adding text when empty [\#845](https://github.com/FXMisc/RichTextFX/pull/845#issuecomment-552252829)
+- Bug: Fixed line spacing not being applied between paragraphs [\#862](https://github.com/FXMisc/RichTextFX/issues/862)
+- Bug: Fixed anchor properties not updating correctly with listeners [\#874](https://github.com/FXMisc/RichTextFX/issues/874) 
+
+**Other:**
+
+- Balanced linespacing above and below text for better highlighting look [\#872](https://github.com/FXMisc/RichTextFX/issues/872)
+- Changed styled-text-area CSS [\#738](https://github.com/FXMisc/RichTextFX/issues/738#issuecomment-555592054) 
+
 ## [v0.10.2](https://github.com/FXMisc/RichTextFX/tree/v0.10.2) (2019-08-29)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.1...v0.10.2)
 
