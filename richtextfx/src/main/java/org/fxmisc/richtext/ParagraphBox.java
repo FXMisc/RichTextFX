@@ -105,7 +105,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
         graphic = Val.combine(
                 graphicFactory,
                 this.index,
-                (f, i) -> f != null ? f.apply(i) : null);
+                (f, i) -> f != null && i > -1 ? f.apply(i) : null);
         graphic.addListener((obs, oldG, newG) -> {
             if(oldG != null) {
                 getChildren().remove(oldG);
