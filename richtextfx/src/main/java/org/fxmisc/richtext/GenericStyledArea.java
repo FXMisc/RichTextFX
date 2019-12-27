@@ -346,9 +346,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // undo manager
     private UndoManager undoManager;
     @Override public UndoManager getUndoManager() { return undoManager; }
+    /**
+     * @param undoManager may be null in which case a no op undo manager will be set.
+     */
     @Override public void setUndoManager(UndoManager undoManager) {
         this.undoManager.close();
-        this.undoManager = undoManager;
+        this.undoManager = undoManager != null ? undoManager : UndoUtils.noOpUndoManager();
     }
 
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
