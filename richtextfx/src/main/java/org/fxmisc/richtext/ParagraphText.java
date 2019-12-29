@@ -52,11 +52,11 @@ import javafx.scene.shape.StrokeType;
  */
 class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
-    private final ObservableSet<CaretNode> carets = FXCollections.observableSet(new HashSet<>(2));
+    private final ObservableSet<CaretNode> carets = FXCollections.observableSet(new HashSet<>(1));
     public final ObservableSet<CaretNode> caretsProperty() { return carets; }
 
     private final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selections =
-            FXCollections.observableMap(new HashMap<>(2));
+            FXCollections.observableMap(new HashMap<>(1));
     public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() { return selections; }
 
     private final MapChangeListener<? super Selection<PS, SEG, S>, ? super SelectionPath> selectionPathListener;
