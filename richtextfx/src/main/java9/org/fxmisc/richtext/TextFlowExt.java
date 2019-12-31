@@ -26,7 +26,7 @@ class TextFlowExt extends TextFlow {
     private TextFlowLayout textLayout()
     {
         if ( layout == null ) {
-            layout = new TextFlowLayout( this, getManagedChildren() );
+            layout = new TextFlowLayout( this );
         }
         return layout;
     }
