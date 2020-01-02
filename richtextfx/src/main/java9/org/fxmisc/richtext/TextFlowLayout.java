@@ -66,7 +66,8 @@ class TextFlowLayout
     int getLineCount() {
        
         if ( lineCount > -1 ) return lineCount;
-        
+
+        lineCount = 0;
         lineMetrics.clear();
         double totLines = 0.0, prevMinY = 1.0, prevMaxY = -1.0;
         int totCharSoFar = 0;
