@@ -43,9 +43,9 @@ class TextFlowExt extends TextFlow {
 
     int getLineEndPosition(int charIdx) {
         TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
-        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
-        int minor = (currentLineIndex == getLineCount() - 1) ? 0 : -1;
-        return navigator.position(currentLineIndex + 1, minor).toOffset();
+        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor() + 1;
+        int minor = (currentLineIndex == getLineCount()) ? 0 : -1;
+        return navigator.position(currentLineIndex, minor).toOffset();
     }
 
     int getLineOfCharacter(int charIdx) {
