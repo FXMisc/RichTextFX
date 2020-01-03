@@ -958,7 +958,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         int startPar = selection.getStartParagraphIndex();
         int endPar = selection.getEndParagraphIndex();
 
-        if(paragraph < startPar || paragraph > endPar) {
+        if(selection.getLength() == 0 || paragraph < startPar || paragraph > endPar) {
             return EMPTY_RANGE;
         }
 
