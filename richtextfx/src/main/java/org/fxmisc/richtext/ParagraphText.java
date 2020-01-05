@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyledSegment;
@@ -71,8 +70,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return highlightTextFill;
     }
 
-    private Paragraph<PS, SEG, S> paragraph;
-    private Function<StyledSegment<SEG, S>, Node> nodeMaker;
+    private final Paragraph<PS, SEG, S> paragraph;
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
     private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
@@ -90,6 +88,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private int selectionShapeStartIndex = 0;
 
     ParagraphText(Paragraph<PS, SEG, S> par, Function<StyledSegment<SEG, S>, Node> nodeFactory) {
+        this.paragraph = par;
 
         getStyleClass().add("paragraph-text");
 
@@ -150,6 +149,17 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //            }
 //        });
 
+        // populate with text nodes
+        par.getStyledSegments().stream().map(nodeFactory).forEach(n -> {
+            if (n instanceof TextExt) {
+                TextExt t = (TextExt) n;
+                // XXX: binding selectionFill to textFill,
+                // see the note at highlightTextFill
+                JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
+            }
+            getChildren().add(n);
+        });
+
         // set up custom css shape helpers
         UnaryOperator<Path> configurePath = shape -> {
             shape.setManaged(false);
@@ -208,43 +218,18 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 addToForeground,
                 clearUnusedShapes
         );
-
-        // populate with text nodes
-        nodeMaker = nodeFactory;
-        setParagraph( par );
     }
 
     void dispose() {
-        carets.clear();
-        selections.clear();
         // this removes listeners (in selections and carets listeners) and avoids memory leaks
-        selections.removeListener( selectionPathListener );
-        carets.removeListener( caretNodeListener );
-        setParagraph( null );
+    	selections.removeListener( selectionPathListener );
+    	carets.removeListener( caretNodeListener );
+        selections.clear();
+        carets.clear();
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
         return paragraph;
-    }
-
-    public void setParagraph(Paragraph<PS, SEG, S> par) {
-        getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
-            .forEach( t -> JavaFXCompatibility.Text_selectionFillProperty(t).unbind() ); 
-
-        getChildren().setAll( selections.values() );
-        
-        if ( par != null ) getChildren().addAll( par.getStyledSegments().stream().map(nodeMaker)
-        .peek( n -> {
-            if (n instanceof TextExt) {
-                TextExt t = (TextExt) n;
-                // XXX: binding selectionFill to textFill,
-                // see the note at highlightTextFill
-                JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
-            }
-        }).collect( Collectors.toList() ) );
-
-        getChildren().addAll( carets );
-        paragraph = par;
     }
 
     public <T extends Node & Caret> double getCaretOffsetX(T caret) {
