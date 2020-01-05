@@ -70,7 +70,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         return highlightTextFill;
     }
 
-    private final Paragraph<PS, SEG, S> paragraph;
+    private Paragraph<PS, SEG, S> paragraph;
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
     private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
@@ -221,11 +221,18 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     }
 
     void dispose() {
-        // this removes listeners (in selections and carets listeners) and avoids memory leaks
-    	selections.removeListener( selectionPathListener );
-    	carets.removeListener( caretNodeListener );
-        selections.clear();
         carets.clear();
+        selections.clear();
+        // The above must be before the below to prevent any memory leaks.
+        // Then remove listeners to also avoid memory leaks.
+        selections.removeListener( selectionPathListener );
+        carets.removeListener( caretNodeListener );
+
+        getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
+        .forEach( t -> JavaFXCompatibility.Text_selectionFillProperty(t).unbind() ); 
+
+        getChildren().clear();
+        paragraph = null;
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
