@@ -26,7 +26,7 @@ import javafx.scene.text.TextFlow;
 
 public class StyledTextField<PS, S> extends StyledTextArea
 {
-    private final Pattern VERTICAL_WHITESPACE = Pattern.compile( "\\v" );
+    private final Pattern VERTICAL_WHITESPACE = Pattern.compile( "\\v+" );
     private final static String STYLE_SHEET;
     private final static double HEIGHT;
     static {
