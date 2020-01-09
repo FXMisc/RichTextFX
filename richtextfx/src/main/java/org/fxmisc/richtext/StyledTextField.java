@@ -24,6 +24,16 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.TextFlow;
 
+/**
+ * A text field whose segment generic has been specified to be a {@link String}. How the text
+ * will be styled is not yet specified in this class, but use {@link StyleClassedTextField} for a style class
+ * approach to styling the text and {@link InlineCssTextField} for an inline css approach to styling the text.
+ *
+ * @param <PS> type of paragraph style
+ * @param <S> type of style that can be applied to text.
+ * 
+ * @author Jurgen
+ */
 public class StyledTextField<PS, S> extends StyledTextArea
 {
     private final Pattern VERTICAL_WHITESPACE = Pattern.compile( "\\v+" );
@@ -81,6 +91,14 @@ public class StyledTextField<PS, S> extends StyledTextArea
                 moveTo( 0 ); requestFollowCaret();
             }
             selectAll = true;
+        });
+
+        super.setWrapText( false );
+        wrapTextProperty().addListener( (ob,ov,wrap) -> {
+            if ( wrap ) { // veto any changes
+                wrapTextProperty().unbind();
+                super.setWrapText(false);
+            }
         });
     }
 
@@ -155,4 +173,9 @@ public class StyledTextField<PS, S> extends StyledTextArea
     {
         super.replaceText( start, end, VERTICAL_WHITESPACE.matcher( text ).replaceAll( " " ) );
     }
+
+    /** This is a <b>no op</b> for text fields and therefore marked as <i>deprecated</i>. */
+    @Override @Deprecated public void setWrapText( boolean value ) {}
+    /** This <u>always</u> returns <b>false</b> for styled text fields. */
+    @Override public boolean isWrapText() { return false; }
 }
