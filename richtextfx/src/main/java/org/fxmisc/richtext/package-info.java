@@ -10,6 +10,11 @@
  *     {@link org.fxmisc.richtext.StyleClassedTextArea} and {@link org.fxmisc.richtext.InlineCssTextArea}.
  *     For those looking to use a base for a code editor, see {@link org.fxmisc.richtext.CodeArea}.
  * </p>
+ * <p>
+ *     For text fields there is {@link org.fxmisc.richtext.StyledTextField} using {@link java.lang.String}-only segments,
+ *     and styling them are also already supported in the two most common ways via
+ *     {@link org.fxmisc.richtext.StyleClassedTextField} and {@link org.fxmisc.richtext.InlineCssTextField}.
+ * </p>
  *
  * @see org.fxmisc.richtext.model.EditableStyledDocument
  * @see org.fxmisc.richtext.model.TwoDimensional
