@@ -17,9 +17,24 @@
 }
 .styled-text-field:disabled
 {
-	-fx-opacity: 0.4;
+    -fx-opacity: 0.4;
 }
-.styled-text-field .main-selection
+.main-selection
 {
-	-fx-fill: #0096C9;
+    -fx-fill: #0096C9;
+}
+
+// Text alignment classes for StyleClassedTextField
+
+.center
+{
+    -fx-text-alignment: center;
+}
+.left
+{
+    -fx-text-alignment: left;
+}
+.right
+{
+    -fx-text-alignment: right;
 }

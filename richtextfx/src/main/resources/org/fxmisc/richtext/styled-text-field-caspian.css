@@ -1,7 +1,7 @@
 .styled-text-field
 {
     -fx-cursor: text;
-	-fx-text-fill: -fx-text-inner-color;
+    -fx-text-fill: -fx-text-inner-color;
     -fx-background-color: -fx-shadow-highlight-color, -fx-text-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1, 2;
     -fx-background-radius: 3, 2, 2;
@@ -15,9 +15,24 @@
 }
 .styled-text-field:disabled
 {
-	-fx-opacity: -fx-disabled-opacity;
+    -fx-opacity: -fx-disabled-opacity;
 }
-.styled-text-field .main-selection
+.main-selection
 {
-	-fx-fill: #0093ff;
+    -fx-fill: #0093ff;
+}
+
+// Text alignment classes for StyleClassedTextField
+
+.center
+{
+    -fx-text-alignment: center;
+}
+.left
+{
+    -fx-text-alignment: left;
+}
+.right
+{
+    -fx-text-alignment: right;
 }

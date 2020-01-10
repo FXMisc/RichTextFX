@@ -5,6 +5,8 @@ import java.util.Collections;
 
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
+import javafx.scene.text.TextAlignment;
+
 /**
  * A TextField that uses style classes, i.e. <code>getStyleClass().add(String)</code>, to define the styles of text segments.
  * <p>Use CSS Style Class ".styled-text-field" for styling the control.
@@ -54,5 +56,11 @@ public class StyleClassedTextField extends StyledTextField<Collection<String>, C
      */
     public void setStyleClass( int from, int to, String styleClass ) {
         setStyle( from, to, Collections.singletonList( styleClass ) );
+    }
+
+    @Override
+    protected void changeAlignment( TextAlignment txtAlign ) {
+        // Set to style class as defined in "styled-text-field-caspian.css" AND "styled-text-field-modena.css"
+        setParagraphStyle( 0, Collections.singletonList( txtAlign.toString().toLowerCase() ) );
     }
 }
