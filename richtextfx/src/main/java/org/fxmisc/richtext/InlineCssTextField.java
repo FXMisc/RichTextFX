@@ -2,6 +2,7 @@ package org.fxmisc.richtext;
 
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 /**
@@ -19,5 +20,10 @@ public class InlineCssTextField extends StyledTextField<String,String>
         this(); replaceText( text );
         getUndoManager().forgetHistory();
         getUndoManager().mark();
+    }
+
+    @Override
+    protected void changeAlignment( TextAlignment txtAlign ) {
+        setParagraphStyle( 0, "-fx-text-alignment: "+ txtAlign );
     }
 }
