@@ -49,7 +49,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
 
     private final static CssMetaData<StyledTextField,TextAlignment> TEXT_ALIGNMENT = new CustomCssMetaData<>(
         "-fx-alignment", (StyleConverter<?,TextAlignment>) StyleConverter.getEnumConverter(TextAlignment.class),
-        TextAlignment.LEFT, s -> (StyleableObjectProperty) s.textAlignmentProperty()
+        TextAlignment.LEFT, s -> (StyleableObjectProperty) s.alignmentProperty()
     );
     private final static Pattern VERTICAL_WHITESPACE = Pattern.compile( "\\v+" );
     private final static String STYLE_SHEET;
@@ -159,7 +159,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
      * Specifies how the text should be aligned when there is empty space within the TextField.
      * To configure via CSS use {@code -fx-alignment:} and values from {@link javafx.scene.text.TextAlignment}.
      */
-    public final ObjectProperty<TextAlignment> textAlignmentProperty() {
+    public final ObjectProperty<TextAlignment> alignmentProperty() {
         if (textAlignment == null) {
             textAlignment = new CustomStyleableProperty<>( TextAlignment.LEFT, "textAlignment", this, TEXT_ALIGNMENT );
             textAlignment.addListener( (ob,ov,alignment) -> changeAlignment( alignment ) );
@@ -167,7 +167,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
         return textAlignment;
     }
     public final TextAlignment getAlignment() { return textAlignment == null ? TextAlignment.LEFT : textAlignment.getValue(); }
-    public final void setAlignment( TextAlignment value ) { textAlignmentProperty().setValue( value ); }
+    public final void setAlignment( TextAlignment value ) { alignmentProperty().setValue( value ); }
     protected abstract void changeAlignment( TextAlignment txtAlign );
 
     /**
