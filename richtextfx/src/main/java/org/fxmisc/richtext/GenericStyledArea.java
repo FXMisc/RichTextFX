@@ -16,7 +16,6 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
-import javafx.application.Platform;
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -1442,6 +1441,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             followCaretRequested = false;
             paging = false;
         });
+
+        Node node = getPlaceholder();
+        if (node != null && node.isResizable() && node.isManaged()) {
+            node.autosize();
+        }
     }
 
     /* ********************************************************************** *
