@@ -16,8 +16,8 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
-import javafx.application.Platform;
 import javafx.beans.NamedArg;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -371,6 +371,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return getCell(parNdx).getGraphic();
     }
 
+    /**
+     * This Node is shown to the user, centered over the area, when the area has no text content.
+     */
+    private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
+    public final ObjectProperty<Node> placeholderProperty() { return placeHolderProp; }
+    public final void setPlaceholder(Node value) { placeHolderProp.set(value); }
+    public final Node getPlaceholder() { return placeHolderProp.get(); }
+    
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
     // Don't remove as FXMLLoader doesn't recognise default methods !
@@ -787,6 +795,41 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
         new GenericStyledAreaBehavior(this);
+
+        // Setup place holder visibility & placement 
+        final Val<Boolean> showPlaceholder = Val.create
+        (
+            () -> getLength() == 0 && ! isFocused(),
+            lengthProperty(), focusedProperty()
+        );
+        
+        placeHolderProp.addListener( (ob,oldNode,newNode) -> {
+            if ( oldNode != null ) {
+                oldNode.visibleProperty().unbind();
+                oldNode.layoutXProperty().unbind();
+                oldNode.layoutYProperty().unbind();
+                getChildren().remove( oldNode );
+                setClip( null );
+            }
+            if ( newNode != null ) {
+                newNode.visibleProperty().bind( showPlaceholder );
+                configurePlaceholder( newNode );
+                getChildren().add( newNode );
+            }
+        });
+    }
+
+    protected void configurePlaceholder( Node placeholder )
+    {
+        placeholder.layoutYProperty().bind( Bindings.createDoubleBinding( () ->
+            (getHeight() - placeholder.getLayoutBounds().getHeight()) / 2,
+            heightProperty(), placeholder.layoutBoundsProperty() )
+        );
+
+        placeholder.layoutXProperty().bind( Bindings.createDoubleBinding( () ->
+            (getWidth() - placeholder.getLayoutBounds().getWidth()) / 2,
+            widthProperty(), placeholder.layoutBoundsProperty() )
+        );
     }
 
     /* ********************************************************************** *
@@ -1398,6 +1441,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             followCaretRequested = false;
             paging = false;
         });
+
+        Node node = getPlaceholder();
+        if (node != null && node.isResizable() && node.isManaged()) {
+            node.autosize();
+        }
     }
 
     /* ********************************************************************** *
