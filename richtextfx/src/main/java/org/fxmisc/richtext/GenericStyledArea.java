@@ -16,6 +16,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 
+import javafx.application.Platform;
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -53,7 +54,6 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
-import javafx.application.Platform;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -802,21 +802,29 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             () -> getLength() == 0 && ! isFocused(),
             lengthProperty(), focusedProperty()
         );
-        
-        placeHolderProp.addListener( (ob,oldNode,newNode) -> {
-            if ( oldNode != null ) {
-                oldNode.visibleProperty().unbind();
-                oldNode.layoutXProperty().unbind();
-                oldNode.layoutYProperty().unbind();
-                getChildren().remove( oldNode );
-                setClip( null );
-            }
-            if ( newNode != null ) {
-                newNode.visibleProperty().bind( showPlaceholder );
-                configurePlaceholder( newNode );
-                getChildren().add( newNode );
-            }
-        });
+
+        placeHolderProp.addListener( (ob,ov,newNode) -> displayPlaceHolder( showPlaceholder.getValue(), newNode ) );
+        showPlaceholder.addListener( (ob,ov,show) -> displayPlaceHolder( show, getPlaceholder() ) );
+    }
+
+    private Node placeholder;
+
+    private void displayPlaceHolder( boolean show, Node newNode )
+    {
+        if ( placeholder != null && (! show || newNode != placeholder) )
+        {
+            placeholder.layoutXProperty().unbind();
+            placeholder.layoutYProperty().unbind();
+            getChildren().remove( placeholder );
+            placeholder = null;
+            setClip( null );
+        }
+        if ( newNode != null && show && newNode != placeholder )
+        {
+            configurePlaceholder( newNode );
+            getChildren().add( newNode );
+            placeholder = newNode;
+        }
     }
 
     protected void configurePlaceholder( Node placeholder )
@@ -1442,9 +1450,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             paging = false;
         });
 
-        Node node = getPlaceholder();
-        if (node != null && node.isResizable() && node.isManaged()) {
-            node.autosize();
+        Node holder = placeholder;
+        if (holder != null && holder.isResizable() && holder.isManaged()) {
+            holder.autosize();
         }
     }
 
