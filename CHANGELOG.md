@@ -1,5 +1,23 @@
 # Change Log
 
+## [v0.10.4](https://github.com/FXMisc/RichTextFX/tree/v0.10.4) (2020-02-19)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.3...v0.10.4)
+
+**Implemented enhancements:**
+
+- Added convenience method to UndoUtils to create a NO OP undo manager [\#881](https://github.com/FXMisc/RichTextFX/issues/881)
+- Added styled text fields [\#894](https://github.com/FXMisc/RichTextFX/pull/894), [\#895](https://github.com/FXMisc/RichTextFX/pull/895), [\#896](https://github.com/FXMisc/RichTextFX/pull/896) & [\#897](https://github.com/FXMisc/RichTextFX/pull/897)
+- Added place holder to GenericStyledArea [\#899](https://github.com/FXMisc/RichTextFX/pull/899) [\#900](https://github.com/FXMisc/RichTextFX/pull/900)
+- Added prompt text to StyledTextField [\#899](https://github.com/FXMisc/RichTextFX/pull/899)
+- Added Automatic-Module-Name
+- Bumped to Flowless 0.6.1
+
+**Fixed bugs:**
+
+- Bug: Fixed paragraph graphic creation if index is -1 [\#882](https://github.com/FXMisc/RichTextFX/pull/882)
+- Bug: Fixed Java 9 code [\#887](https://github.com/FXMisc/RichTextFX/pull/887/files) and [\#888](https://github.com/FXMisc/RichTextFX/pull/888)
+- Bug: Fixed memory leak in ParagraphText [\#893](https://github.com/FXMisc/RichTextFX/pull/893)
+
 ## [v0.10.3](https://github.com/FXMisc/RichTextFX/tree/v0.10.3) (2019-11-27)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.2...v0.10.3)
 
