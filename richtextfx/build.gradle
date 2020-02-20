@@ -6,11 +6,10 @@ buildscript {
 
 plugins {
     id 'org.unbroken-dome.test-sets' version '2.1.1'
+    id 'osgi'
+    id 'maven-publish'
+    id 'signing'
 }
-
-apply plugin: 'osgi'
-apply plugin: 'maven'
-apply plugin: 'signing'
 
 group = 'org.fxmisc.richtext'
 
@@ -187,65 +186,66 @@ artifacts {
     archives sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
-
-signArchives.onlyIf {
-    project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')
-}
-
 def doUploadArchives = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
+publish.onlyIf { doUploadArchives }
 
 if(doUploadArchives) {
-    uploadArchives {
-        repositories.mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-              authentication(userName: sonatypeUsername, password: sonatypePassword)
+    publishing {
+	    repositories {
+	        maven {
+	           def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+	           def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+	           url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+	            credentials {
+	                username = "${sonatypeUsername}"
+	                password = "${sonatypePassword}"
+	            }
+	        }
+	    }
+        publications {
+            richTextFX(MavenPublication) {
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+                pom {
+	                name = 'RichTextFX'
+	                packaging = 'jar'
+	                description = 'Rich-text area for JavaFX'
+	                url = 'https://github.com/FXMisc/RichTextFX/#richtextfx'
+	           
+	                scm {
+	                    url = 'scm:git@github.com:FXMisc/RichTextFX.git'
+	                    connection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+	                    developerConnection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+	                }
+	           
+	                licenses {
+	                    license {
+	                        name = 'The BSD 2-Clause License'
+	                        url = 'http://opensource.org/licenses/BSD-2-Clause'
+	                        distribution = 'repo'
+	                    }
+	                    license {
+	                        name = 'GPLv2 with the Classpath Exception'
+	                        url = 'http://www.gnu.org/software/classpath/license.html'
+	                        distribution = 'repo'
+	                    }
+	                }
+	           
+	                developers {
+	                    developer {
+	                        name = 'Tomas Mikula'
+	                    }
+	                }
+	            }
             }
-
-            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.project {
-                name 'RichTextFX'
-                packaging 'jar'
-                description 'Rich-text area for JavaFX'
-                url 'https://github.com/FXMisc/RichTextFX/#richtextfx'
-           
-                scm {
-                    url 'scm:git@github.com:FXMisc/RichTextFX.git'
-                    connection 'scm:git@github.com:FXMisc/RichTextFX.git'
-                    developerConnection 'scm:git@github.com:FXMisc/RichTextFX.git'
-                }
-           
-                licenses {
-                    license {
-                        name 'The BSD 2-Clause License'
-                        url 'http://opensource.org/licenses/BSD-2-Clause'
-                        distribution 'repo'
-                    }
-                    license {
-                        name 'GPLv2 with the Classpath Exception'
-                        url 'http://www.gnu.org/software/classpath/license.html'
-                        distribution 'repo'
-                    }
-                }
-           
-                developers {
-                    developer {
-                        name 'Tomas Mikula'
-                    }
-                }
-            }
-        }
+		}
+    }
+	
+    signing {
+        sign publishing.publications.richTextFX
     }
 }
-
-uploadArchives.onlyIf { doUploadArchives }
 
 task fatJar(type: Jar, dependsOn: classes) {
     appendix = 'fat'
