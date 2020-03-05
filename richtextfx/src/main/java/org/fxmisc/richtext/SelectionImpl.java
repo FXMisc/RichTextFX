@@ -462,29 +462,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         subscription = subscription.and(s);
     }
 
-    private IndexRange getParagraphSelection(int paragraph) {
-        int startPar = getStartParagraphIndex();
-        int endPar = getEndParagraphIndex();
-
-        if(paragraph < startPar || paragraph > endPar) {
-            return EMPTY_RANGE;
-        }
-
-        int start = paragraph == startPar ? getStartColumnPosition() : 0;
-        int end = paragraph == endPar ? getEndColumnPosition() : area.getParagraphLength(paragraph) + 1;
-
-        // force rangeProperty() to be valid
-        // selection.getRange(); // not sure why this line is even here...
-
-        return new IndexRange(start, end);
-    }
-
-    private Position position(int row, int col) {
-        return area.position(row, col);
-    }
-
     private int textPosition(int row, int col) {
-        return position(row, col).toOffset();
+        return area.position(row, col).toOffset();
     }
 
     private void moveBoundary(Direction direction, int amount, int oldBoundaryPosition,
