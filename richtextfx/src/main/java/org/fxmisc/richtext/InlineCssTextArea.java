@@ -34,6 +34,8 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
                 document,
                 true
         );
+
+        setStyleCodecs(Codec.STRING_CODEC, styledTextCodec(Codec.STRING_CODEC));
     }
 
     /**
@@ -48,8 +50,6 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         replace(0, 0, ReadOnlyStyledDocument.fromString(text, getInitialParagraphStyle(), getInitialTextStyle(), getSegOps()));
         getUndoManager().forgetHistory();
         getUndoManager().mark();
-
-        setStyleCodecs(Codec.STRING_CODEC, styledTextCodec(Codec.STRING_CODEC));
 
         // position the caret at the beginning
         selectRange(0, 0);
