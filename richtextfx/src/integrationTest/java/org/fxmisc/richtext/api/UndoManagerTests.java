@@ -162,6 +162,17 @@ public class UndoManagerTests {
                assertEquals(0, plainEmissions.get());
             });
         }
+        
+        @Test
+        public void testForBug904() {
+        	String firstLine = "some text\n";
+        	write( firstLine );
+        	interact( () -> area.setStyle( 5, 9, "-fx-font-weight: bold;" ) );
+        	write( "new line" );
+        	area.getUndoManager().preventMerge();
+            area.append( area.getContent().subSequence( firstLine.length()-1, area.getLength() ) );
+            interact( area::undo ); // should not throw Unexpected change received exception 
+        }
 
     }
 
