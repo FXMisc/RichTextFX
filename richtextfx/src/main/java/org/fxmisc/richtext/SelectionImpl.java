@@ -186,7 +186,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         selectedDocument = documentVal.suspendable();
         selectedText = documentVal.map(StyledDocument::getText).suspendable();
 
-        start2DPosition = Var.newSimpleVar(position(0, 0));
+        start2DPosition = Var.newSimpleVar(area.offsetToPosition(range.getStart(), Forward));
         end2DPosition = start2DPosition.map(startPos2D ->
                 getLength() == 0
                         ? startPos2D
