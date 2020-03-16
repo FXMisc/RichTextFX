@@ -9,10 +9,12 @@ import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.RichTextFXTestBase;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
+import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.TextChange;
 import org.fxmisc.richtext.util.UndoUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.reactfx.SuspendableYes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -172,6 +174,20 @@ public class UndoManagerTests {
         	area.getUndoManager().preventMerge();
             area.append( area.getContent().subSequence( firstLine.length()-1, area.getLength() ) );
             interact( area::undo ); // should not throw Unexpected change received exception 
+        }
+
+        @Test
+        public void suspendable_UndoManager_skips_style_check() {
+        	
+            SuspendableYes suspendUndo = new SuspendableYes();
+            area.setUndoManager( UndoUtils.richTextSuspendableUndoManager( area, suspendUndo ) );
+            write( "some text\n" );
+            interact( () -> suspendUndo.suspendWhile( () -> area.setStyle( 5, 9, "-fx-font-weight: bold;" ) ) );
+            write( "new line" );
+            interact( area::undo ); // should not throw Unexpected change received exception
+            
+            area.setUndoManager( UndoUtils.defaultUndoManager( area ) );
+            RichTextChange.skipStyleComparison( false );
         }
 
     }
