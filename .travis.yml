@@ -14,17 +14,19 @@ matrix:
       jdk: oraclejdk9
       env: _JAVA_OPTIONS="-DcheckSourceCompatibility=9"
 
+      # OracleJDK 9 not supported, defaults to OpenJDK which doesn't have JavaFX 8 (earliest is 11)
       # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
-      # Java 8 Mac build
-    - os: osx
-      osx_image: xcode9
-      env: _JAVA_OPTIONS="-Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000"
+      # Java 9 Mac build
+#    - os: osx
+#      osx_image: xcode10.2.1
+#      jdk: oraclejdk9
+#      env: _JAVA_OPTIONS="-DcheckSourceCompatibility=9 -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000"
 
 # enable Java 8u45+, see https://github.com/travis-ci/travis-ci/issues/4042
 addons:
   apt:
     packages:
-      - oracle-java8-installer
+      - oracle-java9-installer
 
 before_install:
   - chmod +x .ci/before_install.sh
