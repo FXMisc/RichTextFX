@@ -17,7 +17,7 @@ matrix:
       # Headless Build: xvfb + TestFX does not work on Travis OSX environments (as of 2017-05-24)
       # Java 9 Mac build
     - os: osx
-      osx_image: xcode10.2
+      osx_image: xcode10.2.1
       jdk: oraclejdk9
       env: _JAVA_OPTIONS="-DcheckSourceCompatibility=9 -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000"
 
@@ -25,7 +25,7 @@ matrix:
 addons:
   apt:
     packages:
-      - oracle-java8-installer
+      - oracle-java9-installer
 
 before_install:
   - chmod +x .ci/before_install.sh
