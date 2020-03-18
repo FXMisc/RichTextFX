@@ -214,7 +214,10 @@ public final class UndoUtils {
      * by {@code area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
      */
     public static <PS, SEG, S> Consumer<PlainTextChange> applyPlainTextChange(GenericStyledArea<PS, SEG, S> area) {
-        return change -> area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+        return change -> {
+            area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+            moveToChange( area, change );
+        };
     }
 
     /**
@@ -223,7 +226,10 @@ public final class UndoUtils {
      */
     public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(
             GenericStyledArea<PS, SEG, S> area) {
-        return change -> area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+        return change -> {
+            area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+            moveToChange( area, change );
+        };
     }
 
     /**
@@ -238,6 +244,7 @@ public final class UndoUtils {
                 builder.replaceTextAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
             }
             builder.commit();
+            moveToChange( area, changeList.get( changeList.size()-1 ) );
         };
     }
 
@@ -253,7 +260,19 @@ public final class UndoUtils {
                 builder.replaceAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
             }
             builder.commit();
+            moveToChange( area, changeList.get( changeList.size()-1 ) );
         };
     }
 
+    /*
+     * Address #912 "After undo/redo, new text is inserted at the end".
+     * Without breaking PositionTests. (org.fxmisc.richtext.api.caret)
+     */
+    private static void moveToChange( GenericStyledArea area, TextChange chg ) {
+        int pos = chg.getPosition(), len = chg.getNetLength(); 
+        if ( len > 0 ) {
+           pos = Math.min( pos + Math.abs(len), area.getLength() );
+        }
+        area.moveTo( pos );
+    }
 }
