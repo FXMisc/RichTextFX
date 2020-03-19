@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 
-import static org.fxmisc.richtext.GenericStyledArea.EMPTY_RANGE;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
@@ -226,57 +225,40 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
             int finalEnd = getEndPosition();
             for (PlainTextChange plainTextChange : list) {
                 int netLength = plainTextChange.getNetLength();
-                //if (netLength != 0)  Causes IndexOutOfBoundsException in ParagraphText.getRangeShapeSafely issue #689
-                // but can be safely reimplemented if this causes other issues.
-                {
-                    int indexOfChange = plainTextChange.getPosition();
-                    // in case of a replacement: "hello there" -> "hi."
-                    int endOfChange = indexOfChange + Math.abs(netLength);
+                int indexOfChange = plainTextChange.getPosition();
+                // in case of a replacement: "hello there" -> "hi."
+                int endOfChange = indexOfChange + Math.abs(netLength);
 
-                    if (getLength() != 0) {
+                /*
+                    "->" means add (positive) netLength to position
+                    "<-" means add (negative) netLength to position
+                    "x" means don't update position
 
-                        /*
-                            "->" means add (positive) netLength to position
-                            "<-" means add (negative) netLength to position
-                            "x" means don't update position
+                    "start / end" means what should be done in each case for each anchor if they differ
 
-                            "start / end" means what should be done in each case for each anchor if they differ
+                    "+a" means one of the anchors was included in the deleted portion of content
+                    "-a" means one of the anchors was not included in the deleted portion of content
+                    Before/At/After means indexOfChange "<" / "==" / ">" position
 
-                            "+a" means one of the anchors was included in the deleted portion of content
-                            "-a" means one of the anchors was not included in the deleted portion of content
-                            Before/At/After means indexOfChange "<" / "==" / ">" position
-
-                                   |   Before +a   | Before -a |   At   | After
-                            -------+---------------+-----------+--------+------
-                            Add    |      N/A      |    ->     | -> / x | x
-                            Delete | indexOfChange |    <-     |    x   | x
-                         */
-                        if (indexOfChange == finalStart && netLength > 0) {
-                            finalStart = finalStart + netLength;
-                        } else if (indexOfChange < finalStart) {
-                            finalStart = finalStart < endOfChange
-                                    ? indexOfChange
-                                    : finalStart + netLength;
-                        }
-                        if (indexOfChange < finalEnd) {
-                            finalEnd = finalEnd < endOfChange
-                                    ? indexOfChange
-                                    : finalEnd + netLength;
-                        }
-                        if (finalStart > finalEnd) {
-                            finalStart = finalEnd;
-                        }
-                    } else {
-                        // force-update internalSelection in case empty selection is
-                        // at the end of area and a character was deleted
-                        // (prevents a StringIndexOutOfBoundsException because
-                        // end is one char farther than area's length).
-
-                        if (getEndPosition() > 0) {
-                            finalStart = area.getLength();
-                            finalEnd = finalStart;
-                        }
-                    }
+                           |   Before +a   | Before -a |   At   | After
+                    -------+---------------+-----------+--------+------
+                    Add    |      N/A      |    ->     | -> / x | x
+                    Delete | indexOfChange |    <-     |    x   | x
+                */
+                if (indexOfChange == finalStart && netLength > 0) {
+                    finalStart = finalStart + netLength;
+                } else if (indexOfChange < finalStart) {
+                    finalStart = finalStart < endOfChange
+                            ? indexOfChange
+                            : finalStart + netLength;
+                }
+                if (indexOfChange < finalEnd) {
+                    finalEnd = finalEnd < endOfChange
+                            ? indexOfChange
+                            : finalEnd + netLength;
+                }
+                if (finalStart > finalEnd) {
+                    finalStart = finalEnd;
                 }
             }
             selectRange(finalStart, finalEnd);
