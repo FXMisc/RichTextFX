@@ -221,13 +221,13 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         ).suspendable();
 
         manageSubscription(area.multiPlainChanges(), list -> {
-            int finalStart = getStartPosition();
-            int finalEnd = getEndPosition();
+            int selectStart = getStartPosition();
+            int selectEnd = getEndPosition();
             for (PlainTextChange plainTextChange : list) {
-                int netLength = plainTextChange.getNetLength();
+            	int changeLength = plainTextChange.getNetLength();
                 int indexOfChange = plainTextChange.getPosition();
                 // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(netLength);
+                int endOfChange = indexOfChange + Math.abs(changeLength);
 
                 /*
                     "->" means add (positive) netLength to position
@@ -245,23 +245,23 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                     Add    |      N/A      |    ->     | -> / x | x
                     Delete | indexOfChange |    <-     |    x   | x
                 */
-                if (indexOfChange == finalStart && netLength > 0) {
-                    finalStart = finalStart + netLength;
-                } else if (indexOfChange < finalStart) {
-                    finalStart = finalStart < endOfChange
+                if (indexOfChange == selectStart && changeLength > 0) {
+                    selectStart = selectStart + changeLength;
+                } else if (indexOfChange < selectStart) {
+                    selectStart = selectStart < endOfChange
                             ? indexOfChange
-                            : finalStart + netLength;
+                            : selectStart + changeLength;
                 }
-                if (indexOfChange < finalEnd) {
-                    finalEnd = finalEnd < endOfChange
+                if (indexOfChange < selectEnd) {
+                    selectEnd = selectEnd < endOfChange
                             ? indexOfChange
-                            : finalEnd + netLength;
+                            : selectEnd + changeLength;
                 }
-                if (finalStart > finalEnd) {
-                    finalStart = finalEnd;
+                if (selectStart > selectEnd) {
+                    selectStart = selectEnd;
                 }
             }
-            selectRange(finalStart, finalEnd);
+            selectRange(selectStart, selectEnd);
         });
 
         Suspendable omniSuspendable = Suspendable.combine(
