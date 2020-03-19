@@ -172,7 +172,7 @@ public class UndoManagerTests {
         	interact( () -> area.setStyle( 5, 9, "-fx-font-weight: bold;" ) );
         	write( "new line" );
         	area.getUndoManager().preventMerge();
-            area.append( area.getContent().subSequence( firstLine.length()-1, area.getLength() ) );
+            interact( () -> area.append( area.getContent().subSequence( firstLine.length()-1, area.getLength() ) ) );
             interact( area::undo ); // should not throw Unexpected change received exception 
         }
 
