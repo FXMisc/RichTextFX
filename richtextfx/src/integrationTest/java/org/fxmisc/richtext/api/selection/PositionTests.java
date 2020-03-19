@@ -34,8 +34,10 @@ public class PositionTests extends InlineCssTextAreaAppTest {
     
     @Test
     public void initial_range_specified_via_constructor_is_honored() {
-        area.appendText( "\n"+ fullText );
-        area.appendText( "\n"+ fullText );
+        interact(() -> {
+            area.appendText( "\n"+ fullText );
+            area.appendText( "\n"+ fullText );
+        };
 
     	int paragraphOne = 1;
     	int start = area.getAbsolutePosition( paragraphOne, leftText.length() );
