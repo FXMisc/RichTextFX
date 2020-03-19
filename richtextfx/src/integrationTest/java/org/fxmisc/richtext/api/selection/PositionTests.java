@@ -37,7 +37,7 @@ public class PositionTests extends InlineCssTextAreaAppTest {
         interact(() -> {
             area.appendText( "\n"+ fullText );
             area.appendText( "\n"+ fullText );
-        };
+        });
 
     	int paragraphOne = 1;
     	int start = area.getAbsolutePosition( paragraphOne, leftText.length() );
