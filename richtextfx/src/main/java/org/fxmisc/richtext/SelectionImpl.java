@@ -224,7 +224,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
             int selectStart = getStartPosition();
             int selectEnd = getEndPosition();
             for (PlainTextChange plainTextChange : list) {
-            	int changeLength = plainTextChange.getNetLength();
+                int changeLength = plainTextChange.getNetLength();
                 int indexOfChange = plainTextChange.getPosition();
                 // in case of a replacement: "hello there" -> "hi."
                 int endOfChange = indexOfChange + Math.abs(changeLength);
