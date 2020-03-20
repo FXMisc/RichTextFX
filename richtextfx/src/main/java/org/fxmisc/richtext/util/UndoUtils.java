@@ -268,11 +268,12 @@ public final class UndoUtils {
      * Address #912 "After undo/redo, new text is inserted at the end".
      * Without breaking PositionTests. (org.fxmisc.richtext.api.caret)
      */
-    private static void moveToChange( GenericStyledArea area, TextChange chg ) {
-        int pos = chg.getPosition(), len = chg.getNetLength(); 
-        if ( len > 0 ) {
-           pos = Math.min( pos + Math.abs(len), area.getLength() );
-        }
-        area.moveTo( pos );
+    private static void moveToChange( GenericStyledArea area, TextChange chg )
+    {
+        int pos = chg.getPosition();
+        int len = chg.getNetLength();
+        if ( len > 0 ) pos += len;
+
+        area.moveTo( Math.min( pos, area.getLength() ) );
     }
 }
