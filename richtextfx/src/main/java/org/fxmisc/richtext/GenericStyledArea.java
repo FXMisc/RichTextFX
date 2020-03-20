@@ -884,13 +884,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     getVisibleParagraphs().size() - 1, visibleParIndex)
             );
         }
-        Paragraph<PS, SEG, S> visibleP = getVisibleParagraphs().get(visibleParIndex);
-        for (int index = 0; index < getParagraphs().size(); index++) {
-            if (getParagraph(index) == visibleP) {
-                return index;
-            }
-        }
-        throw new AssertionError("Unreachable code");
+        return virtualFlow.visibleCells().get( visibleParIndex ).getNode().getIndex();
     }
 
     @Override
