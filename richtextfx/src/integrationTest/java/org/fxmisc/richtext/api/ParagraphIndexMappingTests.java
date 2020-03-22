@@ -31,6 +31,21 @@ public class ParagraphIndexMappingTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
+    public void all_par_to_visible_par_index_after_replace() {
+        interact(() -> {
+            area.clear();
+            area.replaceText( "123\nabc" );
+        });
+
+        interact(() -> area.replaceText( "123\nxyz" ));
+
+        interact(() -> {
+            assertEquals(Optional.of(1), area.allParToVisibleParIndex(1));
+            assertEquals(Optional.of(0), area.allParToVisibleParIndex(0));
+        });
+    }
+
+    @Test
     public void visible_par_to_all_par_index_is_correct() {
         interact(() -> area.showParagraphAtTop(0));
         assertEquals(0, area.visibleParToAllParIndex(0));
