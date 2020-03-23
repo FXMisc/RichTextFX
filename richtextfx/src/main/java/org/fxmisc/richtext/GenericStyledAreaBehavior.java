@@ -260,7 +260,7 @@ class GenericStyledAreaBehavior {
 
         InputMapTemplate<GenericStyledAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
                 EventPattern.eventType(ContextMenuEvent.CONTEXT_MENU_REQUESTED),
-                b -> !b.view.isDisabled() && b.view.isContextMenuPresent(),
+                b -> !b.view.isDisabled(),
                 GenericStyledAreaBehavior::showContextMenu
         );
 
@@ -464,11 +464,13 @@ class GenericStyledAreaBehavior {
      * ********************************************************************** */
 
     private void showContextMenu(ContextMenuEvent e) {
-        ContextMenu menu = view.getContextMenu();
-        double xOffset = view.getContextMenuXOffset();
-        double yOffset = view.getContextMenuYOffset();
-
-        menu.show(view, e.getScreenX() + xOffset, e.getScreenY() + yOffset);
+        view.requestFocus();
+        if ( view.isContextMenuPresent() ) {
+            ContextMenu menu = view.getContextMenu();
+            double x = e.getScreenX() + view.getContextMenuXOffset();
+            double y = e.getScreenY() + view.getContextMenuYOffset();
+            menu.show( view, x, y );
+        }
     }
 
     private void handleShiftPress(MouseEvent e) {
