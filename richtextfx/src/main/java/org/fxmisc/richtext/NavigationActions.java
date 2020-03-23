@@ -102,7 +102,7 @@ public interface NavigationActions<PS, SEG, S> extends TextEditingArea<PS, SEG, 
             return;
         }
 
-        BreakIterator wordBreakIterator = BreakIterator.getWordInstance();
+        BreakIterator wordBreakIterator = BreakIterator.getWordInstance( getLocale() );
         wordBreakIterator.setText(getText());
         wordBreakIterator.preceding(getCaretPosition());
         for (int i = 1; i < n; i++) {

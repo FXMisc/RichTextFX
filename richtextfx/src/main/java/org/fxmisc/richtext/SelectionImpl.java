@@ -382,7 +382,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
             return;
         }
 
-        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        BreakIterator breakIterator = BreakIterator.getWordInstance( getArea().getLocale() );
         breakIterator.setText(area.getText());
         breakIterator.preceding(wordPositionInArea);
         breakIterator.next();
