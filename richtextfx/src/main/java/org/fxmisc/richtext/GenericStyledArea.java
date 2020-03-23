@@ -864,10 +864,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     getParagraphs().size() - 1, allParIndex)
             );
         }
-        Paragraph<PS, SEG, S> p = getParagraph(allParIndex);
-        for (int index = 0; index < getVisibleParagraphs().size(); index++) {
-            if (getVisibleParagraphs().get(index) == p) {
-                return Optional.of(index);
+        List<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> visibleList = virtualFlow.visibleCells();
+        int firstVisibleParIndex = visibleList.get( 0 ).getNode().getIndex();
+        int targetIndex = allParIndex - firstVisibleParIndex;
+        
+        if ( allParIndex >= firstVisibleParIndex && targetIndex < visibleList.size() )
+        {
+            if ( visibleList.get( targetIndex ).getNode().getIndex() == allParIndex )
+            {
+                return Optional.of( targetIndex );
             }
         }
         return Optional.empty();
@@ -884,13 +889,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     getVisibleParagraphs().size() - 1, visibleParIndex)
             );
         }
-        Paragraph<PS, SEG, S> visibleP = getVisibleParagraphs().get(visibleParIndex);
-        for (int index = 0; index < getParagraphs().size(); index++) {
-            if (getParagraph(index) == visibleP) {
-                return index;
-            }
-        }
-        throw new AssertionError("Unreachable code");
+        return virtualFlow.visibleCells().get( visibleParIndex ).getNode().getIndex();
     }
 
     @Override
