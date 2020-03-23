@@ -335,7 +335,7 @@ final class CaretSelectionBindImpl<PS, SEG, S> implements CaretSelectionBind<PS,
             return;
         }
 
-        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        BreakIterator breakIterator = BreakIterator.getWordInstance( getArea().getLocale() );
         breakIterator.setText(getArea().getText());
 
         int start = calculatePositionViaBreakingBackwards(1, breakIterator, wordPositionInArea);

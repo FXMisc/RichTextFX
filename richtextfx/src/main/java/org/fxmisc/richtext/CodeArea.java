@@ -63,7 +63,7 @@ public class CodeArea extends StyleClassedTextArea {
         int position = csb.getColumnPosition(); 
         
         String paragraphText = getText( paragraph );
-        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        BreakIterator breakIterator = BreakIterator.getWordInstance( getLocale() );
         breakIterator.setText( paragraphText );
 
         breakIterator.preceding( position );

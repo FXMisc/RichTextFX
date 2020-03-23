@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -352,6 +353,18 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public void setUndoManager(UndoManager undoManager) {
         this.undoManager.close();
         this.undoManager = undoManager != null ? undoManager : UndoUtils.noOpUndoManager();
+    }
+
+    private Locale textLocale = Locale.getDefault();
+    /**
+     * This is used to determine word and sentence breaks while navigating or selecting.
+     * Override this method if your paragraph or text style accommodates Locales as well.
+     * @return Locale.getDefault() by default
+     */
+    @Override
+    public Locale getLocale() { return textLocale; }
+    public void setLocale( Locale editorLocale ) {
+        textLocale = editorLocale;
     }
 
     private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
