@@ -46,7 +46,7 @@ class GenericEditableStyledDocumentBase<PS, SEG, S> implements EditableStyledDoc
             return parChangesList.subscribe(list -> {
                 ListChangeAccumulator<Paragraph<PS, SEG, S>> accumulator = new ListChangeAccumulator<>();
                 for (MaterializedListModification<Paragraph<PS, SEG, S>> mod : list) {
-                    mod = mod.trim();
+                	try { mod = mod.trim(); } catch ( IndexOutOfBoundsException EX ) {}
 
                     // add the quasiListModification itself, not as a quasiListChange, in case some overlap
                     accumulator.add(QuasiListModification.create(mod.getFrom(), mod.getRemoved(), mod.getAddedSize()));
