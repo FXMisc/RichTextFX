@@ -20,6 +20,7 @@ import org.reactfx.EventStream;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 import static java.lang.Character.isWhitespace;
@@ -177,10 +178,10 @@ class GenericStyledAreaBehavior {
 				//If ALT + CONTROL are pressed and the given character is valid then print the character.
 				//Else, don't consume the event. This change allows Windows users to use accelerators and
 				//printing special characters at the same time.
-				// (For example: ALT + CONTROL + E prints the euro symbol while ALT + CONTROL + L has assigned an accelerator.)
+				// (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
 				//Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
 				if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
-						&& e.getCharacter().getBytes()[0] == '\0') return true;
+						&& e.getCharacter().getBytes()[0] != 0) return true;
 			}
 			return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
 		};

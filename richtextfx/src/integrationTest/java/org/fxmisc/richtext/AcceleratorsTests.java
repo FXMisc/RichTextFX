@@ -20,13 +20,13 @@ public class AcceleratorsTests extends InlineCssTextAreaAppTest {
 					//CHARACTER WITHOUT MODIFIERS
 					new AcceleratorsTestsHelper(area, "f", KeyCode.F, false, false, true),
 					//CHARACTER WITH CONTROL
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, true, false, false),
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, true, false, false),
 					//CHARACTER WITH ALT
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, false, true, false),
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, false, true, false),
 					//CHARACTER WITH ALT + CONTROL / ALTGR on Windows
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, true, true, false),
-					//ALT + CONTROL / ALTGR on Windows with an assigned special character (E -> Euro)
-					new AcceleratorsTestsHelper(area, "€", KeyCode.E, true, true, true)
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.K, true, true, false),
+					//ALT + CONTROL / ALTGR on Windows with an assigned special character (E -> Euro on spanish keyboard)
+					new AcceleratorsTestsHelper(area, "\u20AC", KeyCode.E, true, true, true)
 			};
 		} else {
 			//LINUX TESTS
@@ -34,11 +34,11 @@ public class AcceleratorsTests extends InlineCssTextAreaAppTest {
 					//CHARACTER WITHOUT MODIFIERS
 					new AcceleratorsTestsHelper(area, "f", KeyCode.F, false, false, true),
 					//CHARACTER WITH CONTROL
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, true, false, false),
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, true, false, false),
 					//CHARACTER WITH ALT
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, false, true, false),
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, false, true, false),
 					//CHARACTER WITH ALT + CONTROL
-					new AcceleratorsTestsHelper(area, "", KeyCode.F, true, true, false),
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, true, true, false),
 			};
 		}
 		AcceleratorsTestsHelper helper;
@@ -58,7 +58,7 @@ public class AcceleratorsTests extends InlineCssTextAreaAppTest {
 		boolean expectedConsumeResult;
 
 		public AcceleratorsTestsHelper(EventTarget source, String character, KeyCode key, boolean controlDown, boolean altDown, boolean expected) {
-			keyEvent = new KeyEvent(source, source, KeyEvent.KEY_PRESSED, character, key.getName(), key,
+			keyEvent = new KeyEvent(source, source, KeyEvent.KEY_TYPED, character, key.getName(), key,
 					false, controlDown, altDown, false);
 			expectedConsumeResult = expected;
 		}
