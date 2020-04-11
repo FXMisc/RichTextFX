@@ -167,11 +167,19 @@ class GenericStyledAreaBehavior {
                 ), (b, e) -> b.view.copy()
         );
 
-        Predicate<KeyEvent> noControlKeys = e ->
-                // filter out control keys
-                (!e.isControlDown() && !e.isMetaDown())
-                // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
-                || (isWindows && !e.isMetaDown() && (!e.isControlDown() || e.isAltDown()));
+        Predicate<KeyEvent> noControlKeys = e -> {
+            if (isWindows) {
+                //Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
+                //If ALT + CONTROL are pressed and the given character is valid then print the character.
+                //Else, don't consume the event. This change allows Windows users to use accelerators and
+                //printing special characters at the same time.
+                // (For example: ALT + CONTROL + E prints the euro symbol while ALT + CONTROL + L has assigned an accelerator.)
+                //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
+                if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
+                        && e.getCharacter().getBytes()[0] == '\0') return true;
+            }
+            return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
+        };
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
