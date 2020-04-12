@@ -8,6 +8,7 @@ import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
 import static org.reactfx.EventStreams.*;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 import javafx.event.Event;
@@ -44,6 +45,7 @@ class GenericStyledAreaBehavior {
     }
 
     private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
+    private static final Predicate<KeyEvent> controlKeysFilter;
 
     static {
         SelectionPolicy selPolicy = isMac
@@ -65,7 +67,7 @@ class GenericStyledAreaBehavior {
         KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
-		
+
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
                 consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
@@ -167,18 +169,26 @@ class GenericStyledAreaBehavior {
                 ), (b, e) -> b.view.copy()
         );
 
-        Predicate<KeyEvent> noControlKeys = e ->
-                // filter out control keys
-                (!e.isControlDown() && !e.isMetaDown())
-                // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
-                || (isWindows && !e.isMetaDown() && (!e.isControlDown() || e.isAltDown()));
+        controlKeysFilter = e -> {
+            if (isWindows) {
+                //Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
+                //If ALT + CONTROL are pressed and the given character is valid then print the character.
+                //Else, don't consume the event. This change allows Windows users to use accelerators and
+                //printing special characters at the same time.
+                // (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
+                //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
+                if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
+                	    && e.getCharacter().getBytes()[0] != 0) return true;
+            }
+        	return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
+        };
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
                 e.getCode().isDigitKey() ||
                 e.getCode().isWhitespaceKey();
 
-        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(noControlKeys)));
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(controlKeysFilter)));
 
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyPressedTemplate = edits
                 .orElse(otherNavigation).ifConsumed((b, e) -> b.view.clearTargetCaretOffset())
@@ -191,7 +201,7 @@ class GenericStyledAreaBehavior {
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> keyTypedBase = consume(
                 // character input
-                EventPattern.keyTyped().onlyIf(noControlKeys.and(e -> isLegal(e.getCharacter()))),
+                EventPattern.keyTyped().onlyIf(controlKeysFilter.and(e -> isLegal(e.getCharacter()))),
                 GenericStyledAreaBehavior::keyTyped
         ).ifConsumed((b, e) -> b.view.requestFollowCaret());
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
@@ -342,16 +352,6 @@ class GenericStyledAreaBehavior {
         }
 
         view.replaceSelection(text);
-    }
-
-    private static boolean isLegal(String text) {
-        int n = text.length();
-        for(int i = 0; i < n; ++i) {
-            if(Character.isISOControl(text.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void deleteBackward(KeyEvent ignore) {
@@ -584,5 +584,19 @@ class GenericStyledAreaBehavior {
 
     private static double clamp(double x, double min, double max) {
         return Math.min(Math.max(x, min), max);
+    }
+
+    static boolean isControlKeyEvent(KeyEvent event) {
+    	return controlKeysFilter.test(event);
+    }
+
+    private static boolean isLegal(String text) {
+        int n = text.length();
+        for(int i = 0; i < n; ++i) {
+            if(Character.isISOControl(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }
