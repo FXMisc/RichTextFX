@@ -1,15 +1,5 @@
 package org.fxmisc.richtext;
 
-import static java.lang.Character.*;
-import static javafx.scene.input.KeyCode.*;
-import static javafx.scene.input.KeyCombination.*;
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
-import static org.fxmisc.wellbehaved.event.EventPattern.*;
-import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
-import static org.reactfx.EventStreams.*;
-
-import java.util.function.Predicate;
-
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -30,18 +20,32 @@ import org.reactfx.EventStream;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
+import java.util.function.Predicate;
+
+import static java.lang.Character.isWhitespace;
+import static javafx.scene.input.KeyCode.*;
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
+import static org.fxmisc.wellbehaved.event.EventPattern.*;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
+import static org.reactfx.EventStreams.*;
+
 /**
  * Controller for GenericStyledArea.
  */
 class GenericStyledAreaBehavior {
 
-    private static final boolean isMac;
-    private static final boolean isWindows;
-    static {
-        String os = System.getProperty("os.name");
-        isMac = os.startsWith("Mac");
-        isWindows = os.startsWith("Windows");
-    }
+	private static final boolean isMac;
+	private static final boolean isWindows;
+
+	private static final Predicate<KeyEvent> controlKeysFilter;
+
+	static {
+		String os = System.getProperty("os.name");
+		isMac = os.startsWith("Mac");
+		isWindows = os.startsWith("Windows");
+	}
 
     private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
 
@@ -52,7 +56,7 @@ class GenericStyledAreaBehavior {
 
         /*
          * KeyCodes are misinterpreted when using a different keyboard layout, for example:
-         * on Dvorak: C results in KeyCode I, X -> B, and V -> . 
+         * on Dvorak: C results in KeyCode I, X -> B, and V -> .
          * and on German layouts: Z and Y are reportedly switched
          * so then editing commands such as Ctrl+C, or CMD+Z are incorrectly processed.
          * KeyCharacterCombination however does keyboard translation before matching.
@@ -65,7 +69,7 @@ class GenericStyledAreaBehavior {
         KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
-		
+
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
                 consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
@@ -167,26 +171,26 @@ class GenericStyledAreaBehavior {
                 ), (b, e) -> b.view.copy()
         );
 
-        Predicate<KeyEvent> noControlKeys = e -> {
-            if (isWindows) {
-                //Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
-                //If ALT + CONTROL are pressed and the given character is valid then print the character.
-                //Else, don't consume the event. This change allows Windows users to use accelerators and
-                //printing special characters at the same time.
-                // (For example: ALT + CONTROL + E prints the euro symbol while ALT + CONTROL + L has assigned an accelerator.)
-                //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
-                if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
-                        && e.getCharacter().getBytes()[0] == '\0') return true;
-            }
-            return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
-        };
+		controlKeysFilter = e -> {
+			if (isWindows) {
+				//Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
+				//If ALT + CONTROL are pressed and the given character is valid then print the character.
+				//Else, don't consume the event. This change allows Windows users to use accelerators and
+				//printing special characters at the same time.
+				// (For example: ALT + CONTROL + E prints the euro symbol while ALT + CONTROL + L has assigned an accelerator.)
+				//Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
+				if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
+						&& e.getCharacter().getBytes()[0] == '\0') return true;
+			}
+			return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
+		};
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
                 e.getCode().isDigitKey() ||
                 e.getCode().isWhitespaceKey();
 
-        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(noControlKeys)));
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(controlKeysFilter)));
 
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyPressedTemplate = edits
                 .orElse(otherNavigation).ifConsumed((b, e) -> b.view.clearTargetCaretOffset())
@@ -199,7 +203,7 @@ class GenericStyledAreaBehavior {
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> keyTypedBase = consume(
                 // character input
-                EventPattern.keyTyped().onlyIf(noControlKeys.and(e -> isLegal(e.getCharacter()))),
+                EventPattern.keyTyped().onlyIf(controlKeysFilter.and(e -> isLegal(e.getCharacter()))),
                 GenericStyledAreaBehavior::keyTyped
         ).ifConsumed((b, e) -> b.view.requestFollowCaret());
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
@@ -362,14 +366,18 @@ class GenericStyledAreaBehavior {
         return true;
     }
 
-    private void deleteBackward(KeyEvent ignore) {
-        IndexRange selection = view.getSelection();
-        if(selection.getLength() == 0) {
-            view.deletePreviousChar();
-        } else {
-            view.replaceSelection("");
-        }
-    }
+	static boolean isControlKeyEvent(KeyEvent event) {
+		return controlKeysFilter.test(event);
+	}
+
+	private void deleteBackward(KeyEvent ignore) {
+		IndexRange selection = view.getSelection();
+		if (selection.getLength() == 0) {
+			view.deletePreviousChar();
+		} else {
+			view.replaceSelection("");
+		}
+	}
 
     private void deleteForward(KeyEvent ignore) {
         IndexRange selection = view.getSelection();
