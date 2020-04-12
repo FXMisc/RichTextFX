@@ -3,7 +3,7 @@ package org.fxmisc.richtext;
 import static java.lang.Character.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
 import static org.fxmisc.wellbehaved.event.EventPattern.*;
 import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
 import static org.reactfx.EventStreams.*;
@@ -39,9 +39,9 @@ class GenericStyledAreaBehavior {
     private static final boolean isMac;
     private static final boolean isWindows;
     static {
-    	String os = System.getProperty("os.name");
-    	isMac = os.startsWith("Mac");
-    	isWindows = os.startsWith("Windows");
+        String os = System.getProperty("os.name");
+        isMac = os.startsWith("Mac");
+        isWindows = os.startsWith("Windows");
     }
 
     private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
@@ -54,7 +54,7 @@ class GenericStyledAreaBehavior {
 
         /*
          * KeyCodes are misinterpreted when using a different keyboard layout, for example:
-         * on Dvorak: C results in KeyCode I, X -> B, and V -> .
+         * on Dvorak: C results in KeyCode I, X -> B, and V -> . 
          * and on German layouts: Z and Y are reportedly switched
          * so then editing commands such as Ctrl+C, or CMD+Z are incorrectly processed.
          * KeyCharacterCombination however does keyboard translation before matching.
@@ -355,12 +355,12 @@ class GenericStyledAreaBehavior {
     }
 
     private void deleteBackward(KeyEvent ignore) {
-    	IndexRange selection = view.getSelection();
-    	if (selection.getLength() == 0) {
-    		view.deletePreviousChar();
-    	} else {
-    		view.replaceSelection("");
-    	}
+        IndexRange selection = view.getSelection();
+        if(selection.getLength() == 0) {
+            view.deletePreviousChar();
+        } else {
+            view.replaceSelection("");
+        }
     }
 
     private void deleteForward(KeyEvent ignore) {
