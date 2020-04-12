@@ -1,5 +1,16 @@
 package org.fxmisc.richtext;
 
+import static java.lang.Character.*;
+import static javafx.scene.input.KeyCode.*;
+import static javafx.scene.input.KeyCombination.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
+import static org.fxmisc.wellbehaved.event.EventPattern.*;
+import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
+import static org.reactfx.EventStreams.*;
+
+import java.util.Arrays;
+import java.util.function.Predicate;
+
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -20,35 +31,21 @@ import org.reactfx.EventStream;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
-import java.util.Arrays;
-import java.util.function.Predicate;
-
-import static java.lang.Character.isWhitespace;
-import static javafx.scene.input.KeyCode.*;
-import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
-import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
-import static org.fxmisc.wellbehaved.event.EventPattern.*;
-import static org.fxmisc.wellbehaved.event.template.InputMapTemplate.*;
-import static org.reactfx.EventStreams.*;
-
 /**
  * Controller for GenericStyledArea.
  */
 class GenericStyledAreaBehavior {
 
-	private static final boolean isMac;
-	private static final boolean isWindows;
-
-	private static final Predicate<KeyEvent> controlKeysFilter;
-
-	static {
-		String os = System.getProperty("os.name");
-		isMac = os.startsWith("Mac");
-		isWindows = os.startsWith("Windows");
-	}
+    private static final boolean isMac;
+    private static final boolean isWindows;
+    static {
+    	String os = System.getProperty("os.name");
+    	isMac = os.startsWith("Mac");
+    	isWindows = os.startsWith("Windows");
+    }
 
     private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
+    private static final Predicate<KeyEvent> controlKeysFilter;
 
     static {
         SelectionPolicy selPolicy = isMac
@@ -172,19 +169,19 @@ class GenericStyledAreaBehavior {
                 ), (b, e) -> b.view.copy()
         );
 
-		controlKeysFilter = e -> {
-			if (isWindows) {
-				//Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
-				//If ALT + CONTROL are pressed and the given character is valid then print the character.
-				//Else, don't consume the event. This change allows Windows users to use accelerators and
-				//printing special characters at the same time.
-				// (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
-				//Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
-				if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
-						&& e.getCharacter().getBytes()[0] != 0) return true;
-			}
-			return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
-		};
+        controlKeysFilter = e -> {
+            if (isWindows) {
+                //Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
+                //If ALT + CONTROL are pressed and the given character is valid then print the character.
+                //Else, don't consume the event. This change allows Windows users to use accelerators and
+                //printing special characters at the same time.
+                // (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
+                //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
+                if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
+                	    && e.getCharacter().getBytes()[0] != 0) return true;
+            }
+        	return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
+        };
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
@@ -357,28 +354,14 @@ class GenericStyledAreaBehavior {
         view.replaceSelection(text);
     }
 
-    private static boolean isLegal(String text) {
-        int n = text.length();
-        for(int i = 0; i < n; ++i) {
-            if(Character.isISOControl(text.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+    private void deleteBackward(KeyEvent ignore) {
+    	IndexRange selection = view.getSelection();
+    	if (selection.getLength() == 0) {
+    		view.deletePreviousChar();
+    	} else {
+    		view.replaceSelection("");
+    	}
     }
-
-	static boolean isControlKeyEvent(KeyEvent event) {
-		return controlKeysFilter.test(event);
-	}
-
-	private void deleteBackward(KeyEvent ignore) {
-		IndexRange selection = view.getSelection();
-		if (selection.getLength() == 0) {
-			view.deletePreviousChar();
-		} else {
-			view.replaceSelection("");
-		}
-	}
 
     private void deleteForward(KeyEvent ignore) {
         IndexRange selection = view.getSelection();
@@ -601,5 +584,19 @@ class GenericStyledAreaBehavior {
 
     private static double clamp(double x, double min, double max) {
         return Math.min(Math.max(x, min), max);
+    }
+
+    static boolean isControlKeyEvent(KeyEvent event) {
+    	return controlKeysFilter.test(event);
+    }
+
+    private static boolean isLegal(String text) {
+        int n = text.length();
+        for(int i = 0; i < n; ++i) {
+            if(Character.isISOControl(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }
