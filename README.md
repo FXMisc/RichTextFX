@@ -8,7 +8,7 @@ It does not follow the MVC paradigm as this prevented access to view-specific AP
 
 It is intended as a base for rich-text editors and code editors with syntax highlighting. Since it is a base, a number of suggested features (specific syntax highlighters, search-and-replace, specific support for hyperlinks, etc.) will not be implemented directly in this project. Rather, developers can implement these on top of RichTextFX and submit their work as a PR to the `richtextfx-demos` package.
 
-For a greater explanation of RichTextFX, its design principles, how it works, and how to style its areas via CSS, please [see the wiki](https://github.com/TomasMikula/RichTextFX/wiki)
+For a greater explanation of RichTextFX, its design principles, how it works, and how to style its areas via CSS, please [see the wiki](https://github.com/FXMisc/RichTextFX/wiki)
 
 Demos
 -----
@@ -31,7 +31,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.10.4](http://fxmisc.github.io/richtext/javadoc/0.10.4/index.html?org/fxmisc/richtext/package-summary.html)
+  * [0.10.5](http://fxmisc.github.io/richtext/javadoc/0.10.5/index.html?org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -145,31 +145,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.10.4 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.10.5 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.10.4  |
+| org.fxmisc.richtext | richtextfx  | 0.10.5  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.4'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.5'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.4"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.5"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.4/richtextfx-0.10.4.jar) or [the fat JAR file (including dependencies)](https://github.com/TomasMikula/RichTextFX/releases/download/v0.10.4/richtextfx-fat-0.10.4.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.5/richtextfx-0.10.5.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.5/richtextfx-fat-0.10.5.jar) and place it on your classpath.
 
 ### Snapshot releases
 

@@ -1,5 +1,24 @@
 # Change Log
 
+## [v0.10.5](https://github.com/FXMisc/RichTextFX/tree/v0.10.5) (2020-04-19)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.4...v0.10.5)
+
+**Implemented enhancements:**
+
+- Upgraded Gradle Maven plugin [\#910](https://github.com/FXMisc/RichTextFX/pull/910)
+- Provide suspendable undo manager and test [\#914](https://github.com/FXMisc/RichTextFX/pull/914)
+- Added getLocale and setLocale for BreakIterator use [\#920](https://github.com/FXMisc/RichTextFX/pull/920)
+- Allow ALT and ALT + CONTROL (or ALTGR on Windows) accelerators [\#922](https://github.com/FXMisc/RichTextFX/pull/922)
+
+**Fixed bugs:**
+
+- Bug: Fixed SelectionImpl not honouring constructor range [\#907](https://github.com/FXMisc/RichTextFX/pull/907)
+- Bug: Fixed RichTextChange reported by ReadOnlyStyledDocument replace [\#908](https://github.com/FXMisc/RichTextFX/pull/908)
+- Bug: Fixed post undo/redo caret position [\#915](https://github.com/FXMisc/RichTextFX/pull/915)
+- Bug: Fixed tests not on FX thread [\#917](https://github.com/FXMisc/RichTextFX/pull/917)
+- Bug: Fixed scrollbar jump [\#918](https://github.com/FXMisc/RichTextFX/pull/918), also alternative fix for visibleParToAllParIndex crashing [\#777](https://github.com/FXMisc/RichTextFX/issues/777)
+- Bug: Fixed focus lost on right click [\#921](https://github.com/FXMisc/RichTextFX/pull/921) (Thank you [gaeqs](https://github.com/gaeqs))
+
 ## [v0.10.4](https://github.com/FXMisc/RichTextFX/tree/v0.10.4) (2020-02-19)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.3...v0.10.4)
 
