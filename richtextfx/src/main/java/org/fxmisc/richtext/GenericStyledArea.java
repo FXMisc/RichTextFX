@@ -1698,6 +1698,24 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
+        double scrollX = virtualFlow.getEstimatedScrollX();
+
+        // Ordinarily when a caret ends a selection in the target paragraph and scrolling left is required to follow 
+        // the caret then the selection won't be visible. So here we check for this scenario and adjust if needed.
+        if ( ! isWrapText() && scrollX > 0.0 && getParagraphSelection( parIdx ).getLength() > 0 )
+        {
+            double visibleLeftX = cell.getNode().getWidth() * scrollX / 100 - getWidth() + graphicWidth;
+
+            CaretNode selectionStart = new CaretNode( "", this, getSelection().getStart() );
+            cell.getNode().caretsProperty().add( selectionStart );
+            Bounds startBounds = cell.getNode().getCaretBounds( selectionStart );
+            cell.getNode().caretsProperty().remove( selectionStart );
+
+            if ( startBounds.getMinX() - graphicWidth < visibleLeftX ) {
+                region = extendLeft( startBounds, graphicWidth );
+            }
+        }
+
         virtualFlow.show(parIdx, region);
     }
 
