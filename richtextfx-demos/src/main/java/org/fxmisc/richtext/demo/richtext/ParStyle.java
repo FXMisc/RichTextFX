@@ -73,7 +73,7 @@ class ParStyle {
 
     @Override
     public int hashCode() {
-        return Objects.hash(alignment, backgroundColor);
+        return Objects.hash(alignment, backgroundColor, indent);
     }
 
     @Override
@@ -81,7 +81,8 @@ class ParStyle {
         if(other instanceof ParStyle) {
             ParStyle that = (ParStyle) other;
             return Objects.equals(this.alignment, that.alignment) &&
-                   Objects.equals(this.backgroundColor, that.backgroundColor);
+                   Objects.equals(this.backgroundColor, that.backgroundColor) &&
+                   Objects.equals(this.indent, that.indent);
         } else {
             return false;
         }
@@ -134,16 +135,12 @@ class ParStyle {
     }
 
     public ParStyle increaseIndent() {
-        if ( indent.isPresent() ) indent.get().level++;
-        else return updateIndent( new Indent() );
-        return this; 
+        return updateIndent( indent.map( Indent::increase ).orElseGet( Indent::new ) );
     }
 
     public ParStyle decreaseIndent() {
-        if ( indent.isPresent() && --indent.get().level == 0 ) {
-            return updateIndent( null );
-        }
-        return this; 
+        return updateIndent( indent.filter( in -> in.level > 1 )
+           .map( Indent::decrease ).orElse( null ) );
     }
 
 }
