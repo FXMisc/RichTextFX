@@ -1444,6 +1444,40 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
+    private BooleanProperty autoHeightProp = new SimpleBooleanProperty();
+
+    public BooleanProperty autoHeightProperty() {
+        return autoHeightProp;
+    }
+    public void setAutoHeight( boolean value ) {
+        autoHeightProp.set( value );
+    }
+    public boolean isAutoHeight() {
+        return autoHeightProp.get();
+    }
+
+    @Override
+    protected double computePrefHeight( double width )
+    {
+        if ( autoHeightProp.get() )
+        {
+            if ( getWidth() == 0.0 ) Platform.runLater( () -> requestLayout() );
+            else
+            {
+                double height = 0.0;
+                Insets in = getInsets();
+
+                for ( int p = 0; p < getParagraphs().size(); p++ ) {
+                    height += getCell( p ).getHeight();
+                }
+                if ( height > 0.0 ) {
+                    return height + in.getTop() + in.getBottom();
+                }
+            }
+        }
+        return super.computePrefHeight( width );
+    }
+
     @Override
     protected void layoutChildren() {
         Insets ins = getInsets();
