@@ -1750,6 +1750,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             }
         }
 
+        // Addresses https://github.com/FXMisc/RichTextFX/issues/937#issuecomment-674319602
+        if ( parIdx == getParagraphs().size()-1 && cell.getNode().getLineCount() == 1 )
+        {
+            region = new BoundingBox // Correcting the region's height
+            (
+                region.getMinX(), region.getMinY(), region.getWidth(),
+                cell.getNode().getLayoutBounds().getHeight()
+            );
+        }
+
         virtualFlow.show(parIdx, region);
     }
 
