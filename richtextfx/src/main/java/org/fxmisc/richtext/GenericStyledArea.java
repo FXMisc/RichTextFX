@@ -1236,7 +1236,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 path.getElements().addListener( (Change<? extends PathElement> chg) -> 
                 {
                     if ( chg.next() && chg.wasAdded() || chg.wasReplaced() ) {
-                        double width = getLayoutBounds().getWidth();
+                        double width = path.getParent().getLayoutBounds().getWidth();
                         // The path is limited to the bounds of the text, so here it's altered to the area's width
                         chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( width ) );
                         // The path can wrap onto another line if enough text is inserted, so here it's trimmed
