@@ -1190,7 +1190,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
     
     private double caretPrevY = -1;
-    private Selection<PS, SEG, S> lineHighlighter;
+    private LineSelection<PS, SEG, S> lineHighlighter;
     private ObjectProperty<Paint> lineHighlighterFill; 
     
     /**
@@ -1228,34 +1228,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         {
             if ( lineHighlighter != null ) return;
             
-            lineHighlighter = new SelectionImpl<>( "line-highlighter", this, path ->
-            {
-                if ( lineHighlighterFill == null ) path.setHighlightFill( Color.YELLOW );
-                else path.highlightFillProperty().bind( lineHighlighterFill );
-                
-                path.getElements().addListener( (Change<? extends PathElement> chg) -> 
-                {
-                    if ( chg.next() && chg.wasAdded() || chg.wasReplaced() ) {
-                        double width = path.getParent().getLayoutBounds().getWidth();
-                        // The path is limited to the bounds of the text, so here it's altered to the area's width
-                        chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( width ) );
-                        // The path can wrap onto another line if enough text is inserted, so here it's trimmed
-                        if ( chg.getAddedSize() > 5 ) path.getElements().remove( 5, 10 );
-                        // Highlight masks the downward selection of text on the last line, so move it behind
-                        path.toBack();
-                    }
-                } );
-            } );
+            lineHighlighter = new LineSelection<>( this, lineHighlighterFill );
             
             Runnable adjustHighlighterRange = () ->
             {
                 if ( lineHighlighter != null )
                 {
-                    int p = getCurrentParagraph();
-                    int start = getCurrentLineStartInParargraph();
-                    int end = getCurrentLineEndInParargraph();
-                    if (end == 0) end++;// +1 for empty lines
-                    lineHighlighter.selectRange( p, start, p, end );
+                    lineHighlighter.selectCurrentLine();
                 }
             };
             
@@ -1677,8 +1656,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                             if (p == null) {
                                 // create & configure path
                                 Val<IndexRange> range = Val.create(
-                                        () -> boxIndex != -1
-                                                ? getParagraphSelection(selection, boxIndex)
+                                        () -> box.getIndex() != -1
+                                                ? getParagraphSelection(selection, box.getIndex())
                                                 : EMPTY_RANGE,
                                         selection.rangeProperty()
                                 );
