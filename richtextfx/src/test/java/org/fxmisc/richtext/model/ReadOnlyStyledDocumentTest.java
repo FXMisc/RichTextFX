@@ -36,6 +36,13 @@ public class ReadOnlyStyledDocumentTest {
     }
 
     @Test
+    public void testMultiParagraphFromSegment() {
+        TextOps<String, Void> segOps = SegmentOps.styledTextOps();
+        ReadOnlyStyledDocument<Void, String, Void> doc0 = fromSegment("Foo\nBar", NULL, NULL, segOps);
+        assertEquals( 2, doc0.getParagraphCount() );
+    }
+
+    @Test
     public void deleteNewlineTest() {
         TextOps<String, Void> segOps = SegmentOps.styledTextOps();
         ReadOnlyStyledDocument<Void, String, Void> doc0 = fromString("Foo\nBar", NULL, NULL, segOps);
