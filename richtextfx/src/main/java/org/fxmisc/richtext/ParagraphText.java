@@ -232,7 +232,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         .forEach( t -> JavaFXCompatibility.Text_selectionFillProperty(t).unbind() ); 
 
         getChildren().clear();
-        paragraph = null;
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
