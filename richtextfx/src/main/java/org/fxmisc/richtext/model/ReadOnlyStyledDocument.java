@@ -127,6 +127,9 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
      * @param <S> The type of the style of individual segments.
      */
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromSegment(SEG segment,  PS paragraphStyle, S style, SegmentOps<SEG, S> segmentOps) {
+        if ( segment instanceof String && segmentOps instanceof TextOps ) {
+            return fromString( (String) segment, paragraphStyle, style, (TextOps<SEG,S>) segmentOps );
+        }
         Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, segment, style);
         List<Paragraph<PS, SEG, S>> res = Collections.singletonList(content);
         return new ReadOnlyStyledDocument<>(res);
