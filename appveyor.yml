@@ -2,7 +2,7 @@
 version: "{branch} {build}"
 
 environment:
-  JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+  JAVA_HOME: C:\Program Files\Java\jdk9
   matrix:
     - JAVA_OPTS: ""
     - JAVA_OPTS: "-Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500"
