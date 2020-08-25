@@ -24,6 +24,9 @@ class TextFlowLayout
     private List<TextFlowSpan> lineMetrics = new ArrayList<>();
     private int lineCount = -1;
 
+    private static final TextFlowSpan EMPTY_SPAN = new TextFlowSpan( 0, 0, 0, 0, 0 );
+
+
     TextFlowLayout( TextFlow tf ) {
         tf.getChildren().addListener( (Observable ob) -> lineCount = -1 );
         tf.widthProperty().addListener( (Observable ob) -> lineCount = -1 );
@@ -42,7 +45,7 @@ class TextFlowLayout
 
 
     TextFlowSpan getLineSpan( int lineNo ) {
-        return getLineCount() > 0 ? lineMetrics.get( lineNo ) : null;
+        return getLineCount() > 0 ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
     }
 
 
