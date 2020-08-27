@@ -3,6 +3,8 @@ package org.fxmisc.richtext.demo;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,9 +18,11 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.reactfx.collection.ListModification;
 import org.reactfx.Subscription;
 
 public class JavaKeywordsDemo extends Application {
@@ -88,8 +92,8 @@ public class JavaKeywordsDemo extends Application {
 
         // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-
-        // recompute the syntax highlighting 500 ms after user stops editing area
+/*
+        // recompute the syntax highlighting for all text, 500 ms after user stops editing area
         Subscription cleanupWhenNoLongerNeedIt = codeArea
 
                 // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
@@ -105,7 +109,12 @@ public class JavaKeywordsDemo extends Application {
 
         // when no longer need syntax highlighting and wish to clean up memory leaks
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
-
+*/
+        // recompute syntax highlighting only for visible paragraph changes
+        codeArea.getVisibleParagraphs().addModificationObserver
+        (
+            new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
+        );
 
         // auto-indent: insert previous line's indents on enter
         final Pattern whiteSpace = Pattern.compile( "^\\s+" );
@@ -129,7 +138,7 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.show();
     }
 
-    private static StyleSpans<Collection<String>> computeHighlighting(String text) {
+    private StyleSpans<Collection<String>> computeHighlighting(String text) {
         Matcher matcher = PATTERN.matcher(text);
         int lastKwEnd = 0;
         StyleSpansBuilder<Collection<String>> spansBuilder
@@ -151,4 +160,36 @@ public class JavaKeywordsDemo extends Application {
         spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
         return spansBuilder.create();
     }
+
+    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification>
+    {
+        private final GenericStyledArea<PS, SEG, S> area;
+        private final Function<String,StyleSpans<S>> computeStyles;
+        private int prevParagraph, prevTextLength;
+
+        public VisibleParagraphStyler( GenericStyledArea<PS, SEG, S> area, Function<String,StyleSpans<S>> computeStyles )
+        {
+            this.computeStyles = computeStyles;
+            this.area = area;
+        }
+
+        @Override
+        public void accept( ListModification lm )
+        {
+            if ( lm.getAddedSize() > 0 )
+            {
+                int paragraph = area.visibleParToAllParIndex( lm.getFrom() );
+                String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
+
+        	    if ( paragraph != prevParagraph || text.length() != prevTextLength )
+        	    {
+                    int startPos = area.getAbsolutePosition( paragraph, 0 );
+                    Platform.runLater( () -> area.setStyleSpans( startPos, computeStyles.apply( text ) ) );
+                    prevTextLength = text.length();
+                    prevParagraph = paragraph;
+        	    }
+        	}
+        }
+    }
+
 }
