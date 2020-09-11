@@ -2,6 +2,7 @@ package org.fxmisc.richtext.demo.brackethighlighter;
 
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.StyledDocument;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,13 +35,13 @@ public class CustomCodeArea extends CodeArea {
     }
 
     @Override
-    public void replaceText(int start, int end, String text) {
+    public void replace(int start, int end, StyledDocument<Collection<String>, String, Collection<String>> replacement) {
         // notify all listeners
         for (TextInsertionListener listener : insertionListeners) {
-            listener.codeInserted(start, end, text);
+            listener.codeInserted(start, end, replacement.getText());
         }
 
-        super.replaceText(start, end, text);
+        super.replace(start, end, replacement);
     }
 
 }
