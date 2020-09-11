@@ -35,6 +35,41 @@ public class BracketHighlighter {
     }
 
     /**
+     * Highlight the matching bracket at current caret position
+     */
+    public void highlightBracket() {
+        this.highlightBracket(codeArea.getCaretPosition());
+    }
+
+    /**
+     * Highlight the matching bracket at new caret position
+     *
+     * @param newVal the new caret position
+     */
+    private void highlightBracket(int newVal) {
+        // first clear existing bracket highlights
+        this.clearBracket();
+
+        // detect caret position both before and after bracket
+        String prevChar = (newVal > 0 && newVal <= codeArea.getLength()) ? codeArea.getText(newVal - 1, newVal) : "";
+        if (BRACKET_PAIRS.contains(prevChar)) newVal--;
+
+        // get other half of matching bracket
+        Integer other = getMatchingBracket(newVal);
+
+        if (other != null) {
+            // other half exists
+            BracketPair pair = new BracketPair(newVal, other);
+
+            // highlight pair
+            styleBrackets(pair, MATCH_STYLE);
+
+            // add bracket pair to list
+            this.bracketPairs.add(pair);
+        }
+    }
+
+    /**
      * Find the matching bracket location
      *
      * @param index to start searching from
@@ -67,46 +102,11 @@ public class BracketHighlighter {
 
         return null;
     }
-
-    /**
-     * Highlight the matching bracket at new caret position
-     *
-     * @param newVal the new caret position
-     */
-    private synchronized void highlightBracket(int newVal) {
-        // first clear existing bracket highlights
-        this.clearBracket();
-
-        // detect caret position both before and after bracket
-        String prevChar = (newVal > 0 && newVal <= codeArea.getLength()) ? codeArea.getText(newVal - 1, newVal) : "";
-        if (BRACKET_PAIRS.contains(prevChar)) newVal--;
-
-        // get other half of matching bracket
-        Integer other = getMatchingBracket(newVal);
-
-        if (other != null) {
-            // other half exists
-            BracketPair pair = new BracketPair(newVal, other);
-
-            // highlight pair
-            styleBrackets(pair, MATCH_STYLE);
-
-            // add bracket pair to list
-            this.bracketPairs.add(pair);
-        }
-    }
-
-    /**
-     * Highlight the matching bracket at current caret position
-     */
-    public synchronized void highlightBracket() {
-        this.highlightBracket(codeArea.getCaretPosition());
-    }
-
+    
     /**
      * Clear the existing highlighted bracket styles
      */
-    public synchronized void clearBracket() {
+    public void clearBracket() {
         // get iterator of bracket pairs
         Iterator<BracketPair> iterator = this.bracketPairs.iterator();
 
