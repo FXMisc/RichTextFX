@@ -1230,23 +1230,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             
             lineHighlighter = new LineSelection<>( this, lineHighlighterFill );
             
-            Runnable adjustHighlighterRange = () ->
-            {
-                if ( lineHighlighter != null )
-                {
-                    lineHighlighter.selectCurrentLine();
-                }
-            };
-            
             Consumer<Bounds> caretListener = b -> 
             {
-                if ( b.getMinY() != caretPrevY || getCaretColumn() == 1 ) {
-                	adjustHighlighterRange.run();
+                if ( lineHighlighter != null && (b.getMinY() != caretPrevY || getCaretColumn() == 1) ) {
+                    lineHighlighter.selectCurrentLine();
                     caretPrevY = b.getMinY();
                 }
             };
             
-            widthProperty().addListener( (ob,ov,nv) -> Platform.runLater( adjustHighlighterRange ) );
             caretBoundsProperty().addListener( (ob,ov,nv) -> nv.ifPresent( caretListener ) );
             getCaretBounds().ifPresent( caretListener );
             selectionSet.add( lineHighlighter );
