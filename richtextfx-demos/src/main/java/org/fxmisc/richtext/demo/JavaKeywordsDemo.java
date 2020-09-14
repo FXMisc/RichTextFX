@@ -178,7 +178,7 @@ public class JavaKeywordsDemo extends Application {
         {
             if ( lm.getAddedSize() > 0 )
             {
-                int paragraph = area.visibleParToAllParIndex( lm.getFrom() );
+                int paragraph = Math.min( area.firstVisibleParToAllParIndex() + lm.getFrom(), area.getParagraphs().size()-1 );
                 String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
 
         	    if ( paragraph != prevParagraph || text.length() != prevTextLength )
