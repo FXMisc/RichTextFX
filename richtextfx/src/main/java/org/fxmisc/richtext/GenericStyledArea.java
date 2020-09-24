@@ -16,6 +16,8 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import javafx.application.Platform;
 import javafx.beans.NamedArg;
@@ -788,6 +790,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         );
 
         caretSelectionBind = new CaretSelectionBindImpl<>("main-caret", "main-selection",this);
+        caretSelectionBind.paragraphIndexProperty().addListener( this::skipOverFoldedParagraphs );
         caretSet.add(caretSelectionBind.getUnderlyingCaret());
         selectionSet.add(caretSelectionBind.getUnderlyingSelection());
 
@@ -1391,6 +1394,129 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override
     public MultiChangeBuilder<PS, SEG, S> createMultiChange(int initialNumOfChanges) {
         return new MultiChangeBuilder<>(this, initialNumOfChanges);
+    }
+
+    /**
+     * Convenience method to fold (hide/collapse) the currently selected paragraphs,
+     * into (i.e. excluding) the first paragraph of the range.
+     *
+     * @param styleMixin Given a paragraph style PS, return a <b>new</b> PS that will activate folding.
+     *
+     * <p>See {@link #fold(int, int, UnaryOperator)} for more info.</p>
+     */
+    protected void foldSelectedParagraphs( UnaryOperator<PS> styleMixin )
+    {
+        IndexRange range = getSelection();
+        fold( range.getStart(), range.getEnd(), styleMixin );
+    }
+
+    /**
+     * Folds (hides/collapses) paragraphs from <code>start</code> to <code>
+     * end</code>, into (i.e. excluding) the first paragraph of the range.
+     *
+     * @param styleMixin Given a paragraph style PS, return a <b>new</b> PS that will activate folding.
+     *
+     * <p>See {@link #fold(int, int, UnaryOperator)} for more info.</p>
+     */
+    protected void foldParagraphs( int start, int end, UnaryOperator<PS> styleMixin )
+    {
+        start = getAbsolutePosition( start, 0 );
+        end = getAbsolutePosition( end, getParagraphLength( end ) );
+        fold( start, end, styleMixin );
+    }
+
+    /**
+     * Folds (hides/collapses) paragraphs from character position <code>startPos</code>
+     * to <code>endPos</code>, into (i.e. excluding) the first paragraph of the range.
+     *
+     * <p>Folding is achieved with the help of paragraph styling, which is applied to the paragraph's
+     * TextFlow object through the applyParagraphStyle BiConsumer (supplied in the constructor to
+     * GenericStyledArea). When applyParagraphStyle is to apply fold styling it just needs to set
+     * the TextFlow's visibility to collapsed for it to be folded. See {@code InlineCssTextArea},
+     * {@code StyleClassedTextArea}, and {@code RichTextDemo} for different ways of doing this.
+     * Also read the GitHub Wiki.</p>
+     *
+     * <p>The UnaryOperator <code>styleMixin</code> must return a
+     * different paragraph style Object to what was submitted.</p>
+     *
+     * @param styleMixin Given a paragraph style PS, return a <b>new</b> PS that will activate folding.
+     */
+    protected void fold( int startPos, int endPos, UnaryOperator<PS> styleMixin )
+    {
+        ReadOnlyStyledDocument<PS, SEG, S> subDoc;
+        UnaryOperator<Paragraph<PS, SEG, S>> mapper;
+
+        subDoc = (ReadOnlyStyledDocument<PS, SEG, S>) subDocument( startPos, endPos );
+        mapper = p -> p.setParagraphStyle( styleMixin.apply( p.getParagraphStyle() ) );
+
+        for ( int p = 1; p < subDoc.getParagraphCount(); p++ ) {
+            subDoc = subDoc.replaceParagraph( p, mapper ).get1();
+        }
+
+        replace( startPos, endPos, subDoc );
+        recreateParagraphGraphic( offsetToPosition( startPos, Bias.Backward ).getMajor() );
+        moveTo( startPos );
+    }
+
+    private void skipOverFoldedParagraphs( ObservableValue<? extends Integer> ob, Integer prevParagraph, Integer newParagraph )
+    {
+        if ( getCell( newParagraph ).isFolded() )
+        {
+            int skip = (newParagraph - prevParagraph > 0) ? +1 : -1;
+            int p = newParagraph + skip;
+
+            while ( p > 0 && p < getParagraphs().size() ) {
+                if ( getCell( p ).isFolded() )  p += skip;
+                else break;
+            }
+
+            if ( p < 0 || p == getParagraphs().size() ) p = prevParagraph;
+            int col = Math.min( getCaretColumn(), getParagraphLength( p ) );
+
+            if ( getSelection().getLength() == 0 )  moveTo( p, col );
+            else moveTo( p, col, SelectionPolicy.EXTEND );
+        }
+    }
+
+    /**
+     * Unfolds paragraphs <code>startingFrom</code> onwards for the currently folded block.
+     *
+     * <p>The UnaryOperator <code>styleMixin</code> must return a
+     * different paragraph style Object to what was submitted.</p>
+     *
+     * @param isFolded Given a paragraph style PS check if it's folded.
+     * @param styleMixin Given a paragraph style PS, return a <b>new</b> PS that excludes fold styling.
+     */
+    protected void unfoldParagraphs( int startingFrom, Predicate<PS> isFolded, UnaryOperator<PS> styleMixin )
+    {
+        LiveList<Paragraph<PS, SEG, S>> pList = getParagraphs();
+        int to = startingFrom;
+
+        while ( ++to < pList.size() )
+        {
+            if ( ! isFolded.test( pList.get( to ).getParagraphStyle() ) ) break;
+        }
+
+        if ( --to > startingFrom )
+        {
+            ReadOnlyStyledDocument<PS, SEG, S> subDoc;
+            UnaryOperator<Paragraph<PS, SEG, S>> mapper;
+
+            int startPos = getAbsolutePosition( startingFrom, 0 );
+            int endPos = getAbsolutePosition( to, getParagraphLength( to ) );
+
+            subDoc = (ReadOnlyStyledDocument<PS, SEG, S>) subDocument( startPos, endPos );
+            mapper = p -> p.setParagraphStyle( styleMixin.apply( p.getParagraphStyle() ) );
+
+            for ( int p = 1; p < subDoc.getParagraphCount(); p++ ) {
+                subDoc = subDoc.replaceParagraph( p, mapper ).get1();
+            }
+
+            replace( startPos, endPos, subDoc );
+
+            moveTo( startingFrom, getParagraphLength( startingFrom ) );
+            recreateParagraphGraphic( startingFrom );
+        }
     }
 
     /* ********************************************************************** *
