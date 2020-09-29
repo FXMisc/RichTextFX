@@ -117,7 +117,8 @@ public class LineNumberFactory<PS> implements IntFunction<Node> {
             lineNo.setGraphic( foldIndicator );
 
             if ( area.getParagraphs().size() > idx+1 ) {
-                if ( isFoldedCheck.test( area.getParagraph( idx+1 ).getParagraphStyle() ) ) {
+                if ( isFoldedCheck.test( area.getParagraph( idx+1 ).getParagraphStyle() )
+                && ! isFoldedCheck.test( area.getParagraph( idx ).getParagraphStyle() ) ) {
                     foldIndicator.setOnMouseClicked( ME -> area.unfoldParagraphs
                     (
                         idx, isFoldedCheck, removeFoldStyle
