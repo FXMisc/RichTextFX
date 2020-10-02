@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import javafx.application.Application;
 import javafx.beans.binding.BooleanBinding;
@@ -29,7 +31,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -71,23 +75,105 @@ public class RichTextDemo extends Application {
         launch(args);
     }
 
-    private final TextOps<String, TextStyle> styledTextOps = SegmentOps.styledTextOps();
-    private final LinkedImageOps<TextStyle> linkedImageOps = new LinkedImageOps<>();
+    private final FoldableStyledArea area = new FoldableStyledArea();
 
-    private final GenericStyledArea<ParStyle, Either<String, LinkedImage>, TextStyle> area =
-            new GenericStyledArea<>(
-                    ParStyle.EMPTY,                                                 // default paragraph style
-                    (paragraph, style) -> paragraph.setStyle(style.toCss()),        // paragraph style setter
+    static class FoldableStyledArea extends GenericStyledArea<ParStyle, Either<String, LinkedImage>, TextStyle>
+    {
+        private final static TextOps<String, TextStyle> styledTextOps = SegmentOps.styledTextOps();
+        private final static LinkedImageOps<TextStyle> linkedImageOps = new LinkedImageOps<>();
 
-                    TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),  // default segment style
-                    styledTextOps._or(linkedImageOps, (s1, s2) -> Optional.empty()),                            // segment operations
-                    seg -> createNode(seg, (text, style) -> text.setStyle(style.toCss())));                     // Node creator and segment style setter
+        public FoldableStyledArea()
+        {
+            super(
+                ParStyle.EMPTY,                                                 // default paragraph style
+                (paragraph, style) -> paragraph.setStyle(style.toCss()),        // paragraph style setter
+                TextStyle.EMPTY.updateFontSize(12).updateFontFamily("Serif").updateTextColor(Color.BLACK),  // default segment style
+                styledTextOps._or(linkedImageOps, (s1, s2) -> Optional.empty()),                            // segment operations
+                seg -> createNode(seg, (text, style) -> text.setStyle(style.toCss())));                     // Node creator and segment style setter
+        }
+
+        private static Node createNode( StyledSegment<Either<String, LinkedImage>, TextStyle> seg,
+                                        BiConsumer<? super TextExt, TextStyle> applyStyle ) {
+            return seg.getSegment().unify(
+                    text -> StyledTextArea.createStyledTextNode(text, seg.getStyle(), applyStyle),
+                    LinkedImage::createNode
+            );
+        }
+
+        public void foldParagraphs( int startPar, int endPar ) {
+            foldParagraphs( startPar, endPar, getAddFoldStyle() );
+        }
+
+        public void foldSelectedParagraphs() {
+            foldSelectedParagraphs( getAddFoldStyle() );
+        }
+
+        public void foldText( int start, int end ) {
+            fold( start, end, getAddFoldStyle() );
+        }
+
+        public void unfoldParagraphs( int startingFromPar ) {
+            unfoldParagraphs( startingFromPar, getFoldStyleCheck(), getRemoveFoldStyle() );
+        }
+
+        public void unfoldText( int startingFromPos ) {
+            startingFromPos = offsetToPosition( startingFromPos, Bias.Backward ).getMajor();
+            unfoldParagraphs( startingFromPos, getFoldStyleCheck(), getRemoveFoldStyle() );
+        }
+
+        protected UnaryOperator<ParStyle> getAddFoldStyle() {
+            return pstyle -> pstyle.updateFold( true );
+        }
+
+        protected UnaryOperator<ParStyle> getRemoveFoldStyle() {
+            return pstyle -> pstyle.updateFold( false );
+        }
+
+        protected Predicate<ParStyle> getFoldStyleCheck() {
+            return pstyle -> pstyle.isFolded();
+        }
+    }
+
+    private class DefaultContextMenu extends ContextMenu
+    {
+        private MenuItem fold, unfold;
+
+        public DefaultContextMenu()
+        {
+            fold = new MenuItem( "Fold selected text" );
+            fold.setOnAction( AE -> { hide(); fold(); } );
+
+            unfold = new MenuItem( "Unfold from cursor" );
+            unfold.setOnAction( AE -> { hide(); unfold(); } );
+
+            getItems().addAll( fold, unfold );
+        }
+
+        /**
+         * Folds multiple lines of selected text, only showing the first line and hiding the rest.
+         */
+        private void fold()
+        {
+            ((FoldableStyledArea) getOwnerNode()).foldSelectedParagraphs();
+        }
+
+        /**
+         * Unfold the CURRENT line/paragraph if it has a fold.
+         */
+        private void unfold()
+        {
+            FoldableStyledArea area = (FoldableStyledArea) getOwnerNode();
+            area.unfoldParagraphs( area.getCurrentParagraph() );
+        }
+    }
+
     {
         area.setWrapText(true);
         area.setStyleCodecs(
                 ParStyle.CODEC,
                 Codec.styledSegmentCodec(Codec.eitherCodec(Codec.STRING_CODEC, LinkedImage.codec()), TextStyle.CODEC));
-        area.setParagraphGraphicFactory( new BulletFactory( area ) );
+        area.setParagraphGraphicFactory( new BulletFactory( area ) );  // and folded paragraph indicator
+        area.setContextMenu( new DefaultContextMenu() );
     }
 
     private Stage mainStage;
@@ -304,14 +390,6 @@ public class RichTextDemo extends Application {
         primaryStage.show();
     }
 
-
-    private Node createNode(StyledSegment<Either<String, LinkedImage>, TextStyle> seg,
-                            BiConsumer<? super TextExt, TextStyle> applyStyle) {
-        return seg.getSegment().unify(
-                text -> StyledTextArea.createStyledTextNode(text, seg.getStyle(), applyStyle),
-                LinkedImage::createNode
-        );
-    }
 
     private Button createButton(String styleClass, Runnable action, String toolTip) {
         Button button = new Button();
