@@ -180,7 +180,7 @@ class GenericStyledAreaBehavior {
                 if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
                 	    && e.getCharacter().getBytes()[0] != 0) return true;
                 
-                return !e.isMetaDown() && (!e.isControlDown() || e.isAltDown());
+                return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
             }
         	return !e.isControlDown() && !e.isMetaDown();
         };
