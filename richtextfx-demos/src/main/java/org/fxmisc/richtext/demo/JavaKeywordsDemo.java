@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
@@ -20,6 +22,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.collection.ListModification;
@@ -92,6 +95,7 @@ public class JavaKeywordsDemo extends Application {
 
         // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
+        codeArea.setContextMenu( new DefaultContextMenu() );
 /*
         // recompute the syntax highlighting for all text, 500 ms after user stops editing area
         Subscription cleanupWhenNoLongerNeedIt = codeArea
@@ -161,7 +165,7 @@ public class JavaKeywordsDemo extends Application {
         return spansBuilder.create();
     }
 
-    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification>
+    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
     {
         private final GenericStyledArea<PS, SEG, S> area;
         private final Function<String,StyleSpans<S>> computeStyles;
@@ -174,7 +178,7 @@ public class JavaKeywordsDemo extends Application {
         }
 
         @Override
-        public void accept( ListModification lm )
+        public void accept( ListModification<? extends Paragraph<PS, SEG, S>> lm )
         {
             if ( lm.getAddedSize() > 0 )
             {
@@ -192,4 +196,41 @@ public class JavaKeywordsDemo extends Application {
         }
     }
 
+    private class DefaultContextMenu extends ContextMenu
+    {
+        private MenuItem fold, unfold, print;
+
+        public DefaultContextMenu()
+        {
+            fold = new MenuItem( "Fold selected text" );
+            fold.setOnAction( AE -> { hide(); fold(); } );
+
+            unfold = new MenuItem( "Unfold from cursor" );
+            unfold.setOnAction( AE -> { hide(); unfold(); } );
+
+            print = new MenuItem( "Print" );
+            print.setOnAction( AE -> { hide(); print(); } );
+
+            getItems().addAll( fold, unfold, print );
+        }
+
+        /**
+         * Folds multiple lines of selected text, only showing the first line and hiding the rest.
+         */
+        private void fold() {
+            ((CodeArea) getOwnerNode()).foldSelectedParagraphs();
+        }
+
+        /**
+         * Unfold the CURRENT line/paragraph if it has a fold.
+         */
+        private void unfold() {
+            CodeArea area = (CodeArea) getOwnerNode();
+            area.unfoldParagraphs( area.getCurrentParagraph() );
+        }
+
+        private void print() {
+            System.out.println( ((CodeArea) getOwnerNode()).getText() );
+        }
+    }
 }

@@ -14,3 +14,12 @@
     -rtfx-blink-rate: 500ms;
     -fx-stroke-width: 1.0;
 }
+
+/* For folding/hiding paragraphs. It's applied to TextFlow. */
+.collapse { visibility: collapse; }
+
+/* For LineNumberFactory, it's applied to Label. */
+.fold-indicator {
+    -fx-font-weight: bold;
+    -fx-text-fill: blue;
+}

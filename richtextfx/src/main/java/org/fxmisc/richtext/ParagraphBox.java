@@ -78,6 +78,9 @@ class ParagraphBox<PS, SEG, S> extends Region {
         wrapText.addListener((obs, old, w) -> requestLayout());
     }
 
+    private final Val<Boolean> isFolded;
+    public boolean isFolded() { return isFolded.getValue(); }
+
     private final Var<Integer> index;
     public Val<Integer> indexProperty() { return index; }
     public void setIndex(int index) { this.index.setValue(index); }
@@ -94,6 +97,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
+        isFolded = Val.wrap( text.visibleProperty().not() );
         
         // start at -1 so that the first time it is displayed, the caret at pos 0 is not
         // accidentally removed from its parent and moved to this node's ParagraphText
@@ -235,6 +239,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     @Override
     protected double computePrefHeight(double width) {
+        if ( isFolded.getValue() ) return 0.0;
         Insets insets = getInsets();
         double overhead = getGraphicPrefWidth() + insets.getLeft() + insets.getRight();
         return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom() + text.getLineSpacing();
