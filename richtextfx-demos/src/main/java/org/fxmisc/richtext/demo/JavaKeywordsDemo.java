@@ -99,6 +99,8 @@ public class JavaKeywordsDemo extends Application {
         codeArea.setContextMenu( new DefaultContextMenu() );
 /*
         // recompute the syntax highlighting for all text, 500 ms after user stops editing area
+        // Note that this shows how it can be done but is not recommended for production with
+        // large files as it does a full scan of ALL the text every time there is a change !
         Subscription cleanupWhenNoLongerNeedIt = codeArea
 
                 // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
@@ -116,6 +118,8 @@ public class JavaKeywordsDemo extends Application {
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 */
         // recompute syntax highlighting only for visible paragraph changes
+        // Note that this shows how it can be done but is not recommended for production where multi-
+        // line syntax requirements are needed, like comment blocks without a leading * on each line. 
         codeArea.getVisibleParagraphs().addModificationObserver
         (
             new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
