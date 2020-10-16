@@ -49,7 +49,8 @@ public class JavaKeywordsDemo extends Application {
     private static final String BRACKET_PATTERN = "\\[|\\]";
     private static final String SEMICOLON_PATTERN = "\\;";
     private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
-    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
+    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/"   // for whole text processing (text blocks)
+    		                          + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
@@ -98,6 +99,8 @@ public class JavaKeywordsDemo extends Application {
         codeArea.setContextMenu( new DefaultContextMenu() );
 /*
         // recompute the syntax highlighting for all text, 500 ms after user stops editing area
+        // Note that this shows how it can be done but is not recommended for production with
+        // large files as it does a full scan of ALL the text every time there is a change !
         Subscription cleanupWhenNoLongerNeedIt = codeArea
 
                 // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
@@ -115,6 +118,8 @@ public class JavaKeywordsDemo extends Application {
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 */
         // recompute syntax highlighting only for visible paragraph changes
+        // Note that this shows how it can be done but is not recommended for production where multi-
+        // line syntax requirements are needed, like comment blocks without a leading * on each line. 
         codeArea.getVisibleParagraphs().addModificationObserver
         (
             new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
