@@ -60,6 +60,7 @@ Who uses RichTextFX?
 - [Astro IDE](https://github.com/AmrDeveloper/Astro) 
 - [Chorus](https://github.com/iAmGio/chorus)
 - [EpubFx](https://gitlab.com/finanzer/epubfx/)
+- [SqlBrowserFx](https://github.com/pariskol/sqlbrowserfx/)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
