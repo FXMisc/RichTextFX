@@ -61,6 +61,7 @@ Who uses RichTextFX?
 - [Chorus](https://github.com/iAmGio/chorus)
 - [EpubFx](https://gitlab.com/finanzer/epubfx/)
 - [SqlBrowserFx](https://github.com/pariskol/sqlbrowserfx/)
+- [BasicCAT](https://github.com/xulihang/BasicCAT/)
 
 If you use RichTextFX in an interesting project, I would like to know!
 
