@@ -113,6 +113,8 @@ public class LineNumberFactory<PS> implements IntFunction<Node> {
         if ( isFoldedCheck != null )
         {
             Label foldIndicator = new Label( " " );
+            foldIndicator.setTextFill( DEFAULT_TEXT_FILL ); // Prevents CSS errors
+
             lineNo.setContentDisplay( ContentDisplay.RIGHT );
             lineNo.setGraphic( foldIndicator );
 
