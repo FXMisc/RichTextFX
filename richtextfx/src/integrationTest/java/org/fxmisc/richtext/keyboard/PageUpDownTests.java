@@ -1,6 +1,5 @@
 package org.fxmisc.richtext.keyboard;
 
-import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
@@ -20,6 +19,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
     @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
+        clickOn( area );
 
         // allow 6 lines to be displayed
         stage.setHeight(90);
@@ -27,66 +27,80 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
-    public void page_up_leaves_caret_at_bottom_of_viewport() {
+    public void page_up_leaves_caret_at_BOTTOM_of_viewport_when_FIRST_line_NOT_visible() {
         interact(() -> {
-            area.moveTo(5, 0);
+            area.moveTo(7, 0);
             area.requestFollowCaret();
         });
-        assertTrue(area.getSelectedText().isEmpty());
         Bounds beforeBounds = area.getCaretBounds().get();
 
         type(PAGE_UP);
 
-        runLater( 150, () -> {
-            Bounds afterBounds = area.getCaretBounds().get();
-            assertEquals(8, area.getCaretPosition());
-            assertTrue(area.getSelectedText().isEmpty());
-            assertTrue(beforeBounds.getMinY() > afterBounds.getMinY());
-        });
+        Bounds afterBounds = area.getCaretBounds().get();
+        assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
+        assertEquals(5, area.getCurrentParagraph());
     }
 
     @Test
-    public void page_down_leaves_caret_at_top_of_viewport() throws Exception {
+    public void page_up_leaves_caret_at_TOP_of_viewport_when_FIRST_line_IS_visible() {
+        interact(() -> {
+            area.moveTo(4, 0);
+            area.requestFollowCaret();
+        });
+
+        type(PAGE_UP);
+
+        assertEquals(0, area.getCurrentParagraph());
+    }
+
+    @Test
+    public void page_down_leaves_caret_at_TOP_of_viewport_when_LAST_line_NOT_visible() throws Exception {
         interact(() -> {
             area.moveTo(0);
             area.requestFollowCaret();
         });
-        assertTrue(area.getSelectedText().isEmpty());
         Bounds beforeBounds = area.getCaretBounds().get();
 
         type(PAGE_DOWN);
 
-        runLater( 150, () -> {
-            Bounds afterBounds = area.getCaretBounds().get();
-            assertEquals(area.getAbsolutePosition(3, 0), area.getCaretPosition());
-            assertTrue(area.getSelectedText().isEmpty());
-            assertTrue(beforeBounds.getMinY() < afterBounds.getMinY());
+        Bounds afterBounds = area.getCaretBounds().get();
+        assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
+        assertEquals(2, area.getCurrentParagraph());
+    }
+
+    @Test
+    public void page_down_leaves_caret_at_BOTTOM_of_viewport_when_LAST_line_IS_visible() throws Exception {
+        interact(() -> {
+            area.showParagraphAtTop(3);
+            area.moveTo(3, 0);
         });
+
+        type(PAGE_DOWN);
+
+        assertEquals(7, area.getCurrentParagraph());
+        assertEquals(15, area.getCaretPosition());
     }
 
     @Test
     public void shift_page_up_leaves_caret_at_bottom_of_viewport_and_makes_selection() {
         interact(() -> {
-            area.moveTo(5, 0);
+            area.moveTo(7, 0);
             area.requestFollowCaret();
         });
-        assertTrue(area.getSelectedText().isEmpty());
         Bounds beforeBounds = area.getCaretBounds().get();
 
         press(SHIFT).type(PAGE_UP).release(SHIFT);
 
-        runLater( 150, () -> {
-            Bounds afterBounds = area.getCaretBounds().get();
-            assertEquals(8, area.getCaretPosition());
-            assertEquals(area.getText(0, 0, 5, 0), area.getSelectedText());
-            assertTrue(beforeBounds.getMinY() > afterBounds.getMinY());
-        });
+        Bounds afterBounds = area.getCaretBounds().get();
+        assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
+        assertEquals(area.getText(5, 0, 7, 0), area.getSelectedText());
+        assertEquals(10, area.getCaretPosition());
     }
 
     @Test
     public void shift_page_down_leaves_caret_at_top_of_viewport_and_makes_selection() {
         interact(() -> {
-            area.moveTo(0);
+            area.moveTo(1);
             area.requestFollowCaret();
         });
         assertTrue(area.getSelectedText().isEmpty());
@@ -94,28 +108,11 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
         press(SHIFT).type(PAGE_DOWN).release(SHIFT);
 
-        runLater( 150, () -> {
-            Bounds afterBounds = area.getCaretBounds().get();
-            assertEquals(area.getAbsolutePosition(3, 0), area.getCaretPosition());
-            assertEquals(area.getText(0, 0, 3, 0), area.getSelectedText());
-            assertTrue(beforeBounds.getMinY() < afterBounds.getMinY());
-        });
+        Bounds afterBounds = area.getCaretBounds().get();
+        assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
+        assertEquals(area.getText(0, 1, 2, 1), area.getSelectedText());
+        assertEquals(5, area.getCaretPosition());
     }
 
-    // Can't use sleep( t ) as that seems to delay the key press & release actions as well, 
-    // defeating the purpose of it. So here a new thread is created for the delay ...
-    private void runLater( final long time, final Runnable runFX )
-	{
-		new Thread( () -> {
-			long  t0 = System.currentTimeMillis();
-			long  t1 = t0 + time;
-			
-			while ( t0 < t1 ) try { Thread.sleep( t1 - t0 ); } catch ( Exception e ) {}
-			finally { t0 = System.currentTimeMillis(); }
-			
-			Platform.runLater( runFX );
-			
-		} ).start();
-	}
 }
 

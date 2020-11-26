@@ -1255,12 +1255,20 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void prevPage(SelectionPolicy selectionPolicy) {
-    	page( -1, selectionPolicy );
+    	// Paging up and we're in the first frame then move/select to start.
+        if ( getEstimatedScrollY() == 0 ) {
+            caretSelectionBind.moveTo( 0, selectionPolicy );
+        }
+        else page( -1, selectionPolicy );
     }
 
     @Override
     public void nextPage(SelectionPolicy selectionPolicy) {
-    	page( +1, selectionPolicy );
+        // Paging down and we're in the last frame then move/select to end.
+        if ( getEstimatedScrollY() + getViewportHeight() >= getTotalHeightEstimate()-2.0 ) {
+            caretSelectionBind.moveTo( getLength(), selectionPolicy );
+        }
+        else page( +1, selectionPolicy );
     }
     
     /**
