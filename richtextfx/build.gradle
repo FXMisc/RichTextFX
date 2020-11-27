@@ -32,7 +32,7 @@ sourceSets {
 dependencies {
     compile group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     compile group: 'org.fxmisc.undo', name: 'undofx', version: '2.1.0'
-    compile group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6.1'
+    compile group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6.2'
     compile group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
     java9Implementation files(sourceSets.main.output.classesDirs) { builtBy compileJava }
@@ -41,11 +41,8 @@ dependencies {
 
     integrationTestCompile group: 'junit', name: 'junit', version: '4.12'
     integrationTestCompile group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
-    integrationTestCompile "org.testfx:testfx-core:4.0.8-alpha"
-    if ( JavaVersion.current() >= JavaVersion.VERSION_1_9 ) {
-        integrationTestCompile "org.testfx:testfx-internal-java9:4.0.8-alpha"
-    }
-    integrationTestCompile ("org.testfx:testfx-junit:4.0.8-alpha") {
+    integrationTestCompile "org.testfx:testfx-core:4.0.16-alpha"
+    integrationTestCompile ("org.testfx:testfx-junit:4.0.15-alpha") {
         exclude(group: "junit", module: "junit")
     }
     integrationTestCompile "org.testfx:openjfx-monocle:8u76-b04"
