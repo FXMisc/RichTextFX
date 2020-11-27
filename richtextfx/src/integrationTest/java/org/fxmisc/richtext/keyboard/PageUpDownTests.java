@@ -37,10 +37,10 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
         type(PAGE_UP);
 
+        WaitForAsyncUtils.waitForFxEvents(150);
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(5, area.getCurrentParagraph());
-        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -65,10 +65,10 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
         type(PAGE_DOWN);
 
+        WaitForAsyncUtils.waitForFxEvents(150);
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(2, area.getCurrentParagraph());
-        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -94,11 +94,11 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
         press(SHIFT).type(PAGE_UP).release(SHIFT);
 
+        WaitForAsyncUtils.waitForFxEvents(150);
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(area.getText(5, 0, 7, 0), area.getSelectedText());
         assertEquals(10, area.getCaretPosition());
-        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -112,11 +112,11 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
         press(SHIFT).type(PAGE_DOWN).release(SHIFT);
 
+        WaitForAsyncUtils.waitForFxEvents(150);
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(area.getText(0, 1, 2, 1), area.getSelectedText());
         assertEquals(5, area.getCaretPosition());
-        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
 }
