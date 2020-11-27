@@ -11,6 +11,7 @@ import static javafx.scene.input.KeyCode.PAGE_UP;
 import static javafx.scene.input.KeyCode.SHIFT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.testfx.util.WaitForAsyncUtils;
 
 public class PageUpDownTests extends InlineCssTextAreaAppTest {
 
@@ -39,6 +40,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(5, area.getCurrentParagraph());
+        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -66,6 +68,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
         Bounds afterBounds = area.getCaretBounds().get();
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(2, area.getCurrentParagraph());
+        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -95,6 +98,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(area.getText(5, 0, 7, 0), area.getSelectedText());
         assertEquals(10, area.getCaretPosition());
+        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
     @Test
@@ -112,6 +116,7 @@ public class PageUpDownTests extends InlineCssTextAreaAppTest {
         assertEquals(beforeBounds.getMinY(), afterBounds.getMinY(), 0);
         assertEquals(area.getText(0, 1, 2, 1), area.getSelectedText());
         assertEquals(5, area.getCaretPosition());
+        WaitForAsyncUtils.waitForFxEvents(10);
     }
 
 }
