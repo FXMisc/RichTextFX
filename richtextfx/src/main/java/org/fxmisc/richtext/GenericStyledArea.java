@@ -826,18 +826,24 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         placeHolderProp.addListener( (ob,ov,newNode) -> displayPlaceHolder( showPlaceholder.getValue(), newNode ) );
         showPlaceholder.addListener( (ob,ov,show) -> displayPlaceHolder( show, getPlaceholder() ) );
         
-        Platform.runLater( () -> if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
+        if ( Platform.isFxApplicationThread() ) initInputMethodHandling();
+        else Platform.runLater( () -> initInputMethodHandling() );
+    }
+    
+    private void initInputMethodHandling()
+    {
+    	if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
         {
         	setOnInputMethodTextChanged( event -> handleInputMethodEvent(event) );
         	// Both of these have to be set for input composition to work !
-        	setInputMethodRequests(new InputMethodRequests()
+        	setInputMethodRequests( new InputMethodRequests()
         	{
-        		@Override public Point2D getTextLocation(int offset) {
+        		@Override public Point2D getTextLocation( int offset ) {
         		    Bounds charBounds = getCaretBounds().get();
         			return new Point2D( charBounds.getMaxX() - 5, charBounds.getMaxY() );
         		}
 
-        		@Override public int getLocationOffset(int x, int y) {
+        		@Override public int getLocationOffset( int x, int y ) {
         			return 0;
         		}
 
@@ -847,48 +853,48 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         			return getSelectedText();
         		}
         	});
-        });
+        }
     }
 
     // Start/Length of the text under input method composition
     private int imstart;
     private int imlength;
 
-    protected void handleInputMethodEvent(InputMethodEvent event) {
-        if (isEditable() && !isDisabled()) {
+    protected void handleInputMethodEvent( InputMethodEvent event ) {
+        if ( isEditable() && !isDisabled() ) {
 
             // remove previous input method text (if any) or selected text
-            if (imlength != 0) {
-                selectRange(imstart, imstart + imlength);
+            if ( imlength != 0 ) {
+                selectRange( imstart, imstart + imlength );
             }
 
             // Insert committed text
-            if (event.getCommitted().length() != 0) {
-                replaceText(getSelection(), event.getCommitted());
+            if ( event.getCommitted().length() != 0 ) {
+                replaceText( getSelection(), event.getCommitted() );
             }
 
             // Replace composed text
             imstart = getSelection().getStart();
             StringBuilder composed = new StringBuilder();
 
-            for (InputMethodTextRun run : event.getComposed()) {
-                composed.append(run.getText());
+            for ( InputMethodTextRun run : event.getComposed() ) {
+                composed.append( run.getText() );
             }
 
-            replaceText(getSelection(), composed.toString());
+            replaceText( getSelection(), composed.toString() );
             imlength = composed.length();
 
-            if (imlength != 0) {
+            if ( imlength != 0 ) {
                 int pos = imstart;
-                for (InputMethodTextRun run : event.getComposed()) {
+                for ( InputMethodTextRun run : event.getComposed() ) {
                     int endPos = pos + run.getText().length();
                     pos = endPos;
                 }
 
                 // Set caret position in composed text
                 int caretPos = event.getCaretPosition();
-                if (caretPos >= 0 && caretPos < imlength) {
-                    selectRange(imstart + caretPos, imstart + caretPos);
+                if ( caretPos >= 0 && caretPos < imlength ) {
+                    selectRange( imstart + caretPos, imstart + caretPos );
                 }
             }
         }
