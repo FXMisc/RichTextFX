@@ -826,7 +826,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         placeHolderProp.addListener( (ob,ov,newNode) -> displayPlaceHolder( showPlaceholder.getValue(), newNode ) );
         showPlaceholder.addListener( (ob,ov,show) -> displayPlaceHolder( show, getPlaceholder() ) );
         
-        if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
+        Platform.runLater( () -> if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
         {
         	setOnInputMethodTextChanged( event -> handleInputMethodEvent(event) );
         	// Both of these have to be set for input composition to work !
@@ -847,7 +847,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         			return getSelectedText();
         		}
         	});
-        }
+        });
     }
 
     // Start/Length of the text under input method composition
