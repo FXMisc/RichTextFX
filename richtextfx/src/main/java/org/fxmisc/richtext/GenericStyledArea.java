@@ -832,27 +832,27 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     
     private void initInputMethodHandling()
     {
-    	if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
+        if( Platform.isSupported( ConditionalFeature.INPUT_METHOD ) )
         {
-        	setOnInputMethodTextChanged( event -> handleInputMethodEvent(event) );
-        	// Both of these have to be set for input composition to work !
-        	setInputMethodRequests( new InputMethodRequests()
-        	{
-        		@Override public Point2D getTextLocation( int offset ) {
-        		    Bounds charBounds = getCaretBounds().get();
-        			return new Point2D( charBounds.getMaxX() - 5, charBounds.getMaxY() );
-        		}
+            setOnInputMethodTextChanged( event -> handleInputMethodEvent(event) );
+            // Both of these have to be set for input composition to work !
+            setInputMethodRequests( new InputMethodRequests()
+            {
+                @Override public Point2D getTextLocation( int offset ) {
+                    Bounds charBounds = getCaretBounds().get();
+                    return new Point2D( charBounds.getMaxX() - 5, charBounds.getMaxY() );
+                }
 
-        		@Override public int getLocationOffset( int x, int y ) {
-        			return 0;
-        		}
+                @Override public int getLocationOffset( int x, int y ) {
+                    return 0;
+                }
 
-        		@Override public void cancelLatestCommittedText() {}
+                @Override public void cancelLatestCommittedText() {}
 
-        		@Override public String getSelectedText() {
-        			return getSelectedText();
-        		}
-        	});
+                @Override public String getSelectedText() {
+                    return getSelectedText();
+                }
+            });
         }
     }
 
@@ -860,9 +860,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private int imstart;
     private int imlength;
 
-    protected void handleInputMethodEvent( InputMethodEvent event ) {
-        if ( isEditable() && !isDisabled() ) {
-
+    protected void handleInputMethodEvent( InputMethodEvent event )
+    {
+        if ( isEditable() && !isDisabled() )
+        {
             // remove previous input method text (if any) or selected text
             if ( imlength != 0 ) {
                 selectRange( imstart, imstart + imlength );
@@ -884,7 +885,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             replaceText( getSelection(), composed.toString() );
             imlength = composed.length();
 
-            if ( imlength != 0 ) {
+            if ( imlength != 0 )
+            {
                 int pos = imstart;
                 for ( InputMethodTextRun run : event.getComposed() ) {
                     int endPos = pos + run.getText().length();
