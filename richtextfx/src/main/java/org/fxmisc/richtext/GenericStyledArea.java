@@ -19,6 +19,7 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Bindings;
