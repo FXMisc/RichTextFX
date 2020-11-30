@@ -1470,6 +1470,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     {
         if ( getCell( newParagraph ).isFolded() )
         {
+            // Prevent Ctrl+A and Ctrl+End breaking when the last paragraph is folded
+            // github.com/FXMisc/RichTextFX/pull/965#issuecomment-706268116
+            if ( newParagraph == getParagraphs().size() - 1 ) return;
+
             int skip = (newParagraph - prevParagraph > 0) ? +1 : -1;
             int p = newParagraph + skip;
 
