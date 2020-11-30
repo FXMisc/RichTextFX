@@ -240,7 +240,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     public <T extends Node & Caret> double getCaretOffsetX(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        checkWithinParagraph(caret);
+        if ( isVisible() /* notFolded */ ) checkWithinParagraph(caret);
         Bounds bounds = caret.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
