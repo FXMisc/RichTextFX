@@ -122,8 +122,8 @@ public class ClickAndDragTests {
             public void single_clicking_area_beyond_text_moves_caret_to_end_position()
                     throws InterruptedException, ExecutionException {
 
-                area.getStylesheets ().add ("org/fxmisc/richtext/mouse/padtest.css");
                 int position = firstParagraph.length() + secondWord.length();
+                interact( () -> area.getStylesheets ().add("org/fxmisc/richtext/mouse/padtest.css") );
                 assertEquals(0, area.getCaretPosition());
                 clickOn( area );
 
