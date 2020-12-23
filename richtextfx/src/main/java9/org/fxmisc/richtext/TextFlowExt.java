@@ -109,6 +109,10 @@ class TextFlowExt extends TextFlow {
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
 
+        if (y >= span.getBounds().getMaxY()) {
+            return CharacterHit.insertionAt(charIdx);
+        }
+
         if ( ! leading && getLineCount() > 1) {
             // If this is a wrapped paragraph and hit character is at end of hit line, make sure that the
             // "character hit" stays at the end of the hit line (and not at the beginning of the next line).
