@@ -21,7 +21,7 @@ public class Hyperlink {
     }
 
     public boolean shareSameAncestor(Hyperlink other) {
-        return link.equals(other.link) && originalDisplayedText.equals(other.originalDisplayedText);
+        return link.equals(other.link);
     }
 
     public int length() {
