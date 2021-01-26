@@ -21,4 +21,12 @@ public class Indent
     {
     	  return new Indent( level-1 );
     }
+
+    int getLevel() { return level; }
+    
+    @Override
+    public String toString()
+    {
+        return "indent: "+ level;
+    }
 }
