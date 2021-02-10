@@ -984,7 +984,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     getVisibleParagraphs().size() - 1, visibleParIndex)
             );
         }
-        return virtualFlow.visibleCells().get( visibleParIndex ).getNode().getIndex();
+
+        Cell<Paragraph<PS,SEG,S>, ParagraphBox<PS,SEG,S>> visibleCell = null;
+
+        if ( visibleParIndex > 0 ) visibleCell = virtualFlow.visibleCells().get( visibleParIndex );
+        else visibleCell = virtualFlow.getCellIfVisible( virtualFlow.getFirstVisibleIndex() )
+            .orElseGet( () -> virtualFlow.visibleCells().get( visibleParIndex ) );
+
+        return visibleCell.getNode().getIndex();
     }
 
     @Override
