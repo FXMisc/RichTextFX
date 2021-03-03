@@ -16,4 +16,4 @@
 }
 
 /* For folding/hiding paragraphs. It's applied to TextFlow. */
-.collapse { visibility: collapse; }
+.styled-text-area .collapse { visibility: collapse; }

@@ -1550,11 +1550,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         replace( startPos, endPos, subDoc );
         recreateParagraphGraphic( offsetToPosition( startPos, Bias.Backward ).getMajor() );
         moveTo( startPos );
+        foldCheck = true;
     }
+
+    protected boolean foldCheck = false;
 
     private void skipOverFoldedParagraphs( ObservableValue<? extends Integer> ob, Integer prevParagraph, Integer newParagraph )
     {
-        if ( getCell( newParagraph ).isFolded() )
+        if ( foldCheck && getCell( newParagraph ).isFolded() )
         {
             // Prevent Ctrl+A and Ctrl+End breaking when the last paragraph is folded
             // github.com/FXMisc/RichTextFX/pull/965#issuecomment-706268116
