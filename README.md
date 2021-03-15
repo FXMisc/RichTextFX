@@ -31,7 +31,7 @@ Table of Contents
   * [Stable](#stable-release)
   * [Snapshot](#snapshot-releases)
 * API Documentation (Javadoc)
-  * [0.10.5](http://fxmisc.github.io/richtext/javadoc/0.10.5/index.html?org/fxmisc/richtext/package-summary.html)
+  * [0.10.6](http://fxmisc.github.io/richtext/javadoc/0.10.6/index.html?org/fxmisc/richtext/package-summary.html)
 * [License](#license)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -147,31 +147,31 @@ Download
 
 ### Stable release
 
-Current stable release is 0.10.5 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.10.6 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.10.5  |
+| org.fxmisc.richtext | richtextfx  | 0.10.6  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.5'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.6'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.5"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.6"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.5/richtextfx-0.10.5.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.5/richtextfx-fat-0.10.5.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.6/richtextfx-0.10.6.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.6/richtextfx-fat-0.10.6.jar) and place it on your classpath.
 
 ### Snapshot releases
 

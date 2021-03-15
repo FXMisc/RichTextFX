@@ -1,5 +1,38 @@
 # Change Log
 
+## [v0.10.6](https://github.com/FXMisc/RichTextFX/tree/v0.10.6) (2021-03-15)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.5...v0.10.6)
+
+**Implemented enhancements:**
+
+- Accommodate selection when following caret [\#933](https://github.com/FXMisc/RichTextFX/pull/933)
+- Added auto height/grow property and behavior [\#944](https://github.com/FXMisc/RichTextFX/pull/944)
+- Added foreign language input composition [\#985](https://github.com/FXMisc/RichTextFX/pull/985) (Thank you [xulihang](https://github.com/xulihang))
+- Added paragraph folding [\#965](https://github.com/FXMisc/RichTextFX/pull/965), [\#986](https://github.com/FXMisc/RichTextFX/pull/986), [\#1000](https://github.com/FXMisc/RichTextFX/pull/1000), and [\#1007](https://github.com/FXMisc/RichTextFX/pull/1007)
+- Improved page up to go to first line when visible, and page down to go to last when visible [\#983](https://github.com/FXMisc/RichTextFX/pull/983)
+- Improved syntax highlighting demo efficiency [\#956](https://github.com/FXMisc/RichTextFX/pull/956), [\#962](https://github.com/FXMisc/RichTextFX/pull/962), and [\#972](https://github.com/FXMisc/RichTextFX/pull/972)
+- Improved hyperlinks demo with editable hyperlinks [\#995](https://github.com/FXMisc/RichTextFX/pull/995)
+- Added bracket highlighter demo [\#959](https://github.com/FXMisc/RichTextFX/pull/959) (Thank you [Pratanu Mandal](https://github.com/prat-man))
+- Updated Appveyor to use JDK9
+- Bumped to Flowless 0.6.3
+- Bumped testfx to 4.0.16
+
+**Fixed bugs:**
+
+- Bug: Fixed exception when trying to get paragraph bounds when caret moves [\#945](https://github.com/FXMisc/RichTextFX/pull/945)
+- Bug: Fixed follow caret not showing complete line at bottom of viewport with large font [\#947](https://github.com/FXMisc/RichTextFX/pull/947)
+- Bug: Fixed full line not being highlighted when text wrap is off [\#948](https://github.com/FXMisc/RichTextFX/pull/948), [\#963](https://github.com/FXMisc/RichTextFX/pull/963)
+- Bug: Fixed incorrect first visible paragraph being returned when navigating backwards [\#1002](https://github.com/FXMisc/RichTextFX/pull/1002)
+- Bug: Fixed line not highlighting after either the last character or the line was deleted [\#950](https://github.com/FXMisc/RichTextFX/issues/950)
+- Bug: Fixed multi-paragraph insert creation [\#951](https://github.com/FXMisc/RichTextFX/pull/951) and [\#953](https://github.com/FXMisc/RichTextFX/pull/953)
+- Bug: Fixed selecting text beyond the end leads to exception on Java 9 or later [\#992](https://github.com/FXMisc/RichTextFX/pull/992)
+- Bug: Fixed demo ParStyle equals & indent [\#943](https://github.com/FXMisc/RichTextFX/pull/943)
+- Regression: Fixed entering curly braces and brackets on OSX not working [\#968](https://github.com/FXMisc/RichTextFX/pull/968)
+
+**Other:**
+
+- Removed [travis.yml](https://github.com/FXMisc/RichTextFX/commit/358df2dcc5e404e1be22b2920277e5f6acd43328)
+
 ## [v0.10.5](https://github.com/FXMisc/RichTextFX/tree/v0.10.5) (2020-04-19)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.4...v0.10.5)
 
