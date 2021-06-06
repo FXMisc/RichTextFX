@@ -1925,9 +1925,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
     private void followCaret() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = getCell(parIdx).getCaretBounds(caretSelectionBind.getUnderlyingCaret());
-        double graphicWidth = cell.getNode().getGraphicPrefWidth();
+        ParagraphBox<PS, SEG, S> paragrafBox = virtualFlow.getCell( parIdx ).getNode();
+        Bounds caretBounds = paragrafBox.getCaretBounds( caretSelectionBind.getUnderlyingCaret() );
+        double graphicWidth = paragrafBox.getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         double scrollX = virtualFlow.getEstimatedScrollX();
 
@@ -1935,12 +1935,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         // the caret then the selection won't be visible. So here we check for this scenario and adjust if needed.
         if ( ! isWrapText() && scrollX > 0.0 && getParagraphSelection( parIdx ).getLength() > 0 )
         {
-            double visibleLeftX = cell.getNode().getWidth() * scrollX / 100 - getWidth() + graphicWidth;
+            double visibleLeftX = paragrafBox.getWidth() * scrollX / 100 - getWidth() + graphicWidth;
 
             CaretNode selectionStart = new CaretNode( "", this, getSelection().getStart() );
-            cell.getNode().caretsProperty().add( selectionStart );
-            Bounds startBounds = cell.getNode().getCaretBounds( selectionStart );
-            cell.getNode().caretsProperty().remove( selectionStart );
+            paragrafBox.caretsProperty().add( selectionStart );
+            Bounds startBounds = paragrafBox.getCaretBounds( selectionStart );
+            paragrafBox.caretsProperty().remove( selectionStart );
 
             if ( startBounds.getMinX() - graphicWidth < visibleLeftX ) {
                 region = extendLeft( startBounds, graphicWidth );
@@ -1948,12 +1948,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
 
         // Addresses https://github.com/FXMisc/RichTextFX/issues/937#issuecomment-674319602
-        if ( parIdx == getParagraphs().size()-1 && cell.getNode().getLineCount() == 1 )
+        if ( parIdx == getParagraphs().size()-1 && paragrafBox.getLineCount() == 1 )
         {
             region = new BoundingBox // Correcting the region's height
             (
                 region.getMinX(), region.getMinY(), region.getWidth(),
-                cell.getNode().getLayoutBounds().getHeight()
+                paragrafBox.getLayoutBounds().getHeight()
             );
         }
 
