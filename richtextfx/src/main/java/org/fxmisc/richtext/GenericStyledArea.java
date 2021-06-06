@@ -1926,7 +1926,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private void followCaret() {
         int parIdx = getCurrentParagraph();
         Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = caretSelectionBind.getUnderlyingCaret().getLayoutBounds();
+        Bounds caretBounds = getCell(parIdx).getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double graphicWidth = cell.getNode().getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         double scrollX = virtualFlow.getEstimatedScrollX();
