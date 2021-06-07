@@ -1926,7 +1926,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private void followCaret() {
         int parIdx = getCurrentParagraph();
         ParagraphBox<PS, SEG, S> paragrafBox = virtualFlow.getCell( parIdx ).getNode();
-        Bounds caretBounds = paragrafBox.getCaretBounds( caretSelectionBind.getUnderlyingCaret() );
+
+        Bounds caretBounds;
+        try {
+            // This is the default mechanism, but is also needed for https://github.com/FXMisc/RichTextFX/issues/1017
+            caretBounds = paragrafBox.getCaretBounds( caretSelectionBind.getUnderlyingCaret() );
+        }
+        catch ( IllegalArgumentException EX ) {
+            // This is an alternative mechanism, to address https://github.com/FXMisc/RichTextFX/issues/939
+            caretBounds = caretSelectionBind.getUnderlyingCaret().getLayoutBounds();
+        }
+
         double graphicWidth = paragrafBox.getGraphicPrefWidth();
         Bounds region = extendLeft(caretBounds, graphicWidth);
         double scrollX = virtualFlow.getEstimatedScrollX();
