@@ -392,10 +392,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     /**
      * This Node is shown to the user, centered over the area, when the area has no text content.
+     * <br>To customize the placeholder's layout override {@link #configurePlaceholder( Node )}
      */
+    public final void setPlaceholder(Node value) { placeHolderProp.set(value); }
     private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
     public final ObjectProperty<Node> placeholderProperty() { return placeHolderProp; }
-    public final void setPlaceholder(Node value) { placeHolderProp.set(value); }
     public final Node getPlaceholder() { return placeHolderProp.get(); }
     
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
@@ -922,6 +923,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
+    /**
+     * Override this to customize the placeholder's layout.
+     * <br>The default position is centered over the area.
+     */
     protected void configurePlaceholder( Node placeholder )
     {
         placeholder.layoutYProperty().bind( Bindings.createDoubleBinding( () ->
