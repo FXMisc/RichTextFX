@@ -1,6 +1,0 @@
-sonatypeUsername = <username>
-sonatypePassword = <password>
-
-signing.keyId = <key id>
-signing.password = <key passphrase>
-signing.secretKeyRingFile = /home/<user>/.gnupg/secring.gpg
