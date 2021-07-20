@@ -143,6 +143,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         this.getStyleClass().add("caret");
         this.setManaged(false);
+        this.setMouseTransparent(true); // don't want the caret to be pickable, see iss 124
 
         internalTextPosition = Var.newSimpleVar(startingPosition);
         position = internalTextPosition.suspendable();
