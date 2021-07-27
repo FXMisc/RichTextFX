@@ -1,0 +1,10 @@
+# Workaround for the missing multi release jar support in the BND tool
+# See https://github.com/bndtools/bnd/issues/2227
+-fixupmessages: ^Classes found in the wrong directory: .*
+
+-exportcontents: org.fxmisc.richtext.*
+Import-Package: !com.sun.javafx.css.converters, org.fxmisc.richtext.*;version="[1.0,2)", *
+
+# Make sure that the Bundle-SymbolicName remains the same as with the deprecated OSGi gradle plugin
+Bundle-Name: richtextfx
+Bundle-SymbolicName: org.fxmisc.richtext.fx
