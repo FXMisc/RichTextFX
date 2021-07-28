@@ -1,5 +1,9 @@
+plugins {
+	id 'java'
+}
+
 dependencies {
-    compile project(":richtextfx")
+    implementation project(":richtextfx")
 }
 
 jar {
@@ -13,9 +17,14 @@ jar {
 }
 
 task fatJar(type: Jar, dependsOn: classes) {
-    appendix = 'fat'
+    // avoid implicit dependency warning since we use output from the lib projects
+    // See  https://docs.gradle.org/7.0.2/userguide/validation_problems.html#implicit_dependency
+    dependsOn ":richtextfx:jar"
+
+    archiveAppendix = 'fat'
+
     from sourceSets.main.output
-    from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 assemble.dependsOn fatJar
@@ -40,98 +49,98 @@ task demos(description: "Lists the names and the descriptions of the demos that 
 /*
 task ClassNameDemo(type: JavaExec, dependsOn: classes,
         description: "A description of what the demo does") {
-    main = 'org.fxmisc.richtext.demo.ClassNameDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.ClassNameDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
  */
 
 task JavaKeywordsDemo(type: JavaExec, dependsOn: classes,
         description: "A CodeArea with Java syntax highlighting that is computed on the JavaFX Application Thread") {
-    main = 'org.fxmisc.richtext.demo.JavaKeywordsDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.JavaKeywordsDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task JavaKeywordsAsyncDemo(type: JavaExec, dependsOn: classes,
         description: "A CodeArea with Java syntax highlighting that is computed on a background thread") {
-    main = 'org.fxmisc.richtext.demo.JavaKeywordsAsyncDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.JavaKeywordsAsyncDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task XMLEditorDemo(type: JavaExec, dependsOn: classes,
         description: "An area with XML syntax highlighting") {
-    main = 'org.fxmisc.richtext.demo.XMLEditorDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.XMLEditorDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task ManualHighlightingDemo(type: JavaExec, dependsOn: classes,
         description: "Manually highlight various parts of the text in an area via buttons") {
-    main = 'org.fxmisc.richtext.demo.ManualHighlightingDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.ManualHighlightingDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task RichTextDemo(type: JavaExec, dependsOn: classes,
         description: "An area showing a large number of RichTextFX's features: " +
                 "inlined images, rich text (e.g. text alignment and background colors, etc.), and save/load capabilities") {
-    main = 'org.fxmisc.richtext.demo.richtext.RichTextDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.richtext.RichTextDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task PopupDemo(type: JavaExec, dependsOn: classes,
         description: "A popup that follows the caret and selection when they move") {
-    main = 'org.fxmisc.richtext.demo.PopupDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.PopupDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task TooltipDemo(type: JavaExec, dependsOn: classes,
         description: "Tells you the letter over which the mouse is hovering") {
-    main = 'org.fxmisc.richtext.demo.TooltipDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.TooltipDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task HyperlinkAreaDemo(type: JavaExec, dependsOn: classes,
         description: "An area with hyperlinks that open to their corresponding link") {
-    main = 'org.fxmisc.richtext.demo.hyperlink.HyperlinkDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.hyperlink.HyperlinkDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task LineIndicatorDemo(type: JavaExec, dependsOn: classes,
         description: "Line numbers appear to left of each paragraph and a triangle appears on the same paragraph as the caret") {
-    main = 'org.fxmisc.richtext.demo.lineindicator.LineIndicatorDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.lineindicator.LineIndicatorDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task CloneDemo(type: JavaExec, dependsOn: classes,
         description: "Two areas that can modify and show the same underlying document") {
-    main = 'org.fxmisc.richtext.demo.CloneDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.CloneDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task FontSizeSwitcherDemo(type: JavaExec, dependsOn: classes,
         description: "Change the font size of the entire area.") {
-    main = 'org.fxmisc.richtext.demo.FontSizeSwitcherDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.FontSizeSwitcherDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task MultiCaretAndSelectionNameDemo(type: JavaExec, dependsOn: classes,
         description: "Add and display multiple carets and selections with different style classes in the same area") {
-    main = 'org.fxmisc.richtext.demo.MultiCaretAndSelectionDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.MultiCaretAndSelectionDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task OverrideBehaviorDemo(type: JavaExec, dependsOn: classes,
         description: "Overrides the area's default behavior and demonstrates some things of which to be aware") {
-    main = 'org.fxmisc.richtext.demo.OverrideBehaviorDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.OverrideBehaviorDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task ShowLineDemo(type: JavaExec, dependsOn: classes,
         description: "Force a specific part of the underlying document to be rendered to the screen.") {
-    main = 'org.fxmisc.richtext.demo.ShowLineDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.ShowLineDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
 
 task SpellCheckingDemo(type: JavaExec, dependsOn: classes,
         description: "Shows how to add a red squiggle underneath misspelled words") {
-    main = 'org.fxmisc.richtext.demo.SpellCheckingDemo'
-    classpath = files(sourceSets.main.output, configurations.runtime)
+    mainClass = 'org.fxmisc.richtext.demo.SpellCheckingDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
