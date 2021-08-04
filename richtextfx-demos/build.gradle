@@ -144,3 +144,9 @@ task SpellCheckingDemo(type: JavaExec, dependsOn: classes,
     mainClass = 'org.fxmisc.richtext.demo.SpellCheckingDemo'
     classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
 }
+
+task BracketHighlighterDemo(type: JavaExec, dependsOn: classes,
+        description: "Shows how to highlight matching brackets") {
+    mainClass = 'org.fxmisc.richtext.demo.brackethighlighter.BracketHighlighterDemo'
+    classpath = files(sourceSets.main.output, configurations.runtimeClasspath)
+}
