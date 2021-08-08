@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -22,7 +23,6 @@ import java.util.function.UnaryOperator;
 import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.beans.NamedArg;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -31,7 +31,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableSet;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
@@ -44,6 +43,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
@@ -57,8 +57,6 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
 import org.fxmisc.flowless.Cell;
@@ -394,10 +392,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * This Node is shown to the user, centered over the area, when the area has no text content.
      * <br>To customize the placeholder's layout override {@link #configurePlaceholder( Node )}
      */
-    public final void setPlaceholder(Node value) { placeHolderProp.set(value); }
+    public final void setPlaceholder(Node value) { setPlaceholder(value,Pos.CENTER); }
+    public void setPlaceholder(Node value, Pos where) { placeHolderProp.set(value); placeHolderPos = Objects.requireNonNull(where); }
     private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
     public final ObjectProperty<Node> placeholderProperty() { return placeHolderProp; }
     public final Node getPlaceholder() { return placeHolderProp.get(); }
+    private Pos placeHolderPos = Pos.CENTER;
     
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
@@ -904,6 +904,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     private Node placeholder;
+    private boolean positionPlaceholder = false;
 
     private void displayPlaceHolder( boolean show, Node newNode )
     {
@@ -929,15 +930,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     protected void configurePlaceholder( Node placeholder )
     {
-        placeholder.layoutYProperty().bind( Bindings.createDoubleBinding( () ->
-            (getHeight() - placeholder.getLayoutBounds().getHeight()) / 2,
-            heightProperty(), placeholder.layoutBoundsProperty() )
-        );
-
-        placeholder.layoutXProperty().bind( Bindings.createDoubleBinding( () ->
-            (getWidth() - placeholder.getLayoutBounds().getWidth()) / 2,
-            widthProperty(), placeholder.layoutBoundsProperty() )
-        );
+        positionPlaceholder = true;
     }
 
     /* ********************************************************************** *
@@ -1699,8 +1692,13 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         });
 
         Node holder = placeholder;
-        if (holder != null && holder.isResizable() && holder.isManaged()) {
-            holder.autosize();
+        if (holder != null && holder.isManaged()) {
+            if (holder.isResizable()) holder.autosize();
+            if (positionPlaceholder) Region.positionInArea
+            (
+                holder, getLayoutX(), getLayoutY(), getWidth(), getHeight(), getBaselineOffset(),
+                ins, placeHolderPos.getHpos(), placeHolderPos.getVpos(), isSnapToPixel()
+            );
         }
     }
 

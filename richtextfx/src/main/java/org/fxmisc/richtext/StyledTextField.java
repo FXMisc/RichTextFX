@@ -19,6 +19,7 @@ import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -213,9 +214,11 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
      * <p>The Text will be aligned according to the text fields alignment setting and have a default
      * text fill of GRAY unless you have changed it by any means, e.g. with CSS "-fx-prompt-text-fill" 
      */
+    public final void setPromptText( Text value ) { placeholderProperty().set( value ); }
     public final ObjectProperty<? super Text> promptTextProperty() { return placeholderProperty(); }
     public final Text getPromptText() { return getPlaceholder() instanceof Text ? (Text) getPlaceholder() : null; }
-    public final void setPromptText( Text value ) { setPlaceholder( value ); }
+    /** setPlaceholder is not supported by StyledTextField, use setPromptText instead */ 
+    @Override public void setPlaceholder( Node value, Pos where ) { throw new UnsupportedOperationException("Use setPromptText instead"); }
     @Override protected void configurePlaceholder( Node placeholder )
     {
         placeholder.layoutYProperty().bind( Bindings.createDoubleBinding( () ->
