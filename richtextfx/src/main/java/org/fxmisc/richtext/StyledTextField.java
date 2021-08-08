@@ -213,9 +213,11 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
      * <p>The Text will be aligned according to the text fields alignment setting and have a default
      * text fill of GRAY unless you have changed it by any means, e.g. with CSS "-fx-prompt-text-fill" 
      */
+    public final void setPromptText( Text value ) { placeholderProperty().set( value ); }
     public final ObjectProperty<? super Text> promptTextProperty() { return placeholderProperty(); }
     public final Text getPromptText() { return getPlaceholder() instanceof Text ? (Text) getPlaceholder() : null; }
-    public final void setPromptText( Text value ) { setPlaceholder( value ); }
+    /** setPlaceholder is not supported by StyledTextField, use setPromptText instead */ 
+    @Override public void setPlaceholder( Node value, Pos where ) { throw new UnsupportedOperationException("Use setPromptText instead"); }
     @Override protected void configurePlaceholder( Node placeholder )
     {
         placeholder.layoutYProperty().bind( Bindings.createDoubleBinding( () ->
