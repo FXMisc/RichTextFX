@@ -397,7 +397,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
     public final ObjectProperty<Node> placeholderProperty() { return placeHolderProp; }
     public final Node getPlaceholder() { return placeHolderProp.get(); }
-    private Pos placeHolder = PosPos.CENTER;
+    private Pos placeHolderPos = Pos.CENTER;
     
     private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
     @Override public final ObjectProperty<ContextMenu> contextMenuObjectProperty() { return contextMenu; }
