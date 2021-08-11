@@ -80,7 +80,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
         // Ugly hack to get a TextFields default height :(
         // as it differs between Caspian, Modena, etc.
         TextField tf = new TextField( "GetHeight" );
-        new Scene(tf); tf.applyCss(); tf.layout();
+        new Scene(tf).snapshot( null );
         HEIGHT = tf.getHeight();
     }
 
