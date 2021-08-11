@@ -1695,7 +1695,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         if (holder != null && holder.isManaged()) {
             if (holder.isResizable()) holder.autosize();
             if (positionPlaceholder) Region.positionInArea
-        	  (
+            (
                 holder, getLayoutX(), getLayoutY(), getWidth(), getHeight(), getBaselineOffset(),
                 ins, placeHolderPos.getHpos(), placeHolderPos.getVpos(), isSnapToPixel()
             );
