@@ -157,7 +157,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 // see the note at highlightTextFill
                 JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
             }
-            getChildren().add(n);
+            if (!getChildren().contains(n)) {
+                getChildren().add(n);
+            }
         });
 
         // set up custom css shape helpers
