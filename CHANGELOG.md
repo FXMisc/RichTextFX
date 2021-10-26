@@ -1,5 +1,23 @@
 # Change Log
 
+## [v0.10.7](https://github.com/FXMisc/RichTextFX/tree/v0.10.7) (2021-10-26)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.6...v0.10.7)
+
+**Implemented enhancements:**
+
+- Added setPlaceholder( Node, Pos ) [\#1035](https://github.com/FXMisc/RichTextFX/pull/1035)
+- Bumped Flowless to 0.6.7
+- Bumped undofx to 2.1.1
+
+**Fixed bugs:**
+
+- Bug: Fixed caret disappear with large font [\#1017](https://github.com/FXMisc/RichTextFX/issues/1017)
+- Bug: Fixed CodeArea w/ LineNumberFactory throws when replacing multi-line text with .replaceText() [\#1021](https://github.com/FXMisc/RichTextFX/issues/1021)
+- Bug: Fixed CaretNode not being transparent to mouse picking [\#1032](https://github.com/FXMisc/RichTextFX/pull/1032) (Thank you [chrisf-london](https://github.com/chrisf-london))
+- Bug: Fixed async demo syntax highlighting after file load [\#1045](https://github.com/FXMisc/RichTextFX/pull/1045) (Thank you [BorisSkegin](https://github.com/sirop))
+- Bug: Fixed visibleParToAllParIndex parameter check [\#1022](https://github.com/FXMisc/RichTextFX/pull/1022)
+- Bug: Fixed StyledTextField initial height [\#1037](https://github.com/FXMisc/RichTextFX/pull/1037)
+
 ## [v0.10.6](https://github.com/FXMisc/RichTextFX/tree/v0.10.6) (2021-03-15)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.5...v0.10.6)
 
