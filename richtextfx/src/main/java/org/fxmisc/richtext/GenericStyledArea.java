@@ -1193,8 +1193,16 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final <T extends Node & Caret> Optional<Bounds> getCaretBoundsOnScreen(T caret) {
-        return virtualFlow.getCellIfVisible(caret.getParagraphIndex())
-                .map(c -> c.getNode().getCaretBoundsOnScreen(caret));
+        Optional<Bounds> caretBounds;
+        try { // This is the default mechanism, but sometimes throws just like in followCaret()
+            caretBounds = virtualFlow.getCellIfVisible(caret.getParagraphIndex())
+                    .map(c -> c.getNode().getCaretBoundsOnScreen(caret));
+        }
+        catch ( IllegalArgumentException EX ) {
+            // This is an alternative mechanism, to address https://github.com/FXMisc/RichTextFX/issues/1048
+            caretBounds = Optional.ofNullable( caretSelectionBind.getUnderlyingCaret().getLayoutBounds() );
+        }
+        return caretBounds;
     }
 
 
