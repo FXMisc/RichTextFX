@@ -1260,6 +1260,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex, region));
     }
 
+    public void showParagraphAtCenter(int paragraphIndex) {
+        double offset = Math.floor( getHeight() / 2.0 );
+        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(paragraphIndex,offset));
+    }
+
     @Override
     public void requestFollowCaret() {
         followCaretRequested = true;
