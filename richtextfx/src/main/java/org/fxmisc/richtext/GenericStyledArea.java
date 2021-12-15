@@ -1961,14 +1961,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         // the caret then the selection won't be visible. So here we check for this scenario and adjust if needed.
         if ( ! isWrapText() && scrollX > 0.0 && getParagraphSelection( parIdx ).getLength() > 0 )
         {
-            double visibleLeftX = paragrafBox.getWidth() * scrollX / 100 - getWidth() + graphicWidth;
-
             CaretNode selectionStart = new CaretNode( "", this, getSelection().getStart() );
             paragrafBox.caretsProperty().add( selectionStart );
             Bounds startBounds = paragrafBox.getCaretBounds( selectionStart );
             paragrafBox.caretsProperty().remove( selectionStart );
 
-            if ( startBounds.getMinX() - graphicWidth < visibleLeftX ) {
+            if ( startBounds.getMinX() - graphicWidth < scrollX ) {
                 region = extendLeft( startBounds, graphicWidth );
             }
         }
