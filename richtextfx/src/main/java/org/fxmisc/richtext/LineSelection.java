@@ -44,4 +44,11 @@ class LineSelection<PS, SEG, S> extends SelectionImpl<PS, SEG, S>
         int end = getArea().getAbsolutePosition( p, getArea().getCurrentLineEndInParargraph() );
         super.selectRange( start, (end > start) ? end : start+1  ); // +1 for empty lines
     }
+
+    @Override
+    public void deselect()
+    {
+        int startPos = getStartPosition();
+        super.selectRange( startPos, startPos );
+    }
 }
