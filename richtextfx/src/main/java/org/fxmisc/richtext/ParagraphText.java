@@ -354,32 +354,38 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             shape = getRangeShape(start, end);
         } else {
             // Selection includes a newline character.
+            double width = getWidth() - getInsets().getRight() - getInsets().getLeft();
             if (paragraph.length() == 0) {
                 // empty paragraph
-                shape = createRectangle(0, 0, getWidth(), getHeight());
+                shape = createRectangle(0, 0, width, getHeight());
             } else if (start == paragraph.length()) {
                 // selecting only the newline char
 
                 // calculate the bounds of the last character
                 shape = getRangeShape(start - 1, start);
                 LineTo lineToTopRight = (LineTo) shape[shape.length - 4];
-                shape = createRectangle(lineToTopRight.getX(), lineToTopRight.getY(), getWidth(), getHeight());
+                shape = createRectangle(lineToTopRight.getX(), lineToTopRight.getY(), width, getHeight());
             } else {
                 shape = getRangeShape(start, paragraph.length());
                 // Since this might be a wrapped multi-line paragraph,
                 // there may be multiple groups of (1 MoveTo, 4 LineTo objects) for each line:
                 // MoveTo(topLeft), LineTo(topRight), LineTo(bottomRight), LineTo(bottomLeft)
 
-                // We only need to adjust the top right and bottom right corners to extend to the
-                // width/height of the line, simulating a full line selection.
+                // Adjust the top right, and bottom left & right corners to extend to the
+                // correct width and height of the line, simulating a full line selection.
                 int length = shape.length;
                 if ( length > 3 )  // Prevent IndexOutOfBoundsException accessing shape[] issue #689
                 {
                     int bottomRightIndex = length - 3;
                     int topRightIndex = bottomRightIndex - 1;
+                    int bottomLeftIndex = bottomRightIndex + 1;
+
                     LineTo lineToTopRight = (LineTo) shape[topRightIndex];
-                    shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
-                    shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
+                    LineTo lineToBottomLeft = (LineTo) shape[bottomLeftIndex];
+
+                    shape[topRightIndex] = new LineTo(width, lineToTopRight.getY());
+                    shape[bottomLeftIndex] = new LineTo(lineToBottomLeft.getX(), getHeight());
+                    shape[bottomRightIndex] = new LineTo(width, getHeight());
                 }
             }
         }
@@ -402,12 +408,13 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         if (getLineCount() > 1) {
             // adjust right corners of wrapped lines
+            double width = getWidth() - getInsets().getRight() - getInsets().getLeft();
             boolean wrappedAtEndPos = (end > 0 && getLineOfCharacter(end) > getLineOfCharacter(end - 1));
             int adjustLength = shape.length - (wrappedAtEndPos ? 0 : 5);
             for (int i = 0; i < adjustLength; i++) {
                 if (shape[i] instanceof MoveTo) {
-                    ((LineTo)shape[i + 1]).setX(getWidth());
-                    ((LineTo)shape[i + 2]).setX(getWidth());
+                    ((LineTo)shape[i + 1]).setX(width);
+                    ((LineTo)shape[i + 2]).setX(width);
                 }
             }
         }
