@@ -840,8 +840,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             setInputMethodRequests( new InputMethodRequests()
             {
                 @Override public Point2D getTextLocation( int offset ) {
-                    Bounds charBounds = getCaretBounds().get();
-                    return new Point2D( charBounds.getMaxX() - 5, charBounds.getMaxY() );
+                    return getCaretBounds()
+                   	    .or( () -> getCharacterBoundsOnScreen( offset, offset ) )
+                   	    .map( cb -> new Point2D( cb.getMaxX() - 5, cb.getMaxY() ) )
+                   	    .orElseGet( () -> new Point2D( 10,10 ) );
                 }
 
                 @Override public int getLocationOffset( int x, int y ) {
