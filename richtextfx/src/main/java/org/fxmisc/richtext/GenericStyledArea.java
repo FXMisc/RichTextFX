@@ -1037,6 +1037,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             throw new IllegalArgumentException(String.format("To is greater than area's length. length=%s, to=%s", getLength(), to));
         }
 
+        if (from == to) {
+            CaretNode cursor = new CaretNode( "", this, from );
+            int parIdx = offsetToPosition( from, Bias.Forward ).getMajor();
+            ParagraphBox<?,?,?> paragrafBox = virtualFlow.getCell( parIdx ).getNode();
+            paragrafBox.caretsProperty().add( cursor );
+            Bounds cursorBounds = paragrafBox.getCaretBoundsOnScreen( cursor );
+            paragrafBox.caretsProperty().remove( cursor );
+
+            if ( cursorBounds != null && ! cursorBounds.isEmpty() )
+            {
+                Bounds emptyCharBounds = new BoundingBox( 
+                    cursorBounds.getMinX()+1, cursorBounds.getMinY()+1,
+                    cursorBounds.getWidth()-1, cursorBounds.getHeight()-2
+                );
+                return Optional.of( emptyCharBounds );
+            }
+            return Optional.empty();
+        }
+
         // no bounds exist if range is just a newline character
         if (getText(from, to).equals("\n")) {
             return Optional.empty();
