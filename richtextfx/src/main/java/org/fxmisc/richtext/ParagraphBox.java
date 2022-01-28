@@ -255,15 +255,15 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
         text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
 
-        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h));
+        graphic.filter( Node::isManaged ).ifPresent(
+            g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h)
+        );
     }
 
     double getGraphicPrefWidth() {
-        if(graphic.isPresent()) {
-            return graphic.getValue().prefWidth(-1);
-        } else {
-            return 0.0;
-        }
+        return graphic.filter( Node::isManaged )
+            .map( n -> n.prefWidth(-1) )
+            .getOrElse( 0.0 );
     }
 
     /**
