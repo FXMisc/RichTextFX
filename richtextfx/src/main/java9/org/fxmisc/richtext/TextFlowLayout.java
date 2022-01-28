@@ -72,7 +72,7 @@ class TextFlowLayout
 
         lineCount = 0;
         lineMetrics.clear();
-        double totLines = 0.0, prevMinY = 1.0, prevMaxY = -1.0;
+        double totLines = 0.0, prevMaxY = -1.0;
         int totCharSoFar = 0;
 
         for ( Node n : flow.getChildren() ) if ( n.isManaged() ) {
@@ -83,8 +83,8 @@ class TextFlowLayout
             double lines = Math.max( 1.0, Math.floor( shape.length / 5 ) );
             double nodeMinY = Math.max( 0.0, nodeBounds.getMinY() );
             
-            if ( nodeMinY >= prevMinY && lines > 1 )  totLines += lines - 1;  // Multiline Text node 
-            else if ( nodeMinY >= prevMaxY )  totLines += lines;
+            if ( nodeMinY >= prevMaxY )  totLines += lines;
+            else if ( lines > 1 )  totLines += lines - 1;  				  	  // Staggered multiline text node 
 
             if ( lineMetrics.size() < totLines ) {                            // Add additional lines
                
@@ -120,8 +120,7 @@ class TextFlowLayout
                 totCharSoFar += length;
             }
 
-            prevMaxY = nodeBounds.getMaxY();
-            prevMinY = nodeMinY;
+            prevMaxY = Math.max( prevMaxY, nodeBounds.getMaxY() );
         }
         
         lineCount = (int) totLines;
