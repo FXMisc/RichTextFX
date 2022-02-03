@@ -409,4 +409,8 @@ public class MultiChangeBuilder<PS, SEG, S> {
             throw new IllegalStateException("Cannot commit multiple changes since none have been added");
         }
     }
+    
+    public boolean hasChanges() {
+    	return list.size() > 0;
+    }
 }
