@@ -1371,6 +1371,34 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
+    /**
+     * Scrolls the text one line UP while maintaining the caret's
+     * position on screen, so that it is now on the NEXT line.
+     * <i>Note: If the caret isn't visible then this is a noop.</i>
+     */
+    public void nextLine(SelectionPolicy selectionPolicy) {
+        scrollLine( +1, selectionPolicy );
+    }
+    
+    /**
+     * Scrolls the text one line DOWN while maintaining the caret's
+     * position on screen, so that it is now on the PREVIOUS line.
+     * <i>Note: If the caret isn't visible then this is a noop.</i>
+     */
+    public void prevLine(SelectionPolicy selectionPolicy) {
+        scrollLine( -1, selectionPolicy );
+    }
+
+    /**
+     * Scrolls the text (direction*caretHeight) while maintaining the caret's current
+     * position on screen. <i>Note: If the caret isn't visible then this is a noop.</i>
+     */
+    private void scrollLine(int direction, SelectionPolicy selectionPolicy) {
+        getCaretBoundsOnScreen( getCaretSelectionBind().getUnderlyingCaret() )
+           .map( caretBounds -> (caretBounds.getHeight()-2) * direction )
+           .ifPresent( deltaY -> scrollText(deltaY, selectionPolicy) );
+    }
+
     @Override
     public void prevPage(SelectionPolicy selectionPolicy) {
     	// Paging up and we're in the first frame then move/select to start.
@@ -1395,11 +1423,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     private void page(int pgCount, SelectionPolicy selectionPolicy)
     {
+    	scrollText( pgCount * getViewportHeight(), selectionPolicy );
+    }
+
+    /**
+     * Scrolls the text by deltaY while maintaining the caret's current position on screen.
+     */
+    private void scrollText(double deltaY, SelectionPolicy selectionPolicy)
+    {
         // Use underlying caret to get the same behaviour as navigating up/down a line where the x position is sticky
         Optional<Bounds> cb = caretSelectionBind.getUnderlyingCaret().getCaretBounds();
     	
         paging = true; // Prevent scroll from reverting back to the current caret position
-        scrollYBy( pgCount * getViewportHeight() );
+        suspendVisibleParsWhile( () -> virtualFlow.scrollYBy( deltaY ) );
 
         cb.map( this::screenToLocal ) // Place caret near the same on screen position as before
             .map( b -> hit( b.getMinX(), b.getMinY()+b.getHeight()/2.0 ).getInsertionIndex() )
