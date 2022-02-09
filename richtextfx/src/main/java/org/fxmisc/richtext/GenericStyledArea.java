@@ -1354,13 +1354,21 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             Consumer<Bounds> caretListener = b -> 
             {
                 if ( lineHighlighter != null && (b.getMinY() != caretPrevY || getCaretColumn() == 1) ) {
-                    lineHighlighter.selectCurrentLine();
+                    if ( getSelection().getLength() != 0 ) lineHighlighter.deselect(); 
+                    else lineHighlighter.selectCurrentLine();
                     caretPrevY = b.getMinY();
                 }
             };
             
             caretBoundsProperty().addListener( (ob,ov,nv) -> nv.ifPresent( caretListener ) );
             getCaretBounds().ifPresent( caretListener );
+            selectionProperty().addListener( (ob,ov,nv) ->
+            {
+                if ( lineHighlighter != null ) {
+            	    if ( nv.getLength() == 0 ) lineHighlighter.selectCurrentLine();
+            	    else if ( ov.getLength() == 0 ) lineHighlighter.deselect();
+                }
+            });
             selectionSet.add( lineHighlighter );
         }
         else if ( lineHighlighter != null ) {
