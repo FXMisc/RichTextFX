@@ -55,8 +55,17 @@ public class CodeArea extends StyleClassedTextArea {
     }
 
     protected Pattern WORD_PATTERN = Pattern.compile( "\\w+" );
-    protected Pattern WORD_SPACE = Pattern.compile( "\\w*\\h*" );
+    protected Pattern WORD_OR_SYMBOL = Pattern.compile(
+            "([\\W&&[^\\h]]{2}"    // Any two non-word characters (excluding white spaces), matches like:
+                                   // !=  <=  >=  ==  +=  -=  *=  --  ++  ()  []  <>  &&  ||  //  /*  */
+            +"|\\w*)"              // Zero or more word characters [a-zA-Z_0-9]
+            +"\\h*"                // Both cases above include any trailing white space
+        );
 
+    /**
+     * Skips ONLY 1 number of word boundaries backwards.
+     * @param n is ignored !
+     */
     @Override
     public void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy)
     {
@@ -73,7 +82,7 @@ public class CodeArea extends StyleClassedTextArea {
             return;
         }
         
-        Matcher m = WORD_SPACE.matcher( getText( paragraph ) );
+        Matcher m = WORD_OR_SYMBOL.matcher( getText( paragraph ) );
         
         while ( m.find() )
         {
@@ -88,6 +97,10 @@ public class CodeArea extends StyleClassedTextArea {
         }
     }
     
+    /**
+     * Skips ONLY 1 number of word boundaries forward.
+     * @param n is ignored !
+     */
     @Override
     public void wordBreaksForwards(int n, SelectionPolicy selectionPolicy)
     {
@@ -97,7 +110,7 @@ public class CodeArea extends StyleClassedTextArea {
         int paragraph = csb.getParagraphIndex();
         int position = csb.getColumnPosition(); 
         
-        Matcher m = WORD_SPACE.matcher( getText( paragraph ) );
+        Matcher m = WORD_OR_SYMBOL.matcher( getText( paragraph ) );
         
         while ( m.find() )
         {
