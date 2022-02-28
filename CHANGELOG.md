@@ -1,5 +1,30 @@
 # Change Log
 
+## [v0.10.8](https://github.com/FXMisc/RichTextFX/tree/v0.10.8) (2022-02-28)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.7...v0.10.8)
+
+**Implemented enhancements:**
+
+- Added overwrite mode [\#1051](https://github.com/FXMisc/RichTextFX/pull/1051)
+- Added showParagraphAtCenter [\#1054](https://github.com/FXMisc/RichTextFX/pull/1054)
+- Add hasChanges to MultiChangeBuilder [\#1084](https://github.com/FXMisc/RichTextFX/pull/1084)
+- Added nextLine & prevLine, behaves like nextPage & prevPage [\#1086](https://github.com/FXMisc/RichTextFX/pull/1086)
+- Changed code area navigation to behave more like a code editor [\#1090](https://github.com/FXMisc/RichTextFX/pull/1090)
+
+**Fixed bugs:**
+
+- Bug: Fixed getCaretBounds exception [\#1049](https://github.com/FXMisc/RichTextFX/pull/1049)
+- Bug: Fixed follow caret with selection update [\#1059](https://github.com/FXMisc/RichTextFX/pull/1059)
+- Bug: Fixed line selection off not updating [\#1066](https://github.com/FXMisc/RichTextFX/pull/1066)
+- Bug: Fixed selection shape [\#1067](https://github.com/FXMisc/RichTextFX/pull/1067)
+- Bug: Fixed InputMethodRequest getTextLocation fix [\#1075](https://github.com/FXMisc/RichTextFX/pull/1075)
+- Bug: Fixed getCharacterBoundsOnScreen when from == to [\#1076](https://github.com/FXMisc/RichTextFX/pull/1076)
+- Bug: Fixed ParagraphBox not respecting the graphic node's managed property [\#1079](https://github.com/FXMisc/RichTextFX/pull/1079)
+- Bug: Fixed wrapped lines get skipped at high DPI settings when navigating with up/down arrow keys. [\#1074](https://github.com/FXMisc/RichTextFX/pull/1074)
+- Bug: Fixed linehighlighter off on selection [\#1085](https://github.com/FXMisc/RichTextFX/pull/1085)
+- Bug: Fixed wordBreaksForward not using locale [\#1089](https://github.com/FXMisc/RichTextFX/pull/1089)
+- Bug: Reverted Flowless back to 0.6.4 for Java 8 compatibility
+
 ## [v0.10.7](https://github.com/FXMisc/RichTextFX/tree/v0.10.7) (2021-10-26)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.6...v0.10.7)
 
