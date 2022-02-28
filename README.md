@@ -143,38 +143,38 @@ This renders the text in the range `(from, to)` in red.
 Requirements
 ------------
 
-[JDK8](https://jdk8.java.net/download.html) is required, because [TextFlow](http://download.java.net/jdk8/jfxdocs/javafx/scene/text/TextFlow.html), introduced in JavaFX 8.0, is used to render each line. Also, there's a heavy use of lambdas, defender methods and the stream API in the code base.
+**JDK9** or higher is required.
 
 Download
 --------
 
 ### Stable release
 
-Current stable release is 0.10.8 which is a multi-release JAR that is compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.10.9 which is ONLY compatible with Java 9 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.10.8  |
+| org.fxmisc.richtext | richtextfx  | 0.10.9  |
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.8'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.9'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.8"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.10.9"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.8/richtextfx-0.10.8.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.8/richtextfx-fat-0.10.8.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.9/richtextfx-0.10.9.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.10.9/richtextfx-fat-0.10.9.jar) and place it on your classpath.
 
 ### Snapshot releases
 

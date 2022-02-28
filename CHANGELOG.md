@@ -1,5 +1,19 @@
 # Change Log
 
+## [v0.10.9](https://github.com/FXMisc/RichTextFX/tree/v0.10.9) (2022-03-01)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.7...v0.10.9)
+
+**Implemented enhancements:**
+
+- Bumped Flowless to 0.6.9
+- Compiled with Java 9
+
+**Fixed bugs:**
+
+- Both of the following were fixed in Flowless:
+- Bug: Fixed thin horizontal lines appear between lines of text when rapidly scrolling vertically [\#105](https://github.com/FXMisc/Flowless/pull/105)
+- Bug: Fixed horizontal scrolling of an area can result in large empty blocks in the upper right [\#106](https://github.com/FXMisc/Flowless/pull/106)
+
 ## [v0.10.8](https://github.com/FXMisc/RichTextFX/tree/v0.10.8) (2022-02-28)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.7...v0.10.8)
 
