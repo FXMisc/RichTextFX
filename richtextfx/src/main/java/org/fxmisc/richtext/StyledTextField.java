@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.NamedArg;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -65,7 +66,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
 
     private final static Pattern VERTICAL_WHITESPACE = Pattern.compile( "\\v+" );
     private final static String STYLE_SHEET;
-    private final static double HEIGHT;
+    private static double HEIGHT = 24;
     static {
         List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(GenericStyledArea.getClassCssMetaData());
         styleables.add( PROMPT_TEXT_FILL );  styleables.add( TEXT_ALIGNMENT );
@@ -79,9 +80,13 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
 
         // Ugly hack to get a TextFields default height :(
         // as it differs between Caspian, Modena, etc.
-        TextField tf = new TextField( "GetHeight" );
-        new Scene(tf).snapshot( null );
-        HEIGHT = tf.getHeight();
+        Runnable snapshot = () -> {
+            TextField tf = new TextField( "GetHeight" );
+            new Scene(tf).snapshot( null );
+            HEIGHT = tf.getHeight();
+        };
+        if ( Platform.isFxApplicationThread() ) snapshot.run();
+        else Platform.runLater( snapshot );
     }
 
     private boolean selectAll = true;
