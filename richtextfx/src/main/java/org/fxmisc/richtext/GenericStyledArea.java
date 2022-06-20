@@ -1535,6 +1535,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void replace(int start, int end, SEG seg, S style) {
+        if (style == null) style = getTextStyleForInsertionAt(start);
         StyledDocument<PS, SEG, S> doc = ReadOnlyStyledDocument.fromSegment(
                 seg, getParagraphStyleForInsertionAt(start), style, segmentOps
         );
