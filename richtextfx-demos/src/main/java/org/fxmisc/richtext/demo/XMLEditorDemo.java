@@ -19,7 +19,7 @@ import javafx.stage.Stage;
 public class XMLEditorDemo extends Application {
 	
     private static final Pattern XML_TAG = Pattern.compile("(?<ELEMENT>(</?\\h*)(\\w+)([^<>]*)(\\h*/?>))"
-    		+"|(?<COMMENT><!--[^<>]+-->)");
+    		+"|(?<COMMENT><!--(.|\\v)+?-->)");
     
     private static final Pattern ATTRIBUTES = Pattern.compile("(\\w+\\h*)(=)(\\h*\"[^\"]+\")");
     
