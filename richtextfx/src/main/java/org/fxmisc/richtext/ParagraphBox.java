@@ -262,7 +262,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     double getGraphicPrefWidth() {
         return graphic.filter( Node::isManaged )
-            .map( n -> n.prefWidth(-1) )
+            .map( n -> Math.min(Math.max(n.prefWidth(-1), n.minWidth(-1)), n.maxWidth(-1)) )
             .getOrElse( 0.0 );
     }
 
