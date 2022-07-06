@@ -39,7 +39,6 @@ Table of Contents
 Who uses RichTextFX?
 --------------------
 
-- [Alt.Text](http://alttexting.com/)
 - [Arduino Harp](https://www.youtube.com/watch?v=rv5raLcsPNs)
 - [Astro IDE](https://github.com/AmrDeveloper/Astro) 
 - [BasicCAT](https://github.com/xulihang/BasicCAT/)
@@ -60,7 +59,6 @@ Who uses RichTextFX?
 - [mqtt-spy](http://kamilfb.github.io/mqtt-spy/)
 - [Nearde IDE](https://github.com/VenityStudio/Nearde-IDE)
 - [OmniEditor](https://github.com/giancosta86/OmniEditor)
-- [PsychSQL](http://softbydoc.dx.am/?page_id=135)
 - [SqlBrowserFx](https://github.com/pariskol/sqlbrowserfx/)
 - [Squirrel SQL client](http://www.squirrelsql.org/)
 - [Xanthic](https://github.com/jrguenther/Xanthic)
