@@ -53,6 +53,7 @@ Who uses RichTextFX?
 - [JabRef](http://www.jabref.org/)
 - [JDialogue](https://github.com/SkyAphid/JDialogue)
 - [JuliarFuture](https://juliar.org)
+- [JVM Explorer](https://github.com/Naton1/jvm-explorer)
 - [Kappa IDE](https://bitbucket.org/TomasMikula/kappaide/)
 - [KeenWrite](https://github.com/DaveJarvis/keenwrite)
 - [Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)
