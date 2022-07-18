@@ -69,13 +69,19 @@ class TextFlowExt extends TextFlow {
         return getUnderlineShape(range.getStart(), range.getEnd());
     }
 
+    PathElement[] getUnderlineShape(int from, int to) {
+        return getUnderlineShape(from, to, 0, 0);
+    }
+
     /**
      * @param from The index of the first character.
      * @param to The index of the last character.
+     * @param offset The distance below the baseline to draw the underline.
+     * @param wave If non-zero, draw a wavy underline with arcs of this radius.
      * @return An array with the PathElement objects which define an
      *         underline from the first to the last character.
      */
-    PathElement[] getUnderlineShape(int from, int to) {
+    PathElement[] getUnderlineShape(int from, int to, double offset, double wave) {
         // get a Path for the text underline
         List<PathElement> result = new ArrayList<>();
         
@@ -88,10 +94,34 @@ class TextFlowExt extends TextFlow {
         {
             LineTo bl = (LineTo) shape[ele+1];
             LineTo br = (LineTo) shape[ele];
-            double y = br.getY() - 2.5;
-            
-            result.add( new MoveTo( bl.getX(), y ) );
-            result.add( new LineTo( br.getX(), y ) );
+            double y = br.getY() + offset - 2.5;
+
+            if (wave <= 0) {
+                result.add(new MoveTo(bl.getX(), y));
+                result.add(new LineTo(br.getX(), y));
+            }
+            else {
+                // Round to pixel locations to reduce ugliness on low-dpi
+                // screens where different wave underlines will look very
+                // different.
+                double x = Math.round(bl.getX());
+                y = Math.round(y);
+                double rx = br.getX();
+                result.add(new MoveTo(x, y));
+                boolean sweep = true;
+                while (x < rx) {
+                    x += wave * 2;
+                    if (x > rx) {
+                        // Compute the value of y at which the arc intersects
+                        // the line x = rx.
+                        double dy = wave * Math.sin(Math.acos((wave - x + rx) / wave));
+                        if (sweep) y -= dy; else y += dy;
+                        x = rx;
+                    }
+                    result.add(new ArcTo(wave, wave, 0.0, x, y, false, sweep));
+                    sweep = !sweep;
+                }
+            }
         }
 
         return result.toArray(new PathElement[0]);
