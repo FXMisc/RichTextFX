@@ -13,8 +13,7 @@ import org.fxmisc.richtext.model.TwoLevelNavigator;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.HitInfo;
 import javafx.scene.text.TextFlow;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.*;
 
 /**
  * Adds additional API to {@link TextFlow}.
