@@ -214,7 +214,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                         underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
                     }
                     PathElement[] shape = getUnderlineShape(tuple._2.getStart(), tuple._2.getEnd(),
-                                                            attributes.offset, attributes.wave);
+                                                            attributes.offset, attributes.waveRadius);
                     underlineShape.getElements().setAll(shape);
                 },
                 addToForeground,
@@ -600,15 +600,15 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         final StrokeLineCap cap;
         final double offset;
-        final double wave;
+        final double waveRadius;
 
         UnderlineAttributes(TextExt text) {
             super(text.getUnderlineColor(), text.getUnderlineWidth(), text.underlineDashArrayProperty());
             cap = text.getUnderlineCap();
             Number offsetNumber = text.getUnderlineOffset();
             offset = offsetNumber == null ? 0 : offsetNumber.doubleValue();
-            Number waveNumber = text.getUnderlineWave();
-            wave = waveNumber == null ? 0 : waveNumber.doubleValue();
+            Number waveRadiusNumber = text.getUnderlineWaveRadius();
+            waveRadius = waveRadiusNumber == null ? 0 : waveRadiusNumber.doubleValue();
         }
 
         /**
@@ -616,7 +616,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
          */
         public boolean equalsFaster(UnderlineAttributes attr) {
             return super.equalsFaster(attr) && Objects.equals(cap, attr.cap)
-                   && offset == attr.offset && wave == attr.wave;
+                   && offset == attr.offset && waveRadius == attr.waveRadius;
         }
 
         @Override

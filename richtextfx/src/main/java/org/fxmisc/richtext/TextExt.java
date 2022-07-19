@@ -43,7 +43,7 @@ public class TextExt extends Text {
         styleables.add(StyleableProperties.UNDERLINE_COLOR);
         styleables.add(StyleableProperties.UNDERLINE_WIDTH);
         styleables.add(StyleableProperties.UNDERLINE_OFFSET);
-        styleables.add(StyleableProperties.UNDERLINE_WAVE);
+        styleables.add(StyleableProperties.UNDERLINE_WAVE_RADIUS);
         styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
         styleables.add(StyleableProperties.UNDERLINE_CAP);
 
@@ -82,8 +82,8 @@ public class TextExt extends Text {
             null, "underlineOffset", this, StyleableProperties.UNDERLINE_OFFSET
     );
 
-    private final StyleableObjectProperty<Number> underlineWave = new CustomStyleableProperty<>(
-            null, "underlineWave", this, StyleableProperties.UNDERLINE_WAVE
+    private final StyleableObjectProperty<Number> underlineWaveRadius = new CustomStyleableProperty<>(
+            null, "underlineWaveRadius", this, StyleableProperties.UNDERLINE_WAVE_RADIUS
     );
 
     private final StyleableObjectProperty<Number[]> underlineDashArray = new CustomStyleableProperty<>(
@@ -249,21 +249,21 @@ public class TextExt extends Text {
      */
     public ObjectProperty<Number> underlineOffsetProperty() { return underlineOffset; }
 
-    public Number getUnderlineWave() { return underlineWave.get(); }
-    public void setUnderlineWave(Number radius) { underlineWave.set(radius); }
+    public Number getUnderlineWaveRadius() { return underlineWaveRadius.get(); }
+    public void setUnderlineWaveRadius(Number radius) { underlineWaveRadius.set(radius); }
 
     /**
      * The arc radius used to draw a wavy underline.  If null or zero, the
      * underline will be a simple line.
      *
-     * Can be styled from CSS using the "-rtfx-underline-wave" property.
+     * Can be styled from CSS using the "-rtfx-underline-wave-radius" property.
      *
      * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
      * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
      * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
      * the value of {@link #underlineProperty()}.</p>
      */
-    public ObjectProperty<Number> underlineWaveProperty() { return underlineWave; }
+    public ObjectProperty<Number> underlineWaveRadiusProperty() { return underlineWaveRadius; }
 
     // Dash array for the text underline
     public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
@@ -338,9 +338,9 @@ public class TextExt extends Text {
             0, n -> n.underlineOffset
         );
 
-        private static final CssMetaData<TextExt, Number> UNDERLINE_WAVE = new CustomCssMetaData<>(
-            "-rtfx-underline-wave", StyleConverter.getSizeConverter(),
-            0, n -> n.underlineWave
+        private static final CssMetaData<TextExt, Number> UNDERLINE_WAVE_RADIUS = new CustomCssMetaData<>(
+            "-rtfx-underline-wave-radius", StyleConverter.getSizeConverter(),
+            0, n -> n.underlineWaveRadius
         );
 
         private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CustomCssMetaData<>(

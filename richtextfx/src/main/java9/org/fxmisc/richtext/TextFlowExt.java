@@ -76,11 +76,11 @@ class TextFlowExt extends TextFlow {
      * @param from The index of the first character.
      * @param to The index of the last character.
      * @param offset The distance below the baseline to draw the underline.
-     * @param wave If non-zero, draw a wavy underline with arcs of this radius.
+     * @param waveRadius If non-zero, draw a wavy underline with arcs of this radius.
      * @return An array with the PathElement objects which define an
      *         underline from the first to the last character.
      */
-    PathElement[] getUnderlineShape(int from, int to, double offset, double wave) {
+    PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius) {
         // get a Path for the text underline
         List<PathElement> result = new ArrayList<>();
         
@@ -95,7 +95,7 @@ class TextFlowExt extends TextFlow {
             LineTo br = (LineTo) shape[ele];
             double y = br.getY() + offset - 2.5;
 
-            if (wave <= 0) {
+            if (waveRadius <= 0) {
                 result.add(new MoveTo(bl.getX(), y));
                 result.add(new LineTo(br.getX(), y));
             }
@@ -109,15 +109,15 @@ class TextFlowExt extends TextFlow {
                 result.add(new MoveTo(x, y));
                 boolean sweep = true;
                 while (x < rx) {
-                    x += wave * 2;
+                    x += waveRadius * 2;
                     if (x > rx) {
                         // Compute the value of y at which the arc intersects
                         // the line x = rx.
-                        double dy = wave * Math.sin(Math.acos((wave - x + rx) / wave));
+                        double dy = waveRadius * Math.sin(Math.acos((waveRadius - x + rx) / waveRadius));
                         if (sweep) y -= dy; else y += dy;
                         x = rx;
                     }
-                    result.add(new ArcTo(wave, wave, 0.0, x, y, false, sweep));
+                    result.add(new ArcTo(waveRadius, waveRadius, 0.0, x, y, false, sweep));
                     sweep = !sweep;
                 }
             }
