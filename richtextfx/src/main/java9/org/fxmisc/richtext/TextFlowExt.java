@@ -93,31 +93,40 @@ class TextFlowExt extends TextFlow {
         {
             LineTo bl = (LineTo) shape[ele+1];
             LineTo br = (LineTo) shape[ele];
-            double y = br.getY() + offset - 2.5;
+
+            double y = snapSizeY( br.getY() + offset - 2.5 );
+            double leftx = snapSizeX( bl.getX() );
 
             if (waveRadius <= 0) {
-                result.add(new MoveTo(bl.getX(), y));
-                result.add(new LineTo(br.getX(), y));
+                result.add(new MoveTo( leftx, y ));
+                result.add(new LineTo( snapSizeX( br.getX() ), y ));
             }
             else {
-                // Round to pixel locations to reduce ugliness on low-dpi
-                // screens where different wave underlines will look very
-                // different.
-                double x = Math.round(bl.getX());
-                y = Math.round(y);
-                double rx = br.getX();
-                result.add(new MoveTo(x, y));
+                // For larger wave radii increase the X radius to stretch out the wave.
+                double radiusX = waveRadius > 1 ? waveRadius * 1.25 : waveRadius;
+                double rightx = br.getX();
+                result.add(new MoveTo( leftx, y ));
                 boolean sweep = true;
-                while (x < rx) {
-                    x += waveRadius * 2;
-                    if (x > rx) {
-                        // Compute the value of y at which the arc intersects
-                        // the line x = rx.
-                        double dy = waveRadius * Math.sin(Math.acos((waveRadius - x + rx) / waveRadius));
+                while ( leftx < rightx ) {
+                    leftx += waveRadius * 2;
+
+                    if (leftx > rightx) {
+                        // Since we are drawing the wave in segments, it is necessary to
+                        // clip the final arc to avoid over/underflow with larger radii,
+                        // so we must compute the y value for the point on the arc where
+                        // x = rightx.
+                        // To simplify the computation, we translate so that the center of
+                        // the arc has x = 0, and the known endpoints have y = 0.
+                        double dx = rightx - (leftx - waveRadius);
+                        double dxsq = dx * dx;
+                        double rxsq = radiusX * radiusX;
+                        double rysq = waveRadius * waveRadius;
+                        double dy = waveRadius * (Math.sqrt(1 - dxsq/rxsq) - Math.sqrt(1 - rysq/rxsq));
+
                         if (sweep) y -= dy; else y += dy;
-                        x = rx;
+                        leftx = rightx;
                     }
-                    result.add(new ArcTo(waveRadius, waveRadius, 0.0, x, y, false, sweep));
+                    result.add(new ArcTo( radiusX, waveRadius, 0.0, leftx, y, false, sweep ));
                     sweep = !sweep;
                 }
             }

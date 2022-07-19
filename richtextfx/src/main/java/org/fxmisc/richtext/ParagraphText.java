@@ -605,10 +605,12 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         UnderlineAttributes(TextExt text) {
             super(text.getUnderlineColor(), text.getUnderlineWidth(), text.underlineDashArrayProperty());
             cap = text.getUnderlineCap();
+            Number waveNumber = text.getUnderlineWaveRadius();
+            waveRadius = waveNumber == null ? 0 : waveNumber.doubleValue();
             Number offsetNumber = text.getUnderlineOffset();
-            offset = offsetNumber == null ? 0 : offsetNumber.doubleValue();
-            Number waveRadiusNumber = text.getUnderlineWaveRadius();
-            waveRadius = waveRadiusNumber == null ? 0 : waveRadiusNumber.doubleValue();
+            offset = offsetNumber == null ? waveRadius * 0.5 : offsetNumber.doubleValue();
+            // The larger the radius the bigger the offset needs to be, so
+            // a reasonable default is provided if no offset is specified.
         }
 
         /**
