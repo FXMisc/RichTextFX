@@ -42,6 +42,8 @@ public class TextExt extends Text {
         styleables.add(StyleableProperties.BORDER_DASH_ARRAY);
         styleables.add(StyleableProperties.UNDERLINE_COLOR);
         styleables.add(StyleableProperties.UNDERLINE_WIDTH);
+        styleables.add(StyleableProperties.UNDERLINE_OFFSET);
+        styleables.add(StyleableProperties.UNDERLINE_WAVE_RADIUS);
         styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
         styleables.add(StyleableProperties.UNDERLINE_CAP);
 
@@ -74,6 +76,14 @@ public class TextExt extends Text {
 
     private final StyleableObjectProperty<Number> underlineWidth = new CustomStyleableProperty<>(
             null, "underlineWidth", this, StyleableProperties.UNDERLINE_WIDTH
+    );
+
+    private final StyleableObjectProperty<Number> underlineOffset = new CustomStyleableProperty<>(
+            null, "underlineOffset", this, StyleableProperties.UNDERLINE_OFFSET
+    );
+
+    private final StyleableObjectProperty<Number> underlineWaveRadius = new CustomStyleableProperty<>(
+            null, "underlineWaveRadius", this, StyleableProperties.UNDERLINE_WAVE_RADIUS
     );
 
     private final StyleableObjectProperty<Number[]> underlineDashArray = new CustomStyleableProperty<>(
@@ -223,6 +233,38 @@ public class TextExt extends Text {
      */
     public ObjectProperty<Number> underlineWidthProperty() { return underlineWidth; }
 
+    public Number getUnderlineOffset() { return underlineOffset.get(); }
+    public void setUnderlineOffset(Number width) { underlineOffset.set(width); }
+
+    /**
+     * The offset of the underline for a section of text.  If null or zero,
+     * the underline will be drawn along the baseline of the text.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-offset" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
+    public ObjectProperty<Number> underlineOffsetProperty() { return underlineOffset; }
+
+    public Number getUnderlineWaveRadius() { return underlineWaveRadius.get(); }
+    public void setUnderlineWaveRadius(Number radius) { underlineWaveRadius.set(radius); }
+
+    /**
+     * The arc radius used to draw a wavy underline.  If null or zero, the
+     * underline will be a simple line.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-wave-radius" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
+    public ObjectProperty<Number> underlineWaveRadiusProperty() { return underlineWaveRadius; }
+
     // Dash array for the text underline
     public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
     public void setUnderlineDashArray(Number[] dashArray) { underlineDashArray.set(dashArray); }
@@ -289,6 +331,16 @@ public class TextExt extends Text {
         private static final CssMetaData<TextExt, Number> UNDERLINE_WIDTH = new CustomCssMetaData<>(
                 "-rtfx-underline-width", StyleConverter.getSizeConverter(),
                 0, n -> n.underlineWidth
+        );
+
+        private static final CssMetaData<TextExt, Number> UNDERLINE_OFFSET = new CustomCssMetaData<>(
+            "-rtfx-underline-offset", StyleConverter.getSizeConverter(),
+            0, n -> n.underlineOffset
+        );
+
+        private static final CssMetaData<TextExt, Number> UNDERLINE_WAVE_RADIUS = new CustomCssMetaData<>(
+            "-rtfx-underline-wave-radius", StyleConverter.getSizeConverter(),
+            0, n -> n.underlineWaveRadius
         );
 
         private static final CssMetaData<TextExt, Number[]> UNDERLINE_DASH_ARRAY = new CustomCssMetaData<>(

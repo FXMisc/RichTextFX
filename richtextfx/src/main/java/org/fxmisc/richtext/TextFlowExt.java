@@ -98,13 +98,19 @@ class TextFlowExt extends TextFlow {
         return getUnderlineShape(range.getStart(), range.getEnd());
     }
 
+    PathElement[] getUnderlineShape(int from, int to) {
+        return getUnderlineShape(from, to, 0, 0);
+    }
+
     /**
      * @param from The index of the first character.
      * @param to The index of the last character.
+     * @param offset Ignored (only implemented for Java 9+)
+     * @param waveRadius Ignored (only implemented for Java 9+)
      * @return An array with the PathElement objects which define an
      *         underline from the first to the last character.
      */
-    PathElement[] getUnderlineShape(int from, int to) {
+    PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius) {
         // get a Path for the text underline
         PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
 
