@@ -82,9 +82,14 @@ class TextFlowLayout
             PathElement[] shape = flow.rangeShape( totCharSoFar, totCharSoFar+length );
             double lines = Math.max( 1.0, Math.floor( shape.length / 5 ) );
             double nodeMinY = Math.max( 0.0, nodeBounds.getMinY() );
-            
-            if ( nodeMinY >= prevMaxY )  totLines += lines;
-            else if ( lines > 1 )  totLines += lines - 1;  				  	  // Staggered multiline text node 
+
+            if ( lines > 1.0 ) {                                              // Staggered multiline text node
+                if ( totLines > 0.0 ) lines--;
+                totLines += lines;
+            }
+            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line 
+                totLines++;
+            }
 
             if ( lineMetrics.size() < totLines ) {                            // Add additional lines
                
