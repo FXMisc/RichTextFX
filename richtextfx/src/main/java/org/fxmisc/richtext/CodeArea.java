@@ -54,12 +54,13 @@ public class CodeArea extends StyleClassedTextArea {
         selectRange(0, 0);
     }
 
-    protected Pattern WORD_PATTERN = Pattern.compile( "\\w+" );
+    protected Pattern WORD_PATTERN = Pattern.compile( "\\w+", Pattern.UNICODE_CHARACTER_CLASS );
     protected Pattern WORD_OR_SYMBOL = Pattern.compile(
             "([\\W&&[^\\h]]{2}"    // Any two non-word characters (excluding white spaces), matches like:
                                    // !=  <=  >=  ==  +=  -=  *=  --  ++  ()  []  <>  &&  ||  //  /*  */
             +"|\\w*)"              // Zero or more word characters [a-zA-Z_0-9]
             +"\\h*"                // Both cases above include any trailing white space
+            , Pattern.UNICODE_CHARACTER_CLASS
         );
 
     /**
