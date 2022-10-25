@@ -75,7 +75,7 @@ class TextFlowLayout
         double totLines = 0.0, prevMaxY = -1.0;
         int totCharSoFar = 0;
 
-        for ( Node n : flow.getChildren() ) if ( n.isManaged() ) {
+        for ( Node n : flow.getChildrenUnmodifiable() ) if ( n.isManaged() ) {
            
             Bounds nodeBounds = n.getBoundsInParent();
             int length = (n instanceof Text) ? ((Text) n).getText().length() : 1;
