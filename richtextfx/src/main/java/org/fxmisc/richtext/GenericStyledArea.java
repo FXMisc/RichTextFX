@@ -2026,6 +2026,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public boolean isReusable() {
+                /*
+                 *  Setting this to true will enable cell REUSE however it currently only passes all tests with JDK 11
+                 *  TODO Revisit once JRE 8 & 9 support are droppped.
+                 */
                 return reuseCells;
             }
         };
@@ -2034,10 +2038,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private boolean reuseCells = false;
     /**
-     *  Setting this to true will enable cell RE-USE instead of recreating
-     *  a paragraph cell for each render or change that is made.
+     *  Setting this to true will enable cell REUSE however it currently only passes all tests with JDK 11
+     *  TODO Revisit once JRE 8 & 9 support are droppped.
      */
-    public void setReuseCells( boolean val ) {
+    public void setReuseTextFlowCells( boolean val ) {
         reuseCells = val;
     }
 
