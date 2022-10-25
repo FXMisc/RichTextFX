@@ -9,12 +9,10 @@ import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.RichTextFXTestBase;
 import org.fxmisc.richtext.StyledTextArea;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.TextChange;
 import org.fxmisc.richtext.util.UndoUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.reactfx.SuspendableYes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,38 +42,19 @@ public class UndoManagerTests {
         }
 
         @Test  // After undo, text insertion point jumps to the start of the text area #780
-               // After undo, text insertion point jumps to the end of the text area #912
         public void undo_leaves_correct_insertion_point() {
+            long periodOfUserInactivity = UndoUtils.DEFAULT_PREVENT_MERGE_DELAY.toMillis() + 300L;
 
-            write("abc mno");
-            interact(() -> {
-                area.insertText(3," def");
-                area.appendText(" xyz");
-            });
+            write("abc def ");
+            sleep(periodOfUserInactivity);
 
-            assertEquals("abc def mno xyz",area.getText());
+            write("xyz");
+            interact(area::undo);
 
-            interact(area::undo); // removes " xyz"
-            assertEquals("abc def mno",area.getText());
-            //                       ^
-            assertEquals( area.getCaretPosition(), area.getSelection().getStart() );
-            assertEquals( 11, area.getSelection().getStart() );
+            write('g');
 
-            interact(area::undo); // removes " def"
-            assertEquals("abc mno",area.getText());
-            //               ^
-            assertEquals( area.getCaretPosition(), area.getSelection().getStart() );
-            assertEquals( 3, area.getSelection().getStart() );
-
-            interact(area::redo); // restore " def"
-            assertEquals("abc def mno",area.getText());
-            //                   ^
-            assertEquals( area.getCaretPosition(), area.getSelection().getStart() );
-            assertEquals( 7, area.getSelection().getStart() );
-
-            interact(area::undo); // removes " def"
-            interact(() -> area.insertText(area.getCaretPosition()," ?"));
-            assertEquals("abc ? mno",area.getText());
+            sleep(periodOfUserInactivity);
+            assertTrue(area.getText().endsWith("g"));
         }
 
         @Test
@@ -182,31 +161,6 @@ public class UndoManagerTests {
                assertEquals(1, richEmissions.get());
                assertEquals(0, plainEmissions.get());
             });
-        }
-        
-        @Test
-        public void testForBug904() {
-        	String firstLine = "some text\n";
-        	write( firstLine );
-        	interact( () -> area.setStyle( 5, 9, "-fx-font-weight: bold;" ) );
-        	write( "new line" );
-        	area.getUndoManager().preventMerge();
-            interact( () -> area.append( area.getContent().subSequence( firstLine.length()-1, area.getLength() ) ) );
-            interact( area::undo ); // should not throw Unexpected change received exception 
-        }
-
-        @Test
-        public void suspendable_UndoManager_skips_style_check() {
-        	
-            SuspendableYes suspendUndo = new SuspendableYes();
-            area.setUndoManager( UndoUtils.richTextSuspendableUndoManager( area, suspendUndo ) );
-            write( "some text\n" );
-            interact( () -> suspendUndo.suspendWhile( () -> area.setStyle( 5, 9, "-fx-font-weight: bold;" ) ) );
-            write( "new line" );
-            interact( area::undo ); // should not throw Unexpected change received exception
-            
-            area.setUndoManager( UndoUtils.defaultUndoManager( area ) );
-            RichTextChange.skipStyleComparison( false );
         }
 
     }

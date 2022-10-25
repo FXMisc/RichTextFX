@@ -184,11 +184,11 @@ public interface Caret {
     void moveBreaksForwards(int numOfBreaks, BreakIterator breakIterator);
 
     default void moveWordBreaksForwards(int numOfWordBreaks) {
-        moveBreaksForwards(numOfWordBreaks, BreakIterator.getWordInstance( getArea().getLocale() ));
+        moveBreaksForwards(numOfWordBreaks, BreakIterator.getWordInstance());
     }
 
     default void moveSentenceBreaksForwards(int numOfSentenceBreaks) {
-        moveBreaksForwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance( getArea().getLocale() ));
+        moveBreaksForwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
     }
 
     /**
@@ -197,11 +197,11 @@ public interface Caret {
     void moveBreaksBackwards(int numOfBreaks, BreakIterator breakIterator);
 
     default void moveWordBreaksBackwards(int numOfWordBreaks) {
-        moveBreaksBackwards(numOfWordBreaks, BreakIterator.getWordInstance( getArea().getLocale() ));
+        moveBreaksBackwards(numOfWordBreaks, BreakIterator.getWordInstance());
     }
 
     default void moveSentenceBreaksBackwards(int numOfSentenceBreaks) {
-        moveBreaksBackwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance( getArea().getLocale() ));
+        moveBreaksBackwards(numOfSentenceBreaks, BreakIterator.getSentenceInstance());
     }
 
     /**

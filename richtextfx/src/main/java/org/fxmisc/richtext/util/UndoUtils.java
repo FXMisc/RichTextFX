@@ -7,9 +7,6 @@ import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.TextChange;
 import org.fxmisc.undo.UndoManager;
 import org.fxmisc.undo.UndoManagerFactory;
-import org.fxmisc.undo.impl.MultiChangeUndoManagerImpl;
-import org.fxmisc.undo.impl.UnlimitedChangeQueue;
-import org.reactfx.SuspendableYes;
 import org.reactfx.value.Val;
 
 import javafx.beans.value.ObservableBooleanValue;
@@ -125,38 +122,6 @@ public final class UndoUtils {
     };
 
     /**
-     * Returns an UndoManager with an unlimited history that can undo/redo {@link RichTextChange}s. New changes
-     * emitted from the stream will not be merged with the previous change after {@link #DEFAULT_PREVENT_MERGE_DELAY}
-     * <p><b>Note</b>: that <u>only styling changes</u> may occur <u>during suspension</u> of the undo manager.
-     */
-    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextSuspendableUndoManager(
-            GenericStyledArea<PS, SEG, S> area, SuspendableYes suspendUndo) {
-        return richTextSuspendableUndoManager(area, DEFAULT_PREVENT_MERGE_DELAY, suspendUndo);
-    }
-
-    /**
-     * Returns an UndoManager with an unlimited history that can undo/redo {@link RichTextChange}s. New changes
-     * emitted from the stream will not be merged with the previous change after {@code preventMergeDelay}.
-     * <p><b>Note</b>: that <u>only styling changes</u> may occur <u>during suspension</u> of the undo manager.
-     */
-    public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextSuspendableUndoManager(
-            GenericStyledArea<PS, SEG, S> area, Duration preventMergeDelay, SuspendableYes suspendUndo) {
-
-        RichTextChange.skipStyleComparison( true );
-
-        return new MultiChangeUndoManagerImpl<>
-        (
-            new UnlimitedChangeQueue<>(),
-            TextChange::invert,
-            applyMultiRichTextChange(area),
-            TextChange::mergeWith,
-            TextChange::isIdentity,
-            area.multiRichChanges().conditionOn(suspendUndo),
-            preventMergeDelay
-        );
-    };
-
-    /**
      * Returns an UndoManager with an unlimited history that can undo/redo {@link PlainTextChange}s. New changes
      * emitted from the stream will not be merged with the previous change
      * after {@link #DEFAULT_PREVENT_MERGE_DELAY}
@@ -214,10 +179,7 @@ public final class UndoUtils {
      * by {@code area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted()}.
      */
     public static <PS, SEG, S> Consumer<PlainTextChange> applyPlainTextChange(GenericStyledArea<PS, SEG, S> area) {
-        return change -> {
-            area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted());
-            moveToChange( area, change );
-        };
+        return change -> area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted());
     }
 
     /**
@@ -226,10 +188,7 @@ public final class UndoUtils {
      */
     public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(
             GenericStyledArea<PS, SEG, S> area) {
-        return change -> {
-            area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
-            moveToChange( area, change );
-        };
+        return change -> area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
     }
 
     /**
@@ -244,7 +203,6 @@ public final class UndoUtils {
                 builder.replaceTextAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
             }
             builder.commit();
-            moveToChange( area, changeList.get( changeList.size()-1 ) );
         };
     }
 
@@ -260,20 +218,7 @@ public final class UndoUtils {
                 builder.replaceAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
             }
             builder.commit();
-            moveToChange( area, changeList.get( changeList.size()-1 ) );
         };
     }
 
-    /*
-     * Address #912 "After undo/redo, new text is inserted at the end".
-     * Without breaking PositionTests. (org.fxmisc.richtext.api.caret)
-     */
-    private static void moveToChange( GenericStyledArea area, TextChange chg )
-    {
-        int pos = chg.getPosition();
-        int len = chg.getNetLength();
-        if ( len > 0 ) pos += len;
-
-        area.moveTo( Math.min( pos, area.getLength() ) );
-    }
 }

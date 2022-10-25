@@ -93,7 +93,6 @@ public class JavaKeywordsAsyncDemo extends Application {
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         Subscription cleanupWhenDone = codeArea.multiPlainChanges()
                 .successionEnds(Duration.ofMillis(500))
-                .retainLatestUntilLater(executor)
                 .supplyTask(this::computeHighlightingAsync)
                 .awaitLatest(codeArea.multiPlainChanges())
                 .filterMap(t -> {

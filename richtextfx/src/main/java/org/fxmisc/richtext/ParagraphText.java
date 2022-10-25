@@ -213,9 +213,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                     if (attributes.dashArray != null) {
                         underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
                     }
-                    PathElement[] shape = getUnderlineShape(tuple._2.getStart(), tuple._2.getEnd(),
-                                                            attributes.offset, attributes.waveRadius);
-                    underlineShape.getElements().setAll(shape);
+                    underlineShape.getElements().setAll(getUnderlineShape(tuple._2));
                 },
                 addToForeground,
                 clearUnusedShapes
@@ -234,6 +232,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         .forEach( t -> JavaFXCompatibility.Text_selectionFillProperty(t).unbind() ); 
 
         getChildren().clear();
+        paragraph = null;
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
@@ -242,7 +241,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     public <T extends Node & Caret> double getCaretOffsetX(T caret) {
         layout(); // ensure layout, is a no-op if not dirty
-        if ( isVisible() /* notFolded */ ) checkWithinParagraph(caret);
+        checkWithinParagraph(caret);
         Bounds bounds = caret.getLayoutBounds();
         return (bounds.getMinX() + bounds.getMaxX()) / 2;
     }
@@ -356,38 +355,32 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             shape = getRangeShape(start, end);
         } else {
             // Selection includes a newline character.
-            double width = getWidth() - getInsets().getRight() - getInsets().getLeft();
             if (paragraph.length() == 0) {
                 // empty paragraph
-                shape = createRectangle(0, 0, width, getHeight());
+                shape = createRectangle(0, 0, getWidth(), getHeight());
             } else if (start == paragraph.length()) {
                 // selecting only the newline char
 
                 // calculate the bounds of the last character
                 shape = getRangeShape(start - 1, start);
                 LineTo lineToTopRight = (LineTo) shape[shape.length - 4];
-                shape = createRectangle(lineToTopRight.getX(), lineToTopRight.getY(), width, getHeight());
+                shape = createRectangle(lineToTopRight.getX(), lineToTopRight.getY(), getWidth(), getHeight());
             } else {
                 shape = getRangeShape(start, paragraph.length());
                 // Since this might be a wrapped multi-line paragraph,
                 // there may be multiple groups of (1 MoveTo, 4 LineTo objects) for each line:
                 // MoveTo(topLeft), LineTo(topRight), LineTo(bottomRight), LineTo(bottomLeft)
 
-                // Adjust the top right, and bottom left & right corners to extend to the
-                // correct width and height of the line, simulating a full line selection.
+                // We only need to adjust the top right and bottom right corners to extend to the
+                // width/height of the line, simulating a full line selection.
                 int length = shape.length;
                 if ( length > 3 )  // Prevent IndexOutOfBoundsException accessing shape[] issue #689
                 {
                     int bottomRightIndex = length - 3;
                     int topRightIndex = bottomRightIndex - 1;
-                    int bottomLeftIndex = bottomRightIndex + 1;
-
                     LineTo lineToTopRight = (LineTo) shape[topRightIndex];
-                    LineTo lineToBottomLeft = (LineTo) shape[bottomLeftIndex];
-
-                    shape[topRightIndex] = new LineTo(width, lineToTopRight.getY());
-                    shape[bottomLeftIndex] = new LineTo(lineToBottomLeft.getX(), getHeight());
-                    shape[bottomRightIndex] = new LineTo(width, getHeight());
+                    shape[topRightIndex] = new LineTo(getWidth(), lineToTopRight.getY());
+                    shape[bottomRightIndex] = new LineTo(getWidth(), getHeight());
                 }
             }
         }
@@ -410,13 +403,12 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
         if (getLineCount() > 1) {
             // adjust right corners of wrapped lines
-            double width = getWidth() - getInsets().getRight() - getInsets().getLeft();
             boolean wrappedAtEndPos = (end > 0 && getLineOfCharacter(end) > getLineOfCharacter(end - 1));
             int adjustLength = shape.length - (wrappedAtEndPos ? 0 : 5);
             for (int i = 0; i < adjustLength; i++) {
                 if (shape[i] instanceof MoveTo) {
-                    ((LineTo)shape[i + 1]).setX(width);
-                    ((LineTo)shape[i + 2]).setX(width);
+                    ((LineTo)shape[i + 1]).setX(getWidth());
+                    ((LineTo)shape[i + 2]).setX(getWidth());
                 }
             }
         }
@@ -599,26 +591,17 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private static class UnderlineAttributes extends LineAttributesBase {
 
         final StrokeLineCap cap;
-        final double offset;
-        final double waveRadius;
 
         UnderlineAttributes(TextExt text) {
             super(text.getUnderlineColor(), text.getUnderlineWidth(), text.underlineDashArrayProperty());
             cap = text.getUnderlineCap();
-            Number waveNumber = text.getUnderlineWaveRadius();
-            waveRadius = waveNumber == null ? 0 : waveNumber.doubleValue();
-            Number offsetNumber = text.getUnderlineOffset();
-            offset = offsetNumber == null ? waveRadius * 0.5 : offsetNumber.doubleValue();
-            // The larger the radius the bigger the offset needs to be, so
-            // a reasonable default is provided if no offset is specified.
         }
 
         /**
          * Same as {@link #equals(Object)} but no need to check the object for its class
          */
         public boolean equalsFaster(UnderlineAttributes attr) {
-            return super.equalsFaster(attr) && Objects.equals(cap, attr.cap)
-                   && offset == attr.offset && waveRadius == attr.waveRadius;
+            return super.equalsFaster(attr) && Objects.equals(cap, attr.cap);
         }
 
         @Override

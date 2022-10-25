@@ -44,7 +44,6 @@ class GenericStyledAreaBehavior {
     }
 
     private static final InputMapTemplate<GenericStyledAreaBehavior, ? super Event> EVENT_TEMPLATE;
-    private static final Predicate<KeyEvent> controlKeysFilter;
 
     static {
         SelectionPolicy selPolicy = isMac
@@ -66,7 +65,7 @@ class GenericStyledAreaBehavior {
         KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
         KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
-
+		
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
                 consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
@@ -89,9 +88,7 @@ class GenericStyledAreaBehavior {
                 consume(keyPressed(SHORTCUT_Z), (b, e) -> b.view.undo()),
                 consume(
                         anyOf(keyPressed(SHORTCUT_Y), keyPressed(SHORTCUT_SHIFT_Z)),
-                        (b, e) -> b.view.redo()),
-                // insert/overwrite
-                consume(keyPressed(INSERT), GenericStyledAreaBehavior::toggelOverwriteMode)
+                        (b, e) -> b.view.redo())
         );
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> edits = when(b -> b.view.isEditable(), editsBase);
 
@@ -170,28 +167,18 @@ class GenericStyledAreaBehavior {
                 ), (b, e) -> b.view.copy()
         );
 
-        controlKeysFilter = e -> {
-            if (isWindows) {
-                //Windows input. ALT + CONTROL accelerators are the same as ALT GR accelerators.
-                //If ALT + CONTROL are pressed and the given character is valid then print the character.
-                //Else, don't consume the event. This change allows Windows users to use accelerators and
-                //printing special characters at the same time.
-                // (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
-                //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
-                if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
-                	    && e.getCharacter().getBytes()[0] != 0) return true;
-                
-                return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
-            }
-        	return !e.isControlDown() && !e.isMetaDown();
-        };
+        Predicate<KeyEvent> noControlKeys = e ->
+                // filter out control keys
+                (!e.isControlDown() && !e.isMetaDown())
+                // except on Windows allow the Ctrl+Alt combination (produced by AltGr)
+                || (isWindows && !e.isMetaDown() && (!e.isControlDown() || e.isAltDown()));
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
                 e.getCode().isDigitKey() ||
                 e.getCode().isWhitespaceKey();
 
-        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(controlKeysFilter)));
+        InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(noControlKeys)));
 
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyPressedTemplate = edits
                 .orElse(otherNavigation).ifConsumed((b, e) -> b.view.clearTargetCaretOffset())
@@ -204,7 +191,7 @@ class GenericStyledAreaBehavior {
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> keyTypedBase = consume(
                 // character input
-                EventPattern.keyTyped().onlyIf(controlKeysFilter.and(e -> isLegal(e.getCharacter()))),
+                EventPattern.keyTyped().onlyIf(noControlKeys.and(e -> isLegal(e.getCharacter()))),
                 GenericStyledAreaBehavior::keyTyped
         ).ifConsumed((b, e) -> b.view.requestFollowCaret());
         InputMapTemplate<GenericStyledAreaBehavior, ? super KeyEvent> keyTypedTemplate = when(b -> b.view.isEditable(), keyTypedBase);
@@ -273,7 +260,7 @@ class GenericStyledAreaBehavior {
 
         InputMapTemplate<GenericStyledAreaBehavior, ? super ContextMenuEvent> contextMenuEventTemplate = consumeWhen(
                 EventPattern.eventType(ContextMenuEvent.CONTEXT_MENU_REQUESTED),
-                b -> !b.view.isDisabled(),
+                b -> !b.view.isDisabled() && b.view.isContextMenuPresent(),
                 GenericStyledAreaBehavior::showContextMenu
         );
 
@@ -299,11 +286,6 @@ class GenericStyledAreaBehavior {
      * ********************************************************************** */
 
     private final GenericStyledArea<?, ?, ?> view;
-
-    /**
-     * Indicates weather the area is in overwrite or insert mode.
-     */
-    private boolean overwriteMode = false;
 
     /**
      * Indicates whether an existing selection is being dragged by the user.
@@ -359,19 +341,17 @@ class GenericStyledAreaBehavior {
             return;
         }
 
-        IndexRange range = view.getSelection();
-        int start = range.getStart();
-        int end = range.getEnd();
-
-        if (overwriteMode && start == end) {
-            end = Math.min(end+1, view.getLength());
-        }
-
-        view.replaceText(start, end, text);
+        view.replaceSelection(text);
     }
 
-    private void toggelOverwriteMode(KeyEvent ignore) {
-        overwriteMode = !overwriteMode;
+    private static boolean isLegal(String text) {
+        int n = text.length();
+        for(int i = 0; i < n; ++i) {
+            if(Character.isISOControl(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void deleteBackward(KeyEvent ignore) {
@@ -484,13 +464,11 @@ class GenericStyledAreaBehavior {
      * ********************************************************************** */
 
     private void showContextMenu(ContextMenuEvent e) {
-        view.requestFocus();
-        if ( view.isContextMenuPresent() ) {
-            ContextMenu menu = view.getContextMenu();
-            double x = e.getScreenX() + view.getContextMenuXOffset();
-            double y = e.getScreenY() + view.getContextMenuYOffset();
-            menu.show( view, x, y );
-        }
+        ContextMenu menu = view.getContextMenu();
+        double xOffset = view.getContextMenuXOffset();
+        double yOffset = view.getContextMenuYOffset();
+
+        menu.show(view, e.getScreenX() + xOffset, e.getScreenY() + yOffset);
     }
 
     private void handleShiftPress(MouseEvent e) {
@@ -604,19 +582,5 @@ class GenericStyledAreaBehavior {
 
     private static double clamp(double x, double min, double max) {
         return Math.min(Math.max(x, min), max);
-    }
-
-    static boolean isControlKeyEvent(KeyEvent event) {
-    	return controlKeysFilter.test(event);
-    }
-
-    private static boolean isLegal(String text) {
-        int n = text.length();
-        for(int i = 0; i < n; ++i) {
-            if(Character.isISOControl(text.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 }

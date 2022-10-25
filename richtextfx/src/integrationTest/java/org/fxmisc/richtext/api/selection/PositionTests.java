@@ -31,24 +31,6 @@ public class PositionTests extends InlineCssTextAreaAppTest {
     private void selectRight() {
         selection.selectRange(leftText.length(), area.getLength());
     }
-    
-    @Test
-    public void initial_range_specified_via_constructor_is_honored() {
-        interact(() -> {
-            area.appendText( "\n"+ fullText );
-            area.appendText( "\n"+ fullText );
-        });
-
-    	int paragraphOne = 1;
-    	int start = area.getAbsolutePosition( paragraphOne, leftText.length() );
-    	int end = start + rightText.length();
-
-    	Selection s0 = new SelectionImpl<>( "constructor", area, start, end );
-    	assertEquals( leftText.length(), s0.getStartColumnPosition() );
-    	assertEquals( paragraphOne, s0.getStartParagraphIndex() );
-
-    	interact( () -> area.replaceText(fullText) );
-    }
 
     @Test
     public void start_position_is_correct_when_change_occurs_before_position() {

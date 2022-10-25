@@ -78,9 +78,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
         wrapText.addListener((obs, old, w) -> requestLayout());
     }
 
-    private final Val<Boolean> isFolded;
-    public boolean isFolded() { return isFolded.getValue(); }
-
     private final Var<Integer> index;
     public Val<Integer> indexProperty() { return index; }
     public void setIndex(int index) { this.index.setValue(index); }
@@ -96,8 +93,10 @@ class ParagraphBox<PS, SEG, S> extends Region {
                  Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.getStyleClass().add("paragraph-box");
         this.text = new ParagraphText<>(par, nodeFactory);
-        applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         isFolded = Val.wrap( text.visibleProperty().not() );
+
+        applyParagraphStyle.accept(this.text, par.getParagraphStyle());
+        paragraphStyler = applyParagraphStyle;
         
         // start at -1 so that the first time it is displayed, the caret at pos 0 is not
         // accidentally removed from its parent and moved to this node's ParagraphText
@@ -239,7 +238,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     @Override
     protected double computePrefHeight(double width) {
-        if ( isFolded.getValue() ) return 0.0;
         Insets insets = getInsets();
         double overhead = getGraphicPrefWidth() + insets.getLeft() + insets.getRight();
         return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom() + text.getLineSpacing();
@@ -255,15 +253,15 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
         text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
 
-        graphic.filter( Node::isManaged ).ifPresent(
-            g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h)
-        );
+        graphic.ifPresent(g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h));
     }
 
     double getGraphicPrefWidth() {
-        return graphic.filter( Node::isManaged )
-            .map( n -> Math.min(Math.max(n.prefWidth(-1), n.minWidth(-1)), n.maxWidth(-1)) )
-            .getOrElse( 0.0 );
+        if(graphic.isPresent()) {
+            return graphic.getValue().prefWidth(-1);
+        } else {
+            return 0.0;
+        }
     }
 
     /**
