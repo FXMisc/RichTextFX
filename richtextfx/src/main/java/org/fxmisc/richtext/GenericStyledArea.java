@@ -2009,12 +2009,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public void dispose() {
-                box.highlightTextFillProperty().unbind();
-                box.wrapTextProperty().unbind();
-                box.graphicFactoryProperty().unbind();
-                box.graphicOffset.unbind();
-                box.dispose();
-
                 firstParPseudoClass.unsubscribe();
                 lastParPseudoClass.unsubscribe();
 
@@ -2022,11 +2016,33 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 hasCaretPseudoClass.unsubscribe();
 
                 selectionSubscription.unsubscribe();
+                box.dispose();
+            }
+
+            @Override
+            public void updateItem(Paragraph<PS, SEG, S> para) {
+                box.updateItem(para);
+            }
+
+            @Override
+            public boolean isReusable() {
+                return reuseCells;
             }
         };
     }
 
-    /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
+
+    private boolean reuseCells = false;
+    /**
+     *  Setting this to true will enable cell RE-USE instead of recreating
+     *  a paragraph cell for each render or change that is made.
+     */
+    public void setReuseCells( boolean val ) {
+        reuseCells = val;
+    }
+
+ 
+   /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
     private void followCaret() {
         int parIdx = getCurrentParagraph();
         ParagraphBox<PS, SEG, S> paragrafBox = virtualFlow.getCell( parIdx ).getNode();

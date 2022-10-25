@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyledSegment;
@@ -21,6 +22,7 @@ import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -71,6 +73,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     }
 
     private Paragraph<PS, SEG, S> paragraph;
+    private Function<StyledSegment<SEG, S>, Node> nodeMaker;
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
     private final CustomCssShapeHelper<BorderAttributes> borderShapeHelper;
@@ -89,8 +92,9 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     ParagraphText(Paragraph<PS, SEG, S> par, Function<StyledSegment<SEG, S>, Node> nodeFactory) {
         this.paragraph = par;
+        nodeMaker = nodeFactory;
 
-        getStyleClass().add("paragraph-text");
+        getStyleClass().add("paragraph-text"); // If changed also amend ParagraphBox.updateItem
 
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
@@ -112,7 +116,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 p.layoutYProperty().bind(topInset);
 
                 getChildren().add(selectionShapeStartIndex, p);
-                updateSingleSelection(p);
+                Platform.runLater(() -> updateSingleSelection(p));
             }
         };
         selections.addListener( selectionPathListener );
@@ -134,7 +138,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 caret.layoutYProperty().bind(topInset);
 
                 getChildren().add(caret);
-                updateSingleCaret(caret);
+                Platform.runLater(() -> updateSingleCaret(caret));
             }
         };
         carets.addListener( caretNodeListener );
@@ -241,6 +245,31 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     public Paragraph<PS, SEG, S> getParagraph() {
         return paragraph;
+    }
+
+    public void setParagraph(Paragraph<PS, SEG, S> par) {
+        getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
+            .forEach( t -> t.selectionFillProperty().unbind() ); 
+
+        selectionShapeStartIndex = 0;
+        backgroundShapeHelper.reset();
+        underlineShapeHelper.reset();
+        borderShapeHelper.reset();
+        getChildren().clear();
+        selections.clear();
+        carets.clear();
+
+        getChildren().addAll( par.getStyledSegments().stream().map(nodeMaker)
+        .peek( n -> {
+            if (n instanceof TextExt) {
+                TextExt t = (TextExt) n;
+                // XXX: binding selectionFill to textFill,
+                // see the note at highlightTextFill
+                t.selectionFillProperty().bind(t.fillProperty());
+            }
+        }).collect( Collectors.toList() ) );
+
+        paragraph = par;
     }
 
     public <T extends Node & Caret> double getCaretOffsetX(T caret) {
@@ -565,7 +594,11 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             // clear, since it's no longer needed
             ranges.clear();
         }
-    }
+ 
+        void reset() {
+            shapes.clear();
+        }
+   }
 
     private static class BorderAttributes extends LineAttributesBase {
 
