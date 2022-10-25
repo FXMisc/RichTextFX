@@ -1,0 +1,38 @@
+.styled-text-field
+{
+    -fx-cursor: text;
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-background-color: -fx-shadow-highlight-color, -fx-text-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 3, 2, 2;
+    -fx-padding: 3 5 4 5;
+}
+.styled-text-field:focused
+{
+    -fx-background-color: -fx-focus-color, -fx-text-box-border, -fx-control-inner-background;
+    -fx-background-insets: -0.4, 1, 2;
+    -fx-background-radius: 3.4, 2, 2;
+}
+.styled-text-field:disabled
+{
+    -fx-opacity: -fx-disabled-opacity;
+}
+.main-selection
+{
+    -fx-fill: #0093ff;
+}
+
+// Text alignment classes for StyleClassedTextField
+
+.center
+{
+    -fx-text-alignment: center;
+}
+.left
+{
+    -fx-text-alignment: left;
+}
+.right
+{
+    -fx-text-alignment: right;
+}

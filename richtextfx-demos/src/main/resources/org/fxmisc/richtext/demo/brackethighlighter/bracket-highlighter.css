@@ -1,0 +1,6 @@
+.code-area .paragraph-box .text {
+    -fx-font-size: 18px;
+}
+.code-area .paragraph-box .text.match {
+    -rtfx-background-color: #00000033;
+}

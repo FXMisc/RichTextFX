@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 
-import static org.fxmisc.richtext.GenericStyledArea.EMPTY_RANGE;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 import static org.reactfx.EventStreams.invalidationsOf;
@@ -186,7 +185,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         selectedDocument = documentVal.suspendable();
         selectedText = documentVal.map(StyledDocument::getText).suspendable();
 
-        start2DPosition = Var.newSimpleVar(position(0, 0));
+        start2DPosition = Var.newSimpleVar(area.offsetToPosition(range.getStart(), Forward));
         end2DPosition = start2DPosition.map(startPos2D ->
                 getLength() == 0
                         ? startPos2D
@@ -222,64 +221,47 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         ).suspendable();
 
         manageSubscription(area.multiPlainChanges(), list -> {
-            int finalStart = getStartPosition();
-            int finalEnd = getEndPosition();
+            int selectStart = getStartPosition();
+            int selectEnd = getEndPosition();
             for (PlainTextChange plainTextChange : list) {
-                int netLength = plainTextChange.getNetLength();
-                //if (netLength != 0)  Causes IndexOutOfBoundsException in ParagraphText.getRangeShapeSafely issue #689
-                // but can be safely reimplemented if this causes other issues.
-                {
-                    int indexOfChange = plainTextChange.getPosition();
-                    // in case of a replacement: "hello there" -> "hi."
-                    int endOfChange = indexOfChange + Math.abs(netLength);
+                int changeLength = plainTextChange.getNetLength();
+                int indexOfChange = plainTextChange.getPosition();
+                // in case of a replacement: "hello there" -> "hi."
+                int endOfChange = indexOfChange + Math.abs(changeLength);
 
-                    if (getLength() != 0) {
+                /*
+                    "->" means add (positive) netLength to position
+                    "<-" means add (negative) netLength to position
+                    "x" means don't update position
 
-                        /*
-                            "->" means add (positive) netLength to position
-                            "<-" means add (negative) netLength to position
-                            "x" means don't update position
+                    "start / end" means what should be done in each case for each anchor if they differ
 
-                            "start / end" means what should be done in each case for each anchor if they differ
+                    "+a" means one of the anchors was included in the deleted portion of content
+                    "-a" means one of the anchors was not included in the deleted portion of content
+                    Before/At/After means indexOfChange "<" / "==" / ">" position
 
-                            "+a" means one of the anchors was included in the deleted portion of content
-                            "-a" means one of the anchors was not included in the deleted portion of content
-                            Before/At/After means indexOfChange "<" / "==" / ">" position
-
-                                   |   Before +a   | Before -a |   At   | After
-                            -------+---------------+-----------+--------+------
-                            Add    |      N/A      |    ->     | -> / x | x
-                            Delete | indexOfChange |    <-     |    x   | x
-                         */
-                        if (indexOfChange == finalStart && netLength > 0) {
-                            finalStart = finalStart + netLength;
-                        } else if (indexOfChange < finalStart) {
-                            finalStart = finalStart < endOfChange
-                                    ? indexOfChange
-                                    : finalStart + netLength;
-                        }
-                        if (indexOfChange < finalEnd) {
-                            finalEnd = finalEnd < endOfChange
-                                    ? indexOfChange
-                                    : finalEnd + netLength;
-                        }
-                        if (finalStart > finalEnd) {
-                            finalStart = finalEnd;
-                        }
-                    } else {
-                        // force-update internalSelection in case empty selection is
-                        // at the end of area and a character was deleted
-                        // (prevents a StringIndexOutOfBoundsException because
-                        // end is one char farther than area's length).
-
-                        if (getEndPosition() > 0) {
-                            finalStart = area.getLength();
-                            finalEnd = finalStart;
-                        }
-                    }
+                           |   Before +a   | Before -a |   At   | After
+                    -------+---------------+-----------+--------+------
+                    Add    |      N/A      |    ->     | -> / x | x
+                    Delete | indexOfChange |    <-     |    x   | x
+                */
+                if (indexOfChange == selectStart && changeLength > 0) {
+                    selectStart = selectStart + changeLength;
+                } else if (indexOfChange < selectStart) {
+                    selectStart = selectStart < endOfChange
+                            ? indexOfChange
+                            : selectStart + changeLength;
+                }
+                if (indexOfChange < selectEnd) {
+                    selectEnd = selectEnd < endOfChange
+                            ? indexOfChange
+                            : selectEnd + changeLength;
+                }
+                if (selectStart > selectEnd) {
+                    selectStart = selectEnd;
                 }
             }
-            selectRange(finalStart, finalEnd);
+            selectRange(selectStart, selectEnd);
         });
 
         Suspendable omniSuspendable = Suspendable.combine(
@@ -400,7 +382,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
             return;
         }
 
-        BreakIterator breakIterator = BreakIterator.getWordInstance();
+        BreakIterator breakIterator = BreakIterator.getWordInstance( getArea().getLocale() );
         breakIterator.setText(area.getText());
         breakIterator.preceding(wordPositionInArea);
         breakIterator.next();
@@ -462,29 +444,8 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
         subscription = subscription.and(s);
     }
 
-    private IndexRange getParagraphSelection(int paragraph) {
-        int startPar = getStartParagraphIndex();
-        int endPar = getEndParagraphIndex();
-
-        if(paragraph < startPar || paragraph > endPar) {
-            return EMPTY_RANGE;
-        }
-
-        int start = paragraph == startPar ? getStartColumnPosition() : 0;
-        int end = paragraph == endPar ? getEndColumnPosition() : area.getParagraphLength(paragraph) + 1;
-
-        // force rangeProperty() to be valid
-        // selection.getRange(); // not sure why this line is even here...
-
-        return new IndexRange(start, end);
-    }
-
-    private Position position(int row, int col) {
-        return area.position(row, col);
-    }
-
     private int textPosition(int row, int col) {
-        return position(row, col).toOffset();
+        return area.position(row, col).toOffset();
     }
 
     private void moveBoundary(Direction direction, int amount, int oldBoundaryPosition,

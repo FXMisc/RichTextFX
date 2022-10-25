@@ -127,6 +127,9 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
      * @param <S> The type of the style of individual segments.
      */
     public static <PS, SEG, S> ReadOnlyStyledDocument<PS, SEG, S> fromSegment(SEG segment,  PS paragraphStyle, S style, SegmentOps<SEG, S> segmentOps) {
+        if ( segment instanceof String && segmentOps instanceof TextOps ) {
+            return fromString( (String) segment, paragraphStyle, style, (TextOps<SEG,S>) segmentOps );
+        }
         Paragraph<PS, SEG, S> content = new Paragraph<PS, SEG, S>(paragraphStyle, segmentOps, segment, style);
         List<Paragraph<PS, SEG, S>> res = Collections.singletonList(content);
         return new ReadOnlyStyledDocument<>(res);
@@ -419,7 +422,8 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
             return start.map(l0::split).map((l, removed) -> {
                 ReadOnlyStyledDocument<PS, SEG, S> replacement = f.apply(removed);
                 ReadOnlyStyledDocument<PS, SEG, S> doc = l.concatR(replacement).concat(r);
-                RichTextChange<PS, SEG, S> change = new RichTextChange<>(pos, removed, replacement);
+                // Next we use doc.subSequence instead of replacement because Paragraph.concat's returned paragraph style can vary.
+                RichTextChange<PS, SEG, S> change = new RichTextChange<>(pos, removed, doc.subSequence(pos, pos+replacement.length()));
                 List<Paragraph<PS, SEG, S>> addedPars = doc.getParagraphs().subList(start.major, start.major + replacement.getParagraphCount());
                 MaterializedListModification<Paragraph<PS, SEG, S>> parChange =
                         MaterializedListModification.create(start.major, removedPars, addedPars);

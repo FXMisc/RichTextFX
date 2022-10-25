@@ -8,7 +8,6 @@ import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.PlainTextChange;
-import org.fxmisc.richtext.model.Replacement;
 import org.fxmisc.richtext.model.RichTextChange;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -17,6 +16,7 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.value.Var;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -40,6 +40,12 @@ public interface TextEditingArea<PS, SEG, S> {
      */
     default int getLength() { return lengthProperty().getValue(); }
     ObservableValue<Integer> lengthProperty();
+
+    /**
+     * This is used to determine word and sentence breaks while navigating or selecting.
+     * Override this method if your paragraph or text style accommodates Locales as well.
+     */
+    default Locale getLocale() { return Locale.getDefault(); }
 
     /**
      * Text content of this text-editing area.

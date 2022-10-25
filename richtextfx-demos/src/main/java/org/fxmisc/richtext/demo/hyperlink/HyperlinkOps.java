@@ -57,31 +57,10 @@ public class HyperlinkOps<S> extends SegmentOpsBase<Hyperlink, S> {
             return Optional.empty();
         }
 
-        String original = leftSeg.getOriginalDisplayedText();
         String leftText = leftSeg.getDisplayedText();
         String rightText = rightSeg.getDisplayedText();
-        int leftOffset = 0;
-        int rightOffset = 0;
-        for (int i = 0; i <= original.length() - leftText.length(); i++) {
-            if (original.regionMatches(i, leftText, 0, leftText.length())) {
-                leftOffset = i;
-                break;
-            }
-        }
-        for (int i = 0; i <= original.length() - rightText.length(); i++) {
-            if (original.regionMatches(i, rightText, 0, rightText.length())) {
-                rightOffset = i;
-                break;
-            }
-        }
 
-        if (rightOffset + rightText.length() == leftOffset) {
-            return Optional.of(leftSeg.mapDisplayedText(rightText + leftText));
-        } else if (leftOffset + leftText.length() == rightOffset) {
-            return Optional.of(leftSeg.mapDisplayedText(leftText + rightText));
-        } else {
-            return Optional.empty();
-        }
+        return Optional.of(leftSeg.mapDisplayedText(leftText + rightText));
     }
 
 }

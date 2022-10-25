@@ -1,9 +1,36 @@
 package org.fxmisc.richtext.api;
 
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class ReplaceTextTests extends InlineCssTextAreaAppTest {
+
+    @Test
+    public void replaceText_does_not_cause_index_out_of_bounds_exception()
+    {
+        interact( () ->
+        {
+            String test = "abc\n";
+            area.replaceText( test );
+            area.insertText( 0, test +"def\n" );
+
+            // An IndexOutOfBoundsException occurs when trimming MaterializedListModification
+            // in GenericEditableStyledDocumentBase.ParagraphList.observeInputs()
+            area.replaceText( test );
+            assertEquals( test, area.getText() );
+            
+            area.clear();
+            area.replaceText( test );
+            area.appendText( test +"def" );
+            
+            // An IndexOutOfBoundsException occurs when trimming MaterializedListModification
+            // in GenericEditableStyledDocumentBase.ParagraphList.observeInputs()
+            area.replaceText( test +"def" );
+            assertEquals( test +"def", area.getText() );
+        });
+
+    }
 
     @Test
     public void deselect_before_replaceText_does_not_cause_index_out_of_bounds_exception()

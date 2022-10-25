@@ -45,4 +45,31 @@ public class RichTextChange<PS, SEG, S> extends TextChange<StyledDocument<PS, SE
     public final boolean isPlainTextIdentity() {
         return removed.getText().equals(inserted.getText());
     }
+    
+    private static boolean skipStyleComparison = false;
+    
+    public static void skipStyleComparison( boolean value )
+    {
+        skipStyleComparison = value;
+    }
+    
+    /* 
+     * This gets used, by the default UndoManagers supplied by UndoUtils,
+     * to check that a submitted undo/redo matches the change reported. 
+     */
+    public boolean equals( Object other )
+    {
+        if( skipStyleComparison && other instanceof RichTextChange )
+        {
+            PlainTextChange otherChange = ((RichTextChange) other).toPlainTextChange();
+            boolean matches = toPlainTextChange().equals( otherChange );
+            if ( ! matches ) System.err.println(
+                "Plain text comparison mismatch caused by text change"
+                +" during undo manager suspension (styling ignored)."
+            );
+            return matches;
+        }
+
+        return super.equals( other );
+    }
 }

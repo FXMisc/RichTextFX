@@ -5,9 +5,11 @@ import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.TextExt;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.TextOps;
 import org.reactfx.util.Either;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -56,6 +58,25 @@ public class TextHyperlinkArea extends GenericStyledArea<Void, Either<String, Hy
                 TextStyle.EMPTY,
                 EITHER_OPS
         ));
+    }
+
+    @Override
+    public void replaceText(int start, int end, String text) {
+        
+        if (start > 0 && end > 0) {
+            int s = Math.max(0, start-1);
+            int e = Math.min(end+1, getLength()-1);
+            List<Either<String, Hyperlink>> segList = getDocument().subSequence( s, e ).getParagraph(0).getSegments();
+            if (!segList.isEmpty() && segList.get(0).isRight()) {
+                String link = segList.get(0).getRight().getLink();
+                replaceWithLink( start, end, text, link );
+                return;
+            }
+        }
+        StyledDocument<Void, Either<String, Hyperlink>, TextStyle> doc = ReadOnlyStyledDocument.fromString(
+            text, getParagraphStyleForInsertionAt(start), getTextStyleForInsertionAt(start), EITHER_OPS
+        );
+        replace(start, end, doc);
     }
 
     public static TextExt createStyledTextNode(Consumer<TextExt> applySegment) {

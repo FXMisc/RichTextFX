@@ -3,6 +3,7 @@ package org.fxmisc.richtext.mouse;
 import com.nitorcreations.junit.runners.NestedRunner;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Test;
@@ -115,6 +116,24 @@ public class ClickAndDragTests {
                 moveTo(bounds).clickOn(PRIMARY);
 
                 assertEquals(firstWord.length(), area.getCaretPosition());
+            }
+
+            @Test
+            public void single_clicking_area_beyond_text_moves_caret_to_end_position()
+                    throws InterruptedException, ExecutionException {
+
+                int position = firstParagraph.length() + secondWord.length();
+                interact( () -> area.getStylesheets ().add("org/fxmisc/richtext/mouse/padtest.css") );
+                assertEquals(0, area.getCaretPosition());
+                clickOn( area );
+
+                Bounds b = asyncFx(
+                        () -> area.getCharacterBoundsOnScreen(position, position + 1).get())
+                        .get();
+
+                moveTo(new Point2D( b.getMaxX(), b.getMaxY()+25 )).clickOn(PRIMARY);
+
+                assertEquals(area.getLength(), area.getCaretPosition());
             }
 
             @Test

@@ -24,6 +24,9 @@ class TextFlowLayout
     private List<TextFlowSpan> lineMetrics = new ArrayList<>();
     private int lineCount = -1;
 
+    private static final TextFlowSpan EMPTY_SPAN = new TextFlowSpan( 0, 0, 0, 0, 0 );
+
+
     TextFlowLayout( TextFlow tf ) {
         tf.getChildren().addListener( (Observable ob) -> lineCount = -1 );
         tf.widthProperty().addListener( (Observable ob) -> lineCount = -1 );
@@ -42,7 +45,7 @@ class TextFlowLayout
 
 
     TextFlowSpan getLineSpan( int lineNo ) {
-        return getLineCount() > 0 ? lineMetrics.get( lineNo ) : null;
+        return getLineCount() > 0 ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
     }
 
 
@@ -69,7 +72,7 @@ class TextFlowLayout
 
         lineCount = 0;
         lineMetrics.clear();
-        double totLines = 0.0, prevMinY = 1.0, prevMaxY = -1.0;
+        double totLines = 0.0, prevMaxY = -1.0;
         int totCharSoFar = 0;
 
         for ( Node n : flow.getChildrenUnmodifiable() ) if ( n.isManaged() ) {
@@ -79,9 +82,14 @@ class TextFlowLayout
             PathElement[] shape = flow.rangeShape( totCharSoFar, totCharSoFar+length );
             double lines = Math.max( 1.0, Math.floor( shape.length / 5 ) );
             double nodeMinY = Math.max( 0.0, nodeBounds.getMinY() );
-            
-            if ( nodeMinY >= prevMinY && lines > 1 )  totLines += lines - 1;  // Multiline Text node 
-            else if ( nodeMinY >= prevMaxY )  totLines += lines;
+
+            if ( lines > 1.0 ) {                                              // Staggered multiline text node
+                if ( totLines > 0.0 ) lines--;
+                totLines += lines;
+            }
+            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line 
+                totLines++;
+            }
 
             if ( lineMetrics.size() < totLines ) {                            // Add additional lines
                
@@ -117,8 +125,7 @@ class TextFlowLayout
                 totCharSoFar += length;
             }
 
-            prevMaxY = nodeBounds.getMaxY();
-            prevMinY = nodeMinY;
+            prevMaxY = Math.max( prevMaxY, nodeBounds.getMaxY() );
         }
         
         lineCount = (int) totLines;
