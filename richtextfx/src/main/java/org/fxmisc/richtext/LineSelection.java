@@ -39,9 +39,10 @@ class LineSelection<PS, SEG, S> extends SelectionImpl<PS, SEG, S>
 
     public void selectCurrentLine()
     {
-        int p = getArea().getCurrentParagraph();
-        int start = getArea().getAbsolutePosition( p, getArea().getCurrentLineStartInParargraph() );
-        int end = getArea().getAbsolutePosition( p, getArea().getCurrentLineEndInParargraph() );
+        GenericStyledArea<PS, SEG, S> area = getArea();
+        int p = area.getCurrentParagraph();
+        int start = area.getAbsolutePosition( p, area.getCurrentLineStartInParargraph() );
+        int end = area.getAbsolutePosition( p, Math.max(0,area.getCurrentLineEndInParargraph()) );
         super.selectRange( start, (end > start) ? end : start+1  ); // +1 for empty lines
     }
 
