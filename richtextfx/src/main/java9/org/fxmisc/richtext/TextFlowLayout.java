@@ -50,9 +50,9 @@ class TextFlowLayout
 
 
     TextFlowSpan getLineSpan( float y ) {
-        final int lastLine = getLineCount() - 1;
+        final int lastLine = getLineCount();
         return lineMetrics.stream().filter( tfs -> y < tfs.getBounds().getMaxY() )
-                .findFirst().orElse( lineMetrics.get( lastLine ) );
+                .findFirst().orElse( lineMetrics.get( Math.max(0,lastLine-1) ) );
     }
 
 
