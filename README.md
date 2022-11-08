@@ -60,6 +60,7 @@ Who uses RichTextFX?
 - [mqtt-spy](http://kamilfb.github.io/mqtt-spy/)
 - [Nearde IDE](https://github.com/VenityStudio/Nearde-IDE)
 - [OmniEditor](https://github.com/giancosta86/OmniEditor)
+- [Recaf](https://github.com/Col-E/Recaf)
 - [SqlBrowserFx](https://github.com/pariskol/sqlbrowserfx/)
 - [Squirrel SQL client](http://www.squirrelsql.org/)
 - [Xanthic](https://github.com/jrguenther/Xanthic)
