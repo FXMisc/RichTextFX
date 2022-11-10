@@ -51,6 +51,7 @@ class TextFlowLayout
 
     TextFlowSpan getLineSpan( float y ) {
         final int lastLine = getLineCount();
+        if ( lastLine < 1 ) return EMPTY_SPAN;
         return lineMetrics.stream().filter( tfs -> y < tfs.getBounds().getMaxY() )
                 .findFirst().orElse( lineMetrics.get( Math.max(0,lastLine-1) ) );
     }
@@ -129,7 +130,9 @@ class TextFlowLayout
         }
         
         lineCount = (int) totLines;
-        return lineCount;
+        if ( lineCount > 0 ) return lineCount;
+        lineCount = -1;
+        return 0;
     }
 
 
