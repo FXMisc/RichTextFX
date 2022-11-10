@@ -63,7 +63,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final SetChangeListener<? super CaretNode> caretNodeListener;
 
     // FIXME: changing it currently has not effect, because
-    // Text.impl_selectionFillProperty().set(newFill) doesn't work
+    // Text.selectionFillProperty().set(newFill) doesn't work
     // properly for Text node inside a TextFlow (as of JDK8-b100).
     private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<>(Color.WHITE);
     public ObjectProperty<Paint> highlightTextFillProperty() {
@@ -145,7 +145,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 //            public void changed(ObservableValue<? extends Paint> observable,
 //                    Paint oldFill, Paint newFill) {
 //                for(PumpedUpText text: textNodes())
-//                    text.impl_selectionFillProperty().set(newFill);
+//                    text.selectionFillProperty().set(newFill);
 //            }
 //        });
 
@@ -155,7 +155,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                 TextExt t = (TextExt) n;
                 // XXX: binding selectionFill to textFill,
                 // see the note at highlightTextFill
-                JavaFXCompatibility.Text_selectionFillProperty(t).bind(t.fillProperty());
+                t.selectionFillProperty().bind(t.fillProperty());
             }
             getChildren().add(n);
         });
@@ -231,7 +231,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         carets.removeListener( caretNodeListener );
 
         getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
-        .forEach( t -> JavaFXCompatibility.Text_selectionFillProperty(t).unbind() ); 
+        .forEach( t -> t.selectionFillProperty().unbind() ); 
 
         getChildren().clear();
     }

@@ -1,87 +1,59 @@
 package org.fxmisc.richtext;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
+import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.control.IndexRange;
 import org.fxmisc.richtext.model.TwoLevelNavigator;
 
-import javafx.scene.control.IndexRange;
 import javafx.scene.shape.PathElement;
+import javafx.scene.text.HitInfo;
 import javafx.scene.text.TextFlow;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.*;
 
 /**
  * Adds additional API to {@link TextFlow}.
- * 
- * PLEASE NOTE that is has a Java 9+ version in src/main/java9 !!!
- * 
  */
 class TextFlowExt extends TextFlow {
-
-    private static Method mGetTextLayout;
-    static {
-        try {
-            mGetTextLayout = TextFlow.class.getDeclaredMethod("getTextLayout");
-        } catch (NoSuchMethodException | SecurityException e) {
-            throw new RuntimeException(e);
+    
+    private TextFlowLayout layout;
+    
+    private TextFlowLayout textLayout()
+    {
+        if ( layout == null ) {
+            layout = new TextFlowLayout( this );
         }
-        mGetTextLayout.setAccessible(true);
+        return layout;
     }
-
-    private static Object invoke(Method m, Object obj, Object... args) {
-        try {
-            return m.invoke(obj, args);
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     int getLineCount() {
-        return getLines().length;
+        return textLayout().getLineCount();
     }
 
     int getLineStartPosition(int charIdx) {
-        TextLine[] lines = getLines();
-        TwoLevelNavigator navigator = new TwoLevelNavigator(
-                () -> lines.length,
-                i -> lines[i].getLength());
+        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
         int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
         return navigator.position(currentLineIndex, 0).toOffset();
     }
 
     int getLineEndPosition(int charIdx) {
-        TextLine[] lines = getLines();
-        TwoLevelNavigator navigator = new TwoLevelNavigator(
-                () -> lines.length,
-                i -> lines[i].getLength());
-        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
-        int minor = currentLineIndex == lines.length - 1 ? 0 : -1;
-        return navigator.position(currentLineIndex + 1, minor).toOffset();
+        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
+        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor() + 1;
+        int minor = (currentLineIndex == getLineCount()) ? 0 : -1;
+        return navigator.position(currentLineIndex, minor).toOffset();
     }
 
     int getLineOfCharacter(int charIdx) {
-        TextLine[] lines = getLines();
-        TwoLevelNavigator navigator = new TwoLevelNavigator(
-                () -> lines.length,
-                i -> lines[i].getLength());
+        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
         return navigator.offsetToPosition(charIdx, Forward).getMajor();
     }
 
     PathElement[] getCaretShape(int charIdx, boolean isLeading) {
-// use if Java 9 becomes minimum requirement
-//        return caretShape(charIdx, isLeading);
-        return textLayout().getCaretShape(charIdx, isLeading, 0, 0);
+        return caretShape(charIdx, isLeading);
     }
 
     PathElement[] getRangeShape(IndexRange range) {
@@ -89,9 +61,7 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getRangeShape(int from, int to) {
-// use if Java 9 becomes minimum requirement
-//        return rangeShape(from, to);
-        return textLayout().getRange(from, to, TextLayout.TYPE_TEXT, 0, 0);
+        return rangeShape(from, to);
     }
 
     PathElement[] getUnderlineShape(IndexRange range) {
@@ -105,66 +75,86 @@ class TextFlowExt extends TextFlow {
     /**
      * @param from The index of the first character.
      * @param to The index of the last character.
-     * @param offset Ignored (only implemented for Java 9+)
-     * @param waveRadius Ignored (only implemented for Java 9+)
+     * @param offset The distance below the baseline to draw the underline.
+     * @param waveRadius If non-zero, draw a wavy underline with arcs of this radius.
      * @return An array with the PathElement objects which define an
      *         underline from the first to the last character.
      */
     PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius) {
         // get a Path for the text underline
-        PathElement[] shape = textLayout().getRange(from, to, TextLayout.TYPE_UNDERLINE, 0, 0);
-
-        // The shape is returned as a closed Path (a thin rectangle).
-        // If we use the Path as it is, this causes rendering issues.
-        // Hence we only use the MoveTo and the succeeding LineTo elements for the result
-        // so that simple line segments instead of rectangles are returned.
         List<PathElement> result = new ArrayList<>();
+        
+        PathElement[] shape = rangeShape( from, to );
+        // The shape is a closed Path for one or more rectangles AROUND the selected text. 
+        // shape: [MoveTo origin, LineTo top R, LineTo bottom R, LineTo bottom L, LineTo origin, *]
 
-        boolean collect = false;
-        for (PathElement elem : shape) {
-            if (elem instanceof MoveTo) {   // There seems to be no API to get the type of the PathElement
-                result.add(elem);
-                collect = true;
-            } else if (elem instanceof LineTo) {
-                if (collect) {
-                    result.add(elem);
-                    collect = false;
+        // Extract the bottom left and right coordinates for each rectangle to get the underline path.
+        for ( int ele = 2; ele < shape.length; ele += 5 )
+        {
+            LineTo bl = (LineTo) shape[ele+1];
+            LineTo br = (LineTo) shape[ele];
+
+            double y = snapSizeY( br.getY() + offset - 2.5 );
+            double leftx = snapSizeX( bl.getX() );
+
+            if (waveRadius <= 0) {
+                result.add(new MoveTo( leftx, y ));
+                result.add(new LineTo( snapSizeX( br.getX() ), y ));
+            }
+            else {
+                // For larger wave radii increase the X radius to stretch out the wave.
+                double radiusX = waveRadius > 1 ? waveRadius * 1.25 : waveRadius;
+                double rightx = br.getX();
+                result.add(new MoveTo( leftx, y ));
+                boolean sweep = true;
+                while ( leftx < rightx ) {
+                    leftx += waveRadius * 2;
+
+                    if (leftx > rightx) {
+                        // Since we are drawing the wave in segments, it is necessary to
+                        // clip the final arc to avoid over/underflow with larger radii,
+                        // so we must compute the y value for the point on the arc where
+                        // x = rightx.
+                        // To simplify the computation, we translate so that the center of
+                        // the arc has x = 0, and the known endpoints have y = 0.
+                        double dx = rightx - (leftx - waveRadius);
+                        double dxsq = dx * dx;
+                        double rxsq = radiusX * radiusX;
+                        double rysq = waveRadius * waveRadius;
+                        double dy = waveRadius * (Math.sqrt(1 - dxsq/rxsq) - Math.sqrt(1 - rysq/rxsq));
+
+                        if (sweep) y -= dy; else y += dy;
+                        leftx = rightx;
+                    }
+                    result.add(new ArcTo( radiusX, waveRadius, 0.0, leftx, y, false, sweep ));
+                    sweep = !sweep;
                 }
             }
         }
 
-       return result.toArray(new PathElement[0]);
+        return result.toArray(new PathElement[0]);
     }
 
     CharacterHit hitLine(double x, int lineIndex) {
-        return hit(x, getLineCenter(lineIndex));
+        return hit(x, textLayout().getLineCenter( lineIndex ));
     }
 
     CharacterHit hit(double x, double y) {
-// use if Java 9 becomes minimum requirement
-//        HitInfo hit = hitTest(new Point2D(x, y));
-        HitInfo hit = textLayout().getHitInfo((float) x, (float) y);
+        TextFlowSpan span = textLayout().getLineSpan( (float) y );
+        Rectangle2D lineBounds = span.getBounds();
+        
+        HitInfo hit = hitTest(new Point2D(x, y));
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
 
-        int lineIdx = getLineIndex((float) y);
-        if(lineIdx >= getLineCount()) {
-            return CharacterHit.insertionAt(getCharCount());
+        if (y >= span.getBounds().getMaxY()) {
+            return CharacterHit.insertionAt(charIdx);
         }
 
-        TextLine[] lines = getLines();
-        TextLine line = lines[lineIdx];
-        RectBounds lineBounds = line.getBounds();
-
-        // If this is a wrapped paragraph and hit character is at end of hit line,
-        // make sure that the "character hit" stays at the end of the hit line
-        // (and not at the beginning of the next line).
-        if(lines.length > 1 &&
-            lineIdx < lines.length - 1 &&
-            charIdx + 1 >= line.getStart() + line.getLength() &&
-            !leading)
-        {
-            leading = true;
+        if ( ! leading && getLineCount() > 1) {
+            // If this is a wrapped paragraph and hit character is at end of hit line, make sure that the
+            // "character hit" stays at the end of the hit line (and not at the beginning of the next line).
+            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= span.getStart() + span.getLength());
         }
 
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {
@@ -182,177 +172,4 @@ class TextFlowExt extends TextFlow {
         }
     }
 
-    private float getLineY(int index) {
-        TextLine[] lines = getLines();
-        float spacing = (float) getLineSpacing();
-        float lineY = 0;
-        for(int i = 0; i < index; ++i) {
-            lineY += lines[i].getBounds().getHeight() + spacing;
-        }
-        return lineY;
-    }
-
-    private float getLineCenter(int index) {
-        return getLineY(index) + getLines()[index].getBounds().getHeight() / 2;
-    }
-
-    private TextLine[] getLines() {
-        return textLayout().getLines();
-    }
-
-    private int getLineIndex(float y) {
-        return textLayout().getLineIndex(y);
-    }
-
-    private int getCharCount() {
-        return textLayout().getCharCount();
-    }
-
-    private TextLayout textLayout() {
-        return GenericIceBreaker.proxy(TextLayout.class, invoke(mGetTextLayout, this));
-    }
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * GenericIceBreaker                                                      *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private static class GenericIceBreaker implements InvocationHandler {
-        private final Object delegate;
-
-        private GenericIceBreaker(Object delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            Method delegateMethod = getDeclaredMethod(delegate.getClass(), method.getName(), method.getParameterTypes());
-
-            Object delegateMethodReturn = null;
-            try {
-                delegateMethodReturn = delegateMethod.invoke(delegate, args);
-            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException("problems invoking " + method.getName());
-            }
-            if (delegateMethodReturn == null) {
-                return null;
-            }
-
-            if (method.getReturnType().isArray()) {
-                if (method.getReturnType().getComponentType().isInterface()
-                        && !method.getReturnType().getComponentType().equals(delegateMethod.getReturnType().getComponentType())) {
-
-                    int arrayLength = Array.getLength(delegateMethodReturn);
-                    Object retArray = Array.newInstance(method.getReturnType().getComponentType(), arrayLength);
-                    for (int i = 0; i < arrayLength; i++) {
-                        Array.set(retArray,
-                                i,
-                                proxy(
-                                        method.getReturnType().getComponentType(),
-                                        Array.get(delegateMethodReturn, i)));
-                    }
-
-                    return retArray;
-                }
-            }
-
-            if (method.getReturnType().isInterface()
-                    && !method.getReturnType().equals(delegateMethod.getReturnType())) {
-                return proxy(method.getReturnType(), delegateMethodReturn);
-            }
-
-            return delegateMethodReturn;
-        }
-
-        @SuppressWarnings("unchecked")
-        static <T> T proxy(Class<T> iface, Object delegate) {
-            return (T) Proxy.newProxyInstance(
-                    iface.getClassLoader(),
-                    new Class[]{iface},
-                    new GenericIceBreaker(delegate));
-        }
-
-        private static final HashMap<MethodCacheKey, Method> declaredMethodCache = new HashMap<>();
-
-        private static synchronized Method getDeclaredMethod(Class<?> cls, String name, Class<?>... paramTypes)
-                throws NoSuchMethodException, SecurityException
-        {
-            MethodCacheKey methodCacheKey = new MethodCacheKey(cls, name, paramTypes);
-
-            Method m = declaredMethodCache.get(methodCacheKey);
-            if (m == null) {
-                m = cls.getDeclaredMethod(name, paramTypes);
-                m.setAccessible(true);
-                declaredMethodCache.put(methodCacheKey, m);
-            }
-            return m;
-        }
-    }
-
-    private static class MethodCacheKey {
-        final Class<?> cls;
-        final String name;
-        final Class<?>[] paramTypes;
-
-        MethodCacheKey(Class<?> cls, String name, Class<?>... paramTypes) {
-            this.cls = cls;
-            this.name = name;
-            this.paramTypes = paramTypes;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof MethodCacheKey))
-                return false;
-
-            MethodCacheKey key2 = (MethodCacheKey) obj;
-            return cls == key2.cls && name.equals(key2.name) && Arrays.equals(paramTypes, key2.paramTypes);
-        }
-
-        @Override
-        public int hashCode() {
-            return cls.hashCode() + name.hashCode() + Arrays.hashCode(paramTypes);
-        }
-    }
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Proxy interfaces                                                       *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private interface TextLayout
-    {
-        static final int TYPE_TEXT           = 1 << 0;
-        static final int TYPE_UNDERLINE      = 1 << 1;
-
-        TextLine[] getLines();
-        int getLineIndex(float y);
-        int getCharCount();
-
-        HitInfo getHitInfo(float x, float y);
-        PathElement[] getCaretShape(int offset, boolean isLeading, float x, float y);
-        PathElement[] getRange(int start, int end, int type, float x, float y);
-    }
-
-    private interface TextLine
-    {
-        int getLength();
-        RectBounds getBounds();
-        int getStart();
-    }
-
-    private interface RectBounds
-    {
-        float getMinX();
-        float getMaxX();
-        float getHeight();
-    }
-
-    private interface HitInfo
-    {
-        int getCharIndex();
-        boolean isLeading();
-    }
 }
