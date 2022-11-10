@@ -18,7 +18,7 @@ class LineSelection<PS, SEG, S> extends SelectionImpl<PS, SEG, S>
 
             path.getElements().addListener( (Change<? extends PathElement> chg) ->
             {
-                if ( chg.next() && chg.wasAdded() || chg.wasReplaced() ) {
+                if ( chg.next() && (chg.wasAdded() || chg.wasReplaced()) && path.getParent() != null ) {
                     double width = path.getParent().getLayoutBounds().getWidth();
                     // The path is limited to the bounds of the text, so here it's altered to the area's width
                     chg.getAddedSubList().stream().skip(1).limit(2).forEach( ele -> ((LineTo) ele).setX( width ) );
