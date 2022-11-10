@@ -24,21 +24,11 @@ check.dependsOn integrationTest
 integrationTest.mustRunAfter test
 integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
 
-sourceSets {
-   java9 {
-      java {
-         srcDirs = ['src/main/java9']
-      }
-   }
-}
-
 dependencies {
     api group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     api group: 'org.fxmisc.undo', name: 'undofx', version: '2.1.1'
     api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6.9'
     api group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
-
-    java9Implementation files(sourceSets.main.output.classesDirs) { builtBy compileJava }
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
@@ -52,30 +42,19 @@ dependencies {
 }
 
 compileJava {
-   if ( JavaVersion.current() == JavaVersion.VERSION_1_9 ) {
-      sourceCompatibility = 9
-      targetCompatibility = 9
-   }
-   options.deprecation = true
-}
-
-compileJava9Java {
-   onlyIf { JavaVersion.current() == JavaVersion.VERSION_1_9 }
    sourceCompatibility = 9
    targetCompatibility = 9
    options.deprecation = true
 }
 
 jar {
-    into 'META-INF/versions/9', { from sourceSets.java9.output }
     manifest {
         attributes(
             'Specification-Title': 'RichTextFX',
             'Specification-Version': project.specificationVersion,
             'Implementation-Title': 'RichTextFX',
             'Implementation-Version': project.version,
-            'Automatic-Module-Name': 'org.fxmisc.richtext',
-            'Multi-Release': 'true')
+            'Automatic-Module-Name': 'org.fxmisc.richtext')
     }
 }
 
@@ -175,7 +154,6 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 task sourcesJar(type: Jar) {
-    into 'java9', { from sourceSets.java9.allSource }
     from sourceSets.main.allSource
     classifier = 'sources'
 }
@@ -249,10 +227,7 @@ if(doUploadArchives) {
 
 task fatJar(type: Jar, dependsOn: classes) {
     archiveAppendix = 'fat'
-
-    manifest.attributes( 'Automatic-Module-Name': 'org.fxmisc.richtext',
-                         'Multi-Release': 'true' )
-    into 'META-INF/versions/9', { from sourceSets.java9.output }
+    manifest.attributes( 'Automatic-Module-Name': 'org.fxmisc.richtext' )
     from sourceSets.main.output
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
