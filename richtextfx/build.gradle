@@ -224,6 +224,10 @@ task fatJar(type: Jar, dependsOn: classes) {
     manifest.attributes( 'Automatic-Module-Name': 'org.fxmisc.richtext' )
     from sourceSets.main.output
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    excludes = [ 'module-info.class',  // block module-info files from other jars
+        '*.dll','javafx*','javafx/',   // block inclusion of javafx files
+        'com/'                         // block com/sun/* files
+    ]
 }
 
 assemble.dependsOn fatJar
