@@ -20,7 +20,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import org.reactfx.Subscription;
 
 public class SpellCheckingDemo extends Application {
 
@@ -35,7 +34,7 @@ public class SpellCheckingDemo extends Application {
         StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.setWrapText(true);
 
-        Subscription cleanupWhenFinished = textArea.multiPlainChanges()
+        textArea.multiPlainChanges()
                 .successionEnds(Duration.ofMillis(500))
                 .subscribe(change -> {
                     textArea.setStyleSpans(0, computeHighlighting(textArea.getText()));

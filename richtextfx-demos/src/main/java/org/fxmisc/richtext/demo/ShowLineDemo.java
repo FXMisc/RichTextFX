@@ -53,6 +53,10 @@ public class ShowLineDemo extends Application {
         field.setPromptText("Input a number to indicate which line you want to show");
     }
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         StringBuilder sb = new StringBuilder();
