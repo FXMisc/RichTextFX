@@ -14,6 +14,10 @@ public class MultiCaretAndSelectionDemo extends Application {
 
     private InlineCssTextArea area;
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) {
         // initialize area with some lines of text

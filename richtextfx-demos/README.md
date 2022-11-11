@@ -17,7 +17,7 @@ Note: This page does not show all the demos in the package. Follow the instructi
 ### Instructions for running demos
 
 1. Clone the repository: `git clone https://www.github.com/FXMisc/RichTextFX.git`
-2. Checkout the latest release version: `git checkout v0.9.0`
+2. Checkout the latest release version: `git checkout tagName` where tagName is the latest release tag (use `git tag` to get a list of available tags, and use the last one)
 3. See the list of demos using a gradle task `./gradlew demos`
 4. Run a demo using a gradle task: `./gradlew [Demo Name]`
 
