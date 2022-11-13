@@ -185,19 +185,22 @@ public class JavaKeywordsDemo extends Application {
         @Override
         public void accept( ListModification<? extends Paragraph<PS, SEG, S>> lm )
         {
-            if ( lm.getAddedSize() > 0 )
+            if ( lm.getAddedSize() > 0 ) Platform.runLater( () ->
             {
                 int paragraph = Math.min( area.firstVisibleParToAllParIndex() + lm.getFrom(), area.getParagraphs().size()-1 );
                 String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
 
-        	    if ( paragraph != prevParagraph || text.length() != prevTextLength )
-        	    {
-                    int startPos = area.getAbsolutePosition( paragraph, 0 );
-                    Platform.runLater( () -> area.setStyleSpans( startPos, computeStyles.apply( text ) ) );
+                if ( paragraph != prevParagraph || text.length() != prevTextLength )
+                {
+                    if ( paragraph < area.getParagraphs().size()-1 )
+                    {
+                        int startPos = area.getAbsolutePosition( paragraph, 0 );
+                        area.setStyleSpans( startPos, computeStyles.apply( text ) );
+                    }
                     prevTextLength = text.length();
                     prevParagraph = paragraph;
-        	    }
-        	}
+                }
+            });
         }
     }
 
