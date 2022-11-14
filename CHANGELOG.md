@@ -1,7 +1,33 @@
 # Change Log
 
+## [v0.11.0](https://github.com/FXMisc/RichTextFX/tree/v0.11.0) (2022-11-14)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.9...v0.11.0)
+
+**Implemented enhancements:**
+
+- Bumped Flowless to 0.7.0
+- Compiled with Java 11 (Thank you [Andreas](https://github.com/afester))
+- Remove Java 8 & 9 multi-jar compatibility [\#1148](https://github.com/FXMisc/RichTextFX/pull/1148)
+- Support wavy underlines [\#1131](https://github.com/FXMisc/RichTextFX/pull/1131) (Thank you [shoaniki](https://github.com/shoaniki))
+
+**Fixed bugs:**
+
+- Fix for SceneBuilder compatibility [\#1112](https://github.com/FXMisc/RichTextFX/pull/1112)
+- Fixed paragraph graphic node width calculation [\#1125](https://github.com/FXMisc/RichTextFX/pull/1125) (Thank you [RationalityFrontline](https://github.com/RationalityFrontline))
+- Fixed multi line text calculation [\#1135](https://github.com/FXMisc/RichTextFX/pull/1135)
+- Fixed code area unicode word selection [\#1139](https://github.com/FXMisc/RichTextFX/pull/1139)
+- Fixed TextFlow children concurrency access [\#1142](https://github.com/FXMisc/RichTextFX/pull/1142)
+
+**Notes from Flowless 0.7.0:**
+
+- Fix first cell not showing sometimes [\#110](https://github.com/FXMisc/Flowless/pull/110)
+- Take padding into account when scrolling [\#111](https://github.com/FXMisc/Flowless/pull/111)
+- Fix for scrolling [\#112](https://github.com/FXMisc/Flowless/pull/112)
+- Fix wrapped text scrollbar flicker [\#113](https://github.com/FXMisc/Flowless/pull/113)
+- Removed scroll noise and improved bidirectional binding behavior [\#113](https://github.com/FXMisc/Flowless/pull/113)
+
 ## [v0.10.9](https://github.com/FXMisc/RichTextFX/tree/v0.10.9) (2022-03-01)
-[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.7...v0.10.9)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.8...v0.10.9)
 
 **Implemented enhancements:**
 

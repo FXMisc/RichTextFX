@@ -2,7 +2,7 @@ subprojects {
     apply plugin: 'eclipse'
 
     version = '1.0.0-SNAPSHOT'
-    ext.specificationVersion = '0.9.0'
+    ext.specificationVersion = '0.11.0'
 
     repositories {
         mavenCentral()
@@ -10,10 +10,6 @@ subprojects {
             url 'https://oss.sonatype.org/content/repositories/snapshots/'
         }
     }
-
-    // Unless Java 9 is used source/target compatibility will be that of the compiling JDK
-    // With JDK 9 src/main/java compiles with source/target compatibility of Java 8 (eight)
-    // while src/main/java9 compiles with 9 and multi-release jars are created.  
 
     if (it.name.equals("richtextfx")) {
         task("getProjectVersion") {
