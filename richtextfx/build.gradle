@@ -36,15 +36,14 @@ dependencies {
     api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.7.0'
     api group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 
-    integrationTestImplementation group: 'junit', name: 'junit', version: '4.12'
+    integrationTestImplementation group: 'junit', name: 'junit', version: '4.13.2'
     integrationTestImplementation group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
     integrationTestImplementation "org.testfx:testfx-core:4.0.16-alpha"
     integrationTestImplementation ("org.testfx:testfx-junit:4.0.15-alpha") {
         exclude(group: "junit", module: "junit")
     }
-    integrationTestImplementation "org.testfx:openjfx-monocle:8u76-b04"
 }
 
 jar {
