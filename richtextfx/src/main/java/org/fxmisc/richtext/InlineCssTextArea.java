@@ -83,6 +83,10 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         fold( start, end, getAddFoldStyle() );
     }
 
+    public boolean isFolded( int paragraph ) {
+        return getFoldStyleCheck().test( getParagraph( paragraph ).getParagraphStyle() );
+    }
+
     /**
      * Unfolds paragraphs <code>startingFromPar</code> onwards for the currently folded block.
      */

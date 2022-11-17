@@ -97,6 +97,10 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
         fold( start, end, getAddFoldStyle() );
     }
 
+    public boolean isFolded( int paragraph ) {
+        return getFoldStyleCheck().test( getParagraph( paragraph ).getParagraphStyle() );
+    }
+
     /**
      * Unfolds paragraphs <code>startingFrom</code> onwards for the currently folded block.
      */
