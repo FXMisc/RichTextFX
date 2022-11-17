@@ -167,57 +167,57 @@ publish.onlyIf { doUploadArchives }
 
 if(doUploadArchives) {
     publishing {
-	    repositories {
-	        maven {
-	           def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-	           def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
-	           url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-	            credentials {
-	                username = "${sonatypeUsername}"
-	                password = "${sonatypePassword}"
-	            }
-	        }
-	    }
+        repositories {
+            maven {
+               def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+               def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+               url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                credentials {
+                    username = "${sonatypeUsername}"
+                    password = "${sonatypePassword}"
+                }
+            }
+        }
         publications {
             richTextFX(MavenPublication) {
                 from components.java
                 artifact sourcesJar
                 artifact javadocJar
                 pom {
-	                name = 'RichTextFX'
-	                packaging = 'jar'
-	                description = 'Rich-text area for JavaFX'
-	                url = 'https://github.com/FXMisc/RichTextFX/#richtextfx'
-	           
-	                scm {
-	                    url = 'scm:git@github.com:FXMisc/RichTextFX.git'
-	                    connection = 'scm:git@github.com:FXMisc/RichTextFX.git'
-	                    developerConnection = 'scm:git@github.com:FXMisc/RichTextFX.git'
-	                }
-	           
-	                licenses {
-	                    license {
-	                        name = 'The BSD 2-Clause License'
-	                        url = 'http://opensource.org/licenses/BSD-2-Clause'
-	                        distribution = 'repo'
-	                    }
-	                    license {
-	                        name = 'GPLv2 with the Classpath Exception'
-	                        url = 'http://www.gnu.org/software/classpath/license.html'
-	                        distribution = 'repo'
-	                    }
-	                }
-	           
-	                developers {
-	                    developer {
-	                        name = 'Tomas Mikula'
-	                    }
-	                }
-	            }
+                    name = 'RichTextFX'
+                    packaging = 'jar'
+                    description = 'Rich-text area for JavaFX'
+                    url = 'https://github.com/FXMisc/RichTextFX/#richtextfx'
+               
+                    scm {
+                        url = 'scm:git@github.com:FXMisc/RichTextFX.git'
+                        connection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+                        developerConnection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+                    }
+               
+                    licenses {
+                        license {
+                            name = 'The BSD 2-Clause License'
+                            url = 'http://opensource.org/licenses/BSD-2-Clause'
+                            distribution = 'repo'
+                        }
+                        license {
+                            name = 'GPLv2 with the Classpath Exception'
+                            url = 'http://www.gnu.org/software/classpath/license.html'
+                            distribution = 'repo'
+                        }
+                    }
+               
+                    developers {
+                        developer {
+                            name = 'Tomas Mikula'
+                        }
+                    }
+                }
             }
-		}
+        }
     }
-	
+    
     signing {
         sign publishing.publications.richTextFX
     }
