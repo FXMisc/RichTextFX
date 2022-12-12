@@ -20,3 +20,9 @@ subprojects {
     }
 
 }
+
+allprojects {
+   tasks.withType(Javadoc) {
+      options.addStringOption("Xmaxwarns", "1")
+   }
+}

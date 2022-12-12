@@ -169,7 +169,7 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
      * └ position 0
      * </pre>
      *
-     * <h3>Warning: Off-By-One errors can easily occur</h3>
+     * <H3>Warning: Off-By-One errors can easily occur</H3>
      * <p>If the column index spans outside of the given paragraph's length, the returned value will
      * pass on to the previous/next paragraph. In other words, given a document with two paragraphs
      * (where the first paragraph's text is "some" and the second "thing"), then the following statements are true:</p>
