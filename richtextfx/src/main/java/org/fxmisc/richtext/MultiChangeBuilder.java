@@ -14,7 +14,7 @@ import java.util.List;
  * {@link org.fxmisc.richtext.model.EditableStyledDocument} in one call via {@link #commit()}. <strong>Note: this builder
  * cannot be reused and a new one must be created for each multi-change.</strong>
  *
- * <h3>Relative vs Absolute Changes</h3>
+ * <H3>Relative vs Absolute Changes</H3>
  * <p>
  *     Let's say that a document has the text {@code |(|t|e|x|t||)|} where each {@code |} represents a position
  *     in-between the characters of the text . If one wants to remove the opening
@@ -79,7 +79,7 @@ import java.util.List;
  *     do not. To make things easier for the developer, the methods declared here are similar to those declared
  *     in {@link EditActions}, minus a few (e.g. {@link EditActions#append(StyledDocument)}).
  * </p>
- * <h3>Other Considerations</h3>
+ * <H3>Other Considerations</H3>
  * <ul>
  *     <li>
  *         <strong>Warning: </strong> relative changes will not be updated if one starts a multi-change and fails
