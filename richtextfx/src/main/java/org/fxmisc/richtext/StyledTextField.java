@@ -215,7 +215,7 @@ public abstract class StyledTextField<PS, S> extends StyledTextArea<PS, S>
 
 
     /**
-     * The prompt text to display or <tt>null</tt> if no prompt text is to be displayed.
+     * The prompt text to display or {@code null} if no prompt text is to be displayed.
      * <p>The Text will be aligned according to the text fields alignment setting and have a default
      * text fill of GRAY unless you have changed it by any means, e.g. with CSS "-fx-prompt-text-fill" 
      */
