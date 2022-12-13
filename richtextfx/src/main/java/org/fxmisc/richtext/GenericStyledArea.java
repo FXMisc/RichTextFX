@@ -101,7 +101,7 @@ import org.reactfx.value.Var;
  * Accepts user input (keyboard, mouse) and provides API to assign style to text ranges. It is suitable for
  * syntax highlighting and rich-text editors.
  *
- * <H3>Adding Scrollbars to the Area</H3>
+ * <h3>Adding Scrollbars to the Area</h3>
  *
  * <p>By default, scroll bars do not appear when the content spans outside of the viewport.
  * To add scroll bars, the area needs to be wrapped in a {@link VirtualizedScrollPane}. For example, </p>
@@ -116,7 +116,7 @@ import org.reactfx.value.Var;
  * parent.getChildren().add(vsPane)
  * </code></pre>
  *
- * <H3>Auto-Scrolling to the Caret</H3>
+ * <h3>Auto-Scrolling to the Caret</h3>
  *
  * <p>Every time the underlying {@link EditableStyledDocument} changes via user interaction (e.g. typing) through
  * the {@code GenericStyledArea}, the area will scroll to insure the caret is kept in view. However, this does not
@@ -147,7 +147,7 @@ import org.reactfx.value.Var;
  * <p>Additionally, when overriding the default user-interaction behavior, remember to include a call
  * to {@link #requestFollowCaret()}.</p>
  *
- * <H3>Setting the area's {@link UndoManager}</H3>
+ * <h3>Setting the area's {@link UndoManager}</h3>
  *
  * <p>
  *     The default UndoManager can undo/redo either {@link PlainTextChange}s or {@link RichTextChange}s. To create
@@ -155,7 +155,7 @@ import org.reactfx.value.Var;
  *     with others), create them using the convenient factory methods in {@link UndoUtils}.
  * </p>
  *
- * <H3>Overriding default keyboard behavior</H3>
+ * <h3>Overriding default keyboard behavior</h3>
  *
  * {@code GenericStyledArea} uses {@link javafx.scene.input.KeyEvent#KEY_TYPED KEY_TYPED} to handle ordinary
  * character input and {@link javafx.scene.input.KeyEvent#KEY_PRESSED KEY_PRESSED} to handle control key
@@ -179,7 +179,7 @@ import org.reactfx.value.Var;
  * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -&gt; save()));
  * </code></pre>
  *
- * <H3>Overriding default mouse behavior</H3>
+ * <h3>Overriding default mouse behavior</h3>
  *
  * The area's default mouse behavior properly handles auto-scrolling and dragging the selected text to a new location.
  * As such, some parts cannot be partially overridden without it affecting other behavior.
@@ -250,14 +250,14 @@ import org.reactfx.value.Var;
  *     </li>
  * </ul>
  *
- * <H3>CSS, Style Classes, and Pseudo Classes</H3>
+ * <h3>CSS, Style Classes, and Pseudo Classes</h3>
  * <p>
  *     Refer to the <a href="https://github.com/FXMisc/RichTextFX/wiki/RichTextFX-CSS-Reference-Guide">
  *         RichTextFX CSS Reference Guide
  *     </a>.
  * </p>
  *
- * <H3>Area Actions and Other Operations</H3>
+ * <h3>Area Actions and Other Operations</h3>
  * <p>
  *     To distinguish the actual operations one can do on this area from the boilerplate methods
  *     within this area (e.g. properties and their getters/setters, etc.), look at the interfaces
@@ -267,7 +267,7 @@ import org.reactfx.value.Var;
  *     To update multiple portions of the area's underlying document in one call, see {@link #createMultiChange()}.
  * </p>
  *
- * <H3>Calculating a Position Within the Area</H3>
+ * <h3>Calculating a Position Within the Area</h3>
  * <p>
  *     To calculate a position or index within the area, read through the javadoc of
  *     {@link org.fxmisc.richtext.model.TwoDimensional} and {@link org.fxmisc.richtext.model.TwoDimensional.Bias}.
