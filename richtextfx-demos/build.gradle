@@ -52,6 +52,11 @@ task fatJar(type: Jar, dependsOn: classes) {
 
 assemble.dependsOn fatJar
 
+javadoc {
+    // ignore missing Javadoc comments or tags
+    options.addBooleanOption('Xdoclint:all,-missing,-accessibility', true)
+}
+
 task demos(description: "Lists the names and the descriptions of the demos that can be run via a Gradle task") {
     doLast {
         // sort the demos first, so they can be added in the build file in any order
