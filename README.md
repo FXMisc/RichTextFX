@@ -51,6 +51,8 @@ Who uses RichTextFX?
 - [EpubFx](https://gitlab.com/finanzer/epubfx/)
 - [Everest REST client](https://github.com/RohitAwate/Everest)
 - [JabRef](http://www.jabref.org/)
+- [JfxIDE](https://github.com/Zev-G/JfxIDE)
+- [JFXDevTools](https://github.com/Zev-G/JFXDevTools)
 - [JDialogue](https://github.com/SkyAphid/JDialogue)
 - [JuliarFuture](https://juliar.org)
 - [JVM Explorer](https://github.com/Naton1/jvm-explorer)
