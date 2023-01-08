@@ -853,7 +853,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 @Override public void cancelLatestCommittedText() {}
 
                 @Override public String getSelectedText() {
-                    return getSelectedText();
+                    return GenericStyledArea.this.getSelectedText();
                 }
             });
         }
