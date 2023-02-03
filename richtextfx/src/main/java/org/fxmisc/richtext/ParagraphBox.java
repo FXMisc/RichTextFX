@@ -240,6 +240,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
     @Override
     protected double computePrefHeight(double width) {
         if ( isFolded.getValue() ) return 0.0;
+        if ( ! wrapText.get() ) width = Double.MAX_VALUE;
         Insets insets = getInsets();
         double overhead = getGraphicPrefWidth() + insets.getLeft() + insets.getRight();
         return text.prefHeight(width - overhead) + insets.getTop() + insets.getBottom() + text.getLineSpacing();
@@ -248,12 +249,17 @@ class ParagraphBox<PS, SEG, S> extends Region {
     @Override
     protected void layoutChildren() {
         Insets ins = getInsets();
-        double w = getWidth() - ins.getLeft() - ins.getRight();
         double h = getHeight() - ins.getTop() - ins.getBottom();
         double graphicWidth = getGraphicPrefWidth();
-        double half = text.getLineSpacing() / 2.0;
 
-        text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
+        if ( wrapText.get() ) {
+            double half = text.getLineSpacing() / 2.0;
+            double w = getWidth() - ins.getLeft() - ins.getRight();
+            text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
+        } else {
+            text.relocate( graphicWidth + ins.getLeft(), ins.getTop() );
+            text.autosize();
+        }
 
         graphic.filter( Node::isManaged ).ifPresent(
             g -> g.resizeRelocate(graphicOffset.get() + ins.getLeft(), ins.getTop(), graphicWidth, h)
