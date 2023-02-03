@@ -74,6 +74,9 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     private final BooleanProperty wrapText = new SimpleBooleanProperty(false);
     public BooleanProperty wrapTextProperty() { return wrapText; }
+    {
+        wrapText.addListener((obs, old, w) -> requestLayout());
+    }
 
     private final Val<Boolean> isFolded;
     public boolean isFolded() { return isFolded.getValue(); }
@@ -95,13 +98,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
         this.text = new ParagraphText<>(par, nodeFactory);
         applyParagraphStyle.accept(this.text, par.getParagraphStyle());
         isFolded = Val.wrap( text.visibleProperty().not() );
-
-        this.text.setPrefWidth( Double.MAX_VALUE ); // Default for no wrapping
-        wrapText.addListener( (obs, old, wrap) ->
-        {
-            text.setPrefWidth( wrap ? USE_COMPUTED_SIZE : Double.MAX_VALUE );
-            requestLayout();
-        });
         
         // start at -1 so that the first time it is displayed, the caret at pos 0 is not
         // accidentally removed from its parent and moved to this node's ParagraphText
