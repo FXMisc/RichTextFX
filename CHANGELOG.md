@@ -1,5 +1,24 @@
 # Change Log
 
+## [v0.11.1](https://github.com/FXMisc/RichTextFX/tree/v0.11.1) (2023-08-18)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.0...v0.11.1)
+
+**Implemented enhancements:**
+
+- Bump Junit to 4.13.2
+- Bumped Flowless to 0.7.1
+- Added isFolded API [\#1156](https://github.com/FXMisc/RichTextFX/pull/1156)
+
+**Fixed bugs:**
+
+- Prevent pom from containing JavaFX dependencies [\#1155](https://github.com/FXMisc/RichTextFX/pull/1155)
+- Fixed InputMethodRequest recursive call [\#1165](https://github.com/FXMisc/RichTextFX/pull/1165)
+- Fixed prefHeight calc and layout for no wrap [\#1169](https://github.com/FXMisc/RichTextFX/pull/1169)
+
+**Notes from Flowless 0.7.1:**
+
+- Minor update with small change to SizeTracker, catching IOOB & NoSuchElement exceptions.
+
 ## [v0.11.0](https://github.com/FXMisc/RichTextFX/tree/v0.11.0) (2022-11-14)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.10.9...v0.11.0)
 
