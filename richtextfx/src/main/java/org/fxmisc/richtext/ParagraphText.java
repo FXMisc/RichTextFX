@@ -233,7 +233,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
         .forEach( t -> t.selectionFillProperty().unbind() ); 
 
-        getChildren().clear();
+        try { getChildren().clear(); }
+        catch ( Exception EX ) {}
     }
 
     public Paragraph<PS, SEG, S> getParagraph() {
