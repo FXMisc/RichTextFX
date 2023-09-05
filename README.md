@@ -1,5 +1,5 @@
 
-RichTextFX
+RichTextFX  
 ==========
 
 RichTextFX provides a memory-efficient text area for JavaFX that allows the developer to style ranges of text, display custom objects in-line (no more `HTMLEditor`), and override specific default behaviors only where necessary.
@@ -9,6 +9,8 @@ The library does not follow the model-view-controller paradigm, which prevents a
 Use the library as a foundation for building rich text editors and code editors that offer syntax highlighting. Being a foundation, many features will not be implemented in this project (such as language-specific syntax highlighters, search-and-replace, hyperlink support, and similar). Rather, developers may implement these features then submit the work as a PR to the `richtextfx-demos` package.
 
 For further details about RichTextFX, its design principles, how it works, and applying CSS styling, [see the wiki](https://github.com/FXMisc/RichTextFX/wiki).
+
+[![JFXCentral](https://img.shields.io/badge/Find_me_on-JFXCentral-blue?logo=googlechrome&logoColor=white)](https://www.jfx-central.com/libraries/richtextfx)
 
 Demos
 -----
