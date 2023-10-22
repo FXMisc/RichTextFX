@@ -154,31 +154,33 @@ Download
 
 ### Stable release
 
-Current stable release is 0.11.1. which is ONLY compatible with Java 11 and UP without the need for `add-exports` or `add-opens` JVM arguments. 
+Current stable release is 0.11.2 which is ONLY compatible with Java 11 and UP. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.11.1  |
+| org.fxmisc.richtext | richtextfx  | 0.11.2  |
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.fxmisc.richtext/richtextfx/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.fxmisc.richtext/richtextfx)
 
 #### Gradle example
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.11.1'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.11.2'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.11.1"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.11.2"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.1/richtextfx-0.11.1.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.1/richtextfx-fat-0.11.1.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.2/richtextfx-0.11.2.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.2/richtextfx-fat-0.11.2.jar) and place it on your classpath.
 
 ### Snapshot releases
 

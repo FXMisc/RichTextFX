@@ -1,5 +1,16 @@
 # Change Log
 
+## [v0.11.2](https://github.com/FXMisc/RichTextFX/tree/v0.11.2) (2023-10-22)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.1...v0.11.2)
+
+**Implemented enhancements:**
+
+- Bumped Flowless to 0.7.2
+
+**Fixed bugs:**
+
+- Fixed placeholder position in some layouts [\#1193](https://github.com/FXMisc/RichTextFX/pull/1193)
+
 ## [v0.11.1](https://github.com/FXMisc/RichTextFX/tree/v0.11.1) (2023-08-18)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.0...v0.11.1)
 
