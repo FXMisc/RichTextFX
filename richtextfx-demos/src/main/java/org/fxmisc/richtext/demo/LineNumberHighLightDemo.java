@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
-import org.reactfx.value.Val;
 
 import java.util.function.IntFunction;
 
@@ -43,6 +42,11 @@ public class LineNumberHighLightDemo extends Application {
 
         public LineNumberHighLightFactory( CodeArea codeArea ) {
         	shownLines = codeArea.currentParagraphProperty();
+            shownLines.addListener( (ob,oldValue,newValue) ->
+            {
+                codeArea.getParagraphGraphic( oldValue ).setStyle("-fx-text-fill: blue");
+                codeArea.getParagraphGraphic( newValue ).setStyle("-fx-text-fill: red");
+            });
         }
         @Override
         public Node apply(int lineIndex) {
@@ -50,26 +54,10 @@ public class LineNumberHighLightDemo extends Application {
             Label after = new Label();
             after.setText(String.valueOf(lineIndex+1));
 
-            // While this works and is the method used in demo.lineindicator.ArrowFactory it isn't
-            // very efficient as this will execute for EVERY line / label whenever the current
-            // paragraph property changes. The next commit will show how this can be done better.
-            ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
-                boolean contains = sl.equals(lineIndex);
-
-                if (contains) {
-                	after.setStyle("-fx-text-fill: red");
-                } else {
-                	after.setStyle("-fx-text-fill: blue");
-                }
-                return true;
-            });
-            after.visibleProperty().bind(
-                    Val.flatMap(after.sceneProperty(), scene -> {
-                        if (scene != null) {
-                            return visible;
-                        }
-                        return Val.constant(false);
-                    }));
+            if ( lineIndex != shownLines.getValue() ) {
+                after.setStyle("-fx-text-fill: blue");
+            }
+            else after.setStyle("-fx-text-fill: red");
 
             return after;
         }
