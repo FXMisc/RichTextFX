@@ -9,7 +9,6 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
@@ -18,7 +17,6 @@ import org.reactfx.value.Val;
 import java.util.function.IntFunction;
 
 public class LineNumberHighLightDemo extends Application {
-    CodeArea codeArea;
 
     public static void main(String[] args) {
         launch(args);
@@ -26,7 +24,7 @@ public class LineNumberHighLightDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        codeArea = new CodeArea();
+        CodeArea codeArea = new CodeArea();
         codeArea.replaceText(0,0,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         codeArea.setPrefHeight(600);
         IntFunction<Node> arrowFactory = new LineNumberHighLightFactory( codeArea );
@@ -61,12 +59,10 @@ public class LineNumberHighLightDemo extends Application {
         }
         @Override
         public Node apply(int lineIndex) {
-            StackPane stackPane = new StackPane();
 
             Label after = new Label();
             after.setText(String.valueOf(lineIndex));
 
-            stackPane.getChildren().addAll(after);
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
                 boolean contains = sl.equals(lineIndex + 1);
 
@@ -85,7 +81,7 @@ public class LineNumberHighLightDemo extends Application {
                         return Val.constant(false);
                     }));
 
-            return stackPane;
+            return after;
         }
     }
 }
