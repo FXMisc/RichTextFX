@@ -1,4 +1,4 @@
-package com.test.chatgpt;
+package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
 import javafx.beans.property.ListProperty;
@@ -21,7 +21,7 @@ import org.reactfx.value.Val;
 
 import java.util.function.IntFunction;
 
-public class LineNumberHighLightApplication extends Application {
+public class LineNumberHighLightDemo extends Application {
     CodeArea codeArea;
     public static final ObservableList<Integer> olistValue = FXCollections.observableArrayList();
     public static final ListProperty<Integer> listValue = new SimpleListProperty<Integer>(olistValue);
