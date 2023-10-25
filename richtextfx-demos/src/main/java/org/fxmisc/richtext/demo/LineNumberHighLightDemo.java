@@ -2,11 +2,9 @@ package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
@@ -27,13 +25,7 @@ public class LineNumberHighLightDemo extends Application {
         codeArea.setPrefHeight(600);
         IntFunction<Node> arrowFactory = new LineNumberHighLightFactory( codeArea );
 
-        IntFunction<Node> graphicFactory = line -> {
-            HBox hbox = new HBox(arrowFactory.apply(line));
-            hbox.setAlignment(Pos.CENTER_LEFT);
-
-            return hbox;
-        };
-        codeArea.setParagraphGraphicFactory(graphicFactory);
+        codeArea.setParagraphGraphicFactory(arrowFactory);
         VBox vbox = new VBox();
 
         vbox.getChildren().addAll(codeArea);
