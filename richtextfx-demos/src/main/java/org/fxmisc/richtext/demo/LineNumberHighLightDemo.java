@@ -50,6 +50,9 @@ public class LineNumberHighLightDemo extends Application {
             Label after = new Label();
             after.setText(String.valueOf(lineIndex+1));
 
+            // While this works and is the method used in demo.lineindicator.ArrowFactory it isn't
+            // very efficient as this will execute for EVERY line / label whenever the current
+            // paragraph property changes. The next commit will show how this can be done better.
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
                 boolean contains = sl.equals(lineIndex);
 
