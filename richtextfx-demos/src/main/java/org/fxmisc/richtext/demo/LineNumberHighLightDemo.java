@@ -52,19 +52,19 @@ public class LineNumberHighLightDemo extends Application {
         private final IntegerProperty shownLines = new SimpleIntegerProperty();
 
         public LineNumberHighLightFactory( CodeArea codeArea ) {
-        	shownLines.set( codeArea.getCurrentParagraph() + 1 );
+        	shownLines.set( codeArea.getCurrentParagraph() );
 	        codeArea.currentParagraphProperty().addListener( 
-	            (observableValue, integer, t1) -> shownLines.set(t1+1)
+	            (observableValue, integer, t1) -> shownLines.set(t1)
             );
         }
         @Override
         public Node apply(int lineIndex) {
 
             Label after = new Label();
-            after.setText(String.valueOf(lineIndex));
+            after.setText(String.valueOf(lineIndex+1));
 
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
-                boolean contains = sl.equals(lineIndex + 1);
+                boolean contains = sl.equals(lineIndex);
 
                 if (contains) {
                 	after.setStyle("-fx-text-fill: red");
