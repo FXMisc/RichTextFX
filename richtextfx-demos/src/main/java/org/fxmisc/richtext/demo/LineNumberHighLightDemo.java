@@ -1,8 +1,6 @@
 package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -49,13 +47,10 @@ public class LineNumberHighLightDemo extends Application {
 
     class LineNumberHighLightFactory implements IntFunction<Node> {
 
-        private final IntegerProperty shownLines = new SimpleIntegerProperty();
+        private final ObservableValue<Integer> shownLines;
 
         public LineNumberHighLightFactory( CodeArea codeArea ) {
-        	shownLines.set( codeArea.getCurrentParagraph() );
-	        codeArea.currentParagraphProperty().addListener( 
-	            (observableValue, integer, t1) -> shownLines.set(t1)
-            );
+        	shownLines = codeArea.currentParagraphProperty();
         }
         @Override
         public Node apply(int lineIndex) {
