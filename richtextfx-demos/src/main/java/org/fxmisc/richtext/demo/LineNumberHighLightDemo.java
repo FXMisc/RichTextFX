@@ -3,7 +3,6 @@ package org.fxmisc.richtext.demo;
 import javafx.application.Application;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -62,6 +61,11 @@ public class LineNumberHighLightDemo extends Application {
 
         public LineNumberHighLightFactory(ListProperty<Integer> shownLine) {
             this.shownLines = shownLine;
+            codeArea.currentParagraphProperty().addListener( (observableValue, integer, t1) -> {
+                    olistValue.clear();
+                    olistValue.add(t1+1);
+                }
+            );
         }
         @Override
         public Node apply(int lineIndex) {
@@ -74,13 +78,6 @@ public class LineNumberHighLightDemo extends Application {
             after.setText(String.valueOf(lineIndex));
             after.setStyle("-fx-text-fill: red");
 
-            codeArea.currentParagraphProperty().addListener(new ChangeListener<Integer>() {
-                @Override
-                public void changed(ObservableValue<? extends Integer> observableValue, Integer integer, Integer t1) {
-                    olistValue.clear();
-                    olistValue.add(t1+1);
-                }
-            });
             stackPane.getChildren().addAll(before, after);
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
                 boolean contains = sl.contains(lineIndex + 1);
