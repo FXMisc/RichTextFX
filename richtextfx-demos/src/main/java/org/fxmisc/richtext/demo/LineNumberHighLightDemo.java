@@ -63,23 +63,19 @@ public class LineNumberHighLightDemo extends Application {
         public Node apply(int lineIndex) {
             StackPane stackPane = new StackPane();
 
-            Label before =  new Label();
-            before.setText(String.valueOf(lineIndex));
-            before.setStyle("-fx-text-fill: blue");
             Label after = new Label();
             after.setText(String.valueOf(lineIndex));
-            after.setStyle("-fx-text-fill: red");
 
-            stackPane.getChildren().addAll(before, after);
+            stackPane.getChildren().addAll(after);
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
                 boolean contains = sl.equals(lineIndex + 1);
 
                 if (contains) {
-                    before.setVisible(false);
+                	after.setStyle("-fx-text-fill: red");
                 } else {
-                    before.setVisible(true);
+                	after.setStyle("-fx-text-fill: blue");
                 }
-                return contains;
+                return true;
             });
             after.visibleProperty().bind(
                     Val.flatMap(after.sceneProperty(), scene -> {
