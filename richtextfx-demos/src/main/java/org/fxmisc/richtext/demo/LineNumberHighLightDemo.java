@@ -29,7 +29,7 @@ public class LineNumberHighLightDemo extends Application {
         codeArea = new CodeArea();
         codeArea.replaceText(0,0,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         codeArea.setPrefHeight(600);
-        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory();
+        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory( codeArea );
 
         IntFunction<Node> graphicFactory = line -> {
             HBox hbox = new HBox(arrowFactory.apply(line));
@@ -53,7 +53,7 @@ public class LineNumberHighLightDemo extends Application {
 
         private final IntegerProperty shownLines = new SimpleIntegerProperty();
 
-        public LineNumberHighLightFactory() {
+        public LineNumberHighLightFactory( CodeArea codeArea ) {
         	shownLines.set( codeArea.getCurrentParagraph() + 1 );
 	        codeArea.currentParagraphProperty().addListener( 
 	            (observableValue, integer, t1) -> shownLines.set(t1+1)
