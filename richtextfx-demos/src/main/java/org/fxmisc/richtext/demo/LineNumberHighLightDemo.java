@@ -16,7 +16,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 import org.reactfx.value.Val;
 
 import java.util.function.IntFunction;
@@ -37,8 +36,7 @@ public class LineNumberHighLightDemo extends Application {
         codeArea.replaceText(0,0,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         codeArea.setPrefHeight(600);
         olistValue.add(codeArea.getCurrentParagraph() + 1);
-        IntFunction<Node> numberFactory = LineNumberFactory.get(codeArea);
-        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory(listValue, numberFactory);
+        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory(listValue);
 
         IntFunction<Node> graphicFactory = line -> {
             HBox hbox = new HBox(arrowFactory.apply(line));
@@ -62,10 +60,7 @@ public class LineNumberHighLightDemo extends Application {
 
         private final ListProperty<Integer> shownLines;
 
-        IntFunction<Node> numberFactory;
-
-        public LineNumberHighLightFactory(ListProperty<Integer> shownLine, IntFunction<Node> numberFactory) {
-            this.numberFactory = numberFactory;
+        public LineNumberHighLightFactory(ListProperty<Integer> shownLine) {
             this.shownLines = shownLine;
         }
         @Override
