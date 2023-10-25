@@ -1,11 +1,9 @@
 package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -21,9 +19,6 @@ import java.util.function.IntFunction;
 
 public class LineNumberHighLightDemo extends Application {
     CodeArea codeArea;
-    public static final ObservableList<Integer> olistValue = FXCollections.observableArrayList();
-    public static final ListProperty<Integer> listValue = new SimpleListProperty<Integer>(olistValue);
-
 
     public static void main(String[] args) {
         launch(args);
@@ -34,8 +29,7 @@ public class LineNumberHighLightDemo extends Application {
         codeArea = new CodeArea();
         codeArea.replaceText(0,0,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         codeArea.setPrefHeight(600);
-        olistValue.add(codeArea.getCurrentParagraph() + 1);
-        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory(listValue);
+        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory();
 
         IntFunction<Node> graphicFactory = line -> {
             HBox hbox = new HBox(arrowFactory.apply(line));
@@ -57,14 +51,12 @@ public class LineNumberHighLightDemo extends Application {
 
     class LineNumberHighLightFactory implements IntFunction<Node> {
 
-        private final ListProperty<Integer> shownLines;
+        private final IntegerProperty shownLines = new SimpleIntegerProperty();
 
-        public LineNumberHighLightFactory(ListProperty<Integer> shownLine) {
-            this.shownLines = shownLine;
-            codeArea.currentParagraphProperty().addListener( (observableValue, integer, t1) -> {
-                    olistValue.clear();
-                    olistValue.add(t1+1);
-                }
+        public LineNumberHighLightFactory() {
+        	shownLines.set( codeArea.getCurrentParagraph() + 1 );
+	        codeArea.currentParagraphProperty().addListener( 
+	            (observableValue, integer, t1) -> shownLines.set(t1+1)
             );
         }
         @Override
@@ -80,7 +72,7 @@ public class LineNumberHighLightDemo extends Application {
 
             stackPane.getChildren().addAll(before, after);
             ObservableValue<Boolean> visible = Val.map(shownLines, sl -> {
-                boolean contains = sl.contains(lineIndex + 1);
+                boolean contains = sl.equals(lineIndex + 1);
 
                 if (contains) {
                     before.setVisible(false);
