@@ -995,7 +995,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         return visibleCell.getNode().getIndex();
         }
-        catch ( NoSuchElementException EX )
+        catch ( IndexOutOfBoundsException | NoSuchElementException EX )
         {
             return -1;
         }
