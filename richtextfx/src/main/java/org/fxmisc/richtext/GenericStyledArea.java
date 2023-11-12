@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -985,13 +986,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             );
         }
 
-        Cell<Paragraph<PS,SEG,S>, ParagraphBox<PS,SEG,S>> visibleCell = null;
+        try {
+            Cell<Paragraph<PS,SEG,S>, ParagraphBox<PS,SEG,S>> visibleCell = null;
 
-        if ( visibleParIndex > 0 ) visibleCell = virtualFlow.visibleCells().get( visibleParIndex );
-        else visibleCell = virtualFlow.getCellIfVisible( virtualFlow.getFirstVisibleIndex() )
-            .orElseGet( () -> virtualFlow.visibleCells().get( visibleParIndex ) );
+            if ( visibleParIndex > 0 ) visibleCell = virtualFlow.visibleCells().get( visibleParIndex );
+            else visibleCell = virtualFlow.getCellIfVisible( virtualFlow.getFirstVisibleIndex() )
+                       .orElseGet( () -> virtualFlow.visibleCells().get( visibleParIndex ) );
 
         return visibleCell.getNode().getIndex();
+        }
+        catch ( NoSuchElementException EX )
+        {
+            return -1;
+        }
     }
 
     @Override
