@@ -398,7 +398,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
      */
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int from, int to, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> mapper) {
-        ensureValidRange(from, to);
+        ensureValidRange(from, to = Math.min(to, length()));
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
         return replace(start, end, mapper);
