@@ -28,7 +28,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -344,12 +343,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     @Override public void setEditable(boolean value) { editable.set(value); }
     @Override public boolean isEditable() { return editable.get(); }
 
-    private final ReadOnlyBooleanWrapper overwriteMode = new ReadOnlyBooleanWrapper(this, "overwriteMode", false);
-    
+    private final ReadOnlyBooleanProperty overwriteMode;
     /**
      * Indicates weather the area is in overwrite or insert mode.
      */
-    public final ReadOnlyBooleanProperty overwriteModeProperty() { return overwriteMode.getReadOnlyProperty(); }
+    public final ReadOnlyBooleanProperty overwriteModeProperty() { return overwriteMode; }
     public boolean isOverwriteMode() { return overwriteMode.get(); }
 
     // wrapText property
@@ -826,7 +824,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                         : EventStreams.never())
                 .subscribe(evt -> Event.fireEvent(this, evt));
 
-        new GenericStyledAreaBehavior(this, this.overwriteMode);
+        this.overwriteMode = new GenericStyledAreaBehavior(this).overwriteModeProperty();
 
         // Setup place holder visibility & placement
         final Val<Boolean> showPlaceholder = Val.create

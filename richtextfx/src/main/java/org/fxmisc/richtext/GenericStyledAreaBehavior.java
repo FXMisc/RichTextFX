@@ -10,6 +10,7 @@ import static org.reactfx.EventStreams.*;
 
 import java.util.function.Predicate;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
@@ -304,7 +305,8 @@ class GenericStyledAreaBehavior {
     /**
      * Indicates weather the area is in overwrite or insert mode.
      */
-    private final ReadOnlyBooleanWrapper overwriteMode;
+    private final ReadOnlyBooleanWrapper overwriteMode = new ReadOnlyBooleanWrapper(this, "overwriteMode", false);
+    final ReadOnlyBooleanProperty overwriteModeProperty() { return overwriteMode.getReadOnlyProperty(); }
 
     /**
      * Indicates whether an existing selection is being dragged by the user.
@@ -322,9 +324,8 @@ class GenericStyledAreaBehavior {
      * Constructors                                                           *
      * ********************************************************************** */
 
-    GenericStyledAreaBehavior(GenericStyledArea<?, ?, ?> area, ReadOnlyBooleanWrapper overwriteMode) {
+    GenericStyledAreaBehavior(GenericStyledArea<?, ?, ?> area) {
         this.view = area;
-        this.overwriteMode = overwriteMode;
 
         InputMapTemplate.installFallback(EVENT_TEMPLATE, this, b -> b.view);
 
