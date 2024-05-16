@@ -10,6 +10,8 @@ import static org.reactfx.EventStreams.*;
 
 import java.util.function.Predicate;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -53,7 +55,7 @@ class GenericStyledAreaBehavior {
 
         /*
          * KeyCodes are misinterpreted when using a different keyboard layout, for example:
-         * on Dvorak: C results in KeyCode I, X -> B, and V -> . 
+         * on Dvorak: C results in KeyCode I, X -> B, and V -> .
          * and on German layouts: Z and Y are reportedly switched
          * so then editing commands such as Ctrl+C, or CMD+Z are incorrectly processed.
          * KeyCharacterCombination however does keyboard translation before matching.
@@ -180,7 +182,7 @@ class GenericStyledAreaBehavior {
                 //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
                 if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
                 	    && e.getCharacter().getBytes()[0] != 0) return true;
-                
+
                 return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
             }
         	return !e.isControlDown() && !e.isMetaDown();
@@ -303,7 +305,8 @@ class GenericStyledAreaBehavior {
     /**
      * Indicates weather the area is in overwrite or insert mode.
      */
-    private boolean overwriteMode = false;
+    private final ReadOnlyBooleanWrapper overwriteMode = new ReadOnlyBooleanWrapper(this, "overwriteMode", false);
+    final ReadOnlyBooleanProperty overwriteModeProperty() { return overwriteMode.getReadOnlyProperty(); }
 
     /**
      * Indicates whether an existing selection is being dragged by the user.
@@ -363,7 +366,7 @@ class GenericStyledAreaBehavior {
         int start = range.getStart();
         int end = range.getEnd();
 
-        if (overwriteMode && start == end) {
+        if (overwriteMode.get() && start == end) {
             end = Math.min(end+1, view.getLength());
         }
 
@@ -371,7 +374,7 @@ class GenericStyledAreaBehavior {
     }
 
     private void toggelOverwriteMode(KeyEvent ignore) {
-        overwriteMode = !overwriteMode;
+        overwriteMode.set(!overwriteMode.get());
     }
 
     private void deleteBackward(KeyEvent ignore) {
