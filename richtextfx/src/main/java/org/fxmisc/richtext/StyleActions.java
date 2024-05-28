@@ -74,7 +74,8 @@ public interface StyleActions<PS, S> {
      * If {@code position} points to a boundary between two styled ranges, then
      * the range preceding {@code position} is returned. If {@code position}
      * points to a boundary between two paragraphs, then the first styled range
-     * of the latter paragraph is returned.
+     * of the latter paragraph is returned. <b>Note</b> that the returned IndexRange
+     * is <i>relative</i> to the paragraph (NOT the document).
      */
     IndexRange getStyleRangeAtPosition(int position);
 
@@ -108,6 +109,7 @@ public interface StyleActions<PS, S> {
      * Returns the range of homogeneous style that includes the given position
      * in the given paragraph. If {@code position} points to a boundary between
      * two styled ranges, then the range preceding {@code position} is returned.
+     * The returned IndexRange is <i>relative</i> to the paragraph.
      */
     IndexRange getStyleRangeAtPosition(int paragraph, int position);
 
