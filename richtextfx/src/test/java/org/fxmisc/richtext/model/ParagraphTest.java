@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 import java.util.Collections;
 
+import javafx.scene.control.IndexRange;
+
 import org.junit.Test;
 
 public class ParagraphTest {
@@ -55,6 +57,7 @@ public class ParagraphTest {
 			@Override public Position position( int major, int minor ) { return null; }
 			@Override public Position offsetToPosition( int offset, Bias bias ) { return null; }
 			@Override public StyleSpan<Collection<String>> getStyleSpan( int index ) { return null; }
+			@Override public IndexRange getStyleRange(int position) { return null; }
 			@Override public int getSpanCount() { return 0; }
 			@Override public int length() { return 0; }
 		};
