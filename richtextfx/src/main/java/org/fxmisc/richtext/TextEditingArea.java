@@ -1,4 +1,4 @@
-package org.fxmisc.richtext;
+﻿package org.fxmisc.richtext;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -36,7 +36,7 @@ public interface TextEditingArea<PS, SEG, S> {
      *******************/
 
     /**
-     * The number of characters in this text-editing area.
+     * The number of Unicode code units in this text-editing area.
      */
     default int getLength() { return lengthProperty().getValue(); }
     ObservableValue<Integer> lengthProperty();
