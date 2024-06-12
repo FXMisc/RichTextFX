@@ -11,6 +11,7 @@ public class StyleSpan<S> {
 
     private final S style;
     private final int length;
+    private int startPos = 0;
 
     /**
      * Creates a style span. Note: length cannot be negative.
@@ -24,12 +25,26 @@ public class StyleSpan<S> {
         this.length = length;
     }
 
+    StyleSpan(S style, int start, int length) {
+        this.style = style;
+        this.startPos = start;
+        this.length = length;
+    }
+
     public S getStyle() {
         return style;
     }
 
     public int getLength() {
         return length;
+    }
+
+    void setStart( int start ) {
+        startPos = start;
+    }
+
+    int getStart() {
+        return startPos;
     }
 
     /**
@@ -51,7 +66,7 @@ public class StyleSpan<S> {
     public int hashCode() {
         return Objects.hash(style, length);
     }
-    
+
     @Override
     public String toString() {
         return String.format("StyleSpan[length=%s, style=%s]", length, style);

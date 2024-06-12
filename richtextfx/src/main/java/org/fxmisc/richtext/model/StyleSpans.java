@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.model;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Forward;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -10,6 +11,8 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import javafx.scene.control.IndexRange;
 
 /**
  * Essentially, a list of {@link StyleSpan} objects.
@@ -35,6 +38,12 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     int length();
     int getSpanCount();
     StyleSpan<S> getStyleSpan(int index);
+
+    /**
+     * @param position is relative to start of style spans
+     * @return IndexRange relative to start of style spans
+     */
+    IndexRange getStyleRange( int position );
 
     /**
      * Two {@code StyleSpans} objects are considered equal if they contain equal
