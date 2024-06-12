@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import javafx.scene.control.IndexRange;
+
 /**
  * A one-time-use builder that Builds a memory efficient {@link StyleSpans} object.
  *
@@ -169,8 +171,9 @@ public class StyleSpansBuilder<S> {
             } else {
                 StyleSpan<S> prev = spans.get(spans.size() - 1);
                 if(prev.getStyle().equals(span.getStyle())) {
-                    spans.set(spans.size() - 1, new StyleSpan<>(span.getStyle(), prev.getLength() + span.getLength()));
+                    spans.set(spans.size() - 1, new StyleSpan<>(span.getStyle(), prev.getStart(), prev.getLength() + span.getLength()));
                 } else {
+                    span.setStart(prev.getStart() + prev.getLength());
                     spans.add(span);
                 }
             }
@@ -200,6 +203,14 @@ abstract class StyleSpansBase<S> implements StyleSpans<S> {
     @Override
     public Position offsetToPosition(int offset, Bias bias) {
         return navigator.offsetToPosition(offset, bias);
+    }
+
+    @Override
+    public IndexRange getStyleRange(int position) {
+        Position offset = offsetToPosition(position, Bias.Backward);
+        StyleSpan<S> span = getStyleSpan(offset.getMajor());
+        int spanStart = span.getStart();
+        return new IndexRange(spanStart, spanStart + span.getLength());
     }
 
     @Override
