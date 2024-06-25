@@ -1,5 +1,18 @@
 # Change Log
 
+## [v0.11.3](https://github.com/FXMisc/RichTextFX/tree/v0.11.3) (2024-06-25)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.2...v0.11.3)
+
+**Implemented enhancements:**
+
+- Added getStyleRange method to StyleSpans [\#1232](https://github.com/FXMisc/RichTextFX/pull/1232)
+- Add property to area to detect overwrite mode [\#1226](https://github.com/FXMisc/RichTextFX/pull/1226) (Thank you [PavelTurk](https://github.com/PavelTurk))
+- Bumped Flowless to 0.7.3
+
+**Fixed bugs:**
+
+- Fixed NoSuchElement / IndexOutOfBounds exceptions when holding Page Up/Down [\#1211](https://github.com/FXMisc/RichTextFX/pull/1211)
+
 ## [v0.11.2](https://github.com/FXMisc/RichTextFX/tree/v0.11.2) (2023-10-22)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.1...v0.11.2)
 
