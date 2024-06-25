@@ -41,7 +41,7 @@ public class LineNumberHighLightDemo extends Application {
         private final ObservableValue<Integer> shownLines;
 
         public LineNumberHighLightFactory( CodeArea codeArea ) {
-        	shownLines = codeArea.currentParagraphProperty();
+            shownLines = codeArea.currentParagraphProperty();
             shownLines.addListener( (ob,oldValue,newValue) ->
             {
                 codeArea.getParagraphGraphic( oldValue ).setStyle("-fx-text-fill: blue");
