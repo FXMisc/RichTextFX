@@ -22,11 +22,11 @@ public class LineNumberHighLightDemo extends Application {
         CodeArea codeArea = new CodeArea();
         codeArea.replaceText(0,0,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         codeArea.setPrefHeight(600);
-        IntFunction<Node> arrowFactory = new LineNumberHighLightFactory( codeArea );
 
-        codeArea.setParagraphGraphicFactory(arrowFactory);
+        IntFunction<Node> labelFactory = new LineNumberHighLightFactory( codeArea );
+        codeArea.setParagraphGraphicFactory(labelFactory);
+
         VBox vbox = new VBox();
-
         vbox.getChildren().addAll(codeArea);
 
         Scene scene = new Scene(vbox, 600, 600);
@@ -48,6 +48,7 @@ public class LineNumberHighLightDemo extends Application {
                 codeArea.getParagraphGraphic( newValue ).setStyle("-fx-text-fill: red");
             });
         }
+
         @Override
         public Node apply(int lineIndex) {
 
