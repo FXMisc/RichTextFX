@@ -1,4 +1,4 @@
-package org.fxmisc.richtext.demo;
+package org.fxmisc.richtext.demo.lineindicator;
 
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
