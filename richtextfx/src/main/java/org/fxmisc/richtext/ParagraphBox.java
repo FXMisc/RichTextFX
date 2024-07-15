@@ -250,14 +250,15 @@ class ParagraphBox<PS, SEG, S> extends Region {
     protected void layoutChildren() {
         Insets ins = getInsets();
         double h = getHeight() - ins.getTop() - ins.getBottom();
+        double w = getWidth() - ins.getLeft() - ins.getRight();
         double graphicWidth = getGraphicPrefWidth();
 
         if ( wrapText.get() ) {
             double half = text.getLineSpacing() / 2.0;
-            double w = getWidth() - ins.getLeft() - ins.getRight();
             text.resizeRelocate(graphicWidth + ins.getLeft(), ins.getTop() + half, w - graphicWidth, h - half);
         } else {
             text.relocate( graphicWidth + ins.getLeft(), ins.getTop() );
+            text.setMinWidth( w - graphicWidth );
             text.autosize();
         }
 
