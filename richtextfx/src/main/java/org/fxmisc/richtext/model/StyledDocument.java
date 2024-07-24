@@ -184,12 +184,7 @@ public interface StyledDocument<PS, SEG, S> extends TwoDimensional {
      */
     default int getAbsolutePosition(int paragraphIndex, int columnPosition) {
         int position = position(paragraphIndex, columnPosition).toOffset();
-        if (position < 0) {
-            throw new IndexOutOfBoundsException(String.format("Negative index! Out of bounds by %s.", 0 - position));
-        }
-        if (length() < position) {
-            throw new IndexOutOfBoundsException(String.format("Out of bounds by %s. Area Length: %s", position - length(), length()));
-        }
-        return position;
+        if (position > 0) return Math.min(position, length());
+        return 0;
     }
 }
