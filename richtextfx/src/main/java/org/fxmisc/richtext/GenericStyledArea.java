@@ -1750,18 +1750,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     {
         if ( autoHeightProp.get() )
         {
-            if ( getWidth() == 0.0 ) Platform.runLater( () -> requestLayout() );
-            else
-            {
-                double height = 0.0;
-                Insets in = getInsets();
+            double height = 0.0;
+            Insets in = getInsets();
 
-                for ( int p = 0; p < getParagraphs().size(); p++ ) {
-                    height += getCell( p ).getHeight();
-                }
-                if ( height > 0.0 ) {
-                    return height + in.getTop() + in.getBottom();
-                }
+            double calcWidth = getWidth();
+            if ( calcWidth <= 0.0 ) calcWidth = getPrefWidth();
+
+            for ( int p = 0; p < getParagraphs().size(); p++ ) {
+                height += getCell( p ).computePrefHeight( calcWidth );
+            }
+            if ( height > 0.0 ) {
+                return height + in.getTop() + in.getBottom();
             }
         }
         return super.computePrefHeight( width );
