@@ -325,12 +325,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * ********************************************************************** */
 
-    /**
-     * Text color for highlighted text.
-     */
-    private final StyleableObjectProperty<Paint> highlightTextFill
-            = new CustomStyleableProperty<>(Color.WHITE, "highlightTextFill", this, HIGHLIGHT_TEXT_FILL);
-
     // editable property
     private final BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true) {
         @Override
@@ -1908,7 +1902,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         ParagraphBox<PS, SEG, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, nodeFactory);
 
-        box.highlightTextFillProperty().bind(highlightTextFill);
         box.wrapTextProperty().bind(wrapTextProperty());
         box.graphicFactoryProperty().bind(paragraphGraphicFactoryProperty());
         box.graphicOffset.bind(virtualFlow.breadthOffsetProperty());
@@ -2001,7 +1994,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public void dispose() {
-                box.highlightTextFillProperty().unbind();
                 box.wrapTextProperty().unbind();
                 box.graphicFactoryProperty().unbind();
                 box.graphicOffset.unbind();
@@ -2123,35 +2115,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private void suspendVisibleParsWhile(Runnable runnable) {
         Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
-    }
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * CSS                                                                    *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL = new CustomCssMetaData<>(
-            "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
-    );
-
-    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
-
-    static {
-        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
-
-        styleables.add(HIGHLIGHT_TEXT_FILL);
-
-        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
-    }
-
-    @Override
-    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        return CSS_META_DATA_LIST;
-    }
-
-    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
-        return CSS_META_DATA_LIST;
     }
 
 }

@@ -22,7 +22,6 @@ import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -33,7 +32,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -62,14 +60,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final MapChangeListener<? super Selection<PS, SEG, S>, ? super SelectionPath> selectionPathListener;
     private final SetChangeListener<? super CaretNode> caretNodeListener;
 
-    // FIXME: changing it currently has not effect, because
-    // Text.selectionFillProperty().set(newFill) doesn't work
-    // properly for Text node inside a TextFlow (as of JDK8-b100).
-    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<>(Color.WHITE);
-    public ObjectProperty<Paint> highlightTextFillProperty() {
-        return highlightTextFill;
-    }
-
     private Paragraph<PS, SEG, S> paragraph;
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
@@ -95,18 +85,25 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
-        ChangeListener<IndexRange> selectionRangeListener = (obs, ov, nv) -> requestLayout();
+        ChangeListener<Paint> selectionFillListener = (obs, ov, nv) -> requestLayout();
+        ChangeListener<IndexRange> selectionRangeListener = (obs, prevRange, nv) -> {
+            resetTextSelection(prevRange);
+            requestLayout();
+        };
         selectionPathListener = change -> {
             if (change.wasRemoved()) {
                 SelectionPath p = change.getValueRemoved();
+                p.textFillProperty().removeListener(selectionFillListener);
                 p.rangeProperty().removeListener(selectionRangeListener);
                 p.layoutXProperty().unbind();
                 p.layoutYProperty().unbind();
 
+                resetTextSelection(p.rangeProperty().getValue());
                 getChildren().remove(p);
             }
             if (change.wasAdded()) {
                 SelectionPath p = change.getValueAdded();
+                p.textFillProperty().addListener(selectionFillListener);
                 p.rangeProperty().addListener(selectionRangeListener);
                 p.layoutXProperty().bind(leftInset);
                 p.layoutYProperty().bind(topInset);
@@ -139,24 +136,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
         carets.addListener( caretNodeListener );
 
-        // XXX: see the note at highlightTextFill
-//        highlightTextFill.addListener(new ChangeListener<Paint>() {
-//            @Override
-//            public void changed(ObservableValue<? extends Paint> observable,
-//                    Paint oldFill, Paint newFill) {
-//                for(PumpedUpText text: textNodes())
-//                    text.selectionFillProperty().set(newFill);
-//            }
-//        });
-
         // populate with text nodes
         par.getStyledSegments().stream().map(nodeFactory).forEach(n -> {
-            if (n instanceof TextExt) {
-                TextExt t = (TextExt) n;
-                // XXX: binding selectionFill to textFill,
-                // see the note at highlightTextFill
-                t.selectionFillProperty().bind(t.fillProperty());
-            }
             getChildren().add(n);
         });
 
@@ -229,9 +210,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         // Then remove listeners to also avoid memory leaks.
         selections.removeListener( selectionPathListener );
         carets.removeListener( caretNodeListener );
-
-        getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
-        .forEach( t -> t.selectionFillProperty().unbind() ); 
 
         try { getChildren().clear(); }
         catch ( Exception EX ) {}
@@ -336,6 +314,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
     private void updateSingleSelection(SelectionPath path) {
         path.getElements().setAll(getRangeShapeSafely(path.rangeProperty().getValue()));
+        updateTextSelection(path);
     }
 
     private PathElement[] getRangeShapeSafely(IndexRange range) {
@@ -435,6 +414,78 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
     }
 
+
+    // XXX: Because of JDK bug https://bugs.openjdk.java.net/browse/JDK-8149134
+    //      this does not work correctly if a paragraph contains more than one segment
+    //      and the selection is (also) in the second or later segments.
+    //      Visually the text color of the selection may be mix black & white.
+    private void updateTextSelection(SelectionPath selection)
+    {
+        IndexRange range = selection.rangeProperty().getValue();
+        if (range.getLength() == 0) return;
+
+        final int selStart = range.getStart();
+        final int selEnd = range.getEnd();
+        int charSoFar = 0;
+
+        for (Node node : getChildren())
+        {
+            if (node instanceof TextExt)
+            {
+                TextExt text = (TextExt) node;
+                int len = text.getText().length();
+                int end = charSoFar + len;
+
+                if (end > selStart)
+                {
+                    text.setSelectionFill(selection.getTextFill());
+
+                    if (selStart <= charSoFar) text.setSelectionStart(0);
+                    else text.setSelectionStart(selStart-charSoFar);
+
+                    if (selEnd > end) text.setSelectionEnd(len);
+                    else
+                    {
+                        text.setSelectionEnd(selEnd-charSoFar);
+                        break;
+                    }
+                }
+                charSoFar = end;
+            }
+            else if (node.isManaged()) // custom user nodes
+            {
+                charSoFar++;
+            }
+        }
+    }
+
+    private void resetTextSelection(IndexRange range)
+    {
+        final int selStart = range.getStart();
+        final int selEnd = range.getEnd();
+        int charSoFar = 0;
+
+        for (Node node : getChildren())
+        {
+            if (node instanceof TextExt)
+            {
+                TextExt text = (TextExt) node;
+                charSoFar += text.getText().length();
+
+                if (charSoFar >= selStart)
+                {
+                    text.setSelectionStart(-1);
+                    text.setSelectionEnd(-1);
+                    if (charSoFar >= selEnd) break;
+                }
+            }
+            else if (node.isManaged()) // custom user nodes
+            {
+                charSoFar++;
+            }
+        }
+    }
+
     private void updateBackgroundShapes() {
         int start = 0;
 
@@ -513,7 +564,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             Runnable addNewValueRange = () -> ranges.add(Tuples.t(value, new IndexRange(start, end)));
 
             if (ranges.isEmpty()) {
-                addNewValueRange.run();;
+                addNewValueRange.run();
             } else {
                 int lastIndex = ranges.size() - 1;
                 Tuple2<T, IndexRange> lastShapeValueRange = ranges.get(lastIndex);
