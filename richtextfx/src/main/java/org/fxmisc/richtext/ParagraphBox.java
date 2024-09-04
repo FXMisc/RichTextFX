@@ -133,8 +133,6 @@ class ParagraphBox<PS, SEG, S> extends Region {
         );
     }
 
-    public Property<Paint> highlightTextFillProperty() { return text.highlightTextFillProperty(); }
-
     Paragraph<PS, SEG, S> getParagraph() {
         return text.getParagraph();
     }

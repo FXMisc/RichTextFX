@@ -22,7 +22,6 @@ import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -33,7 +32,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -62,14 +60,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     private final MapChangeListener<? super Selection<PS, SEG, S>, ? super SelectionPath> selectionPathListener;
     private final SetChangeListener<? super CaretNode> caretNodeListener;
 
-    // FIXME: changing it currently has not effect, because
-    // Text.selectionFillProperty().set(newFill) doesn't work
-    // properly for Text node inside a TextFlow (as of JDK8-b100).
-    private final ObjectProperty<Paint> highlightTextFill = new SimpleObjectProperty<>(Color.WHITE);
-    public ObjectProperty<Paint> highlightTextFillProperty() {
-        return highlightTextFill;
-    }
-
     private Paragraph<PS, SEG, S> paragraph;
 
     private final CustomCssShapeHelper<Paint> backgroundShapeHelper;
@@ -95,6 +85,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Val<Double> leftInset = Val.map(insetsProperty(), Insets::getLeft);
         Val<Double> topInset = Val.map(insetsProperty(), Insets::getTop);
 
+        ChangeListener<Paint> selectionFillListener = (obs, ov, nv) -> requestLayout();
         ChangeListener<IndexRange> selectionRangeListener = (obs, prevRange, nv) -> {
             resetTextSelection(prevRange);
             requestLayout();
@@ -102,6 +93,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         selectionPathListener = change -> {
             if (change.wasRemoved()) {
                 SelectionPath p = change.getValueRemoved();
+                p.textFillProperty().removeListener(selectionFillListener);
                 p.rangeProperty().removeListener(selectionRangeListener);
                 p.layoutXProperty().unbind();
                 p.layoutYProperty().unbind();
@@ -111,6 +103,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             }
             if (change.wasAdded()) {
                 SelectionPath p = change.getValueAdded();
+                p.textFillProperty().addListener(selectionFillListener);
                 p.rangeProperty().addListener(selectionRangeListener);
                 p.layoutXProperty().bind(leftInset);
                 p.layoutYProperty().bind(topInset);
@@ -143,17 +136,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         };
         carets.addListener( caretNodeListener );
 
-        highlightTextFill.addListener((ob,oldFill,newFill) -> getChildren().stream()
-            .filter( n -> n instanceof TextExt).map( n -> (TextExt) n )
-            .forEach( t -> t.selectionFillProperty().set(newFill) )
-        );
-
         // populate with text nodes
         par.getStyledSegments().stream().map(nodeFactory).forEach(n -> {
-            if (n instanceof TextExt) {
-                TextExt t = (TextExt) n;
-                t.selectionFillProperty().bind(highlightTextFill);
-            }
             getChildren().add(n);
         });
 
@@ -226,9 +210,6 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         // Then remove listeners to also avoid memory leaks.
         selections.removeListener( selectionPathListener );
         carets.removeListener( caretNodeListener );
-
-        getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
-        .forEach( t -> t.selectionFillProperty().unbind() );
 
         try { getChildren().clear(); }
         catch ( Exception EX ) {}
@@ -457,7 +438,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
                 if (end > selStart)
                 {
-                    // TODO text.setSelectionFill(selection.getTextFill());
+                    text.setSelectionFill(selection.getTextFill());
 
                     if (selStart <= charSoFar) text.setSelectionStart(0);
                     else text.setSelectionStart(selStart-charSoFar);

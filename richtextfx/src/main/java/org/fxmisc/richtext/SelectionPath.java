@@ -24,12 +24,22 @@ public class SelectionPath extends Path {
     private final StyleableObjectProperty<Paint> highlightFill
             = new CustomStyleableProperty<>(Color.DODGERBLUE, "highlightFill", this, HIGHLIGHT_FILL);
 
+    private final StyleableObjectProperty<Paint> textFill
+            = new CustomStyleableProperty<>(Color.WHITE, "textFill", this, TEXT_FILL);
+
     /**
      * Background fill for highlighted/selected text. Can be styled using "-fx-highlight-fill".
      */
     public final ObjectProperty<Paint> highlightFillProperty() { return highlightFill; }
     public final Paint getHighlightFill() { return highlightFill.get(); }
     public final void setHighlightFill(Paint paint) { highlightFill.set(paint); }
+
+    /**
+    * Text color for highlighted/selected text. Can be styled using "-fx-highlight-text-fill".
+    */
+    public final ObjectProperty<Paint> textFillProperty() { return textFill; }
+    public final Paint getTextFill() { return textFill.get(); }
+    public final void setTextFill(Paint paint) { textFill.set(paint); }
 
     private final Val<IndexRange> range;
     final Val<IndexRange> rangeProperty() { return range; }
@@ -53,12 +63,17 @@ public class SelectionPath extends Path {
             "-fx-highlight-fill", StyleConverter.getPaintConverter(), Color.DODGERBLUE, s -> s.highlightFill
     );
 
+    private static final CssMetaData<SelectionPath, Paint> TEXT_FILL = new CustomCssMetaData<>(
+            "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.textFill
+    );
+
     private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
 
     static {
         List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Path.getClassCssMetaData());
 
         styleables.add(HIGHLIGHT_FILL);
+        styleables.add(TEXT_FILL);
 
         CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
     }
