@@ -1,15 +1,12 @@
 package org.fxmisc.richtext;
 
-import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.IndexRange;
-import org.fxmisc.richtext.model.TwoLevelNavigator;
-
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.HitInfo;
 import javafx.scene.text.TextFlow;
@@ -19,9 +16,14 @@ import javafx.scene.shape.*;
  * Adds additional API to {@link TextFlow}.
  */
 class TextFlowExt extends TextFlow {
-    
+
     private TextFlowLayout layout;
-    
+    /*
+     * Rename to getLayoutInfo() and delete once JavaFX
+     * [PR1596](https://github.com/openjdk/jfx/pull/1596)
+     * is integrated and released. Also delete 
+     * TextFlowLayout and TextFlowSpan.
+     */
     private TextFlowLayout textLayout()
     {
         if ( layout == null ) {
@@ -31,25 +33,22 @@ class TextFlowExt extends TextFlow {
     }
 
     int getLineCount() {
-        return textLayout().getLineCount();
+        return textLayout().getTextLineCount();
     }
 
     int getLineStartPosition(int charIdx) {
-        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
-        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor();
-        return navigator.position(currentLineIndex, 0).toOffset();
+        return textLayout().getTextLineStart( getLineOfCharacter(charIdx) );
     }
 
     int getLineEndPosition(int charIdx) {
-        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
-        int currentLineIndex = navigator.offsetToPosition(charIdx, Forward).getMajor() + 1;
-        int minor = (currentLineIndex == getLineCount()) ? 0 : -1;
-        return navigator.position(currentLineIndex, minor).toOffset();
+        return textLayout().getTextLineEnd( getLineOfCharacter(charIdx) );
     }
 
     int getLineOfCharacter(int charIdx) {
-        TwoLevelNavigator navigator = textLayout().getTwoLevelNavigator();
-        return navigator.offsetToPosition(charIdx, Forward).getMajor();
+        var layout = textLayout();
+        return IntStream.range( 0, getLineCount() )
+                .filter( l -> charIdx <= layout.getTextLineEnd( l ) )
+                .findFirst().orElse( Math.max(0,getLineCount()-1) );
     }
 
     PathElement[] getRangeShape(IndexRange range) {
@@ -80,9 +79,9 @@ class TextFlowExt extends TextFlow {
     PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius, double doubleGap) {
         // get a Path for the text underline
         List<PathElement> result = new ArrayList<>();
-        
+
         PathElement[] shape = rangeShape( from, to );
-        // The shape is a closed Path for one or more rectangles AROUND the selected text. 
+        // The shape is a closed Path for one or more rectangles AROUND the selected text.
         // shape: [MoveTo origin, LineTo top R, LineTo bottom R, LineTo bottom L, LineTo origin, *]
 
         boolean doubleLine = (doubleGap > 0.0);
@@ -149,25 +148,34 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hitLine(double x, int lineIndex) {
-        return hit(x, textLayout().getLineCenter( lineIndex ));
+        Rectangle2D r = textLayout().getLineBounds( lineIndex );
+        double y = r.getMinY() + r.getHeight() / 2.0;
+        return hit( x, y, lineIndex );
     }
 
     CharacterHit hit(double x, double y) {
-        TextFlowSpan span = textLayout().getLineSpan( (float) y );
-        Rectangle2D lineBounds = span.getBounds();
-        
+        var layout = textLayout();
+        int line = IntStream.range( 0, getLineCount() )
+                    .filter( l -> y < layout.getLineBounds( l ).getMaxY() )
+                    .findFirst().orElse( Math.max(0,getLineCount()-1) );
+        return hit( x, y, line );
+    }
+
+    CharacterHit hit(double x, double y, int line) {
+
+        Rectangle2D lineBounds = textLayout().getLineBounds( line );
         HitInfo hit = hitTest(new Point2D(x, y));
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
 
-        if (y >= span.getBounds().getMaxY()) {
+        if (y >= lineBounds.getMaxY()) {
             return CharacterHit.insertionAt(charIdx);
         }
 
         if ( ! leading && getLineCount() > 1) {
             // If this is a wrapped paragraph and hit character is at end of hit line, make sure that the
             // "character hit" stays at the end of the hit line (and not at the beginning of the next line).
-            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= span.getStart() + span.getLength());
+            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= textLayout().getTextLineEnd( line ));
         }
 
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {
