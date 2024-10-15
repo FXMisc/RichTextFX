@@ -21,7 +21,7 @@ class TextFlowExt extends TextFlow {
     /*
      * Rename to getLayoutInfo() and delete once JavaFX
      * [PR1596](https://github.com/openjdk/jfx/pull/1596)
-     * is integrated and released. Also delete 
+     * is integrated and released. Also delete
      * TextFlowLayout and TextFlowSpan.
      */
     private TextFlowLayout textLayout()
@@ -37,17 +37,20 @@ class TextFlowExt extends TextFlow {
     }
 
     int getLineStartPosition(int charIdx) {
-        return textLayout().getTextLineStart( getLineOfCharacter(charIdx) );
+        return textLayout().getTextLine( getLineOfCharacter(charIdx) ).getStart();
     }
 
     int getLineEndPosition(int charIdx) {
-        return textLayout().getTextLineEnd( getLineOfCharacter(charIdx) );
+        int line = getLineOfCharacter( charIdx );
+        int end = textLayout().getTextLine( line ).getEnd();
+        if ( line < (getLineCount() - 1) ) end--; // trailing space
+        return end;
     }
 
     int getLineOfCharacter(int charIdx) {
         var layout = textLayout();
         return IntStream.range( 0, getLineCount() )
-                .filter( l -> charIdx <= layout.getTextLineEnd( l ) )
+                .filter( l -> charIdx < layout.getTextLine( l ).getEnd() )
                 .findFirst().orElse( Math.max(0,getLineCount()-1) );
     }
 
@@ -148,7 +151,7 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hitLine(double x, int lineIndex) {
-        Rectangle2D r = textLayout().getLineBounds( lineIndex );
+        Rectangle2D r = textLayout().getTextLine( lineIndex ).getBounds();
         double y = r.getMinY() + r.getHeight() / 2.0;
         return hit( x, y, lineIndex );
     }
@@ -156,14 +159,14 @@ class TextFlowExt extends TextFlow {
     CharacterHit hit(double x, double y) {
         var layout = textLayout();
         int line = IntStream.range( 0, getLineCount() )
-                    .filter( l -> y < layout.getLineBounds( l ).getMaxY() )
+                    .filter( l -> y < layout.getTextLine( l ).getBounds().getMaxY() )
                     .findFirst().orElse( Math.max(0,getLineCount()-1) );
         return hit( x, y, line );
     }
 
     CharacterHit hit(double x, double y, int line) {
 
-        Rectangle2D lineBounds = textLayout().getLineBounds( line );
+        Rectangle2D lineBounds = textLayout().getTextLine( line ).getBounds();
         HitInfo hit = hitTest(new Point2D(x, y));
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
@@ -175,7 +178,7 @@ class TextFlowExt extends TextFlow {
         if ( ! leading && getLineCount() > 1) {
             // If this is a wrapped paragraph and hit character is at end of hit line, make sure that the
             // "character hit" stays at the end of the hit line (and not at the beginning of the next line).
-            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= textLayout().getTextLineEnd( line ));
+            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= textLayout().getTextLine( line ).getEnd());
         }
 
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {

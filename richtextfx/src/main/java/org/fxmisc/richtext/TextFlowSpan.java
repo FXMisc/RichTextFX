@@ -32,6 +32,7 @@ class TextFlowSpan
 
     int getStart()  { return start; }
     int getLength() { return length; }
+    int getEnd()    { return start + length; }
     double getHeight() { return height; }
     double getWidth() { return width; }
     
