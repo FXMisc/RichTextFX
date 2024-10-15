@@ -8,6 +8,7 @@ import org.fxmisc.richtext.model.TwoLevelNavigator;
 import javafx.beans.Observable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -34,11 +35,13 @@ class TextFlowLayout
     }
 
 
+    @Deprecated
     float getLineCenter( int lineNo ) {
         return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ).getCenterY() : 1.0f;
     }
 
 
+    @Deprecated
     int getLineLength( int lineNo ) {
         return getLineSpan( lineNo ).getLength();
     }
@@ -49,26 +52,44 @@ class TextFlowLayout
     }
 
 
+    @Deprecated
     TextFlowSpan getLineSpan( float y ) {
-        final int lastLine = getLineCount();
+        final int lastLine = getTextLineCount();
         if ( lastLine < 1 ) return EMPTY_SPAN;
         return lineMetrics.stream().filter( tfs -> y < tfs.getBounds().getMaxY() )
                 .findFirst().orElse( lineMetrics.get( Math.max(0,lastLine-1) ) );
     }
 
 
+    @Deprecated
     TwoLevelNavigator getTwoLevelNavigator() {
-        return new TwoLevelNavigator( this::getLineCount, this::getLineLength );
+        return new TwoLevelNavigator( this::getTextLineCount, this::getLineLength );
     }
-    
+
+
+    Rectangle2D getLineBounds( int line ) {
+        return getLineSpan( line ).getBounds();
+    }
+
+    int getTextLineStart( int line ) {
+        return getLineSpan( line ).getStart();
+    }
+
+    int getTextLineEnd( int line ) {
+        TextFlowSpan span = getLineSpan( line );
+        int end = span.getStart() + span.getLength();
+        if ( line < (getTextLineCount() - 1) ) end--;
+        return end;
+    }
+
 
     /*
      * Iterate through the nodes in the TextFlow to determine the number of lines of text.
      * Also calculates the following metrics for each line along the way: line height,
      * line width, centerY, length (character count), start (character offset from 1st line)
      */
-    int getLineCount() {
-       
+    int getTextLineCount() {
+
         if ( lineCount > -1 ) return lineCount;
 
         lineCount = 0;
@@ -77,7 +98,7 @@ class TextFlowLayout
         int totCharSoFar = 0;
 
         for ( Node n : flow.getChildrenUnmodifiable() ) if ( n.isManaged() ) {
-           
+
             Bounds nodeBounds = n.getBoundsInParent();
             int length = (n instanceof Text) ? ((Text) n).getText().length() : 1;
             PathElement[] shape = flow.rangeShape( totCharSoFar, totCharSoFar+length );
@@ -88,12 +109,12 @@ class TextFlowLayout
                 if ( totLines > 0.0 ) lines--;
                 totLines += lines;
             }
-            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line 
+            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line
                 totLines++;
             }
 
             if ( lineMetrics.size() < totLines ) {                            // Add additional lines
-               
+
                 if ( shape.length == 0 ) {
                    lineMetrics.add( new TextFlowSpan( totCharSoFar, length, nodeMinY, nodeBounds.getWidth(), nodeBounds.getHeight() ) );
                     totCharSoFar += length;
@@ -121,14 +142,14 @@ class TextFlowLayout
                 }
             }
             else {
-                // Adjust current line metrics with additional Text or Node embedded in this line 
+                // Adjust current line metrics with additional Text or Node embedded in this line
                 adjustLineMetrics( length, nodeBounds.getWidth(), nodeBounds.getHeight() );
                 totCharSoFar += length;
             }
 
             prevMaxY = Math.max( prevMaxY, nodeBounds.getMaxY() );
         }
-        
+
         lineCount = (int) totLines;
         if ( lineCount > 0 ) return lineCount;
         lineCount = -1;
