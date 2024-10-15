@@ -8,7 +8,6 @@ import org.fxmisc.richtext.model.TwoLevelNavigator;
 import javafx.beans.Observable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -43,7 +42,7 @@ class TextFlowLayout
 
     @Deprecated
     int getLineLength( int lineNo ) {
-        return getLineSpan( lineNo ).getLength();
+        return getTextLine( lineNo ).getLength();
     }
 
 
@@ -64,22 +63,6 @@ class TextFlowLayout
     @Deprecated
     TwoLevelNavigator getTwoLevelNavigator() {
         return new TwoLevelNavigator( this::getTextLineCount, this::getLineLength );
-    }
-
-
-    Rectangle2D getLineBounds( int line ) {
-        return getLineSpan( line ).getBounds();
-    }
-
-    int getTextLineStart( int line ) {
-        return getLineSpan( line ).getStart();
-    }
-
-    int getTextLineEnd( int line ) {
-        TextFlowSpan span = getLineSpan( line );
-        int end = span.getStart() + span.getLength();
-        if ( line < (getTextLineCount() - 1) ) end--;
-        return end;
     }
 
 
