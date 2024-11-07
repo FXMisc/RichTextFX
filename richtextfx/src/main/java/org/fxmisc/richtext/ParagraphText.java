@@ -172,6 +172,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         Supplier<Path> createUnderlineShape = () -> configurePath.apply(new UnderlinePath());
 
         Consumer<Collection<Path>> clearUnusedShapes = paths -> getChildren().removeAll(paths);
+        Consumer<Collection<Path>> clearUnusedAndDecrementSelectionIndex = clearUnusedShapes
+                .andThen(paths -> selectionShapeStartIndex -= paths.size());
         Consumer<Path> addToBackground = path -> getChildren().add(0, path);
         Consumer<Path> addToBackgroundAndIncrementSelectionIndex = addToBackground
                 .andThen(ignore -> selectionShapeStartIndex++);
@@ -184,7 +186,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                     backgroundShape.getElements().setAll(getRangeShape(tuple._2));
                 },
                 addToBackgroundAndIncrementSelectionIndex,
-                clearUnusedShapes
+                clearUnusedAndDecrementSelectionIndex
         );
         borderShapeHelper = new CustomCssShapeHelper<>(
                 createBorderShape,
@@ -231,7 +233,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         carets.removeListener( caretNodeListener );
 
         getChildren().stream().filter( n -> n instanceof TextExt ).map( n -> (TextExt) n )
-        .forEach( t -> t.selectionFillProperty().unbind() ); 
+        .forEach( t -> t.selectionFillProperty().unbind() );
 
         try { getChildren().clear(); }
         catch ( Exception EX ) {}
@@ -513,7 +515,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
             Runnable addNewValueRange = () -> ranges.add(Tuples.t(value, new IndexRange(start, end)));
 
             if (ranges.isEmpty()) {
-                addNewValueRange.run();;
+                addNewValueRange.run();
             } else {
                 int lastIndex = ranges.size() - 1;
                 Tuple2<T, IndexRange> lastShapeValueRange = ranges.get(lastIndex);
