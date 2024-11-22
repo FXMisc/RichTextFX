@@ -18,7 +18,8 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.KeyCharacterCombination;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -58,16 +59,16 @@ class GenericStyledAreaBehavior {
          * on Dvorak: C results in KeyCode I, X -> B, and V -> .
          * and on German layouts: Z and Y are reportedly switched
          * so then editing commands such as Ctrl+C, or CMD+Z are incorrectly processed.
-         * KeyCharacterCombination however does keyboard translation before matching.
+         * KeyCodeCombination however does keyboard translation before matching.
          * This resolves issue #799
          */
-        KeyCharacterCombination SHORTCUT_A = new KeyCharacterCombination( "a", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_C = new KeyCharacterCombination( "c", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_V = new KeyCharacterCombination( "v", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_X = new KeyCharacterCombination( "x", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
+        KeyCombination SHORTCUT_A = new KeyCodeCombination( A, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_C = new KeyCodeCombination( C, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_V = new KeyCodeCombination( V, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_X = new KeyCodeCombination( X, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_Y = new KeyCodeCombination( Y, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_Z = new KeyCodeCombination( Z, SHORTCUT_DOWN );
+        KeyCombination SHORTCUT_SHIFT_Z = new KeyCodeCombination( Z, SHORTCUT_DOWN, SHIFT_DOWN );
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
