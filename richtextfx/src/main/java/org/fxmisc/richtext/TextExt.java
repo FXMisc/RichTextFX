@@ -46,6 +46,7 @@ public class TextExt extends Text {
         styleables.add(StyleableProperties.UNDERLINE_OFFSET);
         styleables.add(StyleableProperties.UNDERLINE_WAVE_RADIUS);
         styleables.add(StyleableProperties.UNDERLINE_DASH_ARRAY);
+        styleables.add(StyleableProperties.UNDERLINE_DOUBLE_GAP);
         styleables.add(StyleableProperties.UNDERLINE_CAP);
 
         CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
@@ -89,6 +90,10 @@ public class TextExt extends Text {
 
     private final StyleableObjectProperty<Number[]> underlineDashArray = new CustomStyleableProperty<>(
             null, "underlineDashArray", this, StyleableProperties.UNDERLINE_DASH_ARRAY
+    );
+
+    private final StyleableObjectProperty<Number> underlineDoubleGap = new CustomStyleableProperty<>(
+            null, "underlineDoubleGap", this, StyleableProperties.UNDERLINE_DOUBLE_GAP
     );
 
     private final StyleableObjectProperty<StrokeLineCap> underlineCap = new CustomStyleableProperty<>(
@@ -266,6 +271,22 @@ public class TextExt extends Text {
      */
     public ObjectProperty<Number> underlineWaveRadiusProperty() { return underlineWaveRadius; }
 
+    public Number getUnderlineDoubleGap() { return underlineDoubleGap.get(); }
+    public void setUnderlineDoubleGap(Number radius) { underlineDoubleGap.set(radius); }
+
+    /**
+     * The size of the gap between two parallel underline lines or wave forms.  If null or zero, the
+     * underline will be a single line or wave form.
+     *
+     * Can be styled from CSS using the "-rtfx-underline-double-gap" property.
+     *
+     * <p>Note that the underline properties specified here are orthogonal to the {@link #underlineProperty()} inherited
+     * from {@link Text}.  The underline properties defined here in {@link TextExt} will cause an underline to be
+     * drawn if {@link #underlineWidthProperty()} is non-null and greater than zero, regardless of
+     * the value of {@link #underlineProperty()}.</p>
+     */
+    public ObjectProperty<Number> underlineDoubleGapProperty() { return underlineDoubleGap; }
+
     // Dash array for the text underline
     public Number[] getUnderlineDashArray() { return underlineDashArray.get(); }
     public void setUnderlineDashArray(Number[] dashArray) { underlineDashArray.set(dashArray); }
@@ -315,7 +336,7 @@ public class TextExt extends Text {
         );
 
         private static final CssMetaData<TextExt, StrokeType> BORDER_TYPE = new CustomCssMetaData<>(
-                "-rtfx-border-stroke-type", (StyleConverter<?, StrokeType>) StyleConverter.getEnumConverter(StrokeType.class),
+                "-rtfx-border-stroke-type", StyleConverter.getEnumConverter(StrokeType.class),
                 StrokeType.INSIDE, n -> n.borderStrokeType
         );
 
@@ -349,8 +370,13 @@ public class TextExt extends Text {
                 new Double[0], n -> n.underlineDashArray
         );
 
+        private static final CssMetaData<TextExt, Number> UNDERLINE_DOUBLE_GAP = new CustomCssMetaData<>(
+                "-rtfx-underline-double-gap", StyleConverter.getSizeConverter(),
+                0, n -> n.underlineDoubleGap
+        );
+
         private static final CssMetaData<TextExt, StrokeLineCap> UNDERLINE_CAP = new CustomCssMetaData<>(
-                "-rtfx-underline-cap", (StyleConverter<?, StrokeLineCap>) StyleConverter.getEnumConverter(StrokeLineCap.class),
+                "-rtfx-underline-cap", StyleConverter.getEnumConverter(StrokeLineCap.class),
                 StrokeLineCap.SQUARE, n -> n.underlineCap
         );
     }

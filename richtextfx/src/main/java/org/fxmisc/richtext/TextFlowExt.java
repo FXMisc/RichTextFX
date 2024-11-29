@@ -69,7 +69,7 @@ class TextFlowExt extends TextFlow {
     }
 
     PathElement[] getUnderlineShape(int from, int to) {
-        return getUnderlineShape(from, to, 0, 0);
+        return getUnderlineShape(from, to, 0, 0, 0);
     }
 
     /**
@@ -80,13 +80,16 @@ class TextFlowExt extends TextFlow {
      * @return An array with the PathElement objects which define an
      *         underline from the first to the last character.
      */
-    PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius) {
+    PathElement[] getUnderlineShape(int from, int to, double offset, double waveRadius, double doubleGap) {
         // get a Path for the text underline
         List<PathElement> result = new ArrayList<>();
         
         PathElement[] shape = rangeShape( from, to );
         // The shape is a closed Path for one or more rectangles AROUND the selected text. 
         // shape: [MoveTo origin, LineTo top R, LineTo bottom R, LineTo bottom L, LineTo origin, *]
+
+        boolean doubleLine = (doubleGap > 0.0);
+        List<PathElement> result2 = new ArrayList<>();
 
         // Extract the bottom left and right coordinates for each rectangle to get the underline path.
         for ( int ele = 2; ele < shape.length; ele += 5 )
@@ -100,12 +103,20 @@ class TextFlowExt extends TextFlow {
             if (waveRadius <= 0) {
                 result.add(new MoveTo( leftx, y ));
                 result.add(new LineTo( snapSizeX( br.getX() ), y ));
+                if (doubleLine) {
+                    y += doubleGap;
+                    result2.add(new MoveTo( leftx, y ));
+                    result2.add(new LineTo( snapSizeX( br.getX() ), y ));
+                }
             }
             else {
                 // For larger wave radii increase the X radius to stretch out the wave.
                 double radiusX = waveRadius > 1 ? waveRadius * 1.25 : waveRadius;
                 double rightx = br.getX();
                 result.add(new MoveTo( leftx, y ));
+                if (doubleLine) {
+                    result2.add(new MoveTo( leftx, y+doubleGap ));
+                }
                 boolean sweep = true;
                 while ( leftx < rightx ) {
                     leftx += waveRadius * 2;
@@ -127,10 +138,15 @@ class TextFlowExt extends TextFlow {
                         leftx = rightx;
                     }
                     result.add(new ArcTo( radiusX, waveRadius, 0.0, leftx, y, false, sweep ));
+                    if (doubleLine) {
+                        result2.add(new ArcTo( radiusX, waveRadius, 0.0, leftx, y+doubleGap, false, sweep ));
+                    }
                     sweep = !sweep;
                 }
             }
         }
+    	
+        if (doubleLine) result.addAll( result2 );
 
         return result.toArray(new PathElement[0]);
     }

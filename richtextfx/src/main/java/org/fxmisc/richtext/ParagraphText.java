@@ -216,7 +216,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
                         underlineShape.getStrokeDashArray().setAll(attributes.dashArray);
                     }
                     PathElement[] shape = getUnderlineShape(tuple._2.getStart(), tuple._2.getEnd(),
-                                                            attributes.offset, attributes.waveRadius);
+                                          attributes.offset, attributes.waveRadius, attributes.doubleGap);
                     underlineShape.getElements().setAll(shape);
                 },
                 addToForeground,
@@ -604,16 +604,23 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
         final StrokeLineCap cap;
         final double offset;
         final double waveRadius;
+        final double doubleGap;
 
         UnderlineAttributes(TextExt text) {
             super(text.getUnderlineColor(), text.getUnderlineWidth(), text.underlineDashArrayProperty());
             cap = text.getUnderlineCap();
+
             Number waveNumber = text.getUnderlineWaveRadius();
             waveRadius = waveNumber == null ? 0 : waveNumber.doubleValue();
+
             Number offsetNumber = text.getUnderlineOffset();
             offset = offsetNumber == null ? waveRadius * 0.5 : offsetNumber.doubleValue();
             // The larger the radius the bigger the offset needs to be, so
             // a reasonable default is provided if no offset is specified.
+
+            Number doubleGapNumber = text.getUnderlineDoubleGap();
+            if (doubleGapNumber == null) doubleGap = 0;
+            else doubleGap = doubleGapNumber.doubleValue() + width;
         }
 
         /**
@@ -621,7 +628,8 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
          */
         public boolean equalsFaster(UnderlineAttributes attr) {
             return super.equalsFaster(attr) && Objects.equals(cap, attr.cap)
-                   && offset == attr.offset && waveRadius == attr.waveRadius;
+                   && offset == attr.offset && waveRadius == attr.waveRadius
+                   && doubleGap == attr.doubleGap;
         }
 
         @Override
