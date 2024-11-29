@@ -1,5 +1,19 @@
 # Change Log
 
+## [v0.11.4](https://github.com/FXMisc/RichTextFX/tree/v0.11.4) (2024-11-29)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.3...v0.11.4)
+
+**Implemented enhancements:**
+
+- Added double underline [\#1256](https://github.com/FXMisc/RichTextFX/pull/1256)
+
+**Fixed bugs:**
+
+- Fix minimum paragraph width [\#1242](https://github.com/FXMisc/RichTextFX/pull/1242)
+- Calc auto height on first pass using pref height [\#1245](https://github.com/FXMisc/RichTextFX/pull/1245)
+- ParagraphText fixed IOOBE [\#1250](https://github.com/FXMisc/RichTextFX/pull/1250)
+- Changed KeyCharacterCombination to KeyCodeCombination [\#1255](https://github.com/FXMisc/RichTextFX/pull/1255)
+
 ## [v0.11.3](https://github.com/FXMisc/RichTextFX/tree/v0.11.3) (2024-06-25)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.2...v0.11.3)
 
