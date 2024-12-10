@@ -620,7 +620,10 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
 
             Number doubleGapNumber = text.getUnderlineDoubleGap();
             if (doubleGapNumber == null) doubleGap = 0;
-            else doubleGap = doubleGapNumber.doubleValue() + width;
+            else if (doubleGapNumber.doubleValue() > 0.0) {
+            	doubleGap = doubleGapNumber.doubleValue() + width;
+            }
+            else doubleGap = doubleGapNumber.doubleValue();
         }
 
         /**
