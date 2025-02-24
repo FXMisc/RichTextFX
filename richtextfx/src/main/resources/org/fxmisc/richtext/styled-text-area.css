@@ -6,7 +6,7 @@
     -fx-padding: -0.5 0 -0.5 0;
 }
 
-.styled-text-area .paragraph-box .paragraph-text {
+.styled-text-area .paragraph-text {
     -fx-line-spacing: 1;
 }
 
