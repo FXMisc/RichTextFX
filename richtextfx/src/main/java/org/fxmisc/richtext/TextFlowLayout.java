@@ -35,7 +35,7 @@ class TextFlowLayout
 
 
     float getLineCenter( int lineNo ) {
-        return getLineCount() > 0 ? lineMetrics.get( lineNo ).getCenterY() : 1.0f;
+        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ).getCenterY() : 1.0f;
     }
 
 
@@ -45,7 +45,7 @@ class TextFlowLayout
 
 
     TextFlowSpan getLineSpan( int lineNo ) {
-        return getLineCount() > 0 ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
+        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
     }
 
 
