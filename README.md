@@ -62,6 +62,7 @@ Who uses RichTextFX?
 - [KeenWrite](https://github.com/DaveJarvis/keenwrite)
 - [Markdown Writer FX](https://github.com/JFormDesigner/markdown-writer-fx)
 - [mqtt-spy](http://kamilfb.github.io/mqtt-spy/)
+- [Mindolph](https://github.com/mindolph/Mindolph)
 - [Nearde IDE](https://github.com/VenityStudio/Nearde-IDE)
 - [OmniEditor](https://github.com/giancosta86/OmniEditor)
 - [PMD Designer](https://github.com/pmd/pmd-designer/)
