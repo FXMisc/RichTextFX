@@ -473,8 +473,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     public final boolean removeSelection(Selection<PS, SEG, S> selection) {
-        if (selection != caretSelectionBind.getUnderlyingSelection()) {
-            return selectionSet.remove(selection);
+        if (selection != caretSelectionBind.getUnderlyingSelection() && selectionSet.remove(selection)) {
+            for (int p = selection.getStartParagraphIndex(); p <= selection.getEndParagraphIndex(); p++) {
+                virtualFlow.getCell(p).getNode().selectionsProperty().remove(selection);
+            }
+            selection.dispose();
+            return true;
         } else {
             return false;
         }
