@@ -456,8 +456,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     public final boolean removeCaret(CaretNode caret) {
-        if (caret != caretSelectionBind.getUnderlyingCaret()) {
-            return caretSet.remove(caret);
+        if (caret != caretSelectionBind.getUnderlyingCaret() && caretSet.remove(caret)) {
+            virtualFlow.getCellIfVisible(caret.getParagraphIndex()).ifPresent(
+                c -> c.getNode().caretsProperty().remove(caret)
+            );
+            caret.dispose();
+            return true;
         } else {
             return false;
         }
@@ -475,7 +479,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final boolean removeSelection(Selection<PS, SEG, S> selection) {
         if (selection != caretSelectionBind.getUnderlyingSelection() && selectionSet.remove(selection)) {
             for (int p = selection.getStartParagraphIndex(); p <= selection.getEndParagraphIndex(); p++) {
-                virtualFlow.getCell(p).getNode().selectionsProperty().remove(selection);
+                virtualFlow.getCellIfVisible(p).ifPresent(c -> c.getNode().selectionsProperty().remove(selection));
             }
             selection.dispose();
             return true;
