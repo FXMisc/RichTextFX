@@ -37,12 +37,12 @@ class TextFlowExt extends TextFlow {
     }
 
     int getLineStartPosition(int charIdx) {
-        return textLayout().getTextLine( getLineOfCharacter(charIdx) ).getStart();
+        return textLayout().getTextLine( getLineOfCharacter(charIdx), false ).start();
     }
 
     int getLineEndPosition(int charIdx) {
         int line = getLineOfCharacter( charIdx );
-        int end = textLayout().getTextLine( line ).getEnd();
+        int end = textLayout().getTextLine( line, false ).end();
         if ( line < (getLineCount() - 1) ) end--; // trailing space
         return end;
     }
@@ -50,7 +50,7 @@ class TextFlowExt extends TextFlow {
     int getLineOfCharacter(int charIdx) {
         var layout = textLayout();
         return IntStream.range( 0, getLineCount() )
-                .filter( l -> charIdx < layout.getTextLine( l ).getEnd() )
+                .filter( l -> charIdx < layout.getTextLine( l, false ).end() )
                 .findFirst().orElse( Math.max(0,getLineCount()-1) );
     }
 
@@ -154,7 +154,7 @@ class TextFlowExt extends TextFlow {
     }
 
     CharacterHit hitLine(double x, int lineIndex) {
-        Rectangle2D r = textLayout().getTextLine( lineIndex ).getBounds();
+        Rectangle2D r = textLayout().getTextLine( lineIndex, false ).bounds();
         double y = r.getMinY() + r.getHeight() / 2.0;
         return hit( x, y, lineIndex );
     }
@@ -162,14 +162,14 @@ class TextFlowExt extends TextFlow {
     CharacterHit hit(double x, double y) {
         var layout = textLayout();
         int line = IntStream.range( 0, getLineCount() )
-                    .filter( l -> y < layout.getTextLine( l ).getBounds().getMaxY() )
+                    .filter( l -> y < layout.getTextLine( l, true ).bounds().getMaxY() )
                     .findFirst().orElse( Math.max(0,getLineCount()-1) );
         return hit( x, y, line );
     }
 
     CharacterHit hit(double x, double y, int line) {
 
-        Rectangle2D lineBounds = textLayout().getTextLine( line ).getBounds();
+        Rectangle2D lineBounds = textLayout().getTextLine( line, false ).bounds();
         HitInfo hit = hitTest(new Point2D(x, y));
         int charIdx = hit.getCharIndex();
         boolean leading = hit.isLeading();
@@ -181,7 +181,7 @@ class TextFlowExt extends TextFlow {
         if ( ! leading && getLineCount() > 1) {
             // If this is a wrapped paragraph and hit character is at end of hit line, make sure that the
             // "character hit" stays at the end of the hit line (and not at the beginning of the next line).
-            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= textLayout().getTextLine( line ).getEnd());
+            leading = (getLineOfCharacter(charIdx) + 1 < getLineCount() && charIdx + 1 >= textLayout().getTextLine( line, false ).end());
         }
 
         if(x < lineBounds.getMinX() || x > lineBounds.getMaxX()) {

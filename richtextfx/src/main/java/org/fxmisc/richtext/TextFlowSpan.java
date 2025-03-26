@@ -19,22 +19,22 @@ class TextFlowSpan
         y = minY;
     }
 
-    Rectangle2D getBounds() {
+    Rectangle2D bounds() {
         if ( bounds == null ) {
             bounds = new Rectangle2D( 0, y, width, height );
         }
         return bounds;
     }
 
-    float getCenterY() {
+    float centerY() {
         return (float) (y + height / 2);
     }
 
-    int getStart()  { return start; }
-    int getLength() { return length; }
-    int getEnd()    { return start + length; }
-    double getHeight() { return height; }
-    double getWidth() { return width; }
+    int start()  { return start; }
+    int length() { return length; }
+    int end()    { return start + length; }
+    double height() { return height; }
+    double width() { return width; }
     
     void setHeight( double h ) { height = h; bounds = null; }
     
