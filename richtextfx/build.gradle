@@ -38,7 +38,7 @@ integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
 dependencies {
     api group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     api group: 'org.fxmisc.undo', name: 'undofx', version: '2.1.1'
-    api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.7.3'
+    api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.7.4'
     api group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
