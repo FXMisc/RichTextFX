@@ -1,5 +1,19 @@
 # Change Log
 
+## [v0.11.5](https://github.com/FXMisc/RichTextFX/tree/v0.11.5) (2025-04-01)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.4...v0.11.5)
+
+**Implemented enhancements:**
+
+- Bumped Flowless to 0.7.4
+- Reduce specificity of "-fx-line-spacing" in styled-text-area.css to allow alternative CSS override
+
+**Fixed bugs:**
+
+- Fixed double underline when gap is zero [\#1259](https://github.com/FXMisc/RichTextFX/pull/1259)
+- TextFlowLayout fixed IOOBE [\#1267](https://github.com/FXMisc/RichTextFX/pull/1267)
+- Selection & Caret removal cleanup [\#1270](https://github.com/FXMisc/RichTextFX/pull/1270)[\#1271](https://github.com/FXMisc/RichTextFX/pull/1271)
+
 ## [v0.11.4](https://github.com/FXMisc/RichTextFX/tree/v0.11.4) (2024-11-29)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.3...v0.11.4)
 
