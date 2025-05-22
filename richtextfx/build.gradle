@@ -1,5 +1,6 @@
 buildscript {
     repositories {
+        gradlePluginPortal()
         mavenCentral()
     }
 }
@@ -7,7 +8,7 @@ buildscript {
 plugins {
     id 'java-library'
     id 'org.openjfx.javafxplugin' version '0.0.13'
-    id 'org.unbroken-dome.test-sets' version '4.0.0'
+    id 'org.unbroken-dome.test-sets' version '4.1.0'
     id 'biz.aQute.bnd.builder' version "5.3.0"
     id 'maven-publish'
     id 'signing'
@@ -147,13 +148,13 @@ integrationTest {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 artifacts {
