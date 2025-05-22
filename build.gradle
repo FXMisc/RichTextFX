@@ -5,6 +5,7 @@ subprojects {
     ext.specificationVersion = '0.11.0'
 
     repositories {
+        gradlePluginPortal()
         mavenCentral()
         maven {
             url 'https://oss.sonatype.org/content/repositories/snapshots/'
