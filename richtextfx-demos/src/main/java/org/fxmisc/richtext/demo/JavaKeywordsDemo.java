@@ -3,12 +3,10 @@ package org.fxmisc.richtext.demo;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -29,7 +27,6 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.collection.ListModification;
 import org.reactfx.Subscription;
-import org.reactfx.util.Tuple2;
 
 public class JavaKeywordsDemo extends Application {
 
@@ -123,7 +120,7 @@ public class JavaKeywordsDemo extends Application {
         // recompute syntax highlighting only for visible paragraph changes
         // Note that this shows how it can be done but is not recommended for production where multi-
         // line syntax requirements are needed, like comment blocks without a leading * on each line. 
-        codeArea.getVisibleParagraphIndexes().addModificationObserver
+        codeArea.getVisibleParagraphs().addModificationObserver
         (
             new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
         );
@@ -173,10 +170,11 @@ public class JavaKeywordsDemo extends Application {
         return spansBuilder.create();
     }
 
-    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification<? extends Tuple2<Integer,Paragraph<PS, SEG, S>>>>
+    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
     {
         private final GenericStyledArea<PS, SEG, S> area;
         private final Function<String,StyleSpans<S>> computeStyles;
+        private int prevParagraph, prevTextLength;
 
         public VisibleParagraphStyler( GenericStyledArea<PS, SEG, S> area, Function<String,StyleSpans<S>> computeStyles )
         {
@@ -185,15 +183,24 @@ public class JavaKeywordsDemo extends Application {
         }
 
         @Override
-        public void accept( ListModification<? extends Tuple2<Integer,Paragraph<PS, SEG, S>>> lm )
+        public void accept( ListModification<? extends Paragraph<PS, SEG, S>> lm )
         {
-            if ( lm.getAddedSize() == 0 ) return;
+            if ( lm.getAddedSize() > 0 ) Platform.runLater( () ->
+            {
+                int paragraph = Math.min( area.firstVisibleParToAllParIndex() + lm.getFrom(), area.getParagraphs().size()-1 );
+                String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
 
-            List<? extends Tuple2<Integer,Paragraph<PS, SEG, S>>> addList = lm.getAddedSubList();
-            String text = addList.stream().map( t2 -> t2.get2().getText() ).collect( Collectors.joining( "\n" ) );
-            int startPos = area.getAbsolutePosition( addList.get(0).get1(), 0 );
-
-            Platform.runLater( () -> area.setStyleSpans( startPos, computeStyles.apply( text ) ) );
+                if ( paragraph != prevParagraph || text.length() != prevTextLength )
+                {
+                    if ( paragraph < area.getParagraphs().size()-1 )
+                    {
+                        int startPos = area.getAbsolutePosition( paragraph, 0 );
+                        area.setStyleSpans( startPos, computeStyles.apply( text ) );
+                    }
+                    prevTextLength = text.length();
+                    prevParagraph = paragraph;
+                }
+            });
         }
     }
 

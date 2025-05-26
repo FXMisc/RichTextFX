@@ -94,7 +94,6 @@ import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
 import org.reactfx.collection.SuspendableList;
 import org.reactfx.util.Tuple2;
-import org.reactfx.util.Tuples;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -570,9 +569,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     // paragraphs
     @Override public LiveList<Paragraph<PS, SEG, S>> getParagraphs() { return content.getParagraphs(); }
 
-    private final SuspendableList<Tuple2<Integer,Paragraph<PS, SEG, S>>> visibleParagraphIndexes;
-    public final LiveList<Tuple2<Integer,Paragraph<PS, SEG, S>>> getVisibleParagraphIndexes() { return visibleParagraphIndexes; }
-
     private final SuspendableList<Paragraph<PS, SEG, S>> visibleParagraphs;
     @Override public final LiveList<Paragraph<PS, SEG, S>> getVisibleParagraphs() { return visibleParagraphs; }
 
@@ -820,9 +816,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         caretSet.add(caretSelectionBind.getUnderlyingCaret());
         selectionSet.add(caretSelectionBind.getUnderlyingSelection());
 
-        LiveList<ParagraphBox<PS,SEG,S>> visibleNodes = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode());
-        visibleParagraphIndexes = visibleNodes.map(pb -> Tuples.t(pb.getIndex(), pb.getParagraph())).suspendable();
-        visibleParagraphs = visibleNodes.map(pb -> pb.getParagraph()).suspendable();
+        visibleParagraphs = LiveList.map(virtualFlow.visibleCells(), c -> c.getNode().getParagraph()).suspendable();
 
         final Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated, // must be first, to be the last one to release
