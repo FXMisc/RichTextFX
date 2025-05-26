@@ -1,10 +1,7 @@
 package org.fxmisc.richtext.demo;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,13 +17,9 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.collection.ListModification;
-import org.reactfx.Subscription;
 
 public class JavaKeywordsDemo extends Application {
 
@@ -120,10 +113,7 @@ public class JavaKeywordsDemo extends Application {
         // recompute syntax highlighting only for visible paragraph changes
         // Note that this shows how it can be done but is not recommended for production where multi-
         // line syntax requirements are needed, like comment blocks without a leading * on each line. 
-        codeArea.getVisibleParagraphs().addModificationObserver
-        (
-            new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
-        );
+        codeArea.setVisibleOnlyStyler( p -> p.restyle( 0, computeHighlighting( p.getText() ) ) );
 
         // auto-indent: insert previous line's indents on enter
         final Pattern whiteSpace = Pattern.compile( "^\\s+" );
@@ -168,40 +158,6 @@ public class JavaKeywordsDemo extends Application {
         }
         spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
         return spansBuilder.create();
-    }
-
-    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
-    {
-        private final GenericStyledArea<PS, SEG, S> area;
-        private final Function<String,StyleSpans<S>> computeStyles;
-        private int prevParagraph, prevTextLength;
-
-        public VisibleParagraphStyler( GenericStyledArea<PS, SEG, S> area, Function<String,StyleSpans<S>> computeStyles )
-        {
-            this.computeStyles = computeStyles;
-            this.area = area;
-        }
-
-        @Override
-        public void accept( ListModification<? extends Paragraph<PS, SEG, S>> lm )
-        {
-            if ( lm.getAddedSize() > 0 ) Platform.runLater( () ->
-            {
-                int paragraph = Math.min( area.firstVisibleParToAllParIndex() + lm.getFrom(), area.getParagraphs().size()-1 );
-                String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
-
-                if ( paragraph != prevParagraph || text.length() != prevTextLength )
-                {
-                    if ( paragraph < area.getParagraphs().size()-1 )
-                    {
-                        int startPos = area.getAbsolutePosition( paragraph, 0 );
-                        area.setStyleSpans( startPos, computeStyles.apply( text ) );
-                    }
-                    prevTextLength = text.length();
-                    prevParagraph = paragraph;
-                }
-            });
-        }
     }
 
     private class DefaultContextMenu extends ContextMenu
