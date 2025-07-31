@@ -149,7 +149,8 @@ This renders the text in the range `(from, to)` in red.
 Requirements
 ------------
 
-**JDK11** or higher is required. (Can still be compiled with JDK9 if needed)
+**JDK11** or higher is required. (Can still be compiled with JDK9 if needed)</br>
+For **JavaFX 25+** use version **0.11.6** or higher. Previous versions of RichTextFX won't work due to a method clash.
 
 Download
 --------
