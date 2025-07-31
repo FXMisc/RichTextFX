@@ -64,15 +64,16 @@ class TextFlowExt extends TextFlow {
         return rangeShape(from, to);
     }
 
+    /**
+     * Note that this doesn't call super.getUnderlineShape in JavaFX 25+ 
+     */
     PathElement[] getUnderlineShape(IndexRange range) {
-        return getUnderlineShape(range.getStart(), range.getEnd());
-    }
-
-    PathElement[] getUnderlineShape(int from, int to) {
-        return getUnderlineShape(from, to, 0, 0, 0);
+        return getUnderlineShape(range.getStart(), range.getEnd(), 0, 0, 0);
     }
 
     /**
+     * Note that this doesn't call super.getUnderlineShape in JavaFX 25+
+     * 
      * @param from The index of the first character.
      * @param to The index of the last character.
      * @param offset The distance below the baseline to draw the underline.
