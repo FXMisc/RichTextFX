@@ -111,9 +111,7 @@ public class JavaKeywordsDemo extends Application {
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 */
         // recompute syntax highlighting only for visible paragraph changes
-        // Note that this shows how it can be done but is not recommended for production where multi-
-        // line syntax requirements are needed, like comment blocks without a leading * on each line. 
-        codeArea.setVisibleOnlyStyler( p -> p.restyle( 0, computeHighlighting( p.getText() ) ) );
+        codeArea.setVisibleOnlyStyler( (pNo,p) -> p.restyle(0, computeHighlighting(pNo, p.getText())) );
 
         // auto-indent: insert previous line's indents on enter
         final Pattern whiteSpace = Pattern.compile( "^\\s+" );
@@ -137,11 +135,10 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.show();
     }
 
-    private StyleSpans<Collection<String>> computeHighlighting(String text) {
+    private StyleSpans<Collection<String>> computeHighlighting(Integer paragraphNo, String text) {
         Matcher matcher = PATTERN.matcher(text);
         int lastKwEnd = 0;
-        StyleSpansBuilder<Collection<String>> spansBuilder
-                = new StyleSpansBuilder<>();
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         while(matcher.find()) {
             String styleClass =
                     matcher.group("KEYWORD") != null ? "keyword" :

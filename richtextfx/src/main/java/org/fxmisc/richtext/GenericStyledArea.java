@@ -778,9 +778,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         // Initialize content
         virtualFlow = VirtualFlow.createVertical(
                 getParagraphs(),
-                par -> {
+                (index, par) -> {
                     Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = createCell(
-                            par,
+                            index, par,
                             applyParagraphStyle,
                             nodeFactory);
                     nonEmptyCells.add(cell.getNode());
@@ -1548,9 +1548,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    private UnaryOperator<Paragraph<PS, SEG, S>> visibleOnlyStyler;
+    private BiFunction<Integer,Paragraph<PS, SEG, S>,Paragraph<PS, SEG, S>> visibleOnlyStyler;
     /**
-     * This styler will only be applied to Paragraphs, just before being displayed.
+     * This styler will only be applied to visible Paragraphs, just before being displayed.
      * <p><b>Important Notes</b></p>
      * <ol>
      * <li> The result of this styling does NOT modify the document model.
@@ -1558,8 +1558,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * <li> The styler should return the result of one of Paragraph's restyle methods.
      * </ol>
      */
-    public void setVisibleOnlyStyler(UnaryOperator<Paragraph<PS, SEG, S>> styler) {
+    public void setVisibleOnlyStyler(BiFunction<Integer,Paragraph<PS, SEG, S>,Paragraph<PS, SEG, S>> styler) {
         visibleOnlyStyler = styler;
+    }
+
+    public void refreshParagraphs(int paragraphStart, int paragraphEnd) {
+        virtualFlow.refreshCells(paragraphStart, paragraphEnd);
     }
 
     @Override
@@ -1924,11 +1928,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * ********************************************************************** */
 
     private Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> createCell(
-            Paragraph<PS, SEG, S> paragraph,
+            Integer index, Paragraph<PS, SEG, S> paragraph,
             BiConsumer<TextFlow, PS> applyParagraphStyle,
             Function<StyledSegment<SEG, S>, Node> nodeFactory) {
 
-        if (visibleOnlyStyler != null) paragraph = visibleOnlyStyler.apply(paragraph);
+        if (visibleOnlyStyler != null) paragraph = visibleOnlyStyler.apply(index, paragraph);
         ParagraphBox<PS, SEG, S> box = new ParagraphBox<>(paragraph, applyParagraphStyle, nodeFactory);
 
         box.highlightTextFillProperty().bind(highlightTextFill);
