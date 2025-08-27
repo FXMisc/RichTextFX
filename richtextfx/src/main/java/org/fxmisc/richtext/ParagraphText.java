@@ -328,7 +328,7 @@ class ParagraphText<PS, SEG, S> extends TextFlowExt {
     }
 
     private void updateSingleCaret(CaretNode caretNode) {
-        PathElement[] shape = getCaretShape(getClampedCaretPosition(caretNode), true);
+        PathElement[] shape = getLeadingCaretShape(getClampedCaretPosition(caretNode));
         caretNode.getElements().setAll(shape);
     }
 
