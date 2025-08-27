@@ -52,16 +52,6 @@ class TextFlowExt extends TextFlow {
         return navigator.offsetToPosition(charIdx, Forward).getMajor();
     }
 
-    /**
-     * The name of this method was changed from {@code getCaretShape} to {@code getLeadingCaretShape} because
-     * of the introduction in {@link TextFlow} of a method with the same name in JavaFX 25+.
-     * To make this method unique, the {@code isLeading} argument has been removed. If you need to use it, refer
-     * to the {@link TextFlow} class with the original method.
-     */
-    PathElement[] getLeadingCaretShape(int charIdx) {
-        return caretShape(charIdx, true);
-    }
-
     PathElement[] getRangeShape(IndexRange range) {
         return getRangeShape(range.getStart(), range.getEnd());
     }
