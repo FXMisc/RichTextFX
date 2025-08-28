@@ -2,6 +2,8 @@ package org.fxmisc.richtext.demo;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -145,6 +147,19 @@ public class JavaKeywordsDemo extends Application {
         private static final String GROUP_STRING = "STRING";
         private static final String GROUP_COMMENT = "COMMENT";
 
+        private static final Map<String, String> groupToStyleClass;
+
+        static {
+            groupToStyleClass = new HashMap<>();
+            groupToStyleClass.put(GROUP_KEYWORD, "keyword");
+            groupToStyleClass.put(GROUP_PAREN, "paren");
+            groupToStyleClass.put(GROUP_BRACE, "brace");
+            groupToStyleClass.put(GROUP_BRACKET, "bracket");
+            groupToStyleClass.put(GROUP_SEMICOLON, "semicolon");
+            groupToStyleClass.put(GROUP_STRING, "string");
+            groupToStyleClass.put(GROUP_COMMENT, "comment");
+        }
+
         private static final Pattern PATTERN = Pattern.compile(
                 "(?<" + GROUP_KEYWORD + ">" + KEYWORD_PATTERN + ")" +
                 "|(?<" + GROUP_PAREN + ">" + PAREN_PATTERN + ")" +
@@ -169,14 +184,14 @@ public class JavaKeywordsDemo extends Application {
 
         public StyleSpans<Collection<String>> style() {
             while(matcher.find()) {
-                String styleClass = evaluateNextStyle(matcher);
+                String styleClass = evaluateNextStyle();
                 evaluateMatch(matcher.start(), matcher.end(), styleClass);
             }
-            endStyle();
+            completeStyleToEnd();
             return spansBuilder.create();
         }
 
-        private void endStyle() {
+        private void completeStyleToEnd() {
             spansBuilder.add(Collections.emptyList(), text.length() - lastSpanEnd);
         }
 
@@ -190,15 +205,14 @@ public class JavaKeywordsDemo extends Application {
             lastSpanEnd = end;
         }
 
-        private String evaluateNextStyle(Matcher matcher) {
-            return matcher.group(GROUP_KEYWORD) != null ? "keyword" :
-                   matcher.group(GROUP_PAREN) != null ? "paren" :
-                   matcher.group(GROUP_BRACE) != null ? "brace" :
-                   matcher.group(GROUP_BRACKET) != null ? "bracket" :
-                   matcher.group(GROUP_SEMICOLON) != null ? "semicolon" :
-                   matcher.group(GROUP_STRING) != null ? "string" :
-                   matcher.group(GROUP_COMMENT) != null ? "comment" :
-                   null; /* never happens */
+        private String evaluateNextStyle() {
+            for (String groupName : groupToStyleClass.keySet()) {
+                // If matcher found something that matches the group name, we return the associated style
+                if(matcher.group(groupName) != null) {
+                    return groupToStyleClass.get(groupName);
+                }
+            }
+            return null; /* never happens */
         }
     }
 
@@ -220,14 +234,15 @@ public class JavaKeywordsDemo extends Application {
             if (modifications.getAddedSize() > 0) {
                 Platform.runLater(() -> {
                     int paragraph = Math.min(area.firstVisibleParToAllParIndex() + modifications.getFrom(), area.getParagraphs().size() - 1);
-                    String text = area.getText(paragraph, 0, paragraph, area.getParagraphLength(paragraph));
+                    String paragraphText = area.getText(paragraph, 0, paragraph, area.getParagraphLength(paragraph));
 
-                    if (paragraph != prevParagraph || text.length() != prevTextLength) {
-                        if (paragraph < area.getParagraphs().size() - 1) {
-                            int startPos = area.getAbsolutePosition(paragraph, 0);
-                            area.setStyleSpans(startPos, computeStyles.apply(text));
-                        }
-                        prevTextLength = text.length();
+                    // TODO : Is that code needed? why do we save the length and paragraph as a way to know what?
+                    if (paragraph != prevParagraph || paragraphText.length() != prevTextLength) {
+                        int startPos = area.getAbsolutePosition(paragraph, 0);
+                        area.setStyleSpans(startPos, computeStyles.apply(paragraphText));
+
+                        // Saving paragraph
+                        prevTextLength = paragraphText.length();
                         prevParagraph = paragraph;
                     }
                 });
