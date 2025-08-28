@@ -24,6 +24,7 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyleSpan;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.collection.ListModification;
@@ -220,7 +221,6 @@ public class JavaKeywordsDemo extends Application {
     {
         private final GenericStyledArea<PS, SEG, S> area;
         private final Function<String,StyleSpans<S>> computeStyles;
-        private int prevParagraph, prevTextLength;
 
         public ParagraphModificationHandler(GenericStyledArea<PS, SEG, S> area,
                                             Function<String,StyleSpans<S>> computeStyles) {
@@ -233,18 +233,14 @@ public class JavaKeywordsDemo extends Application {
         {
             if (modifications.getAddedSize() > 0) {
                 Platform.runLater(() -> {
+                    // Getting the paragraph real index and its content
                     int paragraph = Math.min(area.firstVisibleParToAllParIndex() + modifications.getFrom(), area.getParagraphs().size() - 1);
                     String paragraphText = area.getText(paragraph, 0, paragraph, area.getParagraphLength(paragraph));
 
-                    // TODO : Is that code needed? why do we save the length and paragraph as a way to know what?
-                    if (paragraph != prevParagraph || paragraphText.length() != prevTextLength) {
-                        int startPos = area.getAbsolutePosition(paragraph, 0);
-                        area.setStyleSpans(startPos, computeStyles.apply(paragraphText));
-
-                        // Saving paragraph
-                        prevTextLength = paragraphText.length();
-                        prevParagraph = paragraph;
-                    }
+                    // Applying style
+                    int startPos = area.getAbsolutePosition(paragraph, 0);
+                    StyleSpans<S> paragraphStyles = computeStyles.apply(paragraphText);
+                    area.setStyleSpans(startPos, paragraphStyles);
                 });
             }
         }
