@@ -1,18 +1,15 @@
 package org.fxmisc.richtext.demo;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -21,13 +18,9 @@ import javafx.stage.Stage;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyleSpan;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.collection.ListModification;
+import org.fxmisc.richtext.model.TwoDimensional.Bias;
+import org.reactfx.Subscription;
 
 public class JavaKeywordsDemo extends Application {
 
@@ -67,10 +60,8 @@ public class JavaKeywordsDemo extends Application {
         // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.setContextMenu(new DefaultContextMenu());
-/*
-        // recompute the syntax highlighting for all text, 500 ms after user stops editing area
-        // Note that this shows how it can be done but is not recommended for production with
-        // large files as it does a full scan of ALL the text every time there is a change !
+
+        // recompute the syntax highlighting for changed paragraphs, 500 ms after user stops editing area
         Subscription cleanupWhenNoLongerNeedIt = codeArea
 
                 // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
@@ -78,25 +69,38 @@ public class JavaKeywordsDemo extends Application {
                 //   when making multiple changes (e.g. renaming a method at multiple parts in file)
                 .multiPlainChanges()
 
+                // convert the list of text position changes to a unique set of paragraph ranges 
+                .map( changeList -> changeList.stream().map
+                (
+                    textChange -> new IndexRange(
+                        codeArea.offsetToPosition( textChange.getPosition(), Bias.Backward ).getMajor(),    // paragraph start
+                        codeArea.offsetToPosition( textChange.getInsertionEnd(), Bias.Backward ).getMajor() // paragraph end
+                    ))
+                    .collect( Collectors.toSet() )
+                )
+
                 // do not emit an event until 500 ms have passed since the last emission of previous stream
-                .successionEnds(Duration.ofMillis(500))
+                // in the meantime combine additional changes into one set of paragraph ranges with no duplicates 
+                .reduceSuccessions( (a,b) -> { a.addAll( b ); return a; }, Duration.ofMillis(500) )
 
                 // run the following code block when previous stream emits an event
-                .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
+                .subscribe( paragraphs ->
+                {
+                    for ( IndexRange range : paragraphs ) // re-styling each paragraph range
+                    {
+                        String text = codeArea.getText( range.getStart(), 0, range.getEnd()+1, 0 );
+                        codeArea.setStyleSpans( range.getStart(), 0, new JavaStyler( text ).style() );
+                    }
+                });
 
         // when no longer need syntax highlighting and wish to clean up memory leaks
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
-*/
-        // recompute syntax highlighting only for visible paragraph changes
-        // Note that this shows how it can be done but is not recommended for production where multi-line
-        // syntax requirements are needed, like comment blocks without a leading * on each line.
-        codeArea.getVisibleParagraphs().addModificationObserver(new ParagraphModificationHandler<>( codeArea, text -> new JavaStyler(text).style()));
 
         codeArea.addEventHandler( KeyEvent.KEY_PRESSED, KE -> onKeyPressed(codeArea, KE));
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
-        scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("java-keywords.css").toExternalForm());
+        scene.getStylesheets().add(JavaKeywordsDemo.class.getResource("java-keywords.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();
@@ -110,35 +114,6 @@ public class JavaKeywordsDemo extends Application {
             Matcher m0 = whiteSpace.matcher( codeArea.getParagraph( currentParagraph-1 ).getSegments().get( 0 ) );
             if ( m0.find() ) {
                 Platform.runLater( () -> codeArea.insertText( caretPosition, m0.group() ) );
-            }
-        }
-    }
-
-    private static class ParagraphModificationHandler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
-    {
-        private final GenericStyledArea<PS, SEG, S> area;
-        private final Function<String,StyleSpans<S>> computeStyles;
-
-        public ParagraphModificationHandler(GenericStyledArea<PS, SEG, S> area,
-                                            Function<String,StyleSpans<S>> computeStyles) {
-            this.computeStyles = computeStyles;
-            this.area = area;
-        }
-
-        @Override
-        public void accept(ListModification<? extends Paragraph<PS, SEG, S>> modifications)
-        {
-            if (modifications.getAddedSize() > 0) {
-                Platform.runLater(() -> {
-                    // Getting the paragraph real index and its content
-                    int paragraph = Math.min(area.firstVisibleParToAllParIndex() + modifications.getFrom(), area.getParagraphs().size() - 1);
-                    String paragraphText = area.getText(paragraph, 0, paragraph, area.getParagraphLength(paragraph));
-
-                    // Applying style
-                    int startPos = area.getAbsolutePosition(paragraph, 0);
-                    StyleSpans<S> paragraphStyles = computeStyles.apply(paragraphText);
-                    area.setStyleSpans(startPos, paragraphStyles);
-                });
             }
         }
     }
