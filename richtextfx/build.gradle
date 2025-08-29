@@ -10,8 +10,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.13'
     id 'org.unbroken-dome.test-sets' version '4.1.0'
     id 'biz.aQute.bnd.builder' version "5.3.0"
-    id 'maven-publish'
-    id 'signing'
+    id 'com.vanniktech.maven.publish' version '0.34.0'
 }
 
 javafx {
@@ -157,76 +156,49 @@ task sourcesJar(type: Jar) {
     archiveClassifier = 'sources'
 }
 
-artifacts {
-    archives jar
-    archives javadocJar
-    archives sourcesJar
-}
-
-def doUploadArchives = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
-publish.onlyIf { doUploadArchives }
-
-publishing {
+mavenPublishing {
     repositories {
         mavenLocal()
-        if(doUploadArchives) {
-            maven {
-               def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-               def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
-               url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-                credentials {
-                    username = "${sonatypeUsername}"
-                    password = "${sonatypePassword}"
-                }
+    }
+    pom {
+        name = 'RichTextFX'
+        packaging = 'jar'
+        description = 'Rich-text area for JavaFX'
+        url = 'https://github.com/FXMisc/RichTextFX/#richtextfx'
+   
+        scm {
+            url = 'scm:git@github.com:FXMisc/RichTextFX.git'
+            connection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+            developerConnection = 'scm:git@github.com:FXMisc/RichTextFX.git'
+        }
+   
+        licenses {
+            license {
+                name = 'The BSD 2-Clause License'
+                url = 'http://opensource.org/licenses/BSD-2-Clause'
+                distribution = 'repo'
+            }
+            license {
+                name = 'GPLv2 with the Classpath Exception'
+                url = 'http://www.gnu.org/software/classpath/license.html'
+                distribution = 'repo'
             }
         }
-    }
-    publications {
-        richTextFX(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-            pom {
-                name = 'RichTextFX'
-                packaging = 'jar'
-                description = 'Rich-text area for JavaFX'
-                url = 'https://github.com/FXMisc/RichTextFX/#richtextfx'
-           
-                scm {
-                    url = 'scm:git@github.com:FXMisc/RichTextFX.git'
-                    connection = 'scm:git@github.com:FXMisc/RichTextFX.git'
-                    developerConnection = 'scm:git@github.com:FXMisc/RichTextFX.git'
-                }
-           
-                licenses {
-                    license {
-                        name = 'The BSD 2-Clause License'
-                        url = 'http://opensource.org/licenses/BSD-2-Clause'
-                        distribution = 'repo'
-                    }
-                    license {
-                        name = 'GPLv2 with the Classpath Exception'
-                        url = 'http://www.gnu.org/software/classpath/license.html'
-                        distribution = 'repo'
-                    }
-                }
-           
-                developers {
-                    developer {
-                        name = 'Tomas Mikula'
-                    }
-                }
+   
+        developers {
+            developer {
+                name = 'Tomas Mikula'
+            }
+            developer {
+                name = 'Jordan Martinez'
+            }
+            developer {
+                name = 'Jurgen Doll'
             }
         }
     }
 }
     
-if(doUploadArchives) {
-    signing {
-        sign publishing.publications.richTextFX
-    }
-}
-
 task fatJar(type: Jar, dependsOn: classes) {
     archiveAppendix = 'fat'
     manifest.attributes( 'Automatic-Module-Name': 'org.fxmisc.richtext' )
