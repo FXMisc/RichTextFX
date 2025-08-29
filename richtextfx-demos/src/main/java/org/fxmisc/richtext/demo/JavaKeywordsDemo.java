@@ -1,8 +1,9 @@
 package org.fxmisc.richtext.demo;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -23,44 +24,12 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyleSpan;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.collection.ListModification;
-import org.reactfx.Subscription;
 
 public class JavaKeywordsDemo extends Application {
-
-    private static final String[] KEYWORDS = new String[] {
-            "abstract", "assert", "boolean", "break", "byte",
-            "case", "catch", "char", "class", "const",
-            "continue", "default", "do", "double", "else",
-            "enum", "extends", "final", "finally", "float",
-            "for", "goto", "if", "implements", "import",
-            "instanceof", "int", "interface", "long", "native",
-            "new", "package", "private", "protected", "public",
-            "return", "short", "static", "strictfp", "super",
-            "switch", "synchronized", "this", "throw", "throws",
-            "transient", "try", "void", "volatile", "while"
-    };
-
-    private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
-    private static final String PAREN_PATTERN = "\\(|\\)";
-    private static final String BRACE_PATTERN = "\\{|\\}";
-    private static final String BRACKET_PATTERN = "\\[|\\]";
-    private static final String SEMICOLON_PATTERN = "\\;";
-    private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
-    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/"   // for whole text processing (text blocks)
-    		                          + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
-
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-            + "|(?<PAREN>" + PAREN_PATTERN + ")"
-            + "|(?<BRACE>" + BRACE_PATTERN + ")"
-            + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-            + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
-            + "|(?<STRING>" + STRING_PATTERN + ")"
-            + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
-    );
 
     private static final String sampleCode = String.join("\n", new String[] {
         "package com.example;",
@@ -85,6 +54,7 @@ public class JavaKeywordsDemo extends Application {
         "}"
     });
 
+    private static final Pattern whiteSpace = Pattern.compile( "^\\s+" );
 
     public static void main(String[] args) {
         launch(args);
@@ -96,7 +66,7 @@ public class JavaKeywordsDemo extends Application {
 
         // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        codeArea.setContextMenu( new DefaultContextMenu() );
+        codeArea.setContextMenu(new DefaultContextMenu());
 /*
         // recompute the syntax highlighting for all text, 500 ms after user stops editing area
         // Note that this shows how it can be done but is not recommended for production with
@@ -118,26 +88,11 @@ public class JavaKeywordsDemo extends Application {
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
 */
         // recompute syntax highlighting only for visible paragraph changes
-        // Note that this shows how it can be done but is not recommended for production where multi-
-        // line syntax requirements are needed, like comment blocks without a leading * on each line. 
-        codeArea.getVisibleParagraphs().addModificationObserver
-        (
-            new VisibleParagraphStyler<>( codeArea, this::computeHighlighting )
-        );
+        // Note that this shows how it can be done but is not recommended for production where multi-line
+        // syntax requirements are needed, like comment blocks without a leading * on each line.
+        codeArea.getVisibleParagraphs().addModificationObserver(new ParagraphModificationHandler<>( codeArea, text -> new JavaStyler(text).style()));
 
-        // auto-indent: insert previous line's indents on enter
-        final Pattern whiteSpace = Pattern.compile( "^\\s+" );
-        codeArea.addEventHandler( KeyEvent.KEY_PRESSED, KE ->
-        {
-            if ( KE.getCode() == KeyCode.ENTER ) {
-            	int caretPosition = codeArea.getCaretPosition();
-            	int currentParagraph = codeArea.getCurrentParagraph();
-                Matcher m0 = whiteSpace.matcher( codeArea.getParagraph( currentParagraph-1 ).getSegments().get( 0 ) );
-                if ( m0.find() ) Platform.runLater( () -> codeArea.insertText( caretPosition, m0.group() ) );
-            }
-        });
-
-        
+        codeArea.addEventHandler( KeyEvent.KEY_PRESSED, KE -> onKeyPressed(codeArea, KE));
         codeArea.replaceText(0, 0, sampleCode);
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
@@ -147,79 +102,58 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.show();
     }
 
-    private StyleSpans<Collection<String>> computeHighlighting(String text) {
-        Matcher matcher = PATTERN.matcher(text);
-        int lastKwEnd = 0;
-        StyleSpansBuilder<Collection<String>> spansBuilder
-                = new StyleSpansBuilder<>();
-        while(matcher.find()) {
-            String styleClass =
-                    matcher.group("KEYWORD") != null ? "keyword" :
-                    matcher.group("PAREN") != null ? "paren" :
-                    matcher.group("BRACE") != null ? "brace" :
-                    matcher.group("BRACKET") != null ? "bracket" :
-                    matcher.group("SEMICOLON") != null ? "semicolon" :
-                    matcher.group("STRING") != null ? "string" :
-                    matcher.group("COMMENT") != null ? "comment" :
-                    null; /* never happens */ assert styleClass != null;
-            spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
-            spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
-            lastKwEnd = matcher.end();
+    private void onKeyPressed(CodeArea codeArea, KeyEvent KE) {
+        // auto-indent: insert previous line's indents on enter
+        if ( KE.getCode() == KeyCode.ENTER ) {
+            int caretPosition = codeArea.getCaretPosition();
+            int currentParagraph = codeArea.getCurrentParagraph();
+            Matcher m0 = whiteSpace.matcher( codeArea.getParagraph( currentParagraph-1 ).getSegments().get( 0 ) );
+            if ( m0.find() ) {
+                Platform.runLater( () -> codeArea.insertText( caretPosition, m0.group() ) );
+            }
         }
-        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
-        return spansBuilder.create();
     }
 
-    private class VisibleParagraphStyler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
+    private static class ParagraphModificationHandler<PS, SEG, S> implements Consumer<ListModification<? extends Paragraph<PS, SEG, S>>>
     {
         private final GenericStyledArea<PS, SEG, S> area;
         private final Function<String,StyleSpans<S>> computeStyles;
-        private int prevParagraph, prevTextLength;
 
-        public VisibleParagraphStyler( GenericStyledArea<PS, SEG, S> area, Function<String,StyleSpans<S>> computeStyles )
-        {
+        public ParagraphModificationHandler(GenericStyledArea<PS, SEG, S> area,
+                                            Function<String,StyleSpans<S>> computeStyles) {
             this.computeStyles = computeStyles;
             this.area = area;
         }
 
         @Override
-        public void accept( ListModification<? extends Paragraph<PS, SEG, S>> lm )
+        public void accept(ListModification<? extends Paragraph<PS, SEG, S>> modifications)
         {
-            if ( lm.getAddedSize() > 0 ) Platform.runLater( () ->
-            {
-                int paragraph = Math.min( area.firstVisibleParToAllParIndex() + lm.getFrom(), area.getParagraphs().size()-1 );
-                String text = area.getText( paragraph, 0, paragraph, area.getParagraphLength( paragraph ) );
+            if (modifications.getAddedSize() > 0) {
+                Platform.runLater(() -> {
+                    // Getting the paragraph real index and its content
+                    int paragraph = Math.min(area.firstVisibleParToAllParIndex() + modifications.getFrom(), area.getParagraphs().size() - 1);
+                    String paragraphText = area.getText(paragraph, 0, paragraph, area.getParagraphLength(paragraph));
 
-                if ( paragraph != prevParagraph || text.length() != prevTextLength )
-                {
-                    if ( paragraph < area.getParagraphs().size()-1 )
-                    {
-                        int startPos = area.getAbsolutePosition( paragraph, 0 );
-                        area.setStyleSpans( startPos, computeStyles.apply( text ) );
-                    }
-                    prevTextLength = text.length();
-                    prevParagraph = paragraph;
-                }
-            });
+                    // Applying style
+                    int startPos = area.getAbsolutePosition(paragraph, 0);
+                    StyleSpans<S> paragraphStyles = computeStyles.apply(paragraphText);
+                    area.setStyleSpans(startPos, paragraphStyles);
+                });
+            }
         }
     }
 
-    private class DefaultContextMenu extends ContextMenu
+    private static class DefaultContextMenu extends ContextMenu
     {
-        private MenuItem fold, unfold, print;
-
         public DefaultContextMenu()
         {
-            fold = new MenuItem( "Fold selected text" );
-            fold.setOnAction( AE -> { hide(); fold(); } );
-
-            unfold = new MenuItem( "Unfold from cursor" );
+            MenuItem fold = new MenuItem("Fold selected text");
+            MenuItem unfold = new MenuItem( "Unfold from cursor" );
+            MenuItem print = new MenuItem( "Print" );
+            fold.setOnAction(AE -> { hide(); fold(); } );
             unfold.setOnAction( AE -> { hide(); unfold(); } );
-
-            print = new MenuItem( "Print" );
             print.setOnAction( AE -> { hide(); print(); } );
-
-            getItems().addAll( fold, unfold, print );
+            getItems().addAll(fold, unfold, print );
         }
 
         /**
