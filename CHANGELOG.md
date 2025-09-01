@@ -1,5 +1,16 @@
 # Change Log
 
+## [v0.11.6](https://github.com/FXMisc/RichTextFX/tree/v0.11.6) (2025-09-01)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.5...v0.11.6)
+
+**Implemented enhancements:**
+
+- Updated Gradle to 8.5
+
+**Fixed bugs:**
+
+- TextFlowExt removed clashing getUnderlineShape method [\#1283](https://github.com/FXMisc/RichTextFX/pull/1283)
+
 ## [v0.11.5](https://github.com/FXMisc/RichTextFX/tree/v0.11.5) (2025-04-01)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.4...v0.11.5)
 
