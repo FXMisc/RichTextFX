@@ -67,6 +67,7 @@ Who uses RichTextFX?
 - [OmniEditor](https://github.com/giancosta86/OmniEditor)
 - [PMD Designer](https://github.com/pmd/pmd-designer/)
 - [Recaf](https://github.com/Col-E/Recaf)
+- [RedisFX](https://github.com/tanhuang2016/RedisFX)
 - [SqlBrowserFx](https://github.com/pariskol/sqlbrowserfx/)
 - [Squirrel SQL client](http://www.squirrelsql.org/)
 - [Xanthic](https://github.com/jrguenther/Xanthic)
