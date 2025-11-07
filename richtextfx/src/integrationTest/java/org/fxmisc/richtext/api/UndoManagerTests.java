@@ -33,6 +33,11 @@ public class UndoManagerTests {
             assertEquals(position, area.getCaretPosition());
         }
 
+        private void input(KeyCode... codes) {
+            press(codes);
+            release(codes);
+        }
+
         @Test
         public void incoming_change_is_not_merged_after_period_of_user_inactivity() {
             String text1 = "text1";
@@ -85,7 +90,7 @@ public class UndoManagerTests {
             checkCaretAtPosition(1);
 
             // Delete
-            press(KeyCode.DELETE);
+            input(KeyCode.DELETE);
             assertEquals("Ht",area.getText());
             checkCaretAtPosition(1);
 
@@ -107,7 +112,7 @@ public class UndoManagerTests {
             checkCaretAtPosition(1);
 
             // Backspace
-            press(KeyCode.BACK_SPACE);
+            input(KeyCode.BACK_SPACE);
             assertEquals("at",area.getText());
             checkCaretAtPosition(0);
 
@@ -131,7 +136,7 @@ public class UndoManagerTests {
             assertEquals(3, area.getCaretPosition());
 
             // press a key to replace the text
-            press(KeyCode.I);
+            input(KeyCode.I);
             assertEquals("Hit",area.getText());
             checkCaretAtPosition(2);
 
@@ -139,6 +144,26 @@ public class UndoManagerTests {
             interact(area::undo);
             assertEquals("Heat",area.getText());
             checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 3 (but creating test to cover existing behaviour)
+
+            // Now perform the same operation but the caret of the selection is at the start
+            area.moveTo(3);
+            press(KeyCode.SHIFT);
+            input(KeyCode.LEFT);
+            input(KeyCode.LEFT);
+            release(KeyCode.SHIFT);
+            assertEquals(1, area.getSelection().getStart());
+            assertEquals(3, area.getSelection().getEnd());
+            assertEquals(1, area.getCaretPosition());
+
+            // press a key to replace the text
+            input(KeyCode.I);
+            assertEquals("Hit",area.getText());
+            checkCaretAtPosition(2);
+
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Heat",area.getText());
+            checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 1 (but creating test to cover existing behaviour)
         }
 
         @Test  // After undo, text insertion point jumps to the start of the text area #780
