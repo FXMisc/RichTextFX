@@ -270,10 +270,18 @@ public final class UndoUtils {
      */
     private static void moveToChange( GenericStyledArea area, TextChange chg )
     {
-        int pos = chg.getPosition();
-        int len = chg.getNetLength();
-        if ( len > 0 ) pos += len;
-
+        // Issue #1293: This is still not sufficient for undo because:
+        // - You want to restore the selection after undo, information is missing.
+        // - Removing a character with "DEL" or "BACKSPACE" result in the same change but the caret should not be at the
+        //   same position when undoing one compared to the other.
+        // - You can select left-to-right or right-to-left, but without the position of the caret before
+        //   the action we cannot put back the caret where it used to be.
+        int pos = chg.getInsertionEnd();
+        /* Before fixing #1293 (remove this comment when the issue is fully fixed):
+         * int pos = chg.getPosition();
+         * int len = chg.getNetLength();
+         * if ( len > 0 ) pos += len;
+         */
         area.moveTo( Math.min( pos, area.getLength() ) );
     }
 }

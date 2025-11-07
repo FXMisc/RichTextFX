@@ -211,8 +211,7 @@ public class UndoManagerTests {
             // undo should put back the content and move the caret at the end
             interact(area::undo);
             assertEquals("Heat",area.getText());
-            checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 3 (but creating test to cover existing behaviour)
-            // TODO SMA CHECK SELECTION
+            checkCaretAtPosition(3); // TODO Bug #1293: Correct value is: checkSelection(1, 3, 3);
 
             // Now perform the same operation but the caret of the selection is at the start
             area.moveTo(3);
@@ -225,8 +224,7 @@ public class UndoManagerTests {
             // undo should put back the content and move the caret at the end
             interact(area::undo);
             assertEquals("Heat",area.getText());
-            checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 1 (but creating test to cover existing behaviour)
-            // TODO SMA CHECK SELECTION
+            checkCaretAtPosition(3); // TODO Bug #1293: Correct value is: checkSelection(1, 3, 1);
         }
 
         @Test  // After undo, text insertion point jumps to the start of the text area #780
