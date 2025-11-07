@@ -52,53 +52,89 @@ public class UndoManagerTests {
         }
 
         @Test  // Perform addition, backspace, delete, replace and check the caret position
-        public void undo_for_all_operations() {
+        public void undo_for_addition() {
             // Addition
             write("Hat");
-            assertEquals("Hat",area.getText());
+            assertEquals("Hat", area.getText());
             checkCaretAtPosition(3);
+
             // Move caret to 1
             area.moveTo(1);
             checkCaretAtPosition(1);
+
             // Add a letter
             write("e");
-            assertEquals("Heat",area.getText());
+            assertEquals("Heat", area.getText());
             checkCaretAtPosition(2);
+
             // Undo removes " a"
             interact(area::undo);
-            assertEquals("Hat",area.getText());
+            assertEquals("Hat", area.getText());
+            checkCaretAtPosition(1);
+        }
+
+        @Test  // Perform addition, backspace, delete, replace and check the caret position
+        public void undo_for_delete() {
+            // Addition
+            write("Hat");
+            assertEquals("Hat", area.getText());
+            checkCaretAtPosition(3);
+
+            // Move caret to 1
+            area.moveTo(1);
             checkCaretAtPosition(1);
 
             // Delete
             press(KeyCode.DELETE);
             assertEquals("Ht",area.getText());
             checkCaretAtPosition(1);
+
             // Undo puts back the 'a'
             interact(area::undo);
             assertEquals("Hat",area.getText());
+            checkCaretAtPosition(1);
+        }
+
+        @Test  // Perform addition, backspace, delete, replace and check the caret position
+        public void undo_for_backspace() {
+            // Addition
+            write("Hat");
+            assertEquals("Hat", area.getText());
+            checkCaretAtPosition(3);
+
+            // Move caret to 1
+            area.moveTo(1);
             checkCaretAtPosition(1);
 
             // Backspace
             press(KeyCode.BACK_SPACE);
             assertEquals("at",area.getText());
             checkCaretAtPosition(0);
+
             // Undo puts back the a
             interact(area::undo);
             assertEquals("Hat",area.getText());
             checkCaretAtPosition(1);
+        }
+
+        @Test  // Perform addition, backspace, delete, replace and check the caret position
+        public void undo_for_replace() {
+            // Addition
+            write("Heat");
+            assertEquals("Heat", area.getText());
+            checkCaretAtPosition(4);
 
             // Replace (but first add)
-            write("e");
-            assertEquals("Heat",area.getText());
-            checkCaretAtPosition(2);
             area.selectRange(1, 3);
             assertEquals(1, area.getSelection().getStart());
             assertEquals(3, area.getSelection().getEnd());
             assertEquals(3, area.getCaretPosition());
+
             // press a key to replace the text
             press(KeyCode.I);
             assertEquals("Hit",area.getText());
             checkCaretAtPosition(2);
+
             // undo should put back the content and move the caret at the end
             interact(area::undo);
             assertEquals("Heat",area.getText());
