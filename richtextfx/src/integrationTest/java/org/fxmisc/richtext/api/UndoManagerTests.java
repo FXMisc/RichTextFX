@@ -4,6 +4,7 @@ import com.nitorcreations.junit.runners.NestedRunner;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.fxmisc.richtext.RichTextFXTestBase;
@@ -15,6 +16,7 @@ import org.fxmisc.richtext.util.UndoUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactfx.SuspendableYes;
+import org.testfx.api.FxRobot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,6 +26,12 @@ import static org.junit.Assert.assertTrue;
 public class UndoManagerTests {
 
     public class UsingInlineCssTextArea extends InlineCssTextAreaAppTest {
+
+        private void checkCaretAtPosition(int position) {
+            assertEquals(position, area.getSelection().getStart());
+            assertEquals(position, area.getSelection().getEnd());
+            assertEquals(position, area.getCaretPosition());
+        }
 
         @Test
         public void incoming_change_is_not_merged_after_period_of_user_inactivity() {
@@ -43,11 +51,67 @@ public class UndoManagerTests {
             assertEquals("", area.getText());
         }
 
+        @Test  // Perform addition, backspace, delete, replace and check the caret position
+        public void undo_for_all_operations() {
+            // Addition
+            write("Hat");
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(3);
+            // Move caret to 1
+            area.moveTo(1);
+            checkCaretAtPosition(1);
+            // Add a letter
+            write("e");
+            assertEquals("Heat",area.getText());
+            checkCaretAtPosition(2);
+            // Undo removes " a"
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(1);
+
+            // Delete
+            press(KeyCode.DELETE);
+            assertEquals("Ht",area.getText());
+            checkCaretAtPosition(1);
+            // Undo puts back the 'a'
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(1);
+
+            // Backspace
+            press(KeyCode.BACK_SPACE);
+            assertEquals("at",area.getText());
+            checkCaretAtPosition(0);
+            // Undo puts back the a
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(1);
+
+            // Replace (but first add)
+            write("e");
+            assertEquals("Heat",area.getText());
+            checkCaretAtPosition(2);
+            area.selectRange(1, 3);
+            assertEquals(1, area.getSelection().getStart());
+            assertEquals(3, area.getSelection().getEnd());
+            assertEquals(3, area.getCaretPosition());
+            // press a key to replace the text
+            press(KeyCode.I);
+            assertEquals("Hit",area.getText());
+            checkCaretAtPosition(2);
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Heat",area.getText());
+            checkCaretAtPosition(3);
+        }
+
         @Test  // After undo, text insertion point jumps to the start of the text area #780
                // After undo, text insertion point jumps to the end of the text area #912
         public void undo_leaves_correct_insertion_point() {
 
             write("abc mno");
+            //                 ^
+            assertEquals(7, area.getCaretPosition());
             interact(() -> {
                 area.insertText(3," def");
                 area.appendText(" xyz");
