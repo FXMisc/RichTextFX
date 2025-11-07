@@ -28,14 +28,35 @@ public class UndoManagerTests {
     public class UsingInlineCssTextArea extends InlineCssTextAreaAppTest {
 
         private void checkCaretAtPosition(int position) {
-            assertEquals(position, area.getSelection().getStart());
-            assertEquals(position, area.getSelection().getEnd());
-            assertEquals(position, area.getCaretPosition());
+            checkSelection(position, position, position);
+        }
+
+        private void checkSelection(int start, int end, int caret) {
+            assertEquals(start, area.getSelection().getStart());
+            assertEquals(end, area.getSelection().getEnd());
+            assertEquals(caret, area.getCaretPosition());
         }
 
         private void input(KeyCode... codes) {
             press(codes);
             release(codes);
+        }
+
+        private void selectNext(int count) {
+            selectMultiple(count, KeyCode.RIGHT);
+        }
+
+        private void selectPrevious(int count) {
+            selectMultiple(count, KeyCode.LEFT);
+        }
+
+        private void selectMultiple(int count, KeyCode keyCode) {
+            press(KeyCode.SHIFT);
+            for (int i = 0; i < count; i++) {
+                input(keyCode);
+            }
+            release(KeyCode.SHIFT);
+
         }
 
         @Test
@@ -98,6 +119,32 @@ public class UndoManagerTests {
             interact(area::undo);
             assertEquals("Hat",area.getText());
             checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 1 (but creating test to cover existing behaviour)
+
+            // Delete with "delete" starting from the start and going to the end
+            area.moveTo(1);
+            selectNext(2);
+            checkSelection(1, 3, 3);
+            // Backspace deletes
+            input(KeyCode.DELETE);
+            assertEquals("H",area.getText());
+            checkCaretAtPosition(1);
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(3); // TODO Bug #1293: Correct value is: checkSelection(1, 3, 3);
+
+            // Delete with "delete" from the end and going to the start
+            area.moveTo(3);
+            selectPrevious(2);
+            checkSelection(1, 3, 1);
+            // Backspace deletes
+            input(KeyCode.DELETE);
+            assertEquals("H",area.getText());
+            checkCaretAtPosition(1);
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(3); // TODO Bug #1293: Correct value is: checkSelection(1, 3, 1);
         }
 
         @Test  // Perform addition, backspace, delete, replace and check the caret position
@@ -120,6 +167,31 @@ public class UndoManagerTests {
             interact(area::undo);
             assertEquals("Hat",area.getText());
             checkCaretAtPosition(1);
+
+            // Delete with backspace starting from the start and going to the end
+            selectNext(2);
+            checkSelection(1, 3, 3);
+            // Backspace deletes
+            input(KeyCode.BACK_SPACE);
+            assertEquals("H",area.getText());
+            checkCaretAtPosition(1);
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(3);  // TODO Bug #1293: Correct value is: checkSelection(1, 3, 3)
+
+            // Delete with backspace from the end and going to the start
+            area.moveTo(3);
+            selectPrevious(2);
+            checkSelection(1, 3, 1);
+            // Backspace deletes
+            input(KeyCode.BACK_SPACE);
+            assertEquals("H",area.getText());
+            checkCaretAtPosition(1);
+            // undo should put back the content and move the caret at the end
+            interact(area::undo);
+            assertEquals("Hat",area.getText());
+            checkCaretAtPosition(3); // TODO Bug #1293: Correct value is: checkSelection(1, 3, 1)
         }
 
         @Test  // Perform addition, backspace, delete, replace and check the caret position
@@ -131,39 +203,30 @@ public class UndoManagerTests {
 
             // Replace (but first add)
             area.selectRange(1, 3);
-            assertEquals(1, area.getSelection().getStart());
-            assertEquals(3, area.getSelection().getEnd());
-            assertEquals(3, area.getCaretPosition());
-
+            checkSelection(1, 3, 3);
             // press a key to replace the text
             input(KeyCode.I);
             assertEquals("Hit",area.getText());
             checkCaretAtPosition(2);
-
             // undo should put back the content and move the caret at the end
             interact(area::undo);
             assertEquals("Heat",area.getText());
             checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 3 (but creating test to cover existing behaviour)
+            // TODO SMA CHECK SELECTION
 
             // Now perform the same operation but the caret of the selection is at the start
             area.moveTo(3);
-            press(KeyCode.SHIFT);
-            input(KeyCode.LEFT);
-            input(KeyCode.LEFT);
-            release(KeyCode.SHIFT);
-            assertEquals(1, area.getSelection().getStart());
-            assertEquals(3, area.getSelection().getEnd());
-            assertEquals(1, area.getCaretPosition());
-
+            selectPrevious(2);
+            checkSelection(1, 3, 1);
             // press a key to replace the text
             input(KeyCode.I);
             assertEquals("Hit",area.getText());
             checkCaretAtPosition(2);
-
             // undo should put back the content and move the caret at the end
             interact(area::undo);
             assertEquals("Heat",area.getText());
             checkCaretAtPosition(2); // TODO Bug #1293: Correct value is 1 (but creating test to cover existing behaviour)
+            // TODO SMA CHECK SELECTION
         }
 
         @Test  // After undo, text insertion point jumps to the start of the text area #780
