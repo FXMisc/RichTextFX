@@ -49,6 +49,22 @@ public class PlainTextChangeTest {
     }
 
     @Test
+    public void merge_consecutive_replace_then_backspace() {
+        PlainTextChange former = new PlainTextChange(0, "reig", "seve"); // reign => seven
+        PlainTextChange latter = new PlainTextChange(2, "ve", ""); // seven => sen
+        checkContent(former.mergeWith(latter).orElseThrow(), 0, "reig", "se"); // reign => sen
+        assertTrue(latter.mergeWith(former).isEmpty());
+    }
+
+    @Test
+    public void merge_consecutive_replace_then_delete() {
+        PlainTextChange former = new PlainTextChange(0, "reig", "seve"); // reign => seven
+        PlainTextChange latter = new PlainTextChange(4, "n", ""); // seven => seve
+        checkContent(former.mergeWith(latter).orElseThrow(), 0, "reign", "seve"); // reign => seve
+        checkContent(latter.mergeWith(former).orElseThrow(), 0, "reign", "seve"); // reign => seve
+    }
+
+    @Test
     public void merge_consecutive_add_then_add() {
         PlainTextChange former = new PlainTextChange(2, "", "si"); // red => resid
         PlainTextChange latter = new PlainTextChange(4, "", "gne"); // resid => resigned
