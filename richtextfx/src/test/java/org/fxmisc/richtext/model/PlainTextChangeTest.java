@@ -49,6 +49,14 @@ public class PlainTextChangeTest {
     }
 
     @Test
+    public void merge_addition_followed_by_removal_that_starts_before() {
+        PlainTextChange former = new PlainTextChange(3, "", "eeee"); // abcd => abceeeed
+        PlainTextChange latter = new PlainTextChange(2, "ceeee", ""); // abceeeed => abd
+        checkContent(former.mergeWith(latter).orElseThrow(), 2, "c", ""); // abcd => abd
+        assertTrue(latter.mergeWith(former).isEmpty());
+    }
+
+    @Test
     public void merge_consecutive_replace_then_backspace() {
         PlainTextChange former = new PlainTextChange(0, "reig", "seve"); // reign => seven
         PlainTextChange latter = new PlainTextChange(2, "ve", ""); // seven => sen

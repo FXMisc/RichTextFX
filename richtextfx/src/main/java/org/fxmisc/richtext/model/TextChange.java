@@ -51,6 +51,9 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     protected abstract int insertedLength();
     protected abstract S concat(S a, S b);
     protected abstract S sub(S s, int from, int to);
+    protected S sub(S s, int to) {
+        return sub(s, 0, to);
+    }
     protected abstract Self create(int position, S removed, S inserted);
 
     /**
@@ -75,22 +78,42 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
      * {@code null} otherwise.
      */
     public Optional<Self> mergeWith(Self latter) {
-        if(latter.position == this.position + this.insertedLength()) {
-            S removedText = concat(this.removed, latter.removed);
-            S addedText = concat(this.inserted, latter.inserted);
-            return Optional.of(create(this.position, removedText, addedText));
-        } else if(latter.position + latter.removedLength() == this.position + this.insertedLength()) {
+        if(this.isInsertionFollowedBy(latter)) {
+            return Optional.of(concatWith(latter));
+        }
+        else if(this.hasInsertionBeenRemovedBy(latter)) {
             if(this.position <= latter.position) {
-                S addedText = concat(sub(this.inserted, 0, latter.position - this.position), latter.inserted);
+                S addedText = concat(sub(this.inserted, latter.position - this.position), latter.inserted);
                 return Optional.of(create(this.position, this.removed, addedText));
             }
+            // latter started before this starts
             else {
-                S removedText = concat(sub(latter.removed, 0, this.position - latter.position), this.removed);
+                S removedText = concat(sub(latter.removed, this.position - latter.position), this.removed);
                 return Optional.of(create(latter.position, removedText, latter.inserted));
             }
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
+    }
+
+    /**
+     * @return some part of the insertion of the current object has been removed by the provided change, meaning that
+     * the end of the insertion of the current object is also the end of the removal of the latter.
+     */
+    private boolean hasInsertionBeenRemovedBy(Self latter) {
+        return this.getInsertionEnd() == latter.getRemovalEnd();
+    }
+
+    /**
+     * @return an insertion is followed by another change (insertion or removal)
+     */
+    private boolean isInsertionFollowedBy(Self latter) {
+        return this.getInsertionEnd() == latter.position;
+    }
+
+    private Self concatWith(Self latter) {
+        S removedText = concat(this.removed, latter.removed);
+        S addedText = concat(this.inserted, latter.inserted);
+        return create(this.position, removedText, addedText);
     }
 
     @Override
