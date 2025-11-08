@@ -82,17 +82,21 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
             return Optional.of(concatWith(latter));
         }
         else if(this.hasInsertionBeenRemovedBy(latter)) {
+            int subLen = Math.abs(this.position - latter.position);
+            int startPosition = Math.min(this.position, latter.position);
             // latter started after or equal this start
             if(this.position <= latter.position) {
-                S subText = sub(this.inserted, latter.position - this.position);
+                S subText = sub(this.inserted, subLen);
+                S removedText = this.removed;
                 S addedText = concat(subText, latter.inserted);
-                return Optional.of(create(this.position, this.removed, addedText));
+                return Optional.of(create(startPosition, removedText, addedText));
             }
             // latter started before this starts
             else {
-                S subText = sub(latter.removed, this.position - latter.position);
+                S subText = sub(latter.removed, subLen);
                 S removedText = concat(subText, this.removed);
-                return Optional.of(create(latter.position, removedText, latter.inserted));
+                S addedText = latter.inserted;
+                return Optional.of(create(startPosition, removedText, addedText));
             }
         }
         return Optional.empty();

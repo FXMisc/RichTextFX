@@ -65,6 +65,24 @@ public class PlainTextChangeTest {
     }
 
     @Test
+    public void merge_replace_followed_by_greater_replace_finishing_at_the_same_index() {
+        PlainTextChange former = new PlainTextChange(2, "CD", "FG"); // ABCDE => ABFGE
+        PlainTextChange latter = new PlainTextChange(1, "BFG", "HIJ"); // ABFGE => AHIJE
+        checkContent(former.mergeWith(latter).orElseThrow(), 1, "BCD", "HIJ"); // ABCDE => AHIJE
+        // Not a correct case because strings are different, but that is how the previous code behaved
+        checkContent(latter.mergeWith(former).orElseThrow(), 1, "BFG", "HFG"); // ABFGE => AHFGE
+    }
+
+    @Test
+    public void merge_replace_followed_by_replace_starting_and_finishing_before() {
+        PlainTextChange former = new PlainTextChange(2, "CD", "FG"); // ABCDE => ABFGE
+        PlainTextChange latter = new PlainTextChange(1, "BFGE", "P"); // ABFGE => AP
+        // This one could have been merged (ABCDE => AP) but the previous code didn't
+        assertTrue(former.mergeWith(latter).isEmpty());
+        checkContent(latter.mergeWith(former).orElseThrow(), 1, "BFGECD", "PFG"); // ABFGECD => APCD => APFG
+    }
+
+    @Test
     public void merge_addition_followed_by_removal_of_the_addition() {
         PlainTextChange former = new PlainTextChange(2, "", "CD"); // ABE => ABCDE
         PlainTextChange latter = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
