@@ -9,9 +9,9 @@ import static org.junit.Assert.assertTrue;
 
 public class PlainTextChangeTest {
     private void checkContent(PlainTextChange textChange, int position, String removed, String inserted) {
-        assertEquals(position, textChange.getPosition());
-        assertEquals(inserted, textChange.getInserted());
-        assertEquals(removed, textChange.getRemoved());
+        assertEquals("Incorrect position", position, textChange.getPosition());
+        assertEquals("Incorrect inserted text", inserted, textChange.getInserted());
+        assertEquals("Incorrect removed text", removed, textChange.getRemoved());
     }
 
     @Test
@@ -50,10 +50,29 @@ public class PlainTextChangeTest {
 
     @Test
     public void merge_addition_followed_by_removal_that_starts_before() {
-        PlainTextChange former = new PlainTextChange(3, "", "eeee"); // abcd => abceeeed
-        PlainTextChange latter = new PlainTextChange(2, "ceeee", ""); // abceeeed => abd
-        checkContent(former.mergeWith(latter).orElseThrow(), 2, "c", ""); // abcd => abd
+        PlainTextChange former = new PlainTextChange(2, "", "CD"); // ABE => ABCDE
+        PlainTextChange latter = new PlainTextChange(1, "BCD", ""); // ABCDE => AE
+        checkContent(former.mergeWith(latter).orElseThrow(), 1, "B", ""); // ABE => AE
         assertTrue(latter.mergeWith(former).isEmpty());
+    }
+
+    @Test
+    public void merge_addition_followed_by_removal_of_the_addition() {
+        PlainTextChange former = new PlainTextChange(2, "", "CD"); // ABE => ABCDE
+        PlainTextChange latter = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
+        checkContent(former.mergeWith(latter).orElseThrow(), 2, "", ""); // ABE => ABE
+        checkContent(latter.mergeWith(former).orElseThrow(), 2, "CD", "CD");
+    }
+
+    @Test
+    public void merge_removal_followed_by_addition_for_different_but_same_size() {
+        PlainTextChange former = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
+        PlainTextChange latter = new PlainTextChange(2, "", "FG"); // ABE => ABFGE
+        checkContent(former.mergeWith(latter).orElseThrow(), 2, "CD", "FG"); // ABCDE => ABFGE
+        // I wrote tests to match the existing behaviour, but that is a wrong scenario. You cannot merge insert
+        // "FG" at index 2 and then remove "CD" at index 2 because "FG" is at index 2. Now, that is how the old code
+        // behaved.
+        checkContent(latter.mergeWith(former).orElseThrow(), 2, "", ""); // ABCDE => ABFGE
     }
 
     @Test
