@@ -57,11 +57,27 @@ public class PlainTextChangeTest {
     }
 
     @Test
+    public void merge_replace_followed_by_removal_that_starts_before() {
+        PlainTextChange former = new PlainTextChange(2, "FF", "CD"); // ABFFE => ABCDE
+        PlainTextChange latter = new PlainTextChange(1, "BCD", ""); // ABCDE => AE
+        checkContent(former.mergeWith(latter).orElseThrow(), 1, "BFF", ""); // ABFFE => AE
+        assertTrue(latter.mergeWith(former).isEmpty());
+    }
+
+    @Test
     public void merge_addition_followed_by_removal_of_the_addition() {
         PlainTextChange former = new PlainTextChange(2, "", "CD"); // ABE => ABCDE
         PlainTextChange latter = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
         checkContent(former.mergeWith(latter).orElseThrow(), 2, "", ""); // ABE => ABE
         checkContent(latter.mergeWith(former).orElseThrow(), 2, "CD", "CD");
+    }
+
+    @Test
+    public void merge_replace_followed_by_removal_of_the_addition() {
+        PlainTextChange former = new PlainTextChange(2, "FF", "CD"); // ABFFE => ABCDE
+        PlainTextChange latter = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
+        checkContent(former.mergeWith(latter).orElseThrow(), 2, "FF", ""); // ABFFE => ABE
+        checkContent(latter.mergeWith(former).orElseThrow(), 2, "CDFF", "CD"); // ABCDFFE => ABCDE
     }
 
     @Test
@@ -73,6 +89,24 @@ public class PlainTextChangeTest {
         // "FG" at index 2 and then remove "CD" at index 2 because "FG" is at index 2. Now, that is how the old code
         // behaved.
         checkContent(latter.mergeWith(former).orElseThrow(), 2, "", ""); // ABCDE => ABFGE
+    }
+
+    @Test
+    public void merge_removal_followed_by_addition_at_next_index() {
+        PlainTextChange former = new PlainTextChange(1, "BCD", ""); // ABCDE => AE
+        PlainTextChange latter = new PlainTextChange(2, "", "CD"); // AE => AECD
+        assertTrue(former.mergeWith(latter).isEmpty());
+        checkContent(latter.mergeWith(former).orElseThrow(), 1, "B", ""); // ABE => AE
+    }
+
+    @Test
+    public void merge_removal_followed_by_addition_at_previous_index() {
+        PlainTextChange former = new PlainTextChange(2, "CD", ""); // ABCDE => ABE
+        PlainTextChange latter = new PlainTextChange(1, "", "CCC"); // ABE => ACCCBE
+        assertTrue(former.mergeWith(latter).isEmpty());
+        // This is a wrong case because the reverse should have been +CCC and -CC. This is how the previous code behaved
+        // as it didn't match on the content.
+        checkContent(latter.mergeWith(former).orElseThrow(), 1, "", "C");
     }
 
     @Test

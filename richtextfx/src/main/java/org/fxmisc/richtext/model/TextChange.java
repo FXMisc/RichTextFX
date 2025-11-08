@@ -82,6 +82,7 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
             return Optional.of(concatWith(latter));
         }
         else if(this.hasInsertionBeenRemovedBy(latter)) {
+            // latter started after or equal this start
             if(this.position <= latter.position) {
                 S subText = sub(this.inserted, latter.position - this.position);
                 S addedText = concat(subText, latter.inserted);
