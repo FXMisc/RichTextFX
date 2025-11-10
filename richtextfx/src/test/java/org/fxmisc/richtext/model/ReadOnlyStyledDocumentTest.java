@@ -5,14 +5,17 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 public class ReadOnlyStyledDocumentTest {
-
-    private static Void NULL = new Void();
+    private static final Void NULL = new Void();
 
     /** Short for Void:
      * cannot pass in 'null' since compiler will interpret it as a StyleSpans argument to Paragraph's constructor */
@@ -56,6 +59,41 @@ public class ReadOnlyStyledDocumentTest {
             assertEquals(1, added.size());
             assertEquals(new Paragraph<>(NULL, segOps, "FooBar", NULL), added.get(0));
         });
+    }
+
+    @Test
+    public void evaluatePosition() {
+        TextOps<String, Void> segOps = SegmentOps.styledTextOps();
+        String text = """
+                To be, or not to be, that is the question:
+                Whether 'tis nobler in the mind to suffer
+                The slings and arrows of outrageous fortune,
+                Or to take arms against a sea of troubles,""";
+        ReadOnlyStyledDocument<Void, String, Void> document = fromString(text, NULL, NULL, segOps);
+        assertEquals(0, document.position(0, 0).toOffset());
+        assertEquals(2, document.position(0, 2).toOffset());
+        assertEquals(42, document.position(0, 42).toOffset());
+        assertEquals(43, document.position(1, 0).toOffset());
+        assertEquals(45, document.position(1, 2).toOffset());
+        assertEquals(87, document.position(2, 2).toOffset());
+        assertEquals(132, document.position(3, 2).toOffset());
+        assertEquals(132, document.position(3, 2).clamp().toOffset());
+        assertEquals(172, document.position(3, 42).toOffset()); // End of the line
+        assertThrows(IndexOutOfBoundsException.class, () -> document.position(5, 0).toOffset());
+        assertThrows(IndexOutOfBoundsException.class, () -> document.position(-1, 0).toOffset());
+
+        // Following is covering current behaviour to avoid breaking, but these are quite strange
+        assertEquals(-1, document.position(0, -1).toOffset());
+        assertEquals(-1, document.position(0, -1).clamp().toOffset());
+        assertEquals(43, document.position(0, 43).toOffset()); // First paragraph has 42 chars
+        assertEquals(43, document.position(0, 43).clamp().toOffset());
+        assertEquals(44, document.position(0, 44).toOffset());
+        assertEquals(44, document.position(0, 44).clamp().toOffset());
+        assertEquals(42, document.position(1, -1).toOffset());
+        assertEquals(42, document.position(1, -1).clamp().toOffset());
+        assertEquals(173, document.position(4, 0).toOffset()); // There are only 3 paragraphs
+        assertEquals(173, document.position(3, 43).toOffset()); // After the end of the line it continues for some reason
+        assertEquals(171, document.position(3, 43).clamp().toOffset());
     }
 
     @Test

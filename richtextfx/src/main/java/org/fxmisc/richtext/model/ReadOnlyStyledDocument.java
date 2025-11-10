@@ -492,9 +492,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         return getParagraphs().hashCode();
     }
 
-
     private class Pos implements Position {
-
         private final int major;
         private final int minor;
 
