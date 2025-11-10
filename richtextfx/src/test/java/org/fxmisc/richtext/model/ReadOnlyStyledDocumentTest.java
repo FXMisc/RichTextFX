@@ -7,11 +7,8 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.UnaryOperator;
 
 import org.junit.Test;
-import org.reactfx.collection.MaterializedListModification;
-import org.reactfx.util.BiIndex;
 import org.reactfx.util.Tuple3;
 
 public class ReadOnlyStyledDocumentTest {

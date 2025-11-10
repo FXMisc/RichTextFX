@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
@@ -60,7 +59,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     }
 
     /**
-     * Private method for quickly calculating the length of a portion (subdocument) of this document.
+     * Private method for quickly calculating the length of a portion (sub-document) of this document.
      */
     private static <PS, SEG, S> ToSemigroup<Paragraph<PS, SEG, S>, Summary> summaryProvider() {
         return new ToSemigroup<Paragraph<PS, SEG, S>, Summary>() {
