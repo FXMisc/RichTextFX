@@ -25,7 +25,7 @@ public class ReadOnlyStyledDocumentTest {
 
         doc0.replace(0, 0, fromString("abcd", "Y", "Y", segOps)).exec((doc1, chng1, pchng1) -> {
             // undo chng1
-            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved())).exec((doc2, chng2, pchng2) -> {
+            doc1.replace(chng1.getPosition(), chng1.getInsertionEnd(), from(chng1.getRemoved().data())).exec((doc2, chng2, pchng2) -> {
                 // we should have arrived at the original document
                 assertEquals(doc0, doc2);
 

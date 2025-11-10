@@ -10,8 +10,7 @@ import java.util.Optional;
  * @param <S> type of data that was removed and inserted in the {@link org.fxmisc.richtext.TextEditingArea}.
  * @param <Self> a subclass of TextChange
  */
-public abstract class TextChange<S, Self extends TextChange<S, Self>> {
-
+public abstract class TextChange<S extends TextChangeData<?, S>, Self extends TextChange<S, Self>> {
     protected final int position;
     protected final S removed;
     protected final S inserted;
@@ -25,7 +24,7 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     /**
      * Gets the start position of where the replacement happened
      */
-    public int getPosition() { return position; };
+    public int getPosition() { return position; }
 
     public S getRemoved() { return removed; }
     public S getInserted() { return inserted; }
@@ -36,24 +35,25 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
      */
     public Self invert() { return create(position, inserted, removed); }
 
-    /** Returns the position where the removal ends (e.g. {@code position + removedLength())} */
+    /** Returns the position where the removal ends (e.g. {@code position + removedLength())}) */
     public int getRemovalEnd() { return position + removedLength(); }
 
-    /** Returns the position where the inserted ends (e.g. {@code position + insertedLength())} */
+    /** Returns the position where the inserted ends (e.g. {@code position + insertedLength())}) */
     public int getInsertionEnd() { return position + insertedLength(); }
+
+    protected int removedLength() {
+        return removed.length();
+    }
+
+    protected int insertedLength() {
+        return inserted.length();
+    }
 
     /**
      * Gets the net length of this change (i.e., {@code insertedLength() - removedLength()})
      */
     public int getNetLength() { return insertedLength() - removedLength(); }
 
-    protected abstract int removedLength();
-    protected abstract int insertedLength();
-    protected abstract S concat(S a, S b);
-    protected abstract S sub(S s, int from, int to);
-    protected S sub(S s, int to) {
-        return sub(s, 0, to);
-    }
     protected abstract Self create(int position, S removed, S inserted);
 
     /**
@@ -92,14 +92,14 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
         if(latter.position < this.position) {
             return latter.inserted;
         }
-        S subText = sub(this.inserted, latter.position - this.position);
-        return concat(subText, latter.inserted);
+        S subText = this.inserted.sub(latter.position - this.position);
+        return subText.concat(latter.inserted);
     }
 
     private S mergeRemove(Self latter) {
         if(latter.position < this.position) {
-            S subText = sub(latter.removed, this.position - latter.position);
-            return concat(subText, this.removed);
+            S subText = latter.removed.sub(this.position - latter.position);
+            return subText.concat(this.removed);
         }
         return this.removed;
     }
@@ -120,8 +120,8 @@ public abstract class TextChange<S, Self extends TextChange<S, Self>> {
     }
 
     private Self concatWith(Self latter) {
-        S removedText = concat(this.removed, latter.removed);
-        S addedText = concat(this.inserted, latter.inserted);
+        S removedText = this.removed.concat(latter.removed);
+        S addedText = this.inserted.concat(latter.inserted);
         return create(this.position, removedText, addedText);
     }
 

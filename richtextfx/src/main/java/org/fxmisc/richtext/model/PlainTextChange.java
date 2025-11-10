@@ -3,34 +3,18 @@ package org.fxmisc.richtext.model;
 /**
  * An object that specifies where a non-style change occurred in a {@link org.fxmisc.richtext.GenericStyledArea}.
  */
-public class PlainTextChange extends TextChange<String, PlainTextChange> {
+public class PlainTextChange extends TextChange<PlainTextChangeData, PlainTextChange> {
 
     public PlainTextChange(int position, String removed, String inserted) {
+        this(position, new PlainTextChangeData(removed), new PlainTextChangeData(inserted));
+    }
+
+    private PlainTextChange(int position, PlainTextChangeData removed, PlainTextChangeData inserted) {
         super(position, removed, inserted);
     }
 
     @Override
-    protected int removedLength() {
-        return removed.length();
-    }
-
-    @Override
-    protected int insertedLength() {
-        return inserted.length();
-    }
-
-    @Override
-    protected final String concat(String a, String b) {
-        return a + b;
-    }
-
-    @Override
-    protected final String sub(String s, int from, int to) {
-        return s.substring(from, to);
-    }
-
-    @Override
-    protected final PlainTextChange create(int position, String removed, String inserted) {
+    protected final PlainTextChange create(int position, PlainTextChangeData removed, PlainTextChangeData inserted) {
         return new PlainTextChange(position, removed, inserted);
     }
 }

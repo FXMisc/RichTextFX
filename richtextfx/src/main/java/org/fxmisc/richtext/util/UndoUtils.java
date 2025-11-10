@@ -97,7 +97,7 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
             GenericStyledArea<PS, SEG, S> area, Duration preventMergeDelay) {
         return richTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory(), preventMergeDelay);
-    };
+    }
 
     /**
      * Returns an UndoManager that can undo/redo {@link RichTextChange}s. New changes
@@ -107,7 +107,7 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
             GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory) {
         return richTextUndoManager(area, factory, DEFAULT_PREVENT_MERGE_DELAY);
-    };
+    }
 
     /**
      * Returns an UndoManager that can undo/redo {@link RichTextChange}s. New changes
@@ -122,7 +122,7 @@ public final class UndoUtils {
                 TextChange::mergeWith,
                 TextChange::isIdentity,
                 preventMergeDelay);
-    };
+    }
 
     /**
      * Returns an UndoManager with an unlimited history that can undo/redo {@link RichTextChange}s. New changes
@@ -154,7 +154,7 @@ public final class UndoUtils {
             area.multiRichChanges().conditionOn(suspendUndo),
             preventMergeDelay
         );
-    };
+    }
 
     /**
      * Returns an UndoManager with an unlimited history that can undo/redo {@link PlainTextChange}s. New changes
@@ -215,7 +215,7 @@ public final class UndoUtils {
      */
     public static <PS, SEG, S> Consumer<PlainTextChange> applyPlainTextChange(GenericStyledArea<PS, SEG, S> area) {
         return change -> {
-            area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+            area.replaceText(change.getPosition(), change.getRemovalEnd(), change.getInserted().data());
             moveToChange( area, change );
         };
     }
@@ -227,7 +227,7 @@ public final class UndoUtils {
     public static <PS, SEG, S> Consumer<RichTextChange<PS, SEG, S>> applyRichTextChange(
             GenericStyledArea<PS, SEG, S> area) {
         return change -> {
-            area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted());
+            area.replace(change.getPosition(), change.getRemovalEnd(), change.getInserted().data());
             moveToChange( area, change );
         };
     }
@@ -241,7 +241,7 @@ public final class UndoUtils {
         return changeList -> {
             MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
             for (PlainTextChange c : changeList) {
-                builder.replaceTextAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+                builder.replaceTextAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted().data());
             }
             builder.commit();
             moveToChange( area, changeList.get( changeList.size()-1 ) );
@@ -257,7 +257,7 @@ public final class UndoUtils {
         return changeList -> {
             MultiChangeBuilder<PS, SEG, S> builder = area.createMultiChange(changeList.size());
             for (RichTextChange<PS, SEG, S> c : changeList) {
-                builder.replaceAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted());
+                builder.replaceAbsolutely(c.getPosition(), c.getRemovalEnd(), c.getInserted().data());
             }
             builder.commit();
             moveToChange( area, changeList.get( changeList.size()-1 ) );

@@ -10,8 +10,8 @@ import static org.junit.Assert.assertTrue;
 public class PlainTextChangeTest {
     private void checkContent(PlainTextChange textChange, int position, String removed, String inserted) {
         assertEquals("Incorrect position", position, textChange.getPosition());
-        assertEquals("Incorrect inserted text", inserted, textChange.getInserted());
-        assertEquals("Incorrect removed text", removed, textChange.getRemoved());
+        assertEquals("Incorrect inserted text", new PlainTextChangeData(inserted), textChange.getInserted());
+        assertEquals("Incorrect removed text", new PlainTextChangeData(removed), textChange.getRemoved());
     }
 
     @Test
