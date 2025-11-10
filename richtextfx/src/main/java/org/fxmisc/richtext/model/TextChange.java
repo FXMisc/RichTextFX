@@ -11,16 +11,23 @@ import java.util.Optional;
  * @param <Self> a subclass of TextChange
  */
 public abstract class TextChange<S extends TextChangeData<?, S>, Self extends TextChange<S, Self>> {
+    private final CaretChange caretChange;
     private final int position;
     private final S removed;
     private final S inserted;
 
-    public TextChange(int position, S removed, S inserted) {
+    public TextChange(int caretBefore, int position, S removed, S inserted) {
+        this(new CaretChange(caretBefore, position + inserted.length()), position, removed, inserted);
+    }
+
+    public TextChange(CaretChange caretChange, int position, S removed, S inserted) {
+        this.caretChange = caretChange;
         this.position = position;
         this.removed = removed;
         this.inserted = inserted;
     }
 
+    public CaretChange getCaretChange() { return caretChange; }
     /** Gets the start position of where the replacement happened */
     public int getPosition() { return position; }
     public S getRemoved() { return removed; }
@@ -30,7 +37,7 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
      * Returns a new subclass of {@link TextChange} that makes the {@code inserted} the removed object and
      * the {@code removed} the inserted object
      */
-    public Self invert() { return create(position, inserted, removed); }
+    public Self invert() { return create(caretChange.invert(), position, inserted, removed); }
 
     /** Returns the position where the removal ends (e.g. {@code position + removedLength())}) */
     public int getRemovalEnd() { return position + removedLength(); }
@@ -51,7 +58,7 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
      */
     public int getNetLength() { return insertedLength() - removedLength(); }
 
-    protected abstract Self create(int position, S removed, S inserted);
+    protected abstract Self create(CaretChange caretChange, int position, S removed, S inserted);
 
     /**
      * Returns true if this change is an identity change: applying it does nothing as it removes what it inserts.
@@ -80,7 +87,10 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
         }
         else if(this.hasInsertionBeenRemovedBy(latter)) {
             int startPosition = Math.min(this.position, latter.getPosition());
-            return Optional.of(create(startPosition, mergeRemove(latter), mergeInsert(latter)));
+            S removed = mergeRemove(latter);
+            S inserted = mergeInsert(latter);
+            CaretChange mergeCaretChange = caretChange.merge(latter.getCaretChange(), removed.length() + startPosition);
+            return Optional.of(create(mergeCaretChange, startPosition, removed, inserted));
         }
         return Optional.empty();
     }
@@ -119,7 +129,8 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
     private Self concatWith(Self latter) {
         S removedText = this.removed.concat(latter.getRemoved());
         S addedText = this.inserted.concat(latter.getInserted());
-        return create(this.position, removedText, addedText);
+        CaretChange mergedCaretChange = getCaretChange().merge(latter.getCaretChange(), this.position + removedText.length());
+        return create(mergedCaretChange, this.position, removedText, addedText);
     }
 
     @Override

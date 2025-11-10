@@ -401,7 +401,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidRange(from, to = Math.min(to, length()));
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
-        return replace(start, end, mapper);
+        return replace(end, start, end, mapper);
     }
 
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
@@ -409,13 +409,14 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
         BiIndex from =  new BiIndex(paragraphIndex, fromCol);
         BiIndex to =  new BiIndex(paragraphIndex, toCol);
-        return replace(from, to, f);
+        return replace(to, from, to, f);
     }
 
     // Note: there must be a "ensureValid_()" call preceding the call of this method
     private Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
-            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
+            BiIndex caret, BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         int pos = new Pos(start).toOffset();
+        int caretPos = new Pos(caret).toOffset();
 
         List<Paragraph<PS, SEG, S>> removedPars =
                 getParagraphs().subList(start.major, end.major + 1);
@@ -425,7 +426,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
                 ReadOnlyStyledDocument<PS, SEG, S> replacement = f.apply(removed);
                 ReadOnlyStyledDocument<PS, SEG, S> doc = l.concatR(replacement).concat(r);
                 // Next we use doc.subSequence instead of replacement because Paragraph.concat's returned paragraph style can vary.
-                RichTextChange<PS, SEG, S> change = new RichTextChange<>(pos, removed, doc.subSequence(pos, pos+replacement.length()));
+                RichTextChange<PS, SEG, S> change = new RichTextChange<>(caretPos, pos, removed, doc.subSequence(pos, pos+replacement.length()));
                 List<Paragraph<PS, SEG, S>> addedPars = doc.getParagraphs().subList(start.major, start.major + replacement.getParagraphCount());
                 MaterializedListModification<Paragraph<PS, SEG, S>> parChange =
                         MaterializedListModification.create(start.major, removedPars, addedPars);
@@ -453,7 +454,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidParagraphIndex(parIdx);
         BiIndex from = new BiIndex(parIdx, 0);
         BiIndex to = new BiIndex(parIdx, tree.getLeaf(parIdx).length());
-        return replace(from, to, doc -> doc.mapParagraphs(mapper));
+        return replace(to, from, to, doc -> doc.mapParagraphs(mapper));
     }
 
     /**
