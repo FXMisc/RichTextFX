@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
@@ -413,7 +414,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     // Note: there must be a "ensureValid_()" call preceding the call of this method
     private Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
-        int pos = tree.getSummaryBetween(0, start.major).map(s -> s.length() + 1).orElse(0) + start.minor;
+        int pos = new Pos(start).toOffset();
 
         List<Paragraph<PS, SEG, S>> removedPars =
                 getParagraphs().subList(start.major, end.major + 1);
@@ -496,6 +497,10 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         private final int major;
         private final int minor;
 
+        private Pos(BiIndex index) {
+            this(index.major, index.minor);
+        }
+
         private Pos(int major, int minor) {
             this.major = major;
             this.minor = minor;
@@ -550,11 +555,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
 
         @Override
         public int toOffset() {
-            if(major == 0) {
-                return minor;
-            } else {
-                return tree.getSummaryBetween(0, major).get().length() + 1 + minor;
-            }
+            return (major == 0) ? minor : tree.getSummaryBetween(0, major).map(s -> s.length() + 1).orElse(0) + minor;
         }
     }
 

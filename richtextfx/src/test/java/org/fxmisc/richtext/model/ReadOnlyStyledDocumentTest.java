@@ -5,17 +5,23 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.UnaryOperator;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.reactfx.collection.MaterializedListModification;
+import org.reactfx.util.BiIndex;
+import org.reactfx.util.Tuple3;
 
 public class ReadOnlyStyledDocumentTest {
     private static final Void NULL = new Void();
+
+    private static final String TEST_TEXT = """
+                To be, or not to be, that is the question:
+                Whether 'tis nobler in the mind to suffer
+                The slings and arrows of outrageous fortune,
+                Or to take arms against a sea of troubles,""";
 
     /** Short for Void:
      * cannot pass in 'null' since compiler will interpret it as a StyleSpans argument to Paragraph's constructor */
@@ -62,15 +68,23 @@ public class ReadOnlyStyledDocumentTest {
     }
 
     @Test
+    public void evaluateEmptyTextPosition() {
+        TextOps<String, Void> segOps = SegmentOps.styledTextOps();
+        ReadOnlyStyledDocument<Void, String, Void> document = fromString("", NULL, NULL, segOps);
+        assertEquals(0, document.position(0, 0).toOffset());
+        assertEquals(-1, document.position(0, -1).toOffset());
+        assertEquals(-1, document.position(0, -1).clamp().toOffset());
+        assertEquals(1, document.position(0, 1).toOffset());
+        assertEquals(-1, document.position(0, 1).clamp().toOffset()); // This looks like a bug, but that is current behaviour
+        assertEquals(1, document.position(1, 0).toOffset());
+        assertEquals(1, document.position(1, 0).clamp().toOffset());
+        assertThrows(IndexOutOfBoundsException.class, () -> document.position(2, 0).toOffset());
+    }
+
+    @Test
     public void evaluatePosition() {
         TextOps<String, Void> segOps = SegmentOps.styledTextOps();
-        String text = """
-                To be, or not to be, that is the question:
-                Whether 'tis nobler in the mind to suffer
-                The slings and arrows of outrageous fortune,
-                Or to take arms against a sea of troubles,""";
-        ReadOnlyStyledDocument<Void, String, Void> document = fromString(text, NULL, NULL, segOps);
-        assertEquals(0, document.position(0, 0).toOffset());
+        ReadOnlyStyledDocument<Void, String, Void> document = fromString(TEST_TEXT, NULL, NULL, segOps);
         assertEquals(2, document.position(0, 2).toOffset());
         assertEquals(42, document.position(0, 42).toOffset());
         assertEquals(43, document.position(1, 0).toOffset());
@@ -83,6 +97,9 @@ public class ReadOnlyStyledDocumentTest {
         assertThrows(IndexOutOfBoundsException.class, () -> document.position(-1, 0).toOffset());
 
         // Following is covering current behaviour to avoid breaking, but these are quite strange
+        // The clamp is wrong compared to the specification of the method which states: "if the position is beyond the
+        // end of a given paragraph, moves the position back to the end of the paragraph", but these are tests meant to
+        // define current behaviour. If you ever fix it and see these tests failing, you can fix the tests.
         assertEquals(-1, document.position(0, -1).toOffset());
         assertEquals(-1, document.position(0, -1).clamp().toOffset());
         assertEquals(43, document.position(0, 43).toOffset()); // First paragraph has 42 chars
@@ -94,6 +111,15 @@ public class ReadOnlyStyledDocumentTest {
         assertEquals(173, document.position(4, 0).toOffset()); // There are only 3 paragraphs
         assertEquals(173, document.position(3, 43).toOffset()); // After the end of the line it continues for some reason
         assertEquals(171, document.position(3, 43).clamp().toOffset());
+    }
+
+    @Test
+    public void replaceTextContent() {
+        TextOps<String, Void> segOps = SegmentOps.styledTextOps();
+        ReadOnlyStyledDocument<Void, String, Void> document = fromString(TEST_TEXT, NULL, NULL, segOps);
+        ReadOnlyStyledDocument<Void, String, Void> replace = fromString(" try to ", NULL, NULL, segOps);
+        Tuple3<ReadOnlyStyledDocument<Void, String, Void>, ?, ?> tuple = document.replace(2, 136, replace);
+        assertEquals("To try to take arms against a sea of troubles,", tuple._1.getText());
     }
 
     @Test
