@@ -97,7 +97,7 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
             GenericStyledArea<PS, SEG, S> area, Duration preventMergeDelay) {
         return richTextUndoManager(area, UndoManagerFactory.unlimitedHistoryFactory(), preventMergeDelay);
-    };
+    }
 
     /**
      * Returns an UndoManager that can undo/redo {@link RichTextChange}s. New changes
@@ -107,7 +107,7 @@ public final class UndoUtils {
     public static <PS, SEG, S> UndoManager<List<RichTextChange<PS, SEG, S>>> richTextUndoManager(
             GenericStyledArea<PS, SEG, S> area, UndoManagerFactory factory) {
         return richTextUndoManager(area, factory, DEFAULT_PREVENT_MERGE_DELAY);
-    };
+    }
 
     /**
      * Returns an UndoManager that can undo/redo {@link RichTextChange}s. New changes
@@ -122,7 +122,7 @@ public final class UndoUtils {
                 TextChange::mergeWith,
                 TextChange::isIdentity,
                 preventMergeDelay);
-    };
+    }
 
     /**
      * Returns an UndoManager with an unlimited history that can undo/redo {@link RichTextChange}s. New changes
@@ -154,7 +154,7 @@ public final class UndoUtils {
             area.multiRichChanges().conditionOn(suspendUndo),
             preventMergeDelay
         );
-    };
+    }
 
     /**
      * Returns an UndoManager with an unlimited history that can undo/redo {@link PlainTextChange}s. New changes
@@ -270,10 +270,18 @@ public final class UndoUtils {
      */
     private static void moveToChange( GenericStyledArea area, TextChange chg )
     {
-        int pos = chg.getPosition();
-        int len = chg.getNetLength();
-        if ( len > 0 ) pos += len;
-
+        // Issue #1293: This is still not sufficient for undo because:
+        // - You want to restore the selection after undo, information is missing.
+        // - Removing a character with "DEL" or "BACKSPACE" result in the same change but the caret should not be at the
+        //   same position when undoing one compared to the other.
+        // - You can select left-to-right or right-to-left, but without the position of the caret before
+        //   the action we cannot put back the caret where it used to be.
+        int pos = chg.getInsertionEnd();
+        /* Before fixing #1293 (remove this comment when the issue is fully fixed):
+         * int pos = chg.getPosition();
+         * int len = chg.getNetLength();
+         * if ( len > 0 ) pos += len;
+         */
         area.moveTo( Math.min( pos, area.getLength() ) );
     }
 }
