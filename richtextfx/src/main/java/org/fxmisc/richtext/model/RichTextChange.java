@@ -18,7 +18,6 @@ public class RichTextChange<PS, SEG, S> extends TextChange<RichTextChangeData<PS
         return new RichTextChange<>(position, removed, inserted);
     }
 
-    // TODO SMA move to adapter
     public final PlainTextChange toPlainTextChange() {
         return new PlainTextChange(getPosition(), getRemoved().getText(), getInserted().getText());
     }

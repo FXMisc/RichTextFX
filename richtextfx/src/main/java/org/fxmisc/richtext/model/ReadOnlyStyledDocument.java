@@ -401,7 +401,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidRange(from, to = Math.min(to, length()));
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
-        return replace(end, start, end, mapper);
+        return replace(start, end, mapper);
     }
 
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
@@ -409,12 +409,12 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
         BiIndex from =  new BiIndex(paragraphIndex, fromCol);
         BiIndex to =  new BiIndex(paragraphIndex, toCol);
-        return replace(to, from, to, f);
+        return replace(from, to, f);
     }
 
     // Note: there must be a "ensureValid_()" call preceding the call of this method
     private Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
-            BiIndex caret, BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
+            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         int pos = new Pos(start).toOffset();
 
         List<Paragraph<PS, SEG, S>> removedPars =
@@ -453,7 +453,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidParagraphIndex(parIdx);
         BiIndex from = new BiIndex(parIdx, 0);
         BiIndex to = new BiIndex(parIdx, tree.getLeaf(parIdx).length());
-        return replace(to, from, to, doc -> doc.mapParagraphs(mapper));
+        return replace(from, to, doc -> doc.mapParagraphs(mapper));
     }
 
     /**
