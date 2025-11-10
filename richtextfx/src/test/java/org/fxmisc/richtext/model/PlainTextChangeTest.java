@@ -7,7 +7,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-// TODO SMA UT caret in all cases
 public class PlainTextChangeTest {
     private void checkContent(PlainTextChange textChange, int position, String removed, String inserted) {
         assertEquals("Incorrect position", position, textChange.getPosition());
