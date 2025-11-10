@@ -401,18 +401,20 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
         ensureValidRange(from, to = Math.min(to, length()));
         BiIndex start = tree.locate(NAVIGATE, from);
         BiIndex end = tree.locate(NAVIGATE, to);
-        return replace(start, end, mapper);
+        return replace(end, start, end, mapper);
     }
 
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int paragraphIndex, int fromCol, int toCol, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
-        return replace(new BiIndex(paragraphIndex, fromCol), new BiIndex(paragraphIndex, toCol), f);
+        BiIndex from =  new BiIndex(paragraphIndex, fromCol);
+        BiIndex to =  new BiIndex(paragraphIndex, toCol);
+        return replace(to, from, to, f);
     }
 
     // Note: there must be a "ensureValid_()" call preceding the call of this method
     private Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
-            BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
+            BiIndex caret, BiIndex start, BiIndex end, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         int pos = new Pos(start).toOffset();
 
         List<Paragraph<PS, SEG, S>> removedPars =
@@ -449,10 +451,9 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
             int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> mapper) {
         ensureValidParagraphIndex(parIdx);
-        return replace(
-                new BiIndex(parIdx, 0),
-                new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
-                doc -> doc.mapParagraphs(mapper));
+        BiIndex from = new BiIndex(parIdx, 0);
+        BiIndex to = new BiIndex(parIdx, tree.getLeaf(parIdx).length());
+        return replace(to, from, to, doc -> doc.mapParagraphs(mapper));
     }
 
     /**

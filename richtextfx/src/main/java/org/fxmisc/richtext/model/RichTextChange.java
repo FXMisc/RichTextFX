@@ -20,7 +20,7 @@ public class RichTextChange<PS, SEG, S> extends TextChange<RichTextChangeData<PS
 
     // TODO SMA move to adapter
     public final PlainTextChange toPlainTextChange() {
-        return new PlainTextChange(position, removed.getText(), inserted.getText());
+        return new PlainTextChange(getPosition(), getRemoved().getText(), getInserted().getText());
     }
 
     /**
@@ -28,7 +28,7 @@ public class RichTextChange<PS, SEG, S> extends TextChange<RichTextChangeData<PS
      * creation via {@link #toPlainTextChange()}.
      */
     public final boolean isPlainTextIdentity() {
-        return removed.getText().equals(inserted.getText());
+        return getRemoved().getText().equals(getInserted().getText());
     }
     
     private static boolean skipStyleComparison = false;

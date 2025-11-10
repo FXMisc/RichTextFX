@@ -11,9 +11,9 @@ import java.util.Optional;
  * @param <Self> a subclass of TextChange
  */
 public abstract class TextChange<S extends TextChangeData<?, S>, Self extends TextChange<S, Self>> {
-    protected final int position;
-    protected final S removed;
-    protected final S inserted;
+    private final int position;
+    private final S removed;
+    private final S inserted;
 
     public TextChange(int position, S removed, S inserted) {
         this.position = position;
@@ -21,11 +21,8 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
         this.inserted = inserted;
     }
 
-    /**
-     * Gets the start position of where the replacement happened
-     */
+    /** Gets the start position of where the replacement happened */
     public int getPosition() { return position; }
-
     public S getRemoved() { return removed; }
     public S getInserted() { return inserted; }
 
@@ -82,23 +79,23 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
             return Optional.of(concatWith(latter));
         }
         else if(this.hasInsertionBeenRemovedBy(latter)) {
-            int startPosition = Math.min(this.position, latter.position);
+            int startPosition = Math.min(this.position, latter.getPosition());
             return Optional.of(create(startPosition, mergeRemove(latter), mergeInsert(latter)));
         }
         return Optional.empty();
     }
 
     private S mergeInsert(Self latter) {
-        if(latter.position < this.position) {
-            return latter.inserted;
+        if(latter.getPosition() < this.position) {
+            return latter.getInserted();
         }
-        S subText = this.inserted.sub(latter.position - this.position);
-        return subText.concat(latter.inserted);
+        S subText = this.inserted.sub(latter.getPosition() - this.position);
+        return subText.concat(latter.getInserted());
     }
 
     private S mergeRemove(Self latter) {
-        if(latter.position < this.position) {
-            S subText = latter.removed.sub(this.position - latter.position);
+        if(latter.getPosition() < this.position) {
+            S subText = latter.getRemoved().sub(this.position - latter.getPosition());
             return subText.concat(this.removed);
         }
         return this.removed;
@@ -116,12 +113,12 @@ public abstract class TextChange<S extends TextChangeData<?, S>, Self extends Te
      * @return an insertion is followed by another change (insertion or removal)
      */
     private boolean isInsertionFollowedBy(Self latter) {
-        return this.getInsertionEnd() == latter.position;
+        return this.getInsertionEnd() == latter.getPosition();
     }
 
     private Self concatWith(Self latter) {
-        S removedText = this.removed.concat(latter.removed);
-        S addedText = this.inserted.concat(latter.inserted);
+        S removedText = this.removed.concat(latter.getRemoved());
+        S addedText = this.inserted.concat(latter.getInserted());
         return create(this.position, removedText, addedText);
     }
 
