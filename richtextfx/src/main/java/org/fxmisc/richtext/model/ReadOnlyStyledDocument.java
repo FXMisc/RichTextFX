@@ -407,9 +407,7 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replace(
             int paragraphIndex, int fromCol, int toCol, UnaryOperator<ReadOnlyStyledDocument<PS, SEG, S>> f) {
         ensureValidParagraphRange(paragraphIndex, fromCol, toCol);
-        BiIndex from =  new BiIndex(paragraphIndex, fromCol);
-        BiIndex to =  new BiIndex(paragraphIndex, toCol);
-        return replace(from, to, f);
+        return replace(new BiIndex(paragraphIndex, fromCol), new BiIndex(paragraphIndex, toCol), f);
     }
 
     // Note: there must be a "ensureValid_()" call preceding the call of this method
@@ -451,9 +449,10 @@ public final class ReadOnlyStyledDocument<PS, SEG, S> implements StyledDocument<
     public Tuple3<ReadOnlyStyledDocument<PS, SEG, S>, RichTextChange<PS, SEG, S>, MaterializedListModification<Paragraph<PS, SEG, S>>> replaceParagraph(
             int parIdx, UnaryOperator<Paragraph<PS, SEG, S>> mapper) {
         ensureValidParagraphIndex(parIdx);
-        BiIndex from = new BiIndex(parIdx, 0);
-        BiIndex to = new BiIndex(parIdx, tree.getLeaf(parIdx).length());
-        return replace(from, to, doc -> doc.mapParagraphs(mapper));
+        return replace(
+                new BiIndex(parIdx, 0),
+                new BiIndex(parIdx, tree.getLeaf(parIdx).length()),
+                doc -> doc.mapParagraphs(mapper));
     }
 
     /**
