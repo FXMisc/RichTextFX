@@ -14,10 +14,10 @@ import org.reactfx.util.Tuple3;
 public class ReadOnlyStyledDocumentTest {
     private static final Void NULL = new Void();
     private static final String TEST_TEXT = """
-                To be, or not to be, that is the question:
-                Whether 'tis nobler in the mind to suffer
-                The slings and arrows of outrageous fortune,
-                Or to take arms against a sea of troubles,""";
+                "To be, or not to be, that is the question:\n"
+               +"Whether 'tis nobler in the mind to suffer\n"
+               +"The slings and arrows of outrageous fortune,\n"
+               +"Or to take arms against a sea of troubles,";
 
     /** Short for Void:
      * cannot pass in 'null' since compiler will interpret it as a StyleSpans argument to Paragraph's constructor */
