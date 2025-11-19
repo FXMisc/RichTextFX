@@ -231,7 +231,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         bounds = Val.create(
                 () -> area.getCaretBoundsOnScreen(this),
-                EventStreams.merge(area.viewportDirtyEvents(), dirty)
+                invalidationsOf(paragraphIndex)
         ).suspendable();
 
         lineIndex = Val.create(
