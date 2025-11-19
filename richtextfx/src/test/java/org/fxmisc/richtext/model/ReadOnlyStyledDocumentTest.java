@@ -13,7 +13,7 @@ import org.reactfx.util.Tuple3;
 
 public class ReadOnlyStyledDocumentTest {
     private static final Void NULL = new Void();
-    private static final String TEST_TEXT = """
+    private static final String TEST_TEXT = 
                 "To be, or not to be, that is the question:\n"
                +"Whether 'tis nobler in the mind to suffer\n"
                +"The slings and arrows of outrageous fortune,\n"
