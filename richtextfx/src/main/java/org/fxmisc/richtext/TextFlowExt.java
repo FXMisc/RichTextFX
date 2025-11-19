@@ -52,10 +52,6 @@ class TextFlowExt extends TextFlow {
         return navigator.offsetToPosition(charIdx, Forward).getMajor();
     }
 
-    PathElement[] getCaretShape(int charIdx, boolean isLeading) {
-        return caretShape(charIdx, isLeading);
-    }
-
     PathElement[] getRangeShape(IndexRange range) {
         return getRangeShape(range.getStart(), range.getEnd());
     }
