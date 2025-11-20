@@ -36,18 +36,18 @@ class TextFlowLayout
 
     @Deprecated
     float getLineCenter( int lineNo ) {
-        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ).getCenterY() : 1.0f;
+        return (lineNo >= 0 && getTextLineCount() > 0) ? lineMetrics.get( lineNo ).centerY() : 1.0f;
     }
 
 
     @Deprecated
     int getLineLength( int lineNo ) {
-        return getTextLine( lineNo ).getLength();
+        return getTextLine( lineNo, false ).length();
     }
 
 
-    TextFlowSpan getTextLine( int lineNo ) {
-        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
+    TextFlowSpan getTextLine( int lineNo, boolean includeLineSpacing ) {
+        return (lineNo >= 0 && getTextLineCount() > 0) ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
     }
 
 
@@ -55,7 +55,7 @@ class TextFlowLayout
     TextFlowSpan getLineSpan( float y ) {
         final int lastLine = getTextLineCount();
         if ( lastLine < 1 ) return EMPTY_SPAN;
-        return lineMetrics.stream().filter( tfs -> y < tfs.getBounds().getMaxY() )
+        return lineMetrics.stream().filter( tfs -> y < tfs.bounds().getMaxY() )
                 .findFirst().orElse( lineMetrics.get( Math.max(0,lastLine-1) ) );
     }
 
@@ -143,7 +143,7 @@ class TextFlowLayout
     private void adjustLineMetrics( int length, double width, double height ) {
         TextFlowSpan span = lineMetrics.get( lineMetrics.size()-1 );
         span.addLengthAndWidth( length, width );
-        if ( height > span.getHeight() ) {
+        if ( height > span.height() ) {
             span.setHeight( height );
         }
     }
