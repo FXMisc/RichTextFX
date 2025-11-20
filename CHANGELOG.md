@@ -1,5 +1,18 @@
 # Change Log
 
+## [v0.11.7](https://github.com/FXMisc/RichTextFX/tree/v0.11.7) (2025-11-20)
+[Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.6...v0.11.7)
+
+**Implemented enhancements:**
+
+- JavaKeywordsDemo use multiPlainChanges with paragraph index [\#1287](https://github.com/FXMisc/RichTextFX/pull/1287)
+
+**Fixed bugs:**
+
+- TextFlowExt removed clashing getCaretShape method [\#1285](https://github.com/FXMisc/RichTextFX/pull/1285) (Thank you [Symeon94](https://github.com/Symeon94))
+- Partial fix for incorrect caret position after Undo [\#1295](https://github.com/FXMisc/RichTextFX/pull/1295) (Thank you [Symeon94](https://github.com/Symeon94))
+- Fixed horizontal scrolling excessive layouts [\#1296](https://github.com/FXMisc/RichTextFX/pull/1296)
+
 ## [v0.11.6](https://github.com/FXMisc/RichTextFX/tree/v0.11.6) (2025-09-01)
 [Full Changelog](https://github.com/FXMisc/RichTextFX/compare/v0.11.5...v0.11.6)
 

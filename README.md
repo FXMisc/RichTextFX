@@ -151,20 +151,20 @@ Requirements
 ------------
 
 **JDK11** or higher is required. (Can still be compiled with JDK9 if needed)</br>
-For **JavaFX 25+** use version **0.11.6** or higher. Previous versions of RichTextFX won't work due to a method clash.
+For **JavaFX 25+** use version **0.11.7** or higher. Previous versions of RichTextFX won't work due to a method clash.
 
 Download
 --------
 
 ### Stable release
 
-Current stable release is 0.11.6 which is ONLY compatible with Java 11 and UP. 
+Current stable release is 0.11.7 which is ONLY compatible with Java 11 and UP. 
 
 #### Maven coordinates
 
 | Group ID            | Artifact ID | Version |
 | :-----------------: | :---------: | :-----: |
-| org.fxmisc.richtext | richtextfx  | 0.11.6  |
+| org.fxmisc.richtext | richtextfx  | 0.11.7  |
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.fxmisc.richtext/richtextfx/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.fxmisc.richtext/richtextfx)
 
@@ -172,19 +172,19 @@ Current stable release is 0.11.6 which is ONLY compatible with Java 11 and UP.
 
 ```groovy
 dependencies {
-    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.11.6'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.11.7'
 }
 ```
 
 #### Sbt example
 
 ```scala
-libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.11.6"
+libraryDependencies += "org.fxmisc.richtext" % "richtextfx" % "0.11.7"
 ```
 
 #### Manual download
 
-Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.6/richtextfx-0.11.6.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.6/richtextfx-fat-0.11.6.jar) and place it on your classpath.
+Download [the JAR file](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.7/richtextfx-0.11.7.jar) or [the fat JAR file (including dependencies)](https://github.com/FXMisc/RichTextFX/releases/download/v0.11.7/richtextfx-fat-0.11.7.jar) and place it on your classpath.
 
 ### Snapshot releases
 
