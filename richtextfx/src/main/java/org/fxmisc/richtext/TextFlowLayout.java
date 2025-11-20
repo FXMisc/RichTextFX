@@ -34,41 +34,45 @@ class TextFlowLayout
     }
 
 
+    @Deprecated
     float getLineCenter( int lineNo ) {
-        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ).getCenterY() : 1.0f;
+        return (lineNo >= 0 && getTextLineCount() > 0) ? lineMetrics.get( lineNo ).centerY() : 1.0f;
     }
 
 
+    @Deprecated
     int getLineLength( int lineNo ) {
-        return getLineSpan( lineNo ).getLength();
+        return getTextLine( lineNo, false ).length();
     }
 
 
-    TextFlowSpan getLineSpan( int lineNo ) {
-        return (lineNo >= 0 && getLineCount() > 0) ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
+    TextFlowSpan getTextLine( int lineNo, boolean includeLineSpacing ) {
+        return (lineNo >= 0 && getTextLineCount() > 0) ? lineMetrics.get( lineNo ) : EMPTY_SPAN;
     }
 
 
+    @Deprecated
     TextFlowSpan getLineSpan( float y ) {
-        final int lastLine = getLineCount();
+        final int lastLine = getTextLineCount();
         if ( lastLine < 1 ) return EMPTY_SPAN;
-        return lineMetrics.stream().filter( tfs -> y < tfs.getBounds().getMaxY() )
+        return lineMetrics.stream().filter( tfs -> y < tfs.bounds().getMaxY() )
                 .findFirst().orElse( lineMetrics.get( Math.max(0,lastLine-1) ) );
     }
 
 
+    @Deprecated
     TwoLevelNavigator getTwoLevelNavigator() {
-        return new TwoLevelNavigator( this::getLineCount, this::getLineLength );
+        return new TwoLevelNavigator( this::getTextLineCount, this::getLineLength );
     }
-    
+
 
     /*
      * Iterate through the nodes in the TextFlow to determine the number of lines of text.
      * Also calculates the following metrics for each line along the way: line height,
      * line width, centerY, length (character count), start (character offset from 1st line)
      */
-    int getLineCount() {
-       
+    int getTextLineCount() {
+
         if ( lineCount > -1 ) return lineCount;
 
         lineCount = 0;
@@ -77,7 +81,7 @@ class TextFlowLayout
         int totCharSoFar = 0;
 
         for ( Node n : flow.getChildrenUnmodifiable() ) if ( n.isManaged() ) {
-           
+
             Bounds nodeBounds = n.getBoundsInParent();
             int length = (n instanceof Text) ? ((Text) n).getText().length() : 1;
             PathElement[] shape = flow.rangeShape( totCharSoFar, totCharSoFar+length );
@@ -88,12 +92,12 @@ class TextFlowLayout
                 if ( totLines > 0.0 ) lines--;
                 totLines += lines;
             }
-            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line 
+            else if ( nodeMinY >= prevMaxY ) {                                // Node is on next line
                 totLines++;
             }
 
             if ( lineMetrics.size() < totLines ) {                            // Add additional lines
-               
+
                 if ( shape.length == 0 ) {
                    lineMetrics.add( new TextFlowSpan( totCharSoFar, length, nodeMinY, nodeBounds.getWidth(), nodeBounds.getHeight() ) );
                     totCharSoFar += length;
@@ -121,14 +125,14 @@ class TextFlowLayout
                 }
             }
             else {
-                // Adjust current line metrics with additional Text or Node embedded in this line 
+                // Adjust current line metrics with additional Text or Node embedded in this line
                 adjustLineMetrics( length, nodeBounds.getWidth(), nodeBounds.getHeight() );
                 totCharSoFar += length;
             }
 
             prevMaxY = Math.max( prevMaxY, nodeBounds.getMaxY() );
         }
-        
+
         lineCount = (int) totLines;
         if ( lineCount > 0 ) return lineCount;
         lineCount = -1;
@@ -139,7 +143,7 @@ class TextFlowLayout
     private void adjustLineMetrics( int length, double width, double height ) {
         TextFlowSpan span = lineMetrics.get( lineMetrics.size()-1 );
         span.addLengthAndWidth( length, width );
-        if ( height > span.getHeight() ) {
+        if ( height > span.height() ) {
             span.setHeight( height );
         }
     }
