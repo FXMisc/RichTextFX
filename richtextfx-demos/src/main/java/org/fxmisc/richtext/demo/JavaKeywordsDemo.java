@@ -1,15 +1,17 @@
 package org.fxmisc.richtext.demo;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.IndexRange;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -19,8 +21,10 @@ import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.model.TwoDimensional.Bias;
+import org.fxmisc.richtext.model.PlainTextChange;
 import org.reactfx.Subscription;
+
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 
 public class JavaKeywordsDemo extends Application {
 
@@ -69,27 +73,29 @@ public class JavaKeywordsDemo extends Application {
                 //   when making multiple changes (e.g. renaming a method at multiple parts in file)
                 .multiPlainChanges()
 
-                // convert the list of text position changes to a unique set of paragraph ranges 
-                .map( changeList -> changeList.stream().map
-                (
-                    textChange -> new IndexRange(
-                        codeArea.offsetToPosition( textChange.getPosition(), Bias.Backward ).getMajor(),    // paragraph start
-                        codeArea.offsetToPosition( textChange.getInsertionEnd(), Bias.Backward ).getMajor() // paragraph end
-                    ))
-                    .collect( Collectors.toSet() )
-                )
-
                 // do not emit an event until 500 ms have passed since the last emission of previous stream
-                // in the meantime combine additional changes into one set of paragraph ranges with no duplicates 
-                .reduceSuccessions( (a,b) -> { a.addAll( b ); return a; }, Duration.ofMillis(500) )
+                .reduceSuccessions(
+						// We can't just add b to a and return a because a gets changed somewhere else
+						(a,b) -> Stream.concat(a.stream(), b.stream()).toList(),
+		                Duration.ofMillis(500) )
 
                 // run the following code block when previous stream emits an event
-                .subscribe( paragraphs ->
+                .subscribe(changes ->
                 {
-                    for ( IndexRange range : paragraphs ) // re-styling each paragraph range
-                    {
-                        String text = codeArea.getText( range.getStart(), 0, range.getEnd()+1, 0 );
-                        codeArea.setStyleSpans( range.getStart(), 0, new JavaStyler( text ).style() );
+                	// work out which lines have been changed, remembering that later changes may affect the line numbers of earlier changes
+                    Set<Integer> linesChanged = new HashSet<>();
+                    for (PlainTextChange change : changes)
+                	{
+                	    int lineCountChange = (int) (change.getInserted().chars().filter(ch -> ch == '\n').count() - change.getRemoved().chars().filter(ch -> ch == '\n').count());
+                	    int startLine = codeArea.offsetToPosition(change.getPosition(), Backward).getMajor();
+                	    shiftAllLineNumbersAboveThreshold(linesChanged, startLine, lineCountChange);
+                	    int endLine = codeArea.offsetToPosition(change.getInsertionEnd(), Backward).getMajor();
+                	    IntStream.rangeClosed(startLine, endLine).forEach(linesChanged::add);
+                    }
+                	// re-style each line that was changed
+                    for (int i : linesChanged)
+                	{
+                	    codeArea.setStyleSpans( i, 0, new JavaStyler( codeArea.getText(i) ).style() );
                     }
                 });
 
@@ -105,6 +111,20 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();
     }
+	
+	private void shiftAllLineNumbersAboveThreshold(Set<Integer> lineNumbers, int threshold, int shift) {
+		if (shift != 0) {
+			Set<Integer> updatedLineNumbers = new HashSet<>();
+			lineNumbers.removeIf(lineNumber -> {
+				if (lineNumber > threshold) {
+					updatedLineNumbers.add(Math.max(lineNumber + shift, threshold));
+					return true;
+				}
+				return false;
+			});
+			lineNumbers.addAll(updatedLineNumbers);
+		}
+	}
 
     private void onKeyPressed(CodeArea codeArea, KeyEvent KE) {
         // auto-indent: insert previous line's indents on enter
