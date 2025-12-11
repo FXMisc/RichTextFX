@@ -94,7 +94,7 @@ public class JavaKeywordsDemo extends Application {
 	                Set<Integer> linesChanged = positionsChanged.stream()
 			                .flatMap(range -> IntStream.rangeClosed(
 									codeArea.offsetToPosition(range.getStart(), Backward).getMajor(),
-					                codeArea.offsetToPosition(range.getEnd() - 1, Backward).getMajor())
+					                codeArea.offsetToPosition(Math.max(range.getEnd() - 1, 0), Backward).getMajor())
 					                .boxed())
 			                .collect(toSet());
                 	// re-style each line that was changed
