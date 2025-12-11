@@ -12,6 +12,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -24,6 +25,7 @@ import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.PlainTextChange;
 import org.reactfx.Subscription;
 
+import static java.util.stream.Collectors.toSet;
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 
 public class JavaKeywordsDemo extends Application {
@@ -77,21 +79,24 @@ public class JavaKeywordsDemo extends Application {
                 .reduceSuccessions(
 						// We can't just add b to a and return a because a gets changed somewhere else
 						(a,b) -> Stream.concat(a.stream(), b.stream()).toList(),
-		                Duration.ofMillis(500) )
+		                Duration.ofMillis(5000) )
 
                 // run the following code block when previous stream emits an event
                 .subscribe(changes ->
                 {
-                	// work out which lines have been changed, remembering that later changes may affect the line numbers of earlier changes
-                    Set<Integer> linesChanged = new HashSet<>();
-                    for (PlainTextChange change : changes)
-                	{
-                	    int lineCountChange = (int) (change.getInserted().chars().filter(ch -> ch == '\n').count() - change.getRemoved().chars().filter(ch -> ch == '\n').count());
-                	    int startLine = codeArea.offsetToPosition(change.getPosition(), Backward).getMajor();
-                	    shiftAllLineNumbersAboveThreshold(linesChanged, startLine, lineCountChange);
-                	    int endLine = codeArea.offsetToPosition(change.getInsertionEnd(), Backward).getMajor();
-                	    IntStream.rangeClosed(startLine, endLine).forEach(linesChanged::add);
-                    }
+                	// work out which positions have been changed, remembering that later changes may affect the positions of earlier changes
+	                Set<IndexRange> positionsChanged = new HashSet<>();
+	                for (PlainTextChange change : changes) {
+		                shiftAllIndicesAtOrAboveThreshold(positionsChanged, change.getPosition(), change.getNetLength());
+						positionsChanged.add(new IndexRange(change.getPosition(), change.getInsertionEnd()));
+	                }
+					// work out the lines changed from the positions changed
+	                Set<Integer> linesChanged = positionsChanged.stream()
+			                .flatMap(range -> IntStream.rangeClosed(
+									codeArea.offsetToPosition(range.getStart(), Backward).getMajor(),
+					                codeArea.offsetToPosition(range.getEnd() - 1, Backward).getMajor())
+					                .boxed())
+			                .collect(toSet());
                 	// re-style each line that was changed
                     for (int i : linesChanged)
                 	{
@@ -112,17 +117,19 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.show();
     }
 	
-	private void shiftAllLineNumbersAboveThreshold(Set<Integer> lineNumbers, int threshold, int shift) {
+	private void shiftAllIndicesAtOrAboveThreshold(Set<IndexRange> indexRanges, int threshold, int shift) {
 		if (shift != 0) {
-			Set<Integer> updatedLineNumbers = new HashSet<>();
-			lineNumbers.removeIf(lineNumber -> {
-				if (lineNumber > threshold) {
-					updatedLineNumbers.add(Math.max(lineNumber + shift, threshold));
+			Set<IndexRange> updatedRanges = new HashSet<>();
+			indexRanges.removeIf(range -> {
+				if (range.getEnd() >= threshold) {
+					int newEnd = Math.max(range.getEnd() + shift, threshold);
+					int newStart = range.getStart() >= threshold ? Math.max(range.getStart() + shift, threshold) : range.getStart();
+					updatedRanges.add(new IndexRange(newStart, newEnd));
 					return true;
 				}
 				return false;
 			});
-			lineNumbers.addAll(updatedLineNumbers);
+			indexRanges.addAll(updatedRanges);
 		}
 	}
 
