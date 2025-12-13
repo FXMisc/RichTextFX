@@ -216,44 +216,10 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
     }
 
     private void handleContentChanged(List<PlainTextChange> list) {
-        int finalPosition = handleContentChanged(getPosition(), list);
-        if (finalPosition != getPosition()) {
-            moveTo(finalPosition);
+        int newPosition = new CaretPositionChange().apply(getPosition(), list);
+        if (newPosition != getPosition()) {
+            moveTo(newPosition);
         }
-    }
-
-    private static int handleContentChanged(int finalPosition, List<PlainTextChange> list) {
-        for (PlainTextChange plainTextChange : list) {
-            int netLength = plainTextChange.getNetLength();
-            if (netLength != 0) {
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(netLength);
-
-                    /*
-                        "->" means add (positive) netLength to position
-                        "<-" means add (negative) netLength to position
-                        "x" means don't update position
-
-                        "+c" means caret was included in the deleted portion of content
-                        "-c" means caret was not included in the deleted portion of content
-                        Before/At/After means indexOfChange "<" / "==" / ">" position
-
-                               |   Before +c   | Before -c | At | After
-                        -------+---------------+-----------+----+------
-                        Add    |      N/A      |    ->     | -> | x
-                        Delete | indexOfChange |    <-     | x  | x
-                     */
-                if (indexOfChange == finalPosition && netLength > 0) {
-                    finalPosition = finalPosition + netLength;
-                } else if (indexOfChange < finalPosition) {
-                    finalPosition = finalPosition < endOfChange
-                            ? indexOfChange
-                            : finalPosition + netLength;
-                }
-            }
-        }
-        return finalPosition;
     }
 
     /* ********************************************************************** *
