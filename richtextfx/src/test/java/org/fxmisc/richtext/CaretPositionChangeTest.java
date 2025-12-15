@@ -13,6 +13,13 @@ public class CaretPositionChangeTest {
     }
 
     @Test
+    public void noChange() {
+        checkChange(3, 3, new PlainTextChange(4, "", ""));
+        checkChange(4, 4, new PlainTextChange(4, "", ""));
+        checkChange(5, 5, new PlainTextChange(4, "", ""));
+    }
+
+    @Test
     public void insertNewText() {
         checkChange(3, 3, new PlainTextChange(4, "", "and"));
         checkChange(4, 7, new PlainTextChange(4, "", "and"));
@@ -65,5 +72,15 @@ public class CaretPositionChangeTest {
         checkChange(8, 6, new PlainTextChange(4, "hover", "and"));
         checkChange(9, 7, new PlainTextChange(4, "hover", "and"));
         checkChange(10, 8, new PlainTextChange(4, "hover", "and"));
+    }
+
+    @Test
+    public void multipleChangesOfAllFlavours() {
+        checkChange(4, 1,
+                new PlainTextChange(4, "and", "above"), // 4 -> 6
+                new PlainTextChange(4, "above", "below"), // 6 -> 6
+                new PlainTextChange(4, "below", "bell"), // 6 -> 5
+                new PlainTextChange(1, "cowbell", "") // 5 -> 1
+        );
     }
 }
