@@ -14,64 +14,56 @@ public class CaretPositionChangeTest {
 
     @Test
     public void insertNewText() {
-        // After
         checkChange(3, 3, new PlainTextChange(4, "", "and"));
-        // On caret
-        checkChange(3, 6, new PlainTextChange(3, "", "and"));
-        // Before caret (caret within the change range)
-        checkChange(3, 2, new PlainTextChange(2, "", "and"));
-        // Before caret (caret outside the change range)
-        checkChange(4, 7, new PlainTextChange(1, "", "and"));
+        checkChange(4, 7, new PlainTextChange(4, "", "and"));
+        checkChange(5, 4, new PlainTextChange(4, "", "and"));
+        checkChange(6, 4, new PlainTextChange(4, "", "and"));
+        checkChange(7, 10, new PlainTextChange(4, "", "and"));
+        checkChange(8, 11, new PlainTextChange(4, "", "and"));
     }
 
     @Test
     public void deleteText() {
-        // After
         checkChange(3, 3, new PlainTextChange(4, "and", ""));
-        // On caret
-        checkChange(3, 3, new PlainTextChange(3, "and", ""));
-        // Before caret (caret within the change range)
-        checkChange(3, 2, new PlainTextChange(2, "and", ""));
-        // Before caret (caret outside the change range)
-        checkChange(3, 0, new PlainTextChange(0, "and", ""));
-        checkChange(4, 1, new PlainTextChange(0, "and", ""));
+        checkChange(4, 4, new PlainTextChange(4, "and", ""));
+        checkChange(5, 4, new PlainTextChange(4, "and", ""));
+        checkChange(6, 4, new PlainTextChange(4, "and", ""));
+        checkChange(7, 4, new PlainTextChange(4, "and", ""));
+        checkChange(8, 5, new PlainTextChange(4, "and", ""));
+        checkChange(9, 6, new PlainTextChange(4, "and", ""));
     }
 
     @Test
     public void replaceWithSameSize() {
-        // After
         checkChange(3, 3, new PlainTextChange(4, "and", "but"));
-        // On caret
-        checkChange(3, 3, new PlainTextChange(3, "and", "but"));
-        // Before caret (caret within the change range)
-        checkChange(3, 3, new PlainTextChange(2, "and", "but"));
-        // Before caret (caret outside the change range)
-        checkChange(5, 5, new PlainTextChange(2, "and", "but"));
+        checkChange(4, 4, new PlainTextChange(4, "and", "but"));
+        checkChange(5, 5, new PlainTextChange(4, "and", "but"));
+        checkChange(6, 6, new PlainTextChange(4, "and", "but"));
+        checkChange(7, 7, new PlainTextChange(4, "and", "but"));
+        checkChange(8, 8, new PlainTextChange(4, "and", "but"));
     }
 
     @Test
     public void replaceWithGreaterSize() {
-        // After
-        checkChange(3, 3, new PlainTextChange(4, "and", "much bigger"));
-        // On caret
-        checkChange(3, 11, new PlainTextChange(3, "and", "much bigger"));
-        // Before caret (caret within the change range)
-        checkChange(3, 2, new PlainTextChange(2, "and", "much bigger"));
-        // Before caret (caret outside the change range)
-        checkChange(13, 21, new PlainTextChange(2, "and", "much bigger"));
-        checkChange(14, 22, new PlainTextChange(2, "and", "much bigger"));
+        checkChange(3, 3, new PlainTextChange(4, "and", "above"));
+        checkChange(4, 6, new PlainTextChange(4, "and", "above"));
+        checkChange(5, 4, new PlainTextChange(4, "and", "above"));
+        checkChange(6, 8, new PlainTextChange(4, "and", "above"));
+        checkChange(7, 9, new PlainTextChange(4, "and", "above"));
+        checkChange(8, 10, new PlainTextChange(4, "and", "above"));
+        checkChange(9, 11, new PlainTextChange(4, "and", "above"));
+        checkChange(10, 12, new PlainTextChange(4, "and", "above"));
     }
 
     @Test
     public void replaceWithSmallerSize() {
-        // After
-        checkChange(3, 3, new PlainTextChange(4, "and", "to"));
-        // On caret
-        checkChange(3, 3, new PlainTextChange(3, "and", "to"));
-        // Before caret (caret within the change range)
-        checkChange(3, 2, new PlainTextChange(2, "and", "to"));
-        // Before caret (caret outside the change range)
-        checkChange(4, 3, new PlainTextChange(2, "and", "to"));
-        checkChange(5, 4, new PlainTextChange(2, "and", "to"));
+        checkChange(3, 3, new PlainTextChange(4, "hover", "and"));
+        checkChange(4, 4, new PlainTextChange(4, "hover", "and"));
+        checkChange(5, 4, new PlainTextChange(4, "hover", "and"));
+        checkChange(6, 4, new PlainTextChange(4, "hover", "and"));
+        checkChange(7, 5, new PlainTextChange(4, "hover", "and"));
+        checkChange(8, 6, new PlainTextChange(4, "hover", "and"));
+        checkChange(9, 7, new PlainTextChange(4, "hover", "and"));
+        checkChange(10, 8, new PlainTextChange(4, "hover", "and"));
     }
 }
