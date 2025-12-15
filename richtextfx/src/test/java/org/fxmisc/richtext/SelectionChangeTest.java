@@ -141,4 +141,14 @@ public class SelectionChangeTest {
         checkChange(7, 8, 8, 9, new PlainTextChange(3, "One", "Four"));
         checkChange(8, 8, 9, 9, new PlainTextChange(3, "One", "Four"));
     }
+
+    @Test
+    public void multipleChanges() {
+        checkChange(1, 8, 0, 0,
+                new PlainTextChange(3, "One", "Four"), // 1,8 -> 1,9
+                new PlainTextChange(2, "This", ""), // 1,9 -> 1,5
+                new PlainTextChange(3, "A", "Test"), // 1,5 -> 1,3
+                new PlainTextChange(0, "", "Test") // 1,3 -> 5,8
+        );
+    }
 }
