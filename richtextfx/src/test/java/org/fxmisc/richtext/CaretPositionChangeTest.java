@@ -49,5 +49,29 @@ public class CaretPositionChangeTest {
         checkChange(5, 5, new PlainTextChange(2, "and", "but"));
     }
 
-    // TODO SMA continue adding tests
+    @Test
+    public void replaceWithGreaterSize() {
+        // After
+        checkChange(3, 3, new PlainTextChange(4, "and", "much bigger"));
+        // On caret
+        checkChange(3, 11, new PlainTextChange(3, "and", "much bigger"));
+        // Before caret (caret within the change range)
+        checkChange(3, 2, new PlainTextChange(2, "and", "much bigger"));
+        // Before caret (caret outside the change range)
+        checkChange(13, 21, new PlainTextChange(2, "and", "much bigger"));
+        checkChange(14, 22, new PlainTextChange(2, "and", "much bigger"));
+    }
+
+    @Test
+    public void replaceWithSmallerSize() {
+        // After
+        checkChange(3, 3, new PlainTextChange(4, "and", "to"));
+        // On caret
+        checkChange(3, 3, new PlainTextChange(3, "and", "to"));
+        // Before caret (caret within the change range)
+        checkChange(3, 2, new PlainTextChange(2, "and", "to"));
+        // Before caret (caret outside the change range)
+        checkChange(4, 3, new PlainTextChange(2, "and", "to"));
+        checkChange(5, 4, new PlainTextChange(2, "and", "to"));
+    }
 }
