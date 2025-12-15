@@ -157,7 +157,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         // when content is updated by an area, update the caret of all the other
         // clones that also display the same document
-        manageSubscription(area.multiPlainChanges(), this::handleContentChanged);
+        manageSubscription(area.multiPlainChanges(), this::handleContentChange);
 
         // whether to display the caret
         EventStream<Boolean> blinkCaret = showCaret.values()
@@ -215,7 +215,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
     }
 
-    private void handleContentChanged(List<PlainTextChange> list) {
+    private void handleContentChange(List<PlainTextChange> list) {
         int newPosition = new CaretPositionChange().apply(getPosition(), list);
         if (newPosition != getPosition()) {
             moveTo(newPosition);
