@@ -164,8 +164,8 @@ public class JavaKeywordsDemo extends Application {
 	
 	private Stream<Integer> getLineNumbers(CodeArea codeArea, IndexRange indexRange) {
 		int startLineNumber = getLineNumber(codeArea, indexRange.getStart());
-		// indexRange has an exclusive end that needs 1 subtracting, but we don't want the end position to be before the start
-		int endPosition = Math.max(indexRange.getEnd() - 1, indexRange.getStart());
+		// indexRange has an inclusive end because we also want to check the character after the change, which may have been moved to a new line
+		int endPosition = indexRange.getEnd();
 		// getLineNumber() could be expensive for a huge text, so avoid calling if possible
 		int endLineNumber = endPosition == indexRange.getStart() ? startLineNumber : getLineNumber(codeArea, endPosition);
 		return IntStream.rangeClosed(startLineNumber, endLineNumber).boxed();
