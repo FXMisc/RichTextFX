@@ -4,12 +4,15 @@ import org.fxmisc.richtext.model.PlainTextChange;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
 public class CaretPositionChangeTest {
     private void checkChange(int before, int after, PlainTextChange... changes) {
-        assertEquals(after, new CaretPositionChange().apply(before, Arrays.stream(changes).toList()));
+        List<PlainTextChange> changeList = Arrays.stream(changes).collect(Collectors.toList());
+        assertEquals(after, new CaretPositionChange().apply(before, changeList));
     }
 
     @Test
