@@ -1,9 +1,14 @@
 package org.fxmisc.richtext.demo;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -19,8 +24,11 @@ import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.model.TwoDimensional.Bias;
+import org.fxmisc.richtext.model.PlainTextChange;
 import org.reactfx.Subscription;
+
+import static java.util.stream.Collectors.toSet;
+import static org.fxmisc.richtext.model.TwoDimensional.Bias.Backward;
 
 public class JavaKeywordsDemo extends Application {
 
@@ -69,29 +77,13 @@ public class JavaKeywordsDemo extends Application {
                 //   when making multiple changes (e.g. renaming a method at multiple parts in file)
                 .multiPlainChanges()
 
-                // convert the list of text position changes to a unique set of paragraph ranges 
-                .map( changeList -> changeList.stream().map
-                (
-                    textChange -> new IndexRange(
-                        codeArea.offsetToPosition( textChange.getPosition(), Bias.Backward ).getMajor(),    // paragraph start
-                        codeArea.offsetToPosition( textChange.getInsertionEnd(), Bias.Backward ).getMajor() // paragraph end
-                    ))
-                    .collect( Collectors.toSet() )
-                )
-
                 // do not emit an event until 500 ms have passed since the last emission of previous stream
-                // in the meantime combine additional changes into one set of paragraph ranges with no duplicates 
-                .reduceSuccessions( (a,b) -> { a.addAll( b ); return a; }, Duration.ofMillis(500) )
+		        // in the meantime, store text changes in a list
+                .reduceSuccessions(this::concatChangeLists, // returns a new list because the lists passed in get modified elsewhere
+		                Duration.ofMillis(500) )
 
-                // run the following code block when previous stream emits an event
-                .subscribe( paragraphs ->
-                {
-                    for ( IndexRange range : paragraphs ) // re-styling each paragraph range
-                    {
-                        String text = codeArea.getText( range.getStart(), 0, range.getEnd()+1, 0 );
-                        codeArea.setStyleSpans( range.getStart(), 0, new JavaStyler( text ).style() );
-                    }
-                });
+                // run this lambda to update syntax highlighting when previous stream emits an event
+                .subscribe(textChanges -> restyleChangedLines(codeArea, textChanges));
 
         // when no longer need syntax highlighting and wish to clean up memory leaks
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
@@ -105,6 +97,91 @@ public class JavaKeywordsDemo extends Application {
         primaryStage.setTitle("Java Keywords Demo");
         primaryStage.show();
     }
+	
+	private List<PlainTextChange> concatChangeLists(List<PlainTextChange> firstChanges, List<PlainTextChange> secondChanges) {
+		List<PlainTextChange> combinedChangeList = new ArrayList<>(firstChanges);
+		combinedChangeList.addAll(secondChanges);
+		return combinedChangeList;
+	}
+	
+	private void restyleChangedLines(CodeArea codeArea, List<PlainTextChange> textChanges) {
+		Set<IndexRange> positionsChanged = getPositionsChanged(textChanges);
+		Set<Integer> lineNumbersChanged = getLineNumbersChanged(codeArea, positionsChanged);
+		restyleLines(codeArea, lineNumbersChanged);
+	}
+	
+	// Converting positions to line numbers could be slow for large texts, so use IndexRanges instead of enumerating all positions
+	private Set<IndexRange> getPositionsChanged(List<PlainTextChange> textChanges) {
+		// Only the last change has up-to-date position data (i.e. up-to-date dirty range that needs restyling)
+		// Earlier changes need to have their positions updated by shifting them based on later changes
+		Set<IndexRange> dirtyRangesSoFar = new HashSet<>(); // Reflects changes that have happened so far as we go through them in order
+		for (PlainTextChange textChange : textChanges) {
+			dirtyRangesSoFar = updateDirtyRanges(dirtyRangesSoFar, textChange);
+		}
+		return dirtyRangesSoFar;
+	}
+	
+	private Set<IndexRange> updateDirtyRanges(Set<IndexRange> dirtyRangesSoFar, PlainTextChange nextChange) {
+		dirtyRangesSoFar = shiftIndicesAtOrAbovePosition(dirtyRangesSoFar, nextChange.getPosition(), nextChange.getNetLength());
+		dirtyRangesSoFar.add(new IndexRange(nextChange.getPosition(), nextChange.getInsertionEnd()));
+		return dirtyRangesSoFar;
+	}
+	
+	private Set<IndexRange> shiftIndicesAtOrAbovePosition(Set<IndexRange> indexRanges, int changePosition, int shift) {
+		if (shift == 0) {
+			return indexRanges;
+		} else {
+			return indexRanges.stream()
+					.map(range -> shiftRangeAtOrAbovePosition(range, changePosition, shift))
+					.collect(toSet());
+		}
+	}
+	
+	private IndexRange shiftRangeAtOrAbovePosition(IndexRange range, int changePosition, int shift) {
+		if (range.getEnd() >= changePosition) {
+			int newStart = shiftIndexAtOrAbovePosition(range.getStart(), changePosition, shift);
+			int newEnd = shiftIndexAtOrAbovePosition(range.getEnd(), changePosition, shift);
+			return new IndexRange(newStart, newEnd);
+		}
+		return range;
+	}
+	
+	private int shiftIndexAtOrAbovePosition(int index, int changePosition, int shift) {
+		if (index < changePosition) {
+			return index;
+		}
+		index += shift;
+		// index could now be lower than changePosition if the change deleted this character
+		// But deleted characters don't need restyling, so in that case just return changePosition, which already needs restyling
+		return Math.max(index, changePosition);
+	}
+	
+	private Set<Integer> getLineNumbersChanged(CodeArea codeArea, Set<IndexRange> positionsChanged) {
+		return positionsChanged.stream()
+				.flatMap(indexRange -> getLineNumbers(codeArea, indexRange))
+				.collect(toSet());
+	}
+	
+	private Stream<Integer> getLineNumbers(CodeArea codeArea, IndexRange indexRange) {
+		int startLineNumber = getLineNumber(codeArea, indexRange.getStart());
+		// indexRange has an inclusive end because we also want to check the character after the change, which may have been moved to a new line
+		int endPosition = indexRange.getEnd();
+		// getLineNumber() could be expensive for a huge text, so avoid calling if possible
+		int endLineNumber = endPosition == indexRange.getStart() ? startLineNumber : getLineNumber(codeArea, endPosition);
+		return IntStream.rangeClosed(startLineNumber, endLineNumber).boxed();
+	}
+	
+	private int getLineNumber(CodeArea codeArea, int position) {
+		return codeArea.offsetToPosition(position, Backward).getMajor();
+	}
+	
+	private void restyleLines(CodeArea codeArea, Set<Integer> lineNumbers) {
+		for (int lineNumber : lineNumbers)
+		{
+			String line = codeArea.getText(lineNumber);
+			codeArea.setStyleSpans( lineNumber, 0, new JavaStyler(line).style() );
+		}
+	}
 
     private void onKeyPressed(CodeArea codeArea, KeyEvent KE) {
         // auto-indent: insert previous line's indents on enter
