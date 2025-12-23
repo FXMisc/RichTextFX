@@ -39,21 +39,22 @@ class CaretPositionChange {
     private void applyFor(PlainTextChange plainTextChange) {
         int netLength = plainTextChange.getNetLength();
         if (netLength != 0) {
-            int indexOfChange = plainTextChange.getPosition();
-            // in case of a replacement: "hello there" -> "hi."
-            int endOfChange = indexOfChange + Math.abs(netLength);
-            position = evaluatePosition(indexOfChange, netLength, endOfChange, position);
+            int changePosition = plainTextChange.getPosition();
+            if (position == changePosition) {
+                // If it's net removal, we don't change anything
+                position += Math.max(0, netLength);
+            }
+            else if (position > changePosition) {
+                // If the caret is within the change, we set it to the start of the change
+                if(position < changePosition + Math.abs(netLength)) {
+                    position = changePosition;
+                }
+                // Else we move the caret depending on the length variation
+                else {
+                    position += netLength;
+                }
+            }
+            // If caretPosition < changeIndex, there is no movement as the changes happens after the current position
         }
-    }
-
-    // TODO SMA duplicate with selection change -> it seems the code is simply
-    private int evaluatePosition(int indexOfChange, int netLength, int endOfChange, int position) {
-        if (indexOfChange == position && netLength > 0) {
-            position = position + netLength;
-        }
-        else if (indexOfChange < position) {
-            position = position < endOfChange ? indexOfChange : position + netLength;
-        }
-        return position;
     }
 }

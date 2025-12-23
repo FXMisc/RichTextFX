@@ -6,7 +6,7 @@ import java.util.List;
 
 // TODO SMA can it be that CaretPositionChange is the same as this one but for start == end ?
 class SelectionChange {
-    private Range range;
+    private int start, end;
 
     // TODO -> to be replaced by state of this class start(), end()
     public static class Range {
@@ -27,7 +27,8 @@ class SelectionChange {
     }
 
     public SelectionChange(int start, int end) {
-        this.range = new Range(start, end);
+        this.start = start;
+        this.end = end;
     }
 
     /*
@@ -48,34 +49,36 @@ class SelectionChange {
     */
     public Range applyFor(List<PlainTextChange> changes) {
         changes.forEach(this::applyFor);
-        return range;
+        return new Range(start, end);
     }
 
     private void applyFor(PlainTextChange plainTextChange) {
-        int start = range.start();
-        int end = range.end();
-
         int netLength = plainTextChange.getNetLength();
         int indexOfChange = plainTextChange.getPosition();
         // in case of a replacement: "hello there" -> "hi."
         int endOfChange = indexOfChange + Math.abs(netLength);
 
-        start = evaluatePosition(indexOfChange, netLength, endOfChange, start);
+        if (start == indexOfChange) {
+            start = start + Math.max(netLength, 0);
+        }
+        else if (start > indexOfChange) {
+            if(start < endOfChange) {
+                start = indexOfChange;
+            }
+            else {
+                start += netLength;
+            }
+        }
 
-        if (indexOfChange < end) {
-            end = end < endOfChange ? indexOfChange : end + netLength;
+        // Adapting the end based on the change
+        if (end > indexOfChange) {
+            if(end < endOfChange) {
+                end = indexOfChange;
+            }
+            else {
+                end += netLength;
+            }
         }
         start = Math.min(start, end);
-        this.range = new Range(start, end);
-    }
-
-    private int evaluatePosition(int indexOfChange, int netLength, int endOfChange, int position) {
-        if (indexOfChange == position && netLength > 0) {
-            position = position + netLength;
-        }
-        else if (indexOfChange < position) {
-            position = position < endOfChange ? indexOfChange : position + netLength;
-        }
-        return position;
     }
 }
