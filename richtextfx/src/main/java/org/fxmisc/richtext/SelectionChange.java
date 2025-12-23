@@ -6,7 +6,22 @@ import java.util.List;
 
 class SelectionChange {
     // TODO -> to be replaced by state of this class start(), end()
-    public record Range(int start, int end) {}
+    public static class Range {
+        private final int start, end;
+
+        public Range(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
+
+        public int start() {
+            return start;
+        }
+
+        public int end() {
+            return end;
+        }
+    }
 
     public Range apply(List<PlainTextChange> list, int selectStart, int selectEnd) {
         for (PlainTextChange plainTextChange : list) {
