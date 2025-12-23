@@ -216,7 +216,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
     }
 
     private void handleContentChange(List<PlainTextChange> list) {
-        int newPosition = new CaretPositionChange().apply(getPosition(), list);
+        int newPosition = new CaretPositionChange(getPosition()).apply(list);
         if (newPosition != getPosition()) {
             moveTo(newPosition);
         }
