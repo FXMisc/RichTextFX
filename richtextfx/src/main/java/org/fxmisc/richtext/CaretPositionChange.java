@@ -21,21 +21,6 @@ class CaretPositionChange {
         return position;
     }
 
-
-    /*
-        "->" means add (positive) netLength to position
-        "<-" means add (negative) netLength to position
-        "x" means don't update position
-
-        "+c" means caret was included in the deleted portion of content
-        "-c" means caret was not included in the deleted portion of content
-        Before/At/After means indexOfChange "<" / "==" / ">" position
-
-               |   Before +c   | Before -c | At | After
-        -------+---------------+-----------+----+------
-        Add    |      N/A      |    ->     | -> | x
-        Delete | indexOfChange |    <-     | x  | x
-     */
     private void applyFor(PlainTextChange plainTextChange) {
         int netLength = plainTextChange.getNetLength();
         if (netLength != 0) {
@@ -45,6 +30,14 @@ class CaretPositionChange {
         }
     }
 
+    /**
+     * <ul>
+     * <li>If the position is after the interval of the change, the caret moves left/right if it's a net removal/addition.</li>
+     * <li>If it's within the change interval, the caret move back at the start of the change.</li>
+     * <li>If it's equal to the start position, the caret is moved at the end of the changed (it cannot be moved backwards
+     * if it's a removal of text, hence capping to 0).</li>
+     * </ul>
+     */
     private static int applyChange(int position, int changeStart, int changeEnd, int netLength) {
         if(position >= changeEnd) {
             position += netLength;
