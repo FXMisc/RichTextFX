@@ -39,27 +39,25 @@ class CaretPositionChange {
     private void applyFor(PlainTextChange plainTextChange) {
         int netLength = plainTextChange.getNetLength();
         if (netLength != 0) {
-            int changePosition = plainTextChange.getPosition();
-            if (position == changePosition) {
+            int changeStart = plainTextChange.getPosition();
+            if (position == changeStart) {
                 // If it's net removal, we don't change anything
                 position += Math.max(0, netLength);
             }
             else {
-                position = applyChange(position, changePosition, netLength);
+                int changeEnd = changeStart + Math.abs(netLength);
+                position = applyChange(position, changeStart, changeEnd, netLength);
             }
         }
     }
 
-    private static int applyChange(int position, int changeStart, int netLength) {
-        // Position is after the end of the change
-        if(position >= changeStart + Math.abs(netLength)) {
+    private static int applyChange(int position, int changeStart, int changeEnd, int netLength) {
+        if(position >= changeEnd) {
             position += netLength;
         }
-        // Position is before the end but after the start
         else if(position > changeStart) {
             position = changeStart;
         }
-        // Else position is before the change
         return position;
     }
 }

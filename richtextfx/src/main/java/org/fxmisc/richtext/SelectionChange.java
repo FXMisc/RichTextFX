@@ -57,7 +57,6 @@ class SelectionChange {
         int changeStart = plainTextChange.getPosition();
         // in case of a replacement: "hello there" -> "hi."
         int changeEnd = changeStart + Math.abs(netLength);
-
         if (start == changeStart) {
             start = start + Math.max(netLength, 0);
         }
@@ -65,7 +64,6 @@ class SelectionChange {
             start = applyChange(start, changeStart, changeEnd, netLength);
         }
         end = applyChange(end, changeStart, changeEnd, netLength);
-
         start = Math.min(start, end);
     }
 
@@ -76,16 +74,6 @@ class SelectionChange {
         else if(position > changeStart) {
             position = changeStart;
         }
-        /*
-        if (position > changeStart) {
-            // Is within the change interval
-            if(position < changeEnd) {
-                position = changeStart;
-            }
-            else {
-                position += netLength;
-            }
-        }*/
         return position;
     }
 }
