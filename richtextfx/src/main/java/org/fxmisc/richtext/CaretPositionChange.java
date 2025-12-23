@@ -44,17 +44,22 @@ class CaretPositionChange {
                 // If it's net removal, we don't change anything
                 position += Math.max(0, netLength);
             }
-            else if (position > changePosition) {
-                // If the caret is within the change, we set it to the start of the change
-                if(position < changePosition + Math.abs(netLength)) {
-                    position = changePosition;
-                }
-                // Else we move the caret depending on the length variation
-                else {
-                    position += netLength;
-                }
+            else {
+                position = applyChange(position, changePosition, netLength);
             }
-            // If caretPosition < changeIndex, there is no movement as the changes happens after the current position
         }
+    }
+
+    private static int applyChange(int position, int changeStart, int netLength) {
+        // Position is after the end of the change
+        if(position >= changeStart + Math.abs(netLength)) {
+            position += netLength;
+        }
+        // Position is before the end but after the start
+        else if(position > changeStart) {
+            position = changeStart;
+        }
+        // Else position is before the change
+        return position;
     }
 }
