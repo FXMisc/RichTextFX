@@ -1,20 +1,20 @@
 package org.fxmisc.richtext;
 
 import org.fxmisc.richtext.model.PlainTextChange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SelectionChangeTest {
     private void checkChange(int startBefore, int endBefore, int startAfter, int endAfter, PlainTextChange... changes) {
         List<PlainTextChange> changeList = Arrays.stream(changes).collect(Collectors.toList());
         SelectionChange.Range range = new SelectionChange(startBefore, endBefore).applyFor(changeList);
-        assertEquals("Start does not match", startAfter, range.start());
-        assertEquals("End does not match", endAfter, range.end());
+        assertEquals(startAfter, range.start(), "Start does not match");
+        assertEquals(endAfter, range.end(), "End does not match");
     }
 
     @Test
