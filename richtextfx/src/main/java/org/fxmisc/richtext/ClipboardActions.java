@@ -108,10 +108,21 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
         if (clipboard.hasString()) {
             String text = clipboard.getString();
             if (text != null) {
+				text = removeEndingNullChars(text);
                 replaceSelection(text);
             }
         }
     }
+	
+	/**
+	 * Removes null characters that were appended to clipboard text on Windows, e.g. when copying from Microsoft Word.
+	 */
+	private String removeEndingNullChars(String text) {
+		if (text.endsWith("\u0000")) {
+			return text.replaceAll("\u0000+\\Z", "");
+		}
+		return text;
+	}
 }
 
 class ClipboardHelper {
