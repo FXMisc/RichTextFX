@@ -143,7 +143,7 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         this.getStyleClass().add("caret");
         this.setManaged(false);
-        this.setMouseTransparent(true); // don't want the caret to be pickable, see iss 124
+        this.setMouseTransparent(true); // don't want the caret to be pick-able, see iss 124
 
         internalTextPosition = Var.newSimpleVar(startingPosition);
         position = internalTextPosition.suspendable();
@@ -157,44 +157,9 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         // when content is updated by an area, update the caret of all the other
         // clones that also display the same document
-        manageSubscription(area.multiPlainChanges(), list -> {
-            int finalPosition = getPosition();
-            for (PlainTextChange plainTextChange : list) {
-                int netLength = plainTextChange.getNetLength();
-                if (netLength != 0) {
-                    int indexOfChange = plainTextChange.getPosition();
-                    // in case of a replacement: "hello there" -> "hi."
-                    int endOfChange = indexOfChange + Math.abs(netLength);
+        manageSubscription(area.multiPlainChanges(), this::handleContentChange);
 
-                    /*
-                        "->" means add (positive) netLength to position
-                        "<-" means add (negative) netLength to position
-                        "x" means don't update position
-
-                        "+c" means caret was included in the deleted portion of content
-                        "-c" means caret was not included in the deleted portion of content
-                        Before/At/After means indexOfChange "<" / "==" / ">" position
-
-                               |   Before +c   | Before -c | At | After
-                        -------+---------------+-----------+----+------
-                        Add    |      N/A      |    ->     | -> | x
-                        Delete | indexOfChange |    <-     | x  | x
-                     */
-                    if (indexOfChange == finalPosition && netLength > 0) {
-                        finalPosition = finalPosition + netLength;
-                    } else if (indexOfChange < finalPosition) {
-                        finalPosition = finalPosition < endOfChange
-                                        ? indexOfChange
-                                        : finalPosition + netLength;
-                    }
-                }
-            }
-            if (finalPosition != getPosition()) {
-                moveTo(finalPosition);
-            }
-        });
-
-        // whether or not to display the caret
+        // whether to display the caret
         EventStream<Boolean> blinkCaret = showCaret.values()
                 .flatMap(mode -> {
                     switch (mode) {
@@ -241,15 +206,20 @@ public class CaretNode extends Path implements Caret, Comparable<CaretNode> {
 
         Suspendable omniSuspendable = Suspendable.combine(
                 beingUpdated,
-
                 lineIndex,
                 bounds,
-
                 paragraphIndex,
                 columnPosition,
                 position
         );
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
+    }
+
+    private void handleContentChange(List<PlainTextChange> list) {
+        int newPosition = new CaretPositionChange().apply(getPosition(), list);
+        if (newPosition != getPosition()) {
+            moveTo(newPosition);
+        }
     }
 
     /* ********************************************************************** *
