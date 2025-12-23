@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 public class SelectionChangeTest {
     private void checkChange(int startBefore, int endBefore, int startAfter, int endAfter, PlainTextChange... changes) {
         List<PlainTextChange> changeList = Arrays.stream(changes).collect(Collectors.toList());
-        SelectionChange.Range range = new SelectionChange().apply(changeList, startBefore, endBefore);
+        SelectionChange.Range range = new SelectionChange(startBefore, endBefore).applyFor(changeList);
         assertEquals("Start does not match", startAfter, range.start());
         assertEquals("End does not match", endAfter, range.end());
     }

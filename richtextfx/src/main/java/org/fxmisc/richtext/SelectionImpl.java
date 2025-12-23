@@ -238,7 +238,7 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
     }
 
     private void handleChange(List<PlainTextChange> list) {
-        SelectionChange.Range newSelection = new SelectionChange().apply(list, getStartPosition(), getEndPosition());
+        SelectionChange.Range newSelection = new SelectionChange(getStartPosition(), getEndPosition()).applyFor(list);
         selectRange(newSelection.start(), newSelection.end());
     }
 
