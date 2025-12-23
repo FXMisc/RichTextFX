@@ -58,6 +58,11 @@ public class CaretPositionChangeTest {
         checkChange(3, 3, new PlainTextChange(4, "and", "above"));
         checkChange(4, 6, new PlainTextChange(4, "and", "above"));
         checkChange(5, 4, new PlainTextChange(4, "and", "above"));
+        // This one below is odd. If you have "Two and one" with caret at position 6, the "and" is replaced
+        // by "above" to form "Two above one", the caret moves to position 8. I couldn't find a bug when ran
+        // manually, as this code does not seem to be used for that update (which might indicate duplicate
+        // code but that is a different problem).
+        // I'm suspecting a bug.
         checkChange(6, 8, new PlainTextChange(4, "and", "above"));
         checkChange(7, 9, new PlainTextChange(4, "and", "above"));
         checkChange(8, 10, new PlainTextChange(4, "and", "above"));
