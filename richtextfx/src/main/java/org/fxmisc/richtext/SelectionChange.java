@@ -58,7 +58,7 @@ class SelectionChange {
         // in case of a replacement: "hello there" -> "hi."
         int changeEnd = changeStart + Math.abs(netLength);
         if (start == changeStart) {
-            start = start + Math.max(netLength, 0);
+            start += Math.max(netLength, 0);
         }
         else {
             start = applyChange(start, changeStart, changeEnd, netLength);
