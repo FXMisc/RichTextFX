@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SelectionChangeTest {
     private void checkChange(int startBefore, int endBefore, int startAfter, int endAfter, PlainTextChange... changes) {
         List<PlainTextChange> changeList = Arrays.stream(changes).collect(Collectors.toList());
-        SelectionChange.Range range = new SelectionChange().apply(changeList, startBefore, endBefore);
+        SelectionChange.Range range = new SelectionChange(startBefore, endBefore).applyFor(changeList);
         assertEquals(startAfter, range.start(), "Start does not match");
         assertEquals(endAfter, range.end(), "End does not match");
     }

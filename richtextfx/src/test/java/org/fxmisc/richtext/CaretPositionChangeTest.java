@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CaretPositionChangeTest {
     private void checkChange(int before, int after, PlainTextChange... changes) {
         List<PlainTextChange> changeList = Arrays.stream(changes).collect(Collectors.toList());
-        assertEquals(after, new CaretPositionChange().apply(before, changeList));
+        assertEquals(after, new CaretPositionChange(before).apply(changeList));
     }
 
     @ParameterizedTest
