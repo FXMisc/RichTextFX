@@ -40,8 +40,11 @@ dependencies {
     api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.7.4'
     api group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
-    testCompileOnly group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.14.1'
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.14.1'
+    testCompileOnly 'org.junit.jupiter:junit-jupiter-api:5.14.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.14.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.14.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-engine:1.14.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.1'
 
     integrationTestImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.14.1'
     integrationTestImplementation group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
@@ -67,7 +70,7 @@ javadoc {
     options.addBooleanOption('Xdoclint:all,-missing,-accessibility', true)
 
     // support for JavaFX properties
-    options.addBooleanOption('javafx', true);
+    options.addBooleanOption('javafx', true)
 
     options.links = [
         // resolve links to Java and JavaFX Javadocs
@@ -89,6 +92,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 test {
+    useJUnitPlatform()
     testLogging {
         // Fancy formatting from http://stackoverflow.com/a/36130467/3634630
         // set options for log level LIFECYCLE

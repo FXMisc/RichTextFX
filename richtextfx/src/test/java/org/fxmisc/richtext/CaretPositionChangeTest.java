@@ -20,74 +20,94 @@ public class CaretPositionChangeTest {
         assertEquals(after, new CaretPositionChange().apply(before, changeList));
     }
 
-    @Test
-    public void noChange() {
-        checkChange(3, 3, new PlainTextChange(4, "", ""));
-        checkChange(4, 4, new PlainTextChange(4, "", ""));
-        checkChange(5, 5, new PlainTextChange(4, "", ""));
+    @ParameterizedTest
+    @MethodSource("argNoChange")
+    @DisplayName("Caret position does not change when no text change")
+    public void noChange(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "", ""));
+    }
+
+    private static Stream<Arguments> argNoChange() {
+        return Stream.of(Arguments.of(3, 3), Arguments.of(4, 4), Arguments.of(5, 5));
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsInsertNewText")
+    @DisplayName("Insert new text at given position")
+    void insertNewText(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "", "and"));
+    }
+
+    private static Stream<Arguments> argsInsertNewText() {
+        return Stream.of(
+                Arguments.of(3, 3), Arguments.of(4, 7),
+                Arguments.of(5, 4), Arguments.of(6, 4),
+                Arguments.of(7, 10), Arguments.of(8, 11));
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsDeleteText")
+    @DisplayName("Delete text at a given position")
+    public void deleteText(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "and", ""));
+    }
+
+    private static Stream<Arguments> argsDeleteText() {
+        return Stream.of(
+                Arguments.of(3, 3), Arguments.of(4, 4), Arguments.of(5, 4),
+                Arguments.of(6, 4), Arguments.of(7, 4), Arguments.of(8, 5),
+                Arguments.of(9, 6));
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsReplaceWithSameSize")
+    @DisplayName("Replace text with content of same size")
+    public void replaceWithSameSize(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "and", "but"));
+    }
+
+    private static Stream<Arguments> argsReplaceWithSameSize() {
+        return Stream.of(
+                Arguments.of(3, 3), Arguments.of(4, 4), Arguments.of(5, 5),
+                Arguments.of(6, 6), Arguments.of(7, 7), Arguments.of(8, 8));
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsReplaceWithGreaterSize")
+    @DisplayName("Replace text with content of greater size")
+    public void replaceWithGreaterSize(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "and", "above"));
+    }
+
+    private static Stream<Arguments> argsReplaceWithGreaterSize() {
+        return Stream.of(
+                Arguments.of(3, 3), Arguments.of(4, 6), Arguments.of(5, 4),
+                // This one below is odd. If you have "Two and one" with caret at position 6, the "and" is replaced
+                // by "above" to form "Two above one", the caret moves to position 8. I couldn't find a bug when ran
+                // manually, as this code does not seem to be used for that update (which might indicate duplicate
+                // code but that is a different problem).
+                // I'm suspecting a bug.
+                Arguments.of(6, 8),
+                Arguments.of(7, 9), Arguments.of(8, 10),
+                Arguments.of(9, 11), Arguments.of(10, 12));
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsReplaceWithSmallerSize")
+    @DisplayName("Replace text with content of smaller size")
+    public void replaceWithSmallerSize(int before, int after) {
+        checkChange(before, after, new PlainTextChange(4, "hover", "and"));
+    }
+
+    private static Stream<Arguments> argsReplaceWithSmallerSize() {
+        return Stream.of(
+                Arguments.of(3, 3), Arguments.of(4, 4), Arguments.of(5, 4),
+                Arguments.of(6, 4), Arguments.of(7, 5), Arguments.of(8, 6),
+                Arguments.of(9, 7), Arguments.of(10, 8));
     }
 
     @Test
-    public void insertNewText() {
-        checkChange(3, 3, new PlainTextChange(4, "", "and"));
-        checkChange(4, 7, new PlainTextChange(4, "", "and"));
-        checkChange(5, 4, new PlainTextChange(4, "", "and"));
-        checkChange(6, 4, new PlainTextChange(4, "", "and"));
-        checkChange(7, 10, new PlainTextChange(4, "", "and"));
-        checkChange(8, 11, new PlainTextChange(4, "", "and"));
-    }
-
-    @Test
-    public void deleteText() {
-        checkChange(3, 3, new PlainTextChange(4, "and", ""));
-        checkChange(4, 4, new PlainTextChange(4, "and", ""));
-        checkChange(5, 4, new PlainTextChange(4, "and", ""));
-        checkChange(6, 4, new PlainTextChange(4, "and", ""));
-        checkChange(7, 4, new PlainTextChange(4, "and", ""));
-        checkChange(8, 5, new PlainTextChange(4, "and", ""));
-        checkChange(9, 6, new PlainTextChange(4, "and", ""));
-    }
-
-    @Test
-    public void replaceWithSameSize() {
-        checkChange(3, 3, new PlainTextChange(4, "and", "but"));
-        checkChange(4, 4, new PlainTextChange(4, "and", "but"));
-        checkChange(5, 5, new PlainTextChange(4, "and", "but"));
-        checkChange(6, 6, new PlainTextChange(4, "and", "but"));
-        checkChange(7, 7, new PlainTextChange(4, "and", "but"));
-        checkChange(8, 8, new PlainTextChange(4, "and", "but"));
-    }
-
-    @Test
-    public void replaceWithGreaterSize() {
-        checkChange(3, 3, new PlainTextChange(4, "and", "above"));
-        checkChange(4, 6, new PlainTextChange(4, "and", "above"));
-        checkChange(5, 4, new PlainTextChange(4, "and", "above"));
-        // This one below is odd. If you have "Two and one" with caret at position 6, the "and" is replaced
-        // by "above" to form "Two above one", the caret moves to position 8. I couldn't find a bug when ran
-        // manually, as this code does not seem to be used for that update (which might indicate duplicate
-        // code but that is a different problem).
-        // I'm suspecting a bug.
-        checkChange(6, 8, new PlainTextChange(4, "and", "above"));
-        checkChange(7, 9, new PlainTextChange(4, "and", "above"));
-        checkChange(8, 10, new PlainTextChange(4, "and", "above"));
-        checkChange(9, 11, new PlainTextChange(4, "and", "above"));
-        checkChange(10, 12, new PlainTextChange(4, "and", "above"));
-    }
-
-    @Test
-    public void replaceWithSmallerSize() {
-        checkChange(3, 3, new PlainTextChange(4, "hover", "and"));
-        checkChange(4, 4, new PlainTextChange(4, "hover", "and"));
-        checkChange(5, 4, new PlainTextChange(4, "hover", "and"));
-        checkChange(6, 4, new PlainTextChange(4, "hover", "and"));
-        checkChange(7, 5, new PlainTextChange(4, "hover", "and"));
-        checkChange(8, 6, new PlainTextChange(4, "hover", "and"));
-        checkChange(9, 7, new PlainTextChange(4, "hover", "and"));
-        checkChange(10, 8, new PlainTextChange(4, "hover", "and"));
-    }
-
-    @Test
+    @DisplayName("Observe caret change after multiple changes")
     public void multipleChangesOfAllFlavours() {
         checkChange(4, 1,
                 new PlainTextChange(4, "and", "above"), // 4 -> 6
