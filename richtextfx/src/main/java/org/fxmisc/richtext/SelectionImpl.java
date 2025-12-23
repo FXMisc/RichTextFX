@@ -16,6 +16,7 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 import java.text.BreakIterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -220,65 +221,25 @@ public class SelectionImpl<PS, SEG, S> implements Selection<PS, SEG, S>, Compara
                 EventStreams.merge(area.viewportDirtyEvents(), dirty)
         ).suspendable();
 
-        manageSubscription(area.multiPlainChanges(), list -> {
-            int selectStart = getStartPosition();
-            int selectEnd = getEndPosition();
-            for (PlainTextChange plainTextChange : list) {
-                int changeLength = plainTextChange.getNetLength();
-                int indexOfChange = plainTextChange.getPosition();
-                // in case of a replacement: "hello there" -> "hi."
-                int endOfChange = indexOfChange + Math.abs(changeLength);
-
-                /*
-                    "->" means add (positive) netLength to position
-                    "<-" means add (negative) netLength to position
-                    "x" means don't update position
-
-                    "start / end" means what should be done in each case for each anchor if they differ
-
-                    "+a" means one of the anchors was included in the deleted portion of content
-                    "-a" means one of the anchors was not included in the deleted portion of content
-                    Before/At/After means indexOfChange "<" / "==" / ">" position
-
-                           |   Before +a   | Before -a |   At   | After
-                    -------+---------------+-----------+--------+------
-                    Add    |      N/A      |    ->     | -> / x | x
-                    Delete | indexOfChange |    <-     |    x   | x
-                */
-                if (indexOfChange == selectStart && changeLength > 0) {
-                    selectStart = selectStart + changeLength;
-                } else if (indexOfChange < selectStart) {
-                    selectStart = selectStart < endOfChange
-                            ? indexOfChange
-                            : selectStart + changeLength;
-                }
-                if (indexOfChange < selectEnd) {
-                    selectEnd = selectEnd < endOfChange
-                            ? indexOfChange
-                            : selectEnd + changeLength;
-                }
-                if (selectStart > selectEnd) {
-                    selectStart = selectEnd;
-                }
-            }
-            selectRange(selectStart, selectEnd);
-        });
+        manageSubscription(area.multiPlainChanges(), this::handleChange);
 
         Suspendable omniSuspendable = Suspendable.combine(
                 // first, so it's released last
                 beingUpdated,
-
                 bounds,
-
                 endPosition,
                 startPosition,
-
                 selectedText,
                 selectedDocument,
                 length,
                 this.range
         );
         manageSubscription(omniSuspendable.suspendWhen(dependentBeingUpdated));
+    }
+
+    private void handleChange(List<PlainTextChange> list) {
+        SelectionChange.Range newSelection = new SelectionChange().apply(list, getStartPosition(), getEndPosition());
+        selectRange(newSelection.start(), newSelection.end());
     }
 
     /* ********************************************************************** *
