@@ -17,12 +17,12 @@ public class ParagraphTest {
         }
         StyleSpans<T> styleSpans = paragraph.getStyleSpans();
         assertEquals(length, styleSpans.length());
-        assertEquals("Style segment count invalid", ranges.length/2, styleSpans.getSpanCount());
+        assertEquals(ranges.length/2, styleSpans.getSpanCount(), "Style segment count invalid");
         for (int i = 0; i < ranges.length/2 ; i++) {
             StyleSpan<T> style = styleSpans.getStyleSpan(i);
-            assertEquals("Start not matching for " + i, ranges[i*2], style.getStart());
-            assertEquals("Length not matching for " + i, ranges[i*2 + 1] - ranges[i*2], style.getLength());
-            assertEquals("Incorrect style for " + i, styles[i], style.getStyle());
+            assertEquals(ranges[i*2], style.getStart(), "Start not matching for " + i);
+            assertEquals(ranges[i*2 + 1] - ranges[i*2], style.getLength(), "Length not matching for " + i);
+            assertEquals(styles[i], style.getStyle(), "Incorrect style for " + i);
         }
     }
 
