@@ -1,10 +1,10 @@
 package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.TwoDimensional.Bias.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.fxmisc.richtext.model.TwoDimensional.Position;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TwoLevelNavigatorTest {
 

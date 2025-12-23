@@ -1,17 +1,14 @@
 package org.fxmisc.richtext.model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PlainTextChangeTest {
     private void checkContent(PlainTextChange textChange, int position, String removed, String inserted) {
-        assertEquals("Incorrect position", position, textChange.getPosition());
-        assertEquals("Incorrect inserted text", inserted, textChange.getInserted());
-        assertEquals("Incorrect removed text", removed, textChange.getRemoved());
+        assertEquals(position, textChange.getPosition(), "Incorrect position");
+        assertEquals(inserted, textChange.getInserted(), "Incorrect inserted text");
+        assertEquals(removed, textChange.getRemoved(), "Incorrect removed text");
     }
 
     @Test

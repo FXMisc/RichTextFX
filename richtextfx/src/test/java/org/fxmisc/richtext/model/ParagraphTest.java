@@ -1,6 +1,6 @@
 package org.fxmisc.richtext.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import javafx.scene.control.IndexRange;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ParagraphTest {
     private <T> void checkStyle(Paragraph<?, ?, T> paragraph, int length, T[] styles, int... ranges) {
@@ -17,12 +17,12 @@ public class ParagraphTest {
         }
         StyleSpans<T> styleSpans = paragraph.getStyleSpans();
         assertEquals(length, styleSpans.length());
-        assertEquals("Style segment count invalid", ranges.length/2, styleSpans.getSpanCount());
+        assertEquals(ranges.length/2, styleSpans.getSpanCount(), "Style segment count invalid");
         for (int i = 0; i < ranges.length/2 ; i++) {
             StyleSpan<T> style = styleSpans.getStyleSpan(i);
-            assertEquals("Start not matching for " + i, ranges[i*2], style.getStart());
-            assertEquals("Length not matching for " + i, ranges[i*2 + 1] - ranges[i*2], style.getLength());
-            assertEquals("Incorrect style for " + i, styles[i], style.getStyle());
+            assertEquals(ranges[i*2], style.getStart(), "Start not matching for " + i);
+            assertEquals(ranges[i*2 + 1] - ranges[i*2], style.getLength(), "Length not matching for " + i);
+            assertEquals(styles[i], style.getStyle(), "Incorrect style for " + i);
         }
     }
 
