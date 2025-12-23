@@ -11,8 +11,28 @@ import javafx.scene.control.IndexRange;
 import org.junit.Test;
 
 public class ParagraphTest {
+    private <T> void checkStyle(Paragraph<?, ?, T> paragraph, int length, T[] styles, int... ranges) {
+        if(ranges.length % 2 == 1 || styles.length != ranges.length / 2) {
+            throw new IllegalArgumentException("Ranges must come in pair [start;end] and correspond to the style count");
+        }
+        StyleSpans<T> styleSpans = paragraph.getStyleSpans();
+        assertEquals(length, styleSpans.length());
+        assertEquals("Style segment count invalid", ranges.length/2, styleSpans.getSpanCount());
+        for (int i = 0; i < ranges.length/2 ; i++) {
+            StyleSpan<T> style = styleSpans.getStyleSpan(i);
+            assertEquals("Start not matching for " + i, ranges[i*2], style.getStart());
+            assertEquals("Length not matching for " + i, ranges[i*2 + 1] - ranges[i*2], style.getLength());
+            assertEquals("Incorrect style for " + i, styles[i], style.getStyle());
+        }
+    }
+
     private Paragraph<Void, String, Void> createTextParagraph(TextOps<String, Void> segOps, String text) {
         return new Paragraph<>(null, segOps, segOps.create(text), (Void)null);
+    }
+
+    private Paragraph<Void, String, String> createTextParagraph(String text, String style) {
+        TextOps<String, String> textOps = SegmentOps.styledTextOps();
+        return new Paragraph<>(null, textOps, textOps.create(text), style);
     }
 
     private Paragraph<Void, String, String> createTextParagraph(TextOps<String, String> segOps, String text, String style) {
@@ -205,5 +225,80 @@ public class ParagraphTest {
         assertThrows(StringIndexOutOfBoundsException.class, () -> paragraph.substring(3, 2));
         assertEquals("", paragraph.substring(5, 7));
         assertThrows(StringIndexOutOfBoundsException.class, () -> paragraph.substring(6, 7));
+    }
+
+    @Test
+    public void multipleStyle() {
+        Paragraph<Void, String, String> p1 = createTextParagraph("To be or not to be", "text");
+        checkStyle(p1, 18, new String[] {"text"}, 0, 18);
+
+        // P1 is immutable, its style hasn't changed, but P2 has now three styles
+        Paragraph<Void, String, String> p2 = p1.restyle(9, 12, "keyword");
+        checkStyle(p1, 18, new String[] {"text"}, 0, 18);
+        checkStyle(p2, 18, new String[] {"text", "keyword", "text"}, 0, 9, 9, 12, 12, 18);
+
+        // Add style over the previous one
+        Paragraph<Void, String, String> p3 = p2.restyle(3, 10, "unknown");
+        checkStyle(p3, 18, new String[] {"text", "unknown", "keyword", "text"}, 0, 3, 3, 10, 10, 12, 12, 18);
+
+        // Restyle out of bound
+        // Bug: the styles are totally off
+        checkStyle(p3.restyle(11, 19, "out"), 19,
+                new String[] {"text", "unknown", "keyword", "out"},
+                0, 3, 3, 10, 0, 1, 0, 8);
+
+        // From > length, no changes
+        checkStyle(p3.restyle(19, 20, "out"), 18,
+                new String[] {"text", "unknown", "keyword", "text"},
+                0, 3, 3, 10, 10, 12, 12, 18);
+
+        // From == to
+        checkStyle(p3.restyle(10, 10, "in"), 18,
+                new String[] {"text", "unknown", "keyword", "text"},
+                0, 3, 3, 10, 10, 12, 12, 18);
+
+        // To < 0
+        // This look very odd
+        checkStyle(p3.restyle(-2, -1, "in"), 20,
+                new String[] {"in", "text", "unknown", "keyword", "text"},
+                0, 1, 1, 4, 4, 11, 11, 13, 13, 20);
+
+        // To < from
+        assertThrows(IllegalArgumentException.class, () -> p3.restyle(10, 8, "in"));
+
+        // Style fully the first part starting from negative number
+        // This look very odd
+        checkStyle(p3.restyle(-1, 3, "replace"), 19,
+                new String[] {"replace", "unknown", "keyword", "text"},
+                0, 4, 4, 11, 11, 13, 13, 19);
+
+        // Restyle the whole thing
+        StyleSpansBuilder<String> builder = new StyleSpansBuilder<>();
+        builder.add("first", 9);
+        builder.add("second", 4);
+        builder.add("last", 5);
+        checkStyle(p3.restyle(0, builder.create()), 18,
+                new String[] {"first", "second", "last"},
+                0, 9, 9, 13, 13, 18);
+
+        // Restyle with one empty
+        // Bug
+        checkStyle(p3.restyle(0, new StyleSpansBuilder<String>().add("na", 0).create()), 18,
+                new String[] {"text", "unknown", "keyword", "text"},
+                0, 3, 4, 11, 11, 13, 0, 6);
+
+        // Restyle with empty style span
+        // Bug
+        StyleSpans<String> emptyStyle = new StyleSpans<>() {
+            @Override public Position position(int major, int minor) {return null;}
+            @Override public Position offsetToPosition(int offset, Bias bias) {return null;}
+            @Override public int length() {return 0;}
+            @Override public int getSpanCount() {return 0;}
+            @Override public StyleSpan<String> getStyleSpan(int index) {return null;}
+            @Override public IndexRange getStyleRange(int position) {return null;}
+        };
+        checkStyle(p3.restyle(0, emptyStyle), 18,
+                new String[] {"text", "unknown", "keyword", "text"},
+                0, 3, 4, 11, 11, 13, 12, 18);
     }
 }
