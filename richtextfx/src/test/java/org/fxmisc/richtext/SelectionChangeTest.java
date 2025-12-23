@@ -31,6 +31,13 @@ public class SelectionChangeTest {
         checkChange(3, 5, 3, 5, new PlainTextChange(3, "", ""));
         checkChange(4, 5, 4, 5, new PlainTextChange(3, "", ""));
         checkChange(5, 5, 5, 5, new PlainTextChange(3, "", ""));
+
+        // No interval selected
+        checkChange(1, 1, 1, 1, new PlainTextChange(3, "", ""));
+        checkChange(2, 2, 2, 2, new PlainTextChange(3, "", ""));
+        checkChange(3, 3, 3, 3, new PlainTextChange(3, "", ""));
+        checkChange(4, 4, 4, 4, new PlainTextChange(3, "", ""));
+        checkChange(5, 5, 5, 5, new PlainTextChange(3, "", ""));
     }
 
     @Test
@@ -53,6 +60,16 @@ public class SelectionChangeTest {
         checkChange(5, 8, 5, 8, new PlainTextChange(3, "One", "Two"));
         checkChange(6, 8, 6, 8, new PlainTextChange(3, "One", "Two"));
         checkChange(7, 8, 7, 8, new PlainTextChange(3, "One", "Two"));
+        checkChange(8, 8, 8, 8, new PlainTextChange(3, "One", "Two"));
+
+        // No interval selected
+        checkChange(1, 1, 1, 1, new PlainTextChange(3, "One", "Two"));
+        checkChange(2, 2, 2, 2, new PlainTextChange(3, "One", "Two"));
+        checkChange(3, 3, 3, 3, new PlainTextChange(3, "One", "Two"));
+        checkChange(4, 4, 4, 4, new PlainTextChange(3, "One", "Two"));
+        checkChange(5, 5, 5, 5, new PlainTextChange(3, "One", "Two"));
+        checkChange(6, 6, 6, 6, new PlainTextChange(3, "One", "Two"));
+        checkChange(7, 7, 7, 7, new PlainTextChange(3, "One", "Two"));
         checkChange(8, 8, 8, 8, new PlainTextChange(3, "One", "Two"));
     }
 
@@ -77,6 +94,16 @@ public class SelectionChangeTest {
         checkChange(6, 8, 3, 5, new PlainTextChange(3, "One", ""));
         checkChange(7, 8, 4, 5, new PlainTextChange(3, "One", ""));
         checkChange(8, 8, 5, 5, new PlainTextChange(3, "One", ""));
+
+        // No interval selected
+        checkChange(1, 1, 1, 1, new PlainTextChange(3, "One", ""));
+        checkChange(2, 2, 2, 2, new PlainTextChange(3, "One", ""));
+        checkChange(3, 3, 3, 3, new PlainTextChange(3, "One", ""));
+        checkChange(4, 4, 3, 3, new PlainTextChange(3, "One", ""));
+        checkChange(5, 5, 3, 3, new PlainTextChange(3, "One", ""));
+        checkChange(6, 6, 3, 3, new PlainTextChange(3, "One", ""));
+        checkChange(7, 7, 4, 4, new PlainTextChange(3, "One", ""));
+        checkChange(8, 8, 5, 5, new PlainTextChange(3, "One", ""));
     }
 
     @Test
@@ -93,6 +120,14 @@ public class SelectionChangeTest {
         checkChange(2, 5, 2, 3, new PlainTextChange(3, "", "Two"));
         checkChange(3, 5, 3, 3, new PlainTextChange(3, "", "Two"));
         checkChange(4, 5, 3, 3, new PlainTextChange(3, "", "Two"));
+        checkChange(5, 5, 3, 3, new PlainTextChange(3, "", "Two"));
+
+        // No interval selected
+        checkChange(1, 1, 1, 1, new PlainTextChange(3, "", "Two"));
+        checkChange(2, 2, 2, 2, new PlainTextChange(3, "", "Two"));
+        checkChange(3, 3, 3, 3, new PlainTextChange(3, "", "Two"));
+        // Bug: If you are at position 4 you need to move forward by three
+        checkChange(4, 4, 3, 3, new PlainTextChange(3, "", "Two"));
         checkChange(5, 5, 3, 3, new PlainTextChange(3, "", "Two"));
     }
 
@@ -117,6 +152,16 @@ public class SelectionChangeTest {
         checkChange(6, 8, 4, 6, new PlainTextChange(3, "One", "A"));
         checkChange(7, 8, 5, 6, new PlainTextChange(3, "One", "A"));
         checkChange(8, 8, 6, 6, new PlainTextChange(3, "One", "A"));
+
+        // No interval selected
+        checkChange(1, 1, 1, 1, new PlainTextChange(3, "One", "A"));
+        checkChange(2, 2, 2, 2, new PlainTextChange(3, "One", "A"));
+        checkChange(3, 3, 3, 3, new PlainTextChange(3, "One", "A"));
+        checkChange(4, 4, 3, 3, new PlainTextChange(3, "One", "A"));
+        checkChange(5, 5, 3, 3, new PlainTextChange(3, "One", "A"));
+        checkChange(6, 6, 4, 4, new PlainTextChange(3, "One", "A"));
+        checkChange(7, 7, 5, 5, new PlainTextChange(3, "One", "A"));
+        checkChange(8, 8, 6, 6, new PlainTextChange(3, "One", "A"));
     }
 
     @Test
@@ -140,6 +185,17 @@ public class SelectionChangeTest {
         checkChange(6, 8, 7, 9, new PlainTextChange(3, "One", "Four"));
         checkChange(7, 8, 8, 9, new PlainTextChange(3, "One", "Four"));
         checkChange(8, 8, 9, 9, new PlainTextChange(3, "One", "Four"));
+
+        // No interval
+        checkChange(8, 8, 10, 10, new PlainTextChange(4, "and", "above"));
+        checkChange(7, 7, 9, 9, new PlainTextChange(4, "and", "above"));
+        checkChange(6, 6, 8, 8, new PlainTextChange(4, "and", "above"));
+        // Below is rather strange, why would you suddenly move at the start if you were inside, but not if you were at position 6?
+        checkChange(5, 5, 4, 4, new PlainTextChange(4, "and", "above"));
+        checkChange(4, 4, 4, 4, new PlainTextChange(4, "and", "above"));
+        checkChange(3, 3, 3, 3, new PlainTextChange(4, "and", "above"));
+        checkChange(2, 2, 2, 2, new PlainTextChange(4, "and", "above"));
+        checkChange(1, 1, 1, 1, new PlainTextChange(4, "and", "above"));
     }
 
     @Test
