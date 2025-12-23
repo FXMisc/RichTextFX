@@ -34,19 +34,19 @@ testSets {
 check.dependsOn integrationTest
 integrationTest.mustRunAfter test
 integrationTest.testClassesDirs = sourceSets.integrationTest.output.classesDirs
-
 dependencies {
     api group: 'org.reactfx', name: 'reactfx', version: '2.0-M5'
     api group: 'org.fxmisc.undo', name: 'undofx', version: '2.1.1'
     api group: 'org.fxmisc.flowless', name: 'flowless', version: '0.7.4'
     api group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
 
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testCompileOnly group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.14.1'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.14.1'
 
-    integrationTestImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    integrationTestImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.14.1'
     integrationTestImplementation group: 'com.nitorcreations', name: 'junit-runners', version: '1.2'
-    integrationTestImplementation "org.testfx:testfx-core:4.0.16-alpha"
-    integrationTestImplementation ("org.testfx:testfx-junit:4.0.15-alpha") {
+    integrationTestImplementation "org.testfx:testfx-core:4.0.18"
+    integrationTestImplementation ("org.testfx:testfx-junit:4.0.18") {
         exclude(group: "junit", module: "junit")
     }
 }

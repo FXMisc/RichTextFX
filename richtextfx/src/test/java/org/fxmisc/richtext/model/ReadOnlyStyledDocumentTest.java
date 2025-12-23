@@ -1,14 +1,12 @@
 package org.fxmisc.richtext.model;
 
 import static org.fxmisc.richtext.model.ReadOnlyStyledDocument.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.reactfx.util.Tuple3;
 
 public class ReadOnlyStyledDocumentTest {
@@ -143,7 +141,7 @@ public class ReadOnlyStyledDocumentTest {
         appendStyledText.accept(helloWorld, bold);
 
         StyleSpans<String> styles = doc0.getStyleSpans(4,  17);
-        assertThat("Invalid number of Spans", styles.getSpanCount(), equalTo(3));
+        assertEquals(3, styles.getSpanCount(), "Invalid number of Spans");
 
         StyleSpans<String> newStyles = styles.mapStyles(style -> italic);
         doc0.setStyleSpans(4, newStyles);
@@ -153,10 +151,11 @@ public class ReadOnlyStyledDocumentTest {
         //  StyledText[text="Bar and Hello", style=italic]
         //  StyledText[text=" World", style=bold]
         StyleSpans<String> spans = doc0.getParagraphs().get(0).getStyleSpans();
-        assertThat(spans.getSpanCount(), equalTo(3));
-        assertThat(spans.getStyleSpan(0).getStyle(), equalTo(bold));
-        assertThat(spans.getStyleSpan(1).getStyle(), equalTo(italic));
-        assertThat(spans.getStyleSpan(2).getStyle(), equalTo(bold));
+
+        assertEquals(3, spans.getSpanCount());
+        assertEquals(bold, spans.getStyleSpan(0).getStyle());
+        assertEquals(italic, spans.getStyleSpan(1).getStyle());
+        assertEquals(bold, spans.getStyleSpan(2).getStyle());
     }
 
 }

@@ -1,13 +1,18 @@
 package org.fxmisc.richtext;
 
 import org.fxmisc.richtext.model.PlainTextChange;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CaretPositionChangeTest {
     private void checkChange(int before, int after, PlainTextChange... changes) {

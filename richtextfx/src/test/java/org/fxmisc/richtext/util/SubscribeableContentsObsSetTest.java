@@ -2,7 +2,7 @@ package org.fxmisc.richtext.util;
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SubscribeableContentsObsSetTest {
 

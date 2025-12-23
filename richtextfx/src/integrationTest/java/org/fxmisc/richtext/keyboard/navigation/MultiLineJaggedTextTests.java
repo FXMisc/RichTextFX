@@ -2,19 +2,17 @@ package org.fxmisc.richtext.keyboard.navigation;
 
 import javafx.stage.Stage;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import java.util.concurrent.TimeUnit;
 
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.UP;
 import static org.junit.Assert.assertEquals;
 
+@Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class MultiLineJaggedTextTests extends InlineCssTextAreaAppTest {
-
-    @Rule
-    public Timeout globalTimeout = Timeout.seconds(10);
-
     String threeLinesOfText = "Some long amount of text to take up a lot of space in the given area.";
 
     @Override

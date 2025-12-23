@@ -1,6 +1,6 @@
 package org.fxmisc.richtext.model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.reactfx.util.Tuple2;
 import org.reactfx.util.Tuples;
 
@@ -9,9 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReadOnlyStyledDocumentBuilderTest {
 
