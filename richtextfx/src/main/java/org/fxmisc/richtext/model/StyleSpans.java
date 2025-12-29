@@ -136,7 +136,7 @@ public interface StyleSpans<S> extends Iterable<StyleSpan<S>>, TwoDimensional {
     }
 
     /**
-     * Same as {@link java.util.List#subList(int, int)}, except that the arguments are two dimensional.
+     * Same as {@link java.util.List#subList(int, int)}, except that the arguments are two-dimensional.
      */
     default StyleSpans<S> subView(Position from, Position to) {
         return new SubSpans<>(this, from, to);

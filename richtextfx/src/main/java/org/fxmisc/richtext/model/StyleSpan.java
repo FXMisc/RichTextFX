@@ -8,7 +8,6 @@ import java.util.Objects;
  * @param <S> the style type
  */
 public class StyleSpan<S> {
-
     private final S style;
     private final int length;
     private int startPos = 0;
@@ -20,7 +19,6 @@ public class StyleSpan<S> {
         if(length < 0) {
             throw new IllegalArgumentException("StyleSpan's length cannot be negative");
         }
-
         this.style = style;
         this.length = length;
     }
@@ -39,8 +37,14 @@ public class StyleSpan<S> {
         return length;
     }
 
+    // TODO This one is only used in the factory, can't se make the start position immutable and use "moveTo"
+    //      instead (essentially turning this into an immutable style)
     void setStart( int start ) {
         startPos = start;
+    }
+
+    StyleSpan<S> moveTo(int start) {
+        return new StyleSpan<>(style, start, length);
     }
 
     int getStart() {
