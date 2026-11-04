@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import javafx.scene.control.IndexRange;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class ParagraphTest {
@@ -20,9 +21,9 @@ public class ParagraphTest {
         assertEquals(ranges.length/2, styleSpans.getSpanCount(), "Style segment count invalid");
         for (int i = 0; i < ranges.length/2 ; i++) {
             StyleSpan<T> style = styleSpans.getStyleSpan(i);
+            assertEquals(styles[i], style.getStyle(), "Incorrect style for " + i);
             assertEquals(ranges[i*2], style.getStart(), "Start not matching for " + i);
             assertEquals(ranges[i*2 + 1] - ranges[i*2], style.getLength(), "Length not matching for " + i);
-            assertEquals(styles[i], style.getStyle(), "Incorrect style for " + i);
         }
     }
 
@@ -155,10 +156,21 @@ public class ParagraphTest {
     }
 
     @Test
+    @DisplayName("Trim on empty text should return empty")
+    public void trimOnEmpty() {
+        Paragraph<Void, String, Void> p1 = createTextParagraph(SegmentOps.styledTextOps(), "");
+        assertEquals("", p1.trim(-1).getText());
+        assertEquals("", p1.trim(0).getText());
+        assertEquals("", p1.trim(1).getText());
+        assertEquals("", p1.trim(Integer.MAX_VALUE).getText());
+    }
+
+    @Test
+    @DisplayName("Trim text should return the text until the provided position")
     public void trimParagraph() {
         Paragraph<Void, String, String> p1 = createTextParagraph(SegmentOps.styledTextOps(), "Alpha", "MyStyle");
         // Not very consistent that MIN_VALUE is throwing an exception while other negative numbers work
-        assertThrows(StringIndexOutOfBoundsException.class, () -> p1.trim(Integer.MIN_VALUE).getText());
+        assertEquals("", p1.trim(Integer.MIN_VALUE).getText());
         assertEquals("", p1.trim(-10).getText());
         assertEquals("", p1.trim(-1).getText());
         assertEquals("Alpha", p1.trim(Integer.MAX_VALUE).getText());
@@ -186,7 +198,7 @@ public class ParagraphTest {
         assertThrows(IndexOutOfBoundsException.class, () -> paragraph.delete(4, 10).getText()); // Not consistent with -1
         assertEquals("gated", paragraph.delete(0, 4).getText());
         assertEquals("gated", paragraph.delete(-1, 4).getText());
-        assertThrows(StringIndexOutOfBoundsException.class, () -> paragraph.delete(Integer.MIN_VALUE, 4).getText()); // Not very consistent with -1
+        assertEquals("gated", paragraph.delete(Integer.MIN_VALUE, 4).getText());
 
         // Check style too
         Paragraph<Void, String, String> p2 = paragraph.delete(2, 5);
@@ -232,6 +244,10 @@ public class ParagraphTest {
         Paragraph<Void, String, String> p1 = createTextParagraph("To be or not to be", "text");
         checkStyle(p1, 18, new String[] {"text"}, 0, 18);
 
+        // Restyle with same style
+        Paragraph<Void, String, String> p1b = p1.restyle(0, 18, "text");
+        checkStyle(p1b, 18, new String[] {"text"}, 0, 18);
+
         // P1 is immutable, its style hasn't changed, but P2 has now three styles
         Paragraph<Void, String, String> p2 = p1.restyle(9, 12, "keyword");
         checkStyle(p1, 18, new String[] {"text"}, 0, 18);
@@ -241,8 +257,18 @@ public class ParagraphTest {
         Paragraph<Void, String, String> p3 = p2.restyle(3, 10, "unknown");
         checkStyle(p3, 18, new String[] {"text", "unknown", "keyword", "text"}, 0, 3, 3, 10, 10, 12, 12, 18);
 
+        // Restyle up to the end
+        checkStyle(p3.restyle(11, 17, "out"), 18,
+                new String[] {"text", "unknown", "keyword", "out", "text"},
+                0, 3, 3, 10, 10, 11, 11, 17, 17, 18);
+
+        // Restyle up to the end
+        // Bug
+        checkStyle(p3.restyle(11, 18, "out"), 18,
+                new String[] {"text", "unknown", "keyword", "out"},
+                0, 3, 3, 10, 0, 1, 0, 7);
+
         // Restyle out of bound
-        // Bug: the styles are totally off
         checkStyle(p3.restyle(11, 19, "out"), 19,
                 new String[] {"text", "unknown", "keyword", "out"},
                 0, 3, 3, 10, 0, 1, 0, 8);

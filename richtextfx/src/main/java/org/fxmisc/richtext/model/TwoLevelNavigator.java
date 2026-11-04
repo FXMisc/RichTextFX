@@ -7,7 +7,7 @@ import java.util.function.IntUnaryOperator;
 
 /**
  * Default implementation of {@link TwoDimensional} that makes it trivial to calculate a position within a
- * two dimensional object.
+ * two-dimensional object.
  */
 public class TwoLevelNavigator implements TwoDimensional {
 

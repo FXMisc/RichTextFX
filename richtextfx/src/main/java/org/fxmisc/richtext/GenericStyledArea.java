@@ -2172,25 +2172,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private Bounds getParagraphBoundsOnScreen(Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell) {
         Bounds nodeLocal = cell.getNode().getBoundsInLocal();
         Bounds nodeScreen = cell.getNode().localToScreen(nodeLocal);
-        Bounds areaLocal = getBoundsInLocal();
-        Bounds areaScreen = localToScreen(areaLocal);
-
-        // use area's minX if scrolled right and paragraph's left is not visible
-        double minX = nodeScreen.getMinX() < areaScreen.getMinX()
-                ? areaScreen.getMinX()
-                : nodeScreen.getMinX();
-        // use area's minY if scrolled down vertically and paragraph's top is not visible
-        double minY = nodeScreen.getMinY() < areaScreen.getMinY()
-                ? areaScreen.getMinY()
-                : nodeScreen.getMinY();
-        // use area's width whether paragraph spans outside of it or not
-        // so that short or long paragraph takes up the entire space
-        double width = areaScreen.getWidth();
-        // use area's maxY if scrolled up vertically and paragraph's bottom is not visible
-        double maxY = nodeScreen.getMaxY() < areaScreen.getMaxY()
-                ? nodeScreen.getMaxY()
-                : areaScreen.getMaxY();
-        return new BoundingBox(minX, minY, width, maxY - minY);
+        Bounds areaScreen = localToScreen(getBoundsInLocal());
+        return new ScreenBounds(areaScreen).getParagraphBoundsFrom(nodeScreen);
     }
 
     private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
