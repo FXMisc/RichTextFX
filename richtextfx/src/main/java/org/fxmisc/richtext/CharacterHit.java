@@ -3,13 +3,16 @@ package org.fxmisc.richtext;
 import java.util.OptionalInt;
 
 /**
- * Object that stores information relating to the position in an area's content that corresponds to a given position
- * in some visible entity (e.g. the area, a paragraph in the area, a line on a paragraph).
+ * <p>Object that stores information relating to the position in an area's content that corresponds to a given position
+ * in some visible entity (e.g. the area, a paragraph in the area, a line on a paragraph).</p>
+ * <p>A character hit can either be before a given character (leading) or after a given character (trailing).</p>
+ * <p>A special case is planned when the character hit happens outside the boundaries of some visible entity. In this case
+ * there is an insertion index but there isn't any actual character position in the content.</p>
  */
 public class CharacterHit {
 
     /**
-     * Returns a {@link CharacterHit} for cases where the insertion occurs outside the bounds of some visible entity
+     * @return a {@link CharacterHit} for cases where the insertion occurs outside the bounds of some visible entity
      * (e.g. the area, the paragraph in an area, the line in a paragraph)
      */
     public static CharacterHit insertionAt(int insertionIndex) {
@@ -17,7 +20,10 @@ public class CharacterHit {
     }
 
     /**
-     * Returns a {@link CharacterHit} for cases where the hit occurs inside the bounds of some visible entity
+     * <p>Represents a hit happening before a character at a given position (meaning the character is located forward).</p>
+     * <p>Example: If you have a hit on {@code ALPHA} at position 1, it means before the character {@code L}. The character
+     * index would be 1 and the insertion would be at 1.</p>
+     * @return a {@link CharacterHit} for cases where the hit occurs inside the bounds of some visible entity
      * (e.g. the area, the paragraph in an area, the line in a paragraph) and the character is leading.
      */
     public static CharacterHit leadingHalfOf(int charIdx) {
@@ -25,13 +31,15 @@ public class CharacterHit {
     }
 
     /**
-     * Returns a {@link CharacterHit} for cases where the hit occurs inside the bounds of some visible entity
+     * <p>A hit that happens after the character at the given position (meaning the character is before).</p>
+     * <p>Example: If you have a hit on {@code ALPHA} at position 1, it means after the character {@code L}. The character
+     * index would be 1 but the insertion would be at 2.</p>
+     * @return a {@link CharacterHit} for cases where the hit occurs inside the bounds of some visible entity
      * (e.g. the area, the paragraph in an area, the line in a paragraph) and the character is trailing.
      */
     public static CharacterHit trailingHalfOf(int charIdx) {
         return new CharacterHit(OptionalInt.of(charIdx), charIdx + 1);
     }
-
 
     private final OptionalInt charIdx;
     private final int insertionIndex;
