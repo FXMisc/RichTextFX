@@ -2089,8 +2089,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private Bounds getParagraphBoundsOnScreen(Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell) {
         Bounds nodeLocal = cell.getNode().getBoundsInLocal();
         Bounds nodeScreen = cell.getNode().localToScreen(nodeLocal);
-        Bounds areaLocal = getBoundsInLocal();
-        Bounds areaScreen = localToScreen(areaLocal);
+        Bounds areaScreen = localToScreen(getBoundsInLocal());
         return new ScreenBounds(areaScreen).getParagraphBoundsFrom(nodeScreen);
     }
 
