@@ -203,26 +203,6 @@ public final class Paragraph<PS, SEG, S> {
         return new Paragraph<>(paragraphStyle, segmentOps, concatSegments, concatStyles);
     }
 
-    private StyleSpans<S> concatStylesOf(Paragraph<PS, SEG, S> p) {
-        StyleSpan<S> leftSpan = styles.getStyleSpan(styles.getSpanCount() - 1);
-        StyleSpan<S> rightSpan = p.styles.getStyleSpan(0);
-        Optional<S> mergedStyle = segmentOps.joinStyle(leftSpan.getStyle(), rightSpan.getStyle());
-        if (mergedStyle.isPresent()) {
-            StyleSpans<S> updatedLeftSpan = getSubStyle(0, styles.getSpanCount() - 1);
-            StyleSpans<S> updatedRightSpan = getSubStyle(1, styles.getSpanCount());
-            return updatedLeftSpan
-                    .append(mergedStyle.get(), leftSpan.getLength() + rightSpan.getLength())
-                    .concat(updatedRightSpan);
-        }
-        return styles.concat(p.styles);
-    }
-
-    private StyleSpans<S> getSubStyle(int from, int to) {
-        int start = styles.position(from, 0).toOffset();
-        int end = styles.position(to, 0).toOffset();
-        return styles.subView(start, end);
-    }
-
     private List<SEG> concatSegmentsOf(Paragraph<PS, SEG, S> par) {
         List<SEG> updatedSegments;
         Optional<SEG> joined = concatLastSegmentWith(par);
@@ -244,6 +224,26 @@ public final class Paragraph<PS, SEG, S> {
         SEG leftLastSegment = segments.get(segments.size() - 1);
         SEG rightFirstSegment = par.segments.get(0);
         return segmentOps.joinSeg(leftLastSegment, rightFirstSegment);
+    }
+
+    private StyleSpans<S> concatStylesOf(Paragraph<PS, SEG, S> p) {
+        StyleSpan<S> leftSpan = styles.getStyleSpan(styles.getSpanCount() - 1);
+        StyleSpan<S> rightSpan = p.styles.getStyleSpan(0);
+        Optional<S> mergedStyle = segmentOps.joinStyle(leftSpan.getStyle(), rightSpan.getStyle());
+        if (mergedStyle.isPresent()) {
+            StyleSpans<S> updatedLeftSpan = getSubStyle(0, styles.getSpanCount() - 1);
+            StyleSpans<S> updatedRightSpan = getSubStyle(1, styles.getSpanCount());
+            return updatedLeftSpan
+                    .append(mergedStyle.get(), leftSpan.getLength() + rightSpan.getLength())
+                    .concat(updatedRightSpan);
+        }
+        return styles.concat(p.styles);
+    }
+
+    private StyleSpans<S> getSubStyle(int from, int to) {
+        int start = styles.position(from, 0).toOffset();
+        int end = styles.position(to, 0).toOffset();
+        return styles.subView(start, end);
     }
 
     /**
