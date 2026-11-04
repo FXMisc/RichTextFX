@@ -195,43 +195,55 @@ public final class Paragraph<PS, SEG, S> {
         if(p.length() == 0) {
             return this;
         }
-
         if(length() == 0) {
             return p;
         }
+        List<SEG> concatSegments = concatSegmentsOf(p);
+        StyleSpans<S> concatStyles = concatStylesOf(p);
+        return new Paragraph<>(paragraphStyle, segmentOps, concatSegments, concatStyles);
+    }
 
-        List<SEG> updatedSegs;
-        SEG leftSeg = segments.get(segments.size() - 1);
-        SEG rightSeg = p.segments.get(0);
-        Optional<SEG> joined = segmentOps.joinSeg(leftSeg, rightSeg);
+    private List<SEG> concatSegmentsOf(Paragraph<PS, SEG, S> par) {
+        List<SEG> updatedSegments;
+        Optional<SEG> joined = concatLastSegmentWith(par);
         if(joined.isPresent()) {
             SEG segment = joined.get();
-            updatedSegs = new ArrayList<>(segments.size() + p.segments.size() - 1);
-            updatedSegs.addAll(segments.subList(0, segments.size()-1));
-            updatedSegs.add(segment);
-            updatedSegs.addAll(p.segments.subList(1, p.segments.size()));
+            updatedSegments = new ArrayList<>(segments.size() + par.segments.size() - 1); // -2 + 1
+            updatedSegments.addAll(segments.subList(0, segments.size()-1));
+            updatedSegments.add(segment);
+            updatedSegments.addAll(par.segments.subList(1, par.segments.size()));
         } else {
-            updatedSegs = new ArrayList<>(segments.size() + p.segments.size());
-            updatedSegs.addAll(segments);
-            updatedSegs.addAll(p.segments);
+            updatedSegments = new ArrayList<>(segments.size() + par.segments.size());
+            updatedSegments.addAll(segments);
+            updatedSegments.addAll(par.segments);
         }
+        return updatedSegments;
+    }
 
-        StyleSpans<S> updatedStyles;
+    private Optional<SEG> concatLastSegmentWith(Paragraph<PS, SEG, S> par) {
+        SEG leftLastSegment = segments.get(segments.size() - 1);
+        SEG rightFirstSegment = par.segments.get(0);
+        return segmentOps.joinSeg(leftLastSegment, rightFirstSegment);
+    }
+
+    private StyleSpans<S> concatStylesOf(Paragraph<PS, SEG, S> p) {
         StyleSpan<S> leftSpan = styles.getStyleSpan(styles.getSpanCount() - 1);
         StyleSpan<S> rightSpan = p.styles.getStyleSpan(0);
-        Optional<S> merge = segmentOps.joinStyle(leftSpan.getStyle(), rightSpan.getStyle());
-        if (merge.isPresent()) {
-            int startOfMerge = styles.position(styles.getSpanCount() - 1, 0).toOffset();
-            StyleSpans<S> updatedLeftSpan = styles.subView(0, startOfMerge);
-            int endOfMerge = p.styles.position(1, 0).toOffset();
-            StyleSpans<S> updatedRightSpan = p.styles.subView(endOfMerge, p.styles.length());
-            updatedStyles = updatedLeftSpan
-                    .append(merge.get(), leftSpan.getLength() + rightSpan.getLength())
+        Optional<S> mergedStyle = segmentOps.joinStyle(leftSpan.getStyle(), rightSpan.getStyle());
+        if (mergedStyle.isPresent()) {
+            StyleSpans<S> updatedLeftSpan = getSubStyle(0, styles.getSpanCount() - 1);
+            StyleSpans<S> updatedRightSpan = getSubStyle(1, styles.getSpanCount());
+            return updatedLeftSpan
+                    .append(mergedStyle.get(), leftSpan.getLength() + rightSpan.getLength())
                     .concat(updatedRightSpan);
-        } else {
-            updatedStyles = styles.concat(p.styles);
         }
-        return new Paragraph<>(paragraphStyle, segmentOps, updatedSegs, updatedStyles);
+        return styles.concat(p.styles);
+    }
+
+    private StyleSpans<S> getSubStyle(int from, int to) {
+        int start = styles.position(from, 0).toOffset();
+        int end = styles.position(to, 0).toOffset();
+        return styles.subView(start, end);
     }
 
     /**
@@ -248,20 +260,13 @@ public final class Paragraph<PS, SEG, S> {
         return trim(end).subSequence(start);
     }
 
-    public Paragraph<PS, SEG, S> trim(int length) {
-        if(length >= length()) {
-            return this;
-        } else {
-            Position pos = navigator.offsetToPosition(length, Backward);
-            int segIdx = pos.getMajor();
-            List<SEG> segs = new ArrayList<>(segIdx + 1);
-            segs.addAll(segments.subList(0, segIdx));
-            segs.add(segmentOps.subSequence(segments.get(segIdx), 0, pos.getMinor()));
-            if (segs.isEmpty()) {
-                segs.add(segmentOps.createEmptySeg());
-            }
-            return new Paragraph<>(paragraphStyle, segmentOps, segs, styles.subView(0, length));
+    public Paragraph<PS, SEG, S> trim(int end) {
+        end = Math.max(0, end);
+        if(end < length()) {
+            List<SEG> segments = trimSegmentsTo(navigator.offsetToPosition(end, Backward));
+            return new Paragraph<>(paragraphStyle, segmentOps, segments, styles.subView(0, end));
         }
+        return this;
     }
 
     public Paragraph<PS, SEG, S> subSequence(int start) {
@@ -274,18 +279,27 @@ public final class Paragraph<PS, SEG, S> {
             // to use the left ops' default empty seg, not the right one's empty seg
             return new Paragraph<>(paragraphStyle, segmentOps, segmentOps.createEmptySeg(), styles.subView(start,start));
         } else if(start < length()) {
-            Position pos = navigator.offsetToPosition(start, Forward);
-            int segIdx = pos.getMajor();
-            List<SEG> segs = new ArrayList<>(segments.size() - segIdx);
-            segs.add(segmentOps.subSequence(segments.get(segIdx), pos.getMinor()));
-            segs.addAll(segments.subList(segIdx + 1, segments.size()));
-            if (segs.isEmpty()) {
-                segs.add(segmentOps.createEmptySeg());
-            }
-            return new Paragraph<>(paragraphStyle, segmentOps, segs, styles.subView(start, styles.length()));
-        } else {
-            throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
+            Position position = navigator.offsetToPosition(start, Forward);
+            List<SEG> segments = trimSegmentsFrom(position);
+            return new Paragraph<>(paragraphStyle, segmentOps, segments, styles.subView(start, styles.length()));
         }
+        throw new IndexOutOfBoundsException(start + " not in [0, " + length() + "]");
+    }
+
+    private List<SEG> trimSegmentsTo(Position position) {
+        int index = position.getMajor();
+        List<SEG> segments = new ArrayList<>(index + 1);
+        segments.addAll(this.segments.subList(0, index));
+        segments.add(segmentOps.subSequence(this.segments.get(index), 0, position.getMinor()));
+        return segments;
+    }
+
+    private List<SEG> trimSegmentsFrom(Position position) {
+        int index = position.getMajor();
+        List<SEG> segments = new ArrayList<>(this.segments.size() - index);
+        segments.add(segmentOps.subSequence(this.segments.get(index), position.getMinor()));
+        segments.addAll(this.segments.subList(index + 1, this.segments.size()));
+        return segments;
     }
 
     public Paragraph<PS, SEG, S> delete(int start, int end) {
@@ -306,14 +320,13 @@ public final class Paragraph<PS, SEG, S> {
     }
 
     public Paragraph<PS, SEG, S> restyle(int from, int to, S style) {
-        if(from >= length()) {
-            return this;
-        } else {
+        if(from < length()) {
             StyleSpans<S> left = styles.subView(0, from);
             StyleSpans<S> right = styles.subView(to, length());
             StyleSpans<S> updatedStyles = left.append(style, to - from).concat(right);
             return new Paragraph<>(paragraphStyle, segmentOps, segments, updatedStyles);
         }
+        return this;
     }
 
     public Paragraph<PS, SEG, S> restyle(int from, StyleSpans<? extends S> styleSpans) {
@@ -324,14 +337,15 @@ public final class Paragraph<PS, SEG, S> {
         if(length() == 0) {
         	return new Paragraph<>(paragraphStyle, segmentOps, segments, (StyleSpans<S>) styleSpans);
         }
+        StyleSpans<S> updatedStyles = restyleExistingFrom(from, styleSpans);
+        return new Paragraph<>(paragraphStyle, segmentOps, segments, updatedStyles);
+    }
 
+    private StyleSpans<S> restyleExistingFrom(int from, StyleSpans<? extends S> styleSpans) {
+        int len = styleSpans.length();
         StyleSpans<S> left = styles.subView(0, from);
         StyleSpans<S> right = styles.subView(from + len, length());
-
-        // type issue with concat
-        StyleSpans<S> castedSpans = (StyleSpans<S>) styleSpans;
-        StyleSpans<S> updatedStyles = left.concat(castedSpans).concat(right);
-        return new Paragraph<>(paragraphStyle, segmentOps, segments, updatedStyles);
+        return left.concat((StyleSpans<S>) styleSpans).concat(right);
     }
 
     /**
