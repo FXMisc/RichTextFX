@@ -2104,7 +2104,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             );
         }
 
-        virtualFlow.show(getVisibleParagraphIndex(parIdx), region);
+        virtualFlow.show(getVirtualParagraphIndex(parIdx), region);
     }
 
     private int getVirtualParagraphIndex(int allParagraphIndex) {
