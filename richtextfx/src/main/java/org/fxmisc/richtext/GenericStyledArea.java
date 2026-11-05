@@ -1684,7 +1684,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private void skipOverFoldedParagraphs( ObservableValue<? extends Integer> ob, Integer prevParagraph, Integer newParagraph )
     {
-        if ( foldCheck && isParagraphFolded(newParagraph) )
+        if ( isParagraphFolded(newParagraph) )
         {
             // Prevent Ctrl+A and Ctrl+End breaking when the last paragraph is folded
             // github.com/FXMisc/RichTextFX/pull/965#issuecomment-706268116
@@ -1704,6 +1704,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             if ( getSelection().getLength() == 0 )  moveTo( p, col );
             else moveTo( p, col, SelectionPolicy.EXTEND );
         }
+    }
+
+    private boolean isParagraphFolded(int index) {
+        return foldCheck && foldStyleCheck.test(getParagraphs().get(index).getParagraphStyle());
     }
 
     /**
@@ -1745,6 +1749,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             moveTo( startingFrom, getParagraphLength( startingFrom ) );
             recreateParagraphGraphic( startingFrom );
         }
+        
+        foldCheck = (getParagraphs().size() != virtualFlowParagraphs.size());
     }
 
     /* ********************************************************************** *
@@ -2099,10 +2105,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
 
         virtualFlow.show(getVisibleParagraphIndex(parIdx), region);
-    }
-
-    private boolean isParagraphFolded(int index) {
-        return foldStyleCheck.test(getParagraphs().get(index).getParagraphStyle());
     }
 
     private int getVirtualParagraphIndex(int allParagraphIndex) {
