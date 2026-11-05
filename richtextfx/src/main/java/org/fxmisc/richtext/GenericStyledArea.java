@@ -818,9 +818,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
-        IntUnaryOperator cellLength = i -> isParagraphFolded(i)
-                ? 1
-                : getCell(i).getLineCount();
+        IntUnaryOperator cellLength = i -> getParagraphLinesCount(i);
         paragraphLineNavigator = new TwoLevelNavigator(cellCount, cellLength);
 
         viewportDirty = merge(
@@ -1061,7 +1059,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public int getParagraphLinesCount(int paragraphIndex) {
-        return isParagraphFolded(paragraphIndex) ? 1 : getCell(paragraphIndex).getLineCount();
+        return isParagraphFolded(paragraphIndex) ? 0 : getCell(paragraphIndex).getLineCount();
     }
 
     @Override
