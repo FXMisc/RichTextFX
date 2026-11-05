@@ -1325,6 +1325,32 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, p -> virtualFlow.showAtOffset(p, offset)));
     }
 
+    /**
+     * @param allParagraphIndex the index of the paragraph in the underlying document.
+     * @param action the action to perform on the virtual-flow index of the paragraph, if visible / not folded.
+     */
+    private void forVisibleParagraphIndex(int allParagraphIndex, IntConsumer action) {
+        int virtualIndex = getVisibleParagraphIndexBefore(allParagraphIndex);
+        if ( virtualIndex < 0 ) virtualIndex = getVisibleParagraphIndexAfter(allParagraphIndex);
+        if ( virtualIndex >= 0 ) action.accept(virtualIndex);
+    }
+
+    private int getVisibleParagraphIndexBefore(int allParagraphIndex) {
+        for ( int i = allParagraphIndex ; i >= 0 ; i-- ) {
+            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
+            if ( virtualIndex >= 0 ) return virtualIndex;
+        }
+        return -1;
+    }
+
+    private int getVisibleParagraphIndexAfter(int allParagraphIndex) {
+        for ( int i = allParagraphIndex + 1; i < getParagraphs().size(); i++ ) {
+            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
+            if ( virtualIndex >= 0 ) return virtualIndex;
+        }
+        return -1;
+    }
+
     @Override
     public void requestFollowCaret() {
         followCaretRequested = true;
@@ -2113,41 +2139,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             throw new IllegalArgumentException("Paragraph " + allParagraphIndex + " is folded");
         }
         return virtualIndex;
-    }
-
-    /**
-     * @param allParagraphIndex the index of the paragraph in the underlying document.
-     * @param action the action to perform on the virtual-flow index of the paragraph, if visible / not folded.
-     */
-    private void forVisibleParagraphIndex(int allParagraphIndex, IntConsumer action) {
-        int virtualIndex = getVisibleParagraphIndex(allParagraphIndex);
-        if ( virtualIndex >= 0 ) action.accept(virtualIndex);
-    }
-
-    /**
-     * @param allParagraphIndex the index of the paragraph in the underlying document.
-     * @return the virtual-flow index for the paragraph, or a visible paragraph immediately before or after it if it is folded.
-     *         will return -1 if there are no visible paragraphs before or after it.
-     */
-    private int getVisibleParagraphIndex(int allParagraphIndex) {
-        int virtualIndex = getVisibleParagraphIndexBefore(allParagraphIndex);
-        return virtualIndex >= 0 ? virtualIndex : getVisibleParagraphIndexAfter(allParagraphIndex);
-    }
-
-    private int getVisibleParagraphIndexBefore(int allParagraphIndex) {
-        for ( int i = allParagraphIndex ; i >= 0 ; i-- ) {
-            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
-            if ( virtualIndex >= 0 ) return virtualIndex;
-        }
-        return -1;
-    }
-
-    private int getVisibleParagraphIndexAfter(int allParagraphIndex) {
-        for ( int i = allParagraphIndex + 1; i < getParagraphs().size(); i++ ) {
-            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
-            if ( virtualIndex >= 0 ) return virtualIndex;
-        }
-        return -1;
     }
 
     private Optional<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> getCellIfVisible(int allParagraphIndex) {
