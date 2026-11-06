@@ -997,12 +997,21 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         if (allParIndex < 0 || allParIndex >= getParagraphs().size()) {
             return Optional.empty();
         }
-        List<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> visibleList = virtualFlow.visibleCells();
-        int virtualIndex = virtualFlowParagraphs.getViewIndex(allParIndex);
-        if ( virtualIndex >= 0 ) {
-            for ( int visibleIndex = 0; visibleIndex < visibleList.size(); visibleIndex++ ) {
-                if ( visibleList.get(visibleIndex).getNode().getIndex() == allParIndex ) {
-                    return Optional.of(visibleIndex);
+        
+        int virtualIndex = virtualFlowParagraphs.getViewIndex( allParIndex );
+        
+        if ( virtualIndex >= 0 )
+        {
+            int firstVisibleIndex = virtualFlow.getFirstVisibleIndex();
+            int lastVisibleIndex = virtualFlow.getLastVisibleIndex();
+            
+            if ( virtualIndex >= firstVisibleIndex && virtualIndex <= lastVisibleIndex )
+            {
+                int visibleIndex = virtualIndex - firstVisibleIndex;
+                
+                if ( virtualFlow.visibleCells().get( visibleIndex ).getNode().getIndex() == allParIndex )
+                {
+                    return Optional.of( visibleIndex );
                 }
             }
         }
