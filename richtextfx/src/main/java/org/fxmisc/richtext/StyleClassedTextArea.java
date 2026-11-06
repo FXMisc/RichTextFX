@@ -116,10 +116,7 @@ public class StyleClassedTextArea extends StyledTextArea<Collection<String>, Col
         unfoldParagraphs( startingFromPos, getFoldStyleCheck(), getRemoveFoldStyle() );
     }
 
-
-    /**
-     * @return a Predicate that given a paragraph style, returns true if it includes folding.
-     */
+    @Override
     protected Predicate<Collection<String>> getFoldStyleCheck() {
         return styleList -> styleList != null && styleList.contains( "collapse" );
     }

@@ -269,12 +269,18 @@ public interface ViewActions<PS, SEG, S> {
     /**
      * Maps a paragraph index from {@link TextEditingArea#getParagraphs()} into the index system of
      * {@link #getVisibleParagraphs()}.
+     *
+     * @return The index of the visible paragraph corresponding to the given all paragraph index,
+     * or an empty optional if the paragraph is not visible or the paragraph index is out of bounds.
      */
     public Optional<Integer> allParToVisibleParIndex(int allParIndex);
 
     /**
      * Maps a paragraph index from {@link #getVisibleParagraphs()} into the index system of
      * {@link TextEditingArea#getParagraphs()}.
+     *
+     * @return The index of the paragraph in the document that corresponds to the given visible paragraph index,
+     * or -1 if the visible paragraph index is out of bounds.
      */
     public int visibleParToAllParIndex(int visibleParIndex);
 
@@ -305,8 +311,8 @@ public interface ViewActions<PS, SEG, S> {
     CharacterHit hit(double x, double y);
 
     /**
-     * Returns 0 if the given paragraph displays its content across only one line, or returns the index
-     * of the line on which the given column position appears if the paragraph spans multiple lines.
+     * Returns 0 if the given paragraph displays its content across only one line or is folded.
+     * Returns the index of the line on which the given column position appears if the paragraph spans multiple lines.
      */
     public int lineIndex(int paragraphIndex, int columnPosition);
 
@@ -336,7 +342,7 @@ public interface ViewActions<PS, SEG, S> {
     Optional<Bounds> getCharacterBoundsOnScreen(int from, int to);
 
     /**
-     * Returns the bounds of the paragraph if it is visible or {@link Optional#empty()} if it's not.
+     * Returns the bounds of a visible paragraph.
      *
      * The returned bounds object will always be within the bounds of the area. In other words, it takes
      * scrolling into account. Note: the bound's width will always equal the area's width, not necessarily
@@ -344,6 +350,7 @@ public interface ViewActions<PS, SEG, S> {
      * or if it's long and spans outside of the area's width).
      *
      * @param visibleParagraphIndex the index in area's list of visible paragraphs.
+     * @throws IndexOutOfBoundsException if visible paragraph index is negative or greater than the last visible paragraph index.
      */
     public Bounds getVisibleParagraphBoundsOnScreen(int visibleParagraphIndex);
 

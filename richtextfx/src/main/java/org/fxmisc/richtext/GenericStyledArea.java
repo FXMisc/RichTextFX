@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
@@ -34,6 +35,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+import javafx.collections.transformation.FilteredList;
 import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
 import javafx.css.StyleConverter;
@@ -386,15 +388,28 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
     @Override public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() { return paragraphGraphicFactory; }
 
-    public void recreateParagraphGraphic( int parNdx ) {
+    /**
+     * Recreates the given paragraph graphic by index if it is visible.
+     * @param allParagraphIndex All paragraph index of the paragraph whose graphic is to be recreated.
+     */
+    public void recreateParagraphGraphic( int allParagraphIndex ) {
         ObjectProperty<IntFunction<? extends Node>> gProp;
-        gProp = getCell(parNdx).graphicFactoryProperty();
+        Optional<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> opt = getCellIfVisible(allParagraphIndex);
+        if (opt.isEmpty()) return;
+        gProp = opt.get().getNode().graphicFactoryProperty();
         gProp.unbind();
         gProp.bind(paragraphGraphicFactoryProperty());
     }
 
-    public Node getParagraphGraphic( int parNdx ) {
-        return getCell(parNdx).getGraphic();
+    /**
+     * @param allParagraphIndex All paragraph index of the paragraph whose graphic is to be returned.
+     * @return The graphic {@code Node} of the paragraph at the given all paragraph index,
+     *         or {@code null} if the paragraph is not visible.
+     */
+    public Node getParagraphGraphic( int allParagraphIndex ) {
+        return getCellIfVisible(allParagraphIndex)
+                .map(c -> c.getNode().getGraphic())
+                .orElse(null);
     }
 
     /**
@@ -457,7 +472,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     public final boolean removeCaret(CaretNode caret) {
         if (caret != caretSelectionBind.getUnderlyingCaret() && caretSet.remove(caret)) {
-            virtualFlow.getCellIfVisible(caret.getParagraphIndex()).ifPresent(
+            getCellIfVisible(caret.getParagraphIndex()).ifPresent(
                 c -> c.getNode().caretsProperty().remove(caret)
             );
             caret.dispose();
@@ -479,7 +494,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final boolean removeSelection(Selection<PS, SEG, S> selection) {
         if (selection != caretSelectionBind.getUnderlyingSelection() && selectionSet.remove(selection)) {
             for (int p = selection.getStartParagraphIndex(); p <= selection.getEndParagraphIndex(); p++) {
-                virtualFlow.getCellIfVisible(p).ifPresent(c -> c.getNode().selectionsProperty().remove(selection));
+                getCellIfVisible(p).ifPresent(c -> c.getNode().selectionsProperty().remove(selection));
             }
             selection.dispose();
             return true;
@@ -610,6 +625,12 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     private Subscription subscriptions = () -> {};
 
     private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
+
+    // the document contains all paragraphs (including folded ones).
+    // however, the virtual flow does not need to display those, so keeping filtered
+    // reduces the work flowless has to do when walking items for viewport filling during layouts.
+    private final FilteredList<Paragraph<PS, SEG, S>> virtualFlowParagraphs;
+    private final Predicate<PS> foldStyleCheck;
 
     // used for two-level navigation, where on the higher level are
     // paragraphs and on the lower level are lines within a paragraph
@@ -776,8 +797,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         });
 
         // Initialize content
-        virtualFlow = VirtualFlow.createVertical(
+        foldStyleCheck = getFoldStyleCheck();
+        virtualFlowParagraphs = new FilteredList<>(
                 getParagraphs(),
+                paragraph -> !foldStyleCheck.test(paragraph.getParagraphStyle())
+        );
+
+        virtualFlow = VirtualFlow.createVertical(
+                virtualFlowParagraphs,
                 par -> {
                     Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = createCell(
                             par,
@@ -791,7 +818,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         // initialize navigator
         IntSupplier cellCount = () -> getParagraphs().size();
-        IntUnaryOperator cellLength = i -> virtualFlow.getCell(i).getNode().getLineCount();
+        IntUnaryOperator cellLength = i -> getParagraphLinesCount(i);
         paragraphLineNavigator = new TwoLevelNavigator(cellCount, cellLength);
 
         viewportDirty = merge(
@@ -967,24 +994,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final Optional<Integer> allParToVisibleParIndex(int allParIndex) {
-        if (allParIndex < 0) {
-            throw new IllegalArgumentException("The given paragraph index (allParIndex) cannot be negative but was " + allParIndex);
+        if (allParIndex < 0 || allParIndex >= getParagraphs().size()) {
+            return Optional.empty();
         }
-        if (allParIndex >= getParagraphs().size()) {
-            throw new IllegalArgumentException(String.format(
-                    "Paragraphs' last index is [%s] but allParIndex was [%s]",
-                    getParagraphs().size() - 1, allParIndex)
-            );
-        }
-        List<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> visibleList = virtualFlow.visibleCells();
-        int firstVisibleParIndex = visibleList.get( 0 ).getNode().getIndex();
-        int targetIndex = allParIndex - firstVisibleParIndex;
-
-        if ( allParIndex >= firstVisibleParIndex && targetIndex < visibleList.size() )
+        
+        int virtualIndex = virtualFlowParagraphs.getViewIndex( allParIndex );
+        
+        if ( virtualIndex >= 0 )
         {
-            if ( visibleList.get( targetIndex ).getNode().getIndex() == allParIndex )
+            int firstVisibleIndex = virtualFlow.getFirstVisibleIndex();
+            int lastVisibleIndex = virtualFlow.getLastVisibleIndex();
+            
+            if ( virtualIndex >= firstVisibleIndex && virtualIndex <= lastVisibleIndex )
             {
-                return Optional.of( targetIndex );
+                int visibleIndex = virtualIndex - firstVisibleIndex;
+                
+                if ( virtualFlow.visibleCells().get( visibleIndex ).getNode().getIndex() == allParIndex )
+                {
+                    return Optional.of( visibleIndex );
+                }
             }
         }
         return Optional.empty();
@@ -992,14 +1020,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final int visibleParToAllParIndex(int visibleParIndex) {
-        if (visibleParIndex < 0) {
-            throw new IllegalArgumentException("Visible paragraph index cannot be negative but was " + visibleParIndex);
-        }
-        if (visibleParIndex > 0 && visibleParIndex >= getVisibleParagraphs().size()) {
-            throw new IllegalArgumentException(String.format(
-                    "Visible paragraphs' last index is [%s] but visibleParIndex was [%s]",
-                    getVisibleParagraphs().size() - 1, visibleParIndex)
-            );
+        if (visibleParIndex < 0 || (visibleParIndex > 0 && visibleParIndex >= getVisibleParagraphs().size())) {
+            throw new IllegalArgumentException("visibleParIndex is out of bounds: " + visibleParIndex);
         }
 
         try {
@@ -1009,7 +1031,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             else visibleCell = virtualFlow.getCellIfVisible( virtualFlow.getFirstVisibleIndex() )
                        .orElseGet( () -> virtualFlow.visibleCells().get( visibleParIndex ) );
 
-        return visibleCell.getNode().getIndex();
+            return visibleCell.getNode().getIndex();
         }
         catch ( IndexOutOfBoundsException | NoSuchElementException EX )
         {
@@ -1028,7 +1050,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         } else if(hit.isAfterCells()) {
             return CharacterHit.insertionAt(getLength());
         } else {
-            int parIdx = hit.getCellIndex();
+            int parIdx = virtualFlowParagraphs.getSourceIndex(hit.getCellIndex());
             int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<PS, SEG, S> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
@@ -1039,13 +1061,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public final int lineIndex(int paragraphIndex, int columnPosition) {
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(paragraphIndex);
-        return cell.getNode().getCurrentLineIndex(columnPosition);
+        return getCellIfVisible(paragraphIndex)
+                .map(c -> c.getNode().getCurrentLineIndex(columnPosition))
+                .orElse(0);
     }
 
     @Override
     public int getParagraphLinesCount(int paragraphIndex) {
-        return virtualFlow.getCell(paragraphIndex).getNode().getLineCount();
+        return isParagraphFolded(paragraphIndex) ? 0 : getCell(paragraphIndex).getLineCount();
     }
 
     @Override
@@ -1063,7 +1086,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         if (from == to) {
             CaretNode cursor = new CaretNode( "", this, from );
             int parIdx = offsetToPosition( from, Bias.Forward ).getMajor();
-            ParagraphBox<?,?,?> paragrafBox = virtualFlow.getCell( parIdx ).getNode();
+            ParagraphBox<?,?,?> paragrafBox = getCell( parIdx );
             paragrafBox.caretsProperty().add( cursor );
             Bounds cursorBounds = paragrafBox.getCaretBoundsOnScreen( cursor );
             paragrafBox.caretsProperty().remove( cursor );
@@ -1232,14 +1255,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public Optional<Bounds> getParagraphBoundsOnScreen(int paragraphIndex) {
-        return virtualFlow.getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
+        return getCellIfVisible(paragraphIndex).map(this::getParagraphBoundsOnScreen);
     }
 
     @Override
     public final <T extends Node & Caret> Optional<Bounds> getCaretBoundsOnScreen(T caret) {
         Optional<Bounds> caretBounds;
         try { // This is the default mechanism, but sometimes throws just like in followCaret()
-            caretBounds = virtualFlow.getCellIfVisible(caret.getParagraphIndex())
+            caretBounds = getCellIfVisible(caret.getParagraphIndex())
                     .map(c -> c.getNode().getCaretBoundsOnScreen(caret));
         }
         catch ( IllegalArgumentException EX ) {
@@ -1286,27 +1309,53 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     public void showParagraphInViewport(int paragraphIndex) {
-        suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, virtualFlow::show));
     }
 
     @Override
     public void showParagraphAtTop(int paragraphIndex) {
-        suspendVisibleParsWhile(() -> virtualFlow.showAsFirst(paragraphIndex));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, virtualFlow::showAsFirst));
     }
 
     @Override
     public void showParagraphAtBottom(int paragraphIndex) {
-        suspendVisibleParsWhile(() -> virtualFlow.showAsLast(paragraphIndex));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, virtualFlow::showAsLast));
     }
 
     @Override
     public void showParagraphRegion(int paragraphIndex, Bounds region) {
-        suspendVisibleParsWhile(() -> virtualFlow.show(paragraphIndex, region));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, p -> virtualFlow.show(p, region)));
     }
 
     public void showParagraphAtCenter(int paragraphIndex) {
         double offset = Math.floor( getHeight() / 2.0 );
-        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(paragraphIndex,offset));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(paragraphIndex, p -> virtualFlow.showAtOffset(p, offset)));
+    }
+
+    /**
+     * @param allParagraphIndex the index of the paragraph in the underlying document.
+     * @param action the action to perform on the virtual-flow index of the paragraph, if visible / not folded.
+     */
+    private void forVisibleParagraphIndex(int allParagraphIndex, IntConsumer action) {
+        int virtualIndex = getVisibleParagraphIndexBefore(allParagraphIndex);
+        if ( virtualIndex < 0 ) virtualIndex = getVisibleParagraphIndexAfter(allParagraphIndex);
+        if ( virtualIndex >= 0 ) action.accept(virtualIndex);
+    }
+
+    private int getVisibleParagraphIndexBefore(int allParagraphIndex) {
+        for ( int i = allParagraphIndex ; i >= 0 ; i-- ) {
+            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
+            if ( virtualIndex >= 0 ) return virtualIndex;
+        }
+        return -1;
+    }
+
+    private int getVisibleParagraphIndexAfter(int allParagraphIndex) {
+        for ( int i = allParagraphIndex + 1; i < getParagraphs().size(); i++ ) {
+            int virtualIndex = virtualFlowParagraphs.getViewIndex(i);
+            if ( virtualIndex >= 0 ) return virtualIndex;
+        }
+        return -1;
     }
 
     @Override
@@ -1326,11 +1375,11 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     public int getCurrentLineStartInParargraph() {
-        return virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineStartPosition(caretSelectionBind.getUnderlyingCaret());
+        return getCell(getCurrentParagraph()).getCurrentLineStartPosition(caretSelectionBind.getUnderlyingCaret());
     }
 
     public int getCurrentLineEndInParargraph() {
-        return virtualFlow.getCell(getCurrentParagraph()).getNode().getCurrentLineEndPosition(caretSelectionBind.getUnderlyingCaret());
+        return getCell(getCurrentParagraph()).getCurrentLineEndPosition(caretSelectionBind.getUnderlyingCaret());
     }
 
     private double caretPrevY = -1;
@@ -1591,6 +1640,17 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     /**
+     * Facilitates keeping folded paragraphs out of the virtual flow,
+     * so Flowless does not have to materialize and traverse zero-height cells.
+     *
+     * @return a Predicate that given a paragraph style, returns true if it includes folding.
+     */
+    protected Predicate<PS> getFoldStyleCheck() {
+        // By default, no paragraph is folded. Concrete text areas that expose folding should override this method.
+        return style -> false;
+    }
+
+    /**
      * Convenience method to fold (hide/collapse) the currently selected paragraphs,
      * into (i.e. excluding) the first paragraph of the range.
      *
@@ -1657,7 +1717,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private void skipOverFoldedParagraphs( ObservableValue<? extends Integer> ob, Integer prevParagraph, Integer newParagraph )
     {
-        if ( foldCheck && getCell( newParagraph ).isFolded() )
+        if ( isParagraphFolded(newParagraph) )
         {
             // Prevent Ctrl+A and Ctrl+End breaking when the last paragraph is folded
             // github.com/FXMisc/RichTextFX/pull/965#issuecomment-706268116
@@ -1667,7 +1727,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             int p = newParagraph + skip;
 
             while ( p > 0 && p < getParagraphs().size() ) {
-                if ( getCell( p ).isFolded() )  p += skip;
+                if ( isParagraphFolded(p) )  p += skip;
                 else break;
             }
 
@@ -1677,6 +1737,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             if ( getSelection().getLength() == 0 )  moveTo( p, col );
             else moveTo( p, col, SelectionPolicy.EXTEND );
         }
+    }
+
+    private boolean isParagraphFolded(int index) {
+        return foldCheck && foldStyleCheck.test(getParagraphs().get(index).getParagraphStyle());
     }
 
     /**
@@ -1718,6 +1782,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             moveTo( startingFrom, getParagraphLength( startingFrom ) );
             recreateParagraphGraphic( startingFrom );
         }
+        
+        foldCheck = (getParagraphs().size() != virtualFlowParagraphs.size());
     }
 
     /* ********************************************************************** *
@@ -1765,7 +1831,9 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             if ( calcWidth <= 0.0 ) calcWidth = getPrefWidth();
 
             for ( int p = 0; p < getParagraphs().size(); p++ ) {
-                height += getCell( p ).computePrefHeight( calcWidth );
+                if ( ! isParagraphFolded(p) ) {
+                    height += getCell( p ).computePrefHeight( calcWidth );
+                }
             }
             if ( height > 0.0 ) {
                 return height + in.getTop() + in.getBottom();
@@ -1819,25 +1887,25 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      */
     TwoDimensional.Position currentLine() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        int lineIdx = cell.getNode().getCurrentLineIndex(caretSelectionBind.getUnderlyingCaret());
+        ParagraphBox<PS, SEG, S> cell = getCell(parIdx);
+        int lineIdx = cell.getCurrentLineIndex(caretSelectionBind.getUnderlyingCaret());
         return paragraphLineNavigator.position(parIdx, lineIdx);
     }
 
     void showCaretAtBottom() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
+        ParagraphBox<PS, SEG, S> cell = getCell(parIdx);
+        Bounds caretBounds = cell.getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double y = caretBounds.getMaxY();
-        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, getViewportHeight() - y));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(parIdx, p -> virtualFlow.showAtOffset(p, getViewportHeight() - y)));
     }
 
     void showCaretAtTop() {
         int parIdx = getCurrentParagraph();
-        Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> cell = virtualFlow.getCell(parIdx);
-        Bounds caretBounds = cell.getNode().getCaretBounds(caretSelectionBind.getUnderlyingCaret());
+        ParagraphBox<PS, SEG, S> cell = getCell(parIdx);
+        Bounds caretBounds = cell.getCaretBounds(caretSelectionBind.getUnderlyingCaret());
         double y = caretBounds.getMinY();
-        suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(parIdx, -y));
+        suspendVisibleParsWhile(() -> forVisibleParagraphIndex(parIdx, p -> virtualFlow.showAtOffset(p, -y)));
     }
 
     /**
@@ -1849,7 +1917,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     CharacterHit hit(ParagraphBox.CaretOffsetX x, TwoDimensional.Position targetLine) {
         int parIdx = targetLine.getMajor();
-        ParagraphBox<PS, SEG, S> cell = virtualFlow.getCell(parIdx).getNode();
+        ParagraphBox<PS, SEG, S> cell = getCell(parIdx);
         CharacterHit parHit = cell.hitTextLine(x, targetLine.getMinor());
         return parHit.offset(getParagraphOffset(parIdx));
     }
@@ -1862,7 +1930,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         } else if(hit.isAfterCells()) {
             return CharacterHit.insertionAt(getLength());
         } else {
-            int parIdx = hit.getCellIndex();
+            int parIdx = virtualFlowParagraphs.getSourceIndex(hit.getCellIndex());
             int parOffset = getParagraphOffset(parIdx);
             ParagraphBox<PS, SEG, S> cell = hit.getCell().getNode();
             Point2D cellOffset = hit.getCellOffset();
@@ -1878,7 +1946,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
         List<Bounds> bounds = new ArrayList<>(selection.getParagraphSpan());
         for (int i = selection.getStartParagraphIndex(); i <= selection.getEndParagraphIndex(); i++) {
-            virtualFlow.getCellIfVisible(i)
+            getCellIfVisible(i)
                     .ifPresent(c -> c.getNode()
                             .getSelectionBoundsOnScreen(selection)
                             .ifPresent(bounds::add)
@@ -2004,7 +2072,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
             @Override
             public void updateIndex(int index) {
-                box.setIndex(index);
+                box.setIndex(virtualFlowParagraphs.getSourceIndex(index));
             }
 
             @Override
@@ -2029,7 +2097,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     /** Assumes this method is called within a {@link #suspendVisibleParsWhile(Runnable)} block */
     private void followCaret() {
         int parIdx = getCurrentParagraph();
-        ParagraphBox<PS, SEG, S> paragrafBox = virtualFlow.getCell( parIdx ).getNode();
+        ParagraphBox<PS, SEG, S> paragrafBox = getCell( parIdx );
 
         Bounds caretBounds;
         try {
@@ -2069,11 +2137,26 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             );
         }
 
-        virtualFlow.show(parIdx, region);
+        virtualFlow.show(getVirtualParagraphIndex(parIdx), region);
+    }
+
+    private int getVirtualParagraphIndex(int allParagraphIndex) {
+        int virtualIndex = virtualFlowParagraphs.getViewIndex(allParagraphIndex);
+        if ( virtualIndex < 0 ) {
+            throw new IllegalArgumentException("Paragraph " + allParagraphIndex + " is folded");
+        }
+        return virtualIndex;
+    }
+
+    private Optional<Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> getCellIfVisible(int allParagraphIndex) {
+        int virtualIndex = virtualFlowParagraphs.getViewIndex(allParagraphIndex);
+        return virtualIndex < 0
+                ? Optional.empty()
+                : virtualFlow.getCellIfVisible(virtualIndex);
     }
 
     private ParagraphBox<PS, SEG, S> getCell(int index) {
-        return virtualFlow.getCell(index).getNode();
+        return virtualFlow.getCell(getVirtualParagraphIndex(index)).getNode();
     }
 
     private EventStream<MouseOverTextEvent> mouseOverTextEvents(ObservableSet<ParagraphBox<PS, SEG, S>> cells, Duration delay) {
@@ -2094,7 +2177,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     private Optional<Bounds> getRangeBoundsOnScreen(int paragraphIndex, int from, int to) {
-        return virtualFlow.getCellIfVisible(paragraphIndex)
+        return getCellIfVisible(paragraphIndex)
                 .map(c -> c.getNode().getRangeBoundsOnScreen(from, to));
     }
 

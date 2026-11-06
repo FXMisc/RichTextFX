@@ -32,4 +32,15 @@ public class ParagraphLinesCountTests extends InlineCssTextAreaAppTest {
         assertEquals(1, area.getParagraphLinesCount(0));
     }
 
+    @Test
+    public void folded_paragraph_returns_zero_lines() {
+        interact(() -> {
+            area.replaceText("first\nsecond\nthird");
+            area.foldParagraphs(0, 1);
+        });
+
+        assertEquals(1, area.getParagraphLinesCount(0));
+        assertEquals(0, area.getParagraphLinesCount(1));
+        assertEquals(1, area.getParagraphLinesCount(2));
+    }
 }

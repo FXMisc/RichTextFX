@@ -102,10 +102,7 @@ public class InlineCssTextArea extends StyledTextArea<String, String> {
         unfoldParagraphs( startingFromPos, getFoldStyleCheck(), getRemoveFoldStyle() );
     }
 
-
-    /**
-     * @return a Predicate that given a paragraph style, returns true if it includes folding.
-     */
+    @Override
     protected Predicate<String> getFoldStyleCheck() {
         return pstyle -> pstyle != null && pstyle.contains( "collapse" );
     }

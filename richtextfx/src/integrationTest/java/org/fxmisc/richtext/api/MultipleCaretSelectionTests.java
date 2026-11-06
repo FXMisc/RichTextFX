@@ -45,6 +45,27 @@ public class MultipleCaretSelectionTests extends InlineCssTextAreaAppTest {
     }
 
     @Test
+    public void removing_caret_in_folded_paragraph_works() {
+        interact(() -> {
+            // after folding the first two paragraphs, we should still be able to add/remove carets in them
+            // note: the first line is still visible as the 'preview' of the folded paragraph
+            area.foldParagraphs(0, 1);
+
+            CaretNode caret = new CaretNode("folded caret", area, area.getAbsolutePosition(1, 0));
+            assertTrue(area.addCaret(caret));
+            assertTrue(area.removeCaret(caret));
+
+            // for the visible paragraphs it should still work as well
+            caret = new CaretNode("folded caret", area, area.getAbsolutePosition(0, 0));
+            assertTrue(area.addCaret(caret));
+            assertTrue(area.removeCaret(caret));
+            caret = new CaretNode("folded caret", area, area.getAbsolutePosition(2, 0));
+            assertTrue(area.addCaret(caret));
+            assertTrue(area.removeCaret(caret));
+        });
+    }
+
+    @Test
     public void adding_selection_works() {
         Selection<String, String, String> selection = new SelectionImpl<>("test selection", area);
         interact(() -> assertTrue(area.addSelection(selection)));
@@ -64,6 +85,24 @@ public class MultipleCaretSelectionTests extends InlineCssTextAreaAppTest {
             assertTrue(area.removeSelection(selection));
         });
 
+    }
+
+    @Test
+    public void removing_selection_spanning_folded_paragraph_works() {
+        Selection<String, String, String> selection = new SelectionImpl<>("folded selection", area);
+        interact(() -> {
+            // folding the first two paragraphs, we should still be able to:
+            //  - add a selection that spans the folded paragraphs
+            //  - select the entire area
+            //  - remove that selection
+            area.foldParagraphs(0, 1);
+            assertTrue(area.addSelection(selection));
+
+            selection.selectRange(0, area.getLength());
+            assertTrue(selection.getSelectionBounds().isPresent());
+
+            assertTrue(area.removeSelection(selection));
+        });
     }
 
     @Test
