@@ -208,14 +208,8 @@ abstract class StyleSpansBase<S> implements StyleSpans<S> {
     public IndexRange getStyleRange(int position) {
         Position offset = offsetToPosition(position, Bias.Forward);
         StyleSpan<S> span = getStyleSpan(offset.getMajor());
-
-        int start = 0;
-        for (int i = 0; i < offset.getMajor(); i++) {
-            start += getStyleSpan(i).getLength();
-        }
-
-        int end = start + span.getLength();
-        return new IndexRange(start, end);
+        int spanStart = position - offset.getMinor();
+        return new IndexRange(spanStart, spanStart + span.getLength());
     }
 
     @Override
