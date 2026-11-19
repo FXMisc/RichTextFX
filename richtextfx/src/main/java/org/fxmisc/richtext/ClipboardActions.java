@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import javafx.scene.control.IndexRange;
@@ -88,19 +90,21 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
             Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
-                byte[] bytes = (byte[]) clipboard.getContent(format);
-                ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-                DataInputStream dis = new DataInputStream(is);
-                StyledDocument<PS, SEG, S> doc = null;
-                try {
-                    doc = codec.decode(dis);
-                } catch (IOException e) {
-                    System.err.println("Codec error: Failed to decode '" + codec.getName() + "':");
-                    e.printStackTrace();
-                }
-                if(doc != null) {
-                    replaceSelection(doc);
-                    return;
+                byte[] bytes = extractBytes(clipboard.getContent(format));
+                if (bytes != null) {
+                    ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+                    DataInputStream dis = new DataInputStream(is);
+                    StyledDocument<PS, SEG, S> doc = null;
+                    try {
+                        doc = codec.decode(dis);
+                    } catch (IOException e) {
+                        System.err.println("Codec error: Failed to decode '" + codec.getName() + "':");
+                        e.printStackTrace();
+                    }
+                    if(doc != null) {
+                        replaceSelection(doc);
+                        return;
+                    }
                 }
             }
         }
@@ -123,6 +127,44 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
 		}
 		return text;
 	}
+
+    /**
+     * Extracts the raw byte[] for a custom {@link DataFormat} from clipboard
+     * content, which is not guaranteed to be a byte[].
+     *
+     * <p>On Linux (GTK toolkit), {@code Clipboard.getContent(DataFormat)} for a
+     * custom format returns a {@link ByteBuffer} (even for content freshly put
+     * by the same application instance) whose bytes are the
+     * {@link java.io.ObjectOutputStream}-serialized form of the original
+     * byte[], rather than the payload itself.</p>
+     *
+     * @return the byte[] payload, or null if the content type is unrecognized
+     */
+    private static byte[] extractBytes(Object content) {
+        byte[] raw = null;
+        if (content instanceof byte[] bytes) {
+            raw = bytes;
+        } else if (content instanceof ByteBuffer buffer) {
+            ByteBuffer duplicate = buffer.duplicate();
+            raw = new byte[duplicate.remaining()];
+            duplicate.get(raw);
+        }
+        if (raw == null) {
+            return null;
+        }
+        // Unwrap a java-serialized byte[] if the toolkit serialized the payload
+        if (raw.length >= 4 && (raw[0] & 0xFF) == 0xAC && (raw[1] & 0xFF) == 0xED) {
+            try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(raw))) {
+                Object obj = ois.readObject();
+                if (obj instanceof byte[] bytes) {
+                    return bytes;
+                }
+            } catch (IOException | ClassNotFoundException | RuntimeException e) {
+                // Not a serialized object after all: use the raw bytes as-is
+            }
+        }
+        return raw;
+    }
 }
 
 class ClipboardHelper {
