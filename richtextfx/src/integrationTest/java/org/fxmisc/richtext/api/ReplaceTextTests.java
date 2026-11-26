@@ -69,7 +69,7 @@ public class ReplaceTextTests extends InlineCssTextAreaAppTest {
             // Any text can be selected anywhere in the document, this primed the exception
             area.selectWord();
 
-            // Second text supplied by bug reporter: has 9 paragraphs, 344 characters, and contains two Ä characters
+            // Second text supplied by bug reporter: has 9 paragraphs, 344 characters, and contains two Ã„ characters
             area.replaceText( getTextB() );
 
             // An internal IndexOutOfBoundsException may occur in ParagraphText.getRangeShapeSafely
@@ -96,14 +96,14 @@ public class ReplaceTextTests extends InlineCssTextAreaAppTest {
     }
 
 
-    // Reduced text supplied by bug reporter: has 9 paragraphs, 344 characters, and contains two Ä characters
+    // Reduced text supplied by bug reporter: has 9 paragraphs, 344 characters, and contains two Ã„ characters
     private String getTextB()
     {
         return "<!DOCTYPE HTML>\n" +
                 "\n" +
-                "    SEINÄTELINEET - HifiStudio</title>\n" +
+                "    SEINÃ„TELINEET - HifiStudio</title>\n" +
                 "\n" +
-                "<meta property=\"og:title\" content=\"HifiStudio - SEINÄTELINEET\" />\n" +
+                "<meta property=\"og:title\" content=\"HifiStudio - SEINÃ„TELINEET\" />\n" +
                 "\n" +
                 "<meta property=\"og:url\" content=\"https://www.hifistudio.fi/fi/tuotteet/laitetelineet/seinatelineet/91052\" />\n" +
                 "\n" +

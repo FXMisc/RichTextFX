@@ -12,6 +12,14 @@ subprojects {
         }
     }
 
+    // don't depend on the platform default encoding (UTF-8 only since JDK 18, see JEP 400)
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+    tasks.withType(Javadoc).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
     if (it.name.equals("richtextfx")) {
         task("getProjectVersion") {
             doLast {
