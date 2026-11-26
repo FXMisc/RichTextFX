@@ -19,11 +19,19 @@ public class ParagraphTest {
         StyleSpans<T> styleSpans = paragraph.getStyleSpans();
         assertEquals(length, styleSpans.length());
         assertEquals(ranges.length/2, styleSpans.getSpanCount(), "Style segment count invalid");
+        int expectedStart = 0, start = 0;
+
         for (int i = 0; i < ranges.length/2 ; i++) {
             StyleSpan<T> style = styleSpans.getStyleSpan(i);
             assertEquals(styles[i], style.getStyle(), "Incorrect style for " + i);
-            assertEquals(ranges[i*2], style.getStart(), "Start not matching for " + i);
-            assertEquals(ranges[i*2 + 1] - ranges[i*2], style.getLength(), "Length not matching for " + i);
+            assertEquals(start = ranges[i*2], expectedStart, "Start not matching for " + i);
+
+            int end = ranges[i * 2 + 1];
+            int pos = Math.min(start, end - 1);
+            assertEquals(new IndexRange(start, end), styleSpans.getStyleRange(pos),
+                    "Invalid style range for span " + i);
+
+            expectedStart = end;
         }
     }
 
@@ -263,15 +271,14 @@ public class ParagraphTest {
                 0, 3, 3, 10, 10, 11, 11, 17, 17, 18);
 
         // Restyle up to the end
-        // Bug
         checkStyle(p3.restyle(11, 18, "out"), 18,
                 new String[] {"text", "unknown", "keyword", "out"},
-                0, 3, 3, 10, 0, 1, 0, 7);
+                0, 3, 3, 10, 10, 11, 11, 18);
 
         // Restyle out of bound
         checkStyle(p3.restyle(11, 19, "out"), 19,
                 new String[] {"text", "unknown", "keyword", "out"},
-                0, 3, 3, 10, 0, 1, 0, 8);
+                0, 3, 3, 10, 10, 11, 11, 19);
 
         // From > length, no changes
         checkStyle(p3.restyle(19, 20, "out"), 18,
@@ -308,13 +315,11 @@ public class ParagraphTest {
                 0, 9, 9, 13, 13, 18);
 
         // Restyle with one empty
-        // Bug
         checkStyle(p3.restyle(0, new StyleSpansBuilder<String>().add("na", 0).create()), 18,
                 new String[] {"text", "unknown", "keyword", "text"},
-                0, 3, 4, 11, 11, 13, 0, 6);
+                0, 3, 3, 10, 10, 12, 12, 18);
 
         // Restyle with empty style span
-        // Bug
         StyleSpans<String> emptyStyle = new StyleSpans<>() {
             @Override public Position position(int major, int minor) {return null;}
             @Override public Position offsetToPosition(int offset, Bias bias) {return null;}
@@ -325,6 +330,6 @@ public class ParagraphTest {
         };
         checkStyle(p3.restyle(0, emptyStyle), 18,
                 new String[] {"text", "unknown", "keyword", "text"},
-                0, 3, 4, 11, 11, 13, 12, 18);
+                0, 3, 3, 10, 10, 12, 12, 18);
     }
 }

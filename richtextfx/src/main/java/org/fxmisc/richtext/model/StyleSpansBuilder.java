@@ -171,9 +171,8 @@ public class StyleSpansBuilder<S> {
             } else {
                 StyleSpan<S> prev = spans.get(spans.size() - 1);
                 if(prev.getStyle().equals(span.getStyle())) {
-                    spans.set(spans.size() - 1, new StyleSpan<>(span.getStyle(), prev.getStart(), prev.getLength() + span.getLength()));
+                    spans.set(spans.size() - 1, new StyleSpan<>(span.getStyle(), prev.getLength() + span.getLength()));
                 } else {
-                    span.setStart(prev.getStart() + prev.getLength());
                     spans.add(span);
                 }
             }
@@ -207,9 +206,9 @@ abstract class StyleSpansBase<S> implements StyleSpans<S> {
 
     @Override
     public IndexRange getStyleRange(int position) {
-        Position offset = offsetToPosition(position, Bias.Backward);
+        Position offset = offsetToPosition(position, Bias.Forward);
         StyleSpan<S> span = getStyleSpan(offset.getMajor());
-        int spanStart = span.getStart();
+        int spanStart = position - offset.getMinor();
         return new IndexRange(spanStart, spanStart + span.getLength());
     }
 
