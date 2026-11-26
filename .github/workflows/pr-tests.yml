@@ -1,0 +1,59 @@
+name: PR tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Gradle check (${{ matrix.os }} / ${{ matrix.test_mode }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        test_mode: [desktop, headless]
+        exclude:
+          - os: windows-latest
+            test_mode: desktop
+
+    env:
+      JAVA_OPTS: ${{ matrix.java_opts }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: gradle
+
+      - name: Install virtual display
+        if: runner.os == 'Linux' && matrix.test_mode == 'headless'
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb
+
+      - name: Run checks on Linux
+        if: runner.os == 'Linux'
+        run: |
+          if [ "${{ matrix.test_mode }}" = "headless" ]; then
+            xvfb-run -a ./gradlew check --info --stacktrace --no-daemon
+          else
+            xvfb-run -a ./gradlew check --info --stacktrace --no-daemon
+          fi
+
+      - name: Run checks on Windows
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          JAVA_OPTS: -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500
+        run: gradlew.bat check --info --stacktrace --no-daemon
+        
