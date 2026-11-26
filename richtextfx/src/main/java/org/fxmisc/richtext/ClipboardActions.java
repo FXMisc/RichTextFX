@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -62,11 +63,8 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
                 Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
                 DataFormat format = dataFormat(codec.getName());
                 StyledDocument<PS, SEG, S> doc = subDocument(selection.getStart(), selection.getEnd());
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                DataOutputStream dos = new DataOutputStream(os);
                 try {
-                    codec.encode(dos, doc);
-                    content.put(format, os.toByteArray());
+                    content.put(format, encode(codec, doc));
                 } catch (IOException e) {
                     System.err.println("Codec error: Exception in encoding '" + codec.getName() + "':");
                     e.printStackTrace();
@@ -90,21 +88,10 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
             Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
             DataFormat format = dataFormat(codec.getName());
             if(clipboard.hasContent(format)) {
-                byte[] bytes = extractBytes(clipboard.getContent(format));
-                if (bytes != null) {
-                    ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-                    DataInputStream dis = new DataInputStream(is);
-                    StyledDocument<PS, SEG, S> doc = null;
-                    try {
-                        doc = codec.decode(dis);
-                    } catch (IOException e) {
-                        System.err.println("Codec error: Failed to decode '" + codec.getName() + "':");
-                        e.printStackTrace();
-                    }
-                    if(doc != null) {
-                        replaceSelection(doc);
-                        return;
-                    }
+                StyledDocument<PS, SEG, S> doc = decode(codec, clipboard.getContent(format));
+                if(doc != null) {
+                    replaceSelection(doc);
+                    return;
                 }
             }
         }
@@ -127,44 +114,6 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
 		}
 		return text;
 	}
-
-    /**
-     * Extracts the raw byte[] for a custom {@link DataFormat} from clipboard
-     * content, which is not guaranteed to be a byte[].
-     *
-     * <p>On Linux (GTK toolkit), {@code Clipboard.getContent(DataFormat)} for a
-     * custom format returns a {@link ByteBuffer} (even for content freshly put
-     * by the same application instance) whose bytes are the
-     * {@link java.io.ObjectOutputStream}-serialized form of the original
-     * byte[], rather than the payload itself.</p>
-     *
-     * @return the byte[] payload, or null if the content type is unrecognized
-     */
-    private static byte[] extractBytes(Object content) {
-        byte[] raw = null;
-        if (content instanceof byte[] bytes) {
-            raw = bytes;
-        } else if (content instanceof ByteBuffer buffer) {
-            ByteBuffer duplicate = buffer.duplicate();
-            raw = new byte[duplicate.remaining()];
-            duplicate.get(raw);
-        }
-        if (raw == null) {
-            return null;
-        }
-        // Unwrap a java-serialized byte[] if the toolkit serialized the payload
-        if (raw.length >= 4 && (raw[0] & 0xFF) == 0xAC && (raw[1] & 0xFF) == 0xED) {
-            try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(raw))) {
-                Object obj = ois.readObject();
-                if (obj instanceof byte[] bytes) {
-                    return bytes;
-                }
-            } catch (IOException | ClassNotFoundException | RuntimeException e) {
-                // Not a serialized object after all: use the raw bytes as-is
-            }
-        }
-        return raw;
-    }
 }
 
 class ClipboardHelper {
@@ -174,6 +123,108 @@ class ClipboardHelper {
             return format;
         } else {
             return new DataFormat(name);
+        }
+    }
+
+    /**
+     * Encodes {@code value} for the clipboard.
+     *
+     * <p>The result is a {@link ByteBuffer} rather than a {@code byte[]} on purpose: JavaFX stores
+     * {@link java.io.Serializable} clipboard content (such as a {@code byte[]}) in Java-serialized form,
+     * and since JavaFX 17.0.21, 21.0.13, 25.0.5 and 27.0.1 it no longer deserializes it when reading, so the
+     * reader would receive the serialized form instead of the payload. A {@code ByteBuffer} is not
+     * {@code Serializable}, so JavaFX transfers its bytes as they are, on every JavaFX version and platform.</p>
+     */
+    static <T> ByteBuffer encode(Codec<T> codec, T value) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        codec.encode(new DataOutputStream(os), value);
+        return ByteBuffer.wrap(os.toByteArray());
+    }
+
+    /**
+     * Decodes clipboard content produced by {@link #encode(Codec, Object)} or by an earlier RichTextFX version.
+     *
+     * @return the decoded value, or {@code null} if the content could not be decoded, in which case
+     *         the caller should fall back to plain text
+     */
+    static <T> T decode(Codec<T> codec, Object content) {
+        byte[] bytes = extractBytes(content);
+        if (bytes == null) {
+            return null;
+        }
+        try {
+            return codec.decode(new DataInputStream(new ByteArrayInputStream(bytes)));
+        } catch (IOException | RuntimeException e) {
+            // corrupt or foreign data can make a codec throw unchecked exceptions too,
+            // e.g. a negative collection size
+            System.err.println("Codec error: Failed to decode '" + codec.getName() + "':");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Extracts the codec payload from content returned by {@code Clipboard.getContent(DataFormat)}.
+     * Depending on the JavaFX version and on which RichTextFX version copied it, this can be:
+     * <ul>
+     *     <li>a {@link ByteBuffer} holding the payload: copied by this version, on any JavaFX version;</li>
+     *     <li>a {@code byte[]}: copied by RichTextFX 0.11.7 or earlier, read on a JavaFX version that still
+     *     deserializes clipboard content;</li>
+     *     <li>a {@link ByteBuffer} holding a Java-serialized {@code byte[]}: copied by RichTextFX 0.11.7 or
+     *     earlier, read on JavaFX 17.0.21, 21.0.13, 25.0.5, 27.0.1 or later.</li>
+     * </ul>
+     *
+     * @return the payload, or {@code null} if the content is not in a recognized form
+     */
+    static byte[] extractBytes(Object content) {
+        if (content instanceof byte[]) {
+            return (byte[]) content;
+        }
+        if (!(content instanceof ByteBuffer)) {
+            return null;
+        }
+        ByteBuffer buffer = ((ByteBuffer) content).duplicate();
+        byte[] raw = new byte[buffer.remaining()];
+        buffer.get(raw);
+        if (isJavaSerialized(raw)) {
+            return deserializeByteArray(raw);
+        }
+        return raw;
+    }
+
+    /**
+     * Whether {@code bytes} starts with the Java serialization stream header (0xACED 0x0005). A codec payload
+     * cannot start like this: every RichTextFX document starts with its paragraph count as a 4-byte int,
+     * and these 4 bytes would make it negative.
+     */
+    private static boolean isJavaSerialized(byte[] bytes) {
+        return bytes.length >= 4
+                && (bytes[0] & 0xFF) == 0xAC && (bytes[1] & 0xFF) == 0xED
+                && bytes[2] == 0x00 && bytes[3] == 0x05;
+    }
+
+    /**
+     * Deserializes a {@code byte[]} written by {@link java.io.ObjectOutputStream}, as JavaFX does for content
+     * copied by RichTextFX 0.11.7 or earlier. Clipboard content can come from any process, so this accepts
+     * exactly one {@code byte[]}, no larger than the stream itself, and rejects any other class before it is
+     * loaded or instantiated. It is not the unrestricted deserialization that JavaFX removed.
+     *
+     * @return the array, or {@code null} if the stream holds anything else
+     */
+    private static byte[] deserializeByteArray(byte[] serialized) {
+        final int maxLength = serialized.length;
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serialized))) {
+            ois.setObjectInputFilter(info -> {
+                Class<?> c = info.serialClass();
+                if ((c != null && c != byte[].class) || info.depth() > 1 || info.arrayLength() > maxLength) {
+                    return ObjectInputFilter.Status.REJECTED;
+                }
+                return ObjectInputFilter.Status.ALLOWED;
+            });
+            Object o = ois.readObject();
+            return o instanceof byte[] ? (byte[]) o : null;
+        } catch (IOException | ClassNotFoundException | RuntimeException e) {
+            return null;
         }
     }
 }
