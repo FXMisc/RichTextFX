@@ -15,9 +15,13 @@ public class BoundsTests extends InlineCssTextAreaAppTest {
     private static final String MANY_PARS_OF_TEXT = TextBuildingUtils.buildLines(20);
 
     @Override
+    protected double getStageHeight() {
+        return 50;
+    }
+
+    @Override
     public void start(Stage stage) throws Exception {
         super.start(stage);
-        stage.setHeight(50);
 
         // insure caret is always visible
         area.setShowCaret(Caret.CaretVisibility.ON);

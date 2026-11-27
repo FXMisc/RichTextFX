@@ -25,12 +25,26 @@ public class InlineCssTextAreaAppTest extends RichTextFXTestBase {
 
         stage.setAlwaysOnTop(true);
         stage.setScene(scene);
-        stage.setWidth(400);
-        stage.setHeight(400);
+        // Size the stage before showing it. Don't resize it right after show() in a subclass's start():
+        // on Linux under a window manager, JavaFX 11 then sends the X server a stale size for the
+        // dimension that was not changed (e.g. setHeight(100) yields a 1x100 window), while JavaFX still
+        // thinks the window is full size. Mouse clicks then miss the window. Override the methods below.
+        stage.setWidth(getStageWidth());
+        stage.setHeight(getStageHeight());
         stage.show();
 
         // so tests don't need to do this themselves
         area.requestFocus();
+    }
+
+    /** The width the stage is given before it is shown. */
+    protected double getStageWidth() {
+        return 400;
+    }
+
+    /** The height the stage is given before it is shown. */
+    protected double getStageHeight() {
+        return 400;
     }
 
     public final PointQuery position(Pos pos, double xOffset, double yOffset) {
