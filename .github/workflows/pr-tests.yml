@@ -33,9 +33,10 @@ jobs:
       # TestFX's robot sends real X key events, which go to whichever window has X focus.
       # Bare Xvfb has no window manager, so focus follows the pointer and keystrokes are
       # randomly lost. A lightweight window manager gives the test stage proper focus.
-      # Window decorations are turned off: when the WM reparents a window into a titled
-      # frame, JavaFX learns the new screen position late, so screen-coordinate clicks can
-      # land a title-bar height (about one text line) too high.
+      # Window decorations are turned off so the scene sits at the window's origin. The
+      # wallpaper is turned off because fbsetbg otherwise pops up an error window mid-screen.
+      # Note: under a window manager, JavaFX 11 must not resize a stage right after show()
+      # (see InlineCssTextAreaAppTest), or the real X window can end up 1px wide.
       - name: Install virtual display and window manager
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb fluxbox
@@ -47,6 +48,7 @@ jobs:
         run: |
           mkdir -p ~/.fluxbox
           printf '[app] (name=.*)\n  [Deco] {NONE}\n[end]\n' > ~/.fluxbox/apps
+          printf 'background: none\n' > ~/.fluxbox/overlay
           Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp &
           sleep 2
           fluxbox > /dev/null 2>&1 &

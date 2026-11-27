@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
-import javafx.stage.Stage;
 import org.fxmisc.richtext.CaretNode;
 import org.fxmisc.richtext.InlineCssTextAreaAppTest;
 import org.junit.Test;
@@ -23,9 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FoldedParagraphTests extends InlineCssTextAreaAppTest {
 
     @Override
-    public void start(Stage stage) throws Exception {
-        super.start(stage);
-        stage.setHeight(100);
+    protected double getStageHeight() {
+        return 100;
     }
 
     @Test
@@ -150,23 +148,18 @@ public class FoldedParagraphTests extends InlineCssTextAreaAppTest {
             area.foldParagraphs(1, 2);
         });
 
-        // let layout and any window manager move/resize settle before taking screen coordinates
+        // let layout settle before taking screen coordinates
         WaitForAsyncUtils.waitForFxEvents();
 
         // click on the first character of the 'three' paragraph,
         int start = area.getAbsolutePosition(3, 0);
-        int caretBefore = area.getCaretPosition();
         Bounds bounds = asyncFx(() -> area.getCharacterBoundsOnScreen(start, start + 1).get()).get();
         moveTo(bounds).clickOn(PRIMARY);
         WaitForAsyncUtils.waitForFxEvents();
 
         // verify that the caret is now in the 'three' paragraph, which is the fourth paragraph in the source text.
-        String diagnostics = String.format(
-                "caret before=%d after=%d, target char screen bounds=%s, mouse=%s, window=(%.1f,%.1f %.1fx%.1f)",
-                caretBefore, area.getCaretPosition(), bounds, robotContext().getBaseRobot().retrieveMouse(),
-                stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
-        assertEquals(3, area.getCurrentParagraph(), diagnostics);
-        assertEquals(0, area.getCaretColumn(), diagnostics);
+        assertEquals(3, area.getCurrentParagraph());
+        assertEquals(0, area.getCaretColumn());
     }
 
     @Test
