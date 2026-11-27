@@ -11,20 +11,13 @@ permissions:
 
 jobs:
   test:
-    name: Gradle check (${{ matrix.os }} / ${{ matrix.test_mode }})
+    name: Gradle check (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        test_mode: [desktop, headless]
-        exclude:
-          - os: windows-latest
-            test_mode: desktop
-
-    env:
-      JAVA_OPTS: ${{ matrix.java_opts }}
 
     steps:
       - name: Check out repository
@@ -37,23 +30,32 @@ jobs:
           java-version: '11'
           cache: gradle
 
-      - name: Install virtual display
-        if: runner.os == 'Linux' && matrix.test_mode == 'headless'
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb
+      # TestFX's robot sends real X key events, which go to whichever window has X focus.
+      # Bare Xvfb has no window manager, so focus follows the pointer and keystrokes are
+      # randomly lost. A lightweight window manager gives the test stage proper focus.
+      - name: Install virtual display and window manager
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb fluxbox
 
       - name: Run checks on Linux
         if: runner.os == 'Linux'
+        env:
+          DISPLAY: ':99'
         run: |
-          if [ "${{ matrix.test_mode }}" = "headless" ]; then
-            xvfb-run -a ./gradlew check --info --stacktrace --no-daemon
-          else
-            xvfb-run -a ./gradlew check --info --stacktrace --no-daemon
-          fi
+          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp &
+          sleep 2
+          fluxbox > /dev/null 2>&1 &
+          sleep 2
+          ./gradlew check --info --stacktrace --no-daemon
 
       - name: Run checks on Windows
         if: runner.os == 'Windows'
         shell: cmd
-        env:
-          JAVA_OPTS: -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500
         run: gradlew.bat check --info --stacktrace --no-daemon
-        
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: richtextfx/build/reports/tests/

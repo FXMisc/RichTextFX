@@ -35,8 +35,8 @@ public class AcceleratorsTests extends InlineCssTextAreaAppTest {
 					new AcceleratorsTestsHelper(area, "f", KeyCode.F, false, false, true),
 					//CHARACTER WITH CONTROL
 					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, true, false, false),
-					//CHARACTER WITH ALT
-					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, false, true, false),
+					//CHARACTER WITH ALT (not filtered on non-Windows, so that Option/AltGr characters can be typed)
+					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, false, true, true),
 					//CHARACTER WITH ALT + CONTROL
 					new AcceleratorsTestsHelper(area, "\0", KeyCode.F, true, true, false),
 			};
