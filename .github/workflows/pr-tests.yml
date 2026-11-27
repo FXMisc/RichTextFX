@@ -33,6 +33,9 @@ jobs:
       # TestFX's robot sends real X key events, which go to whichever window has X focus.
       # Bare Xvfb has no window manager, so focus follows the pointer and keystrokes are
       # randomly lost. A lightweight window manager gives the test stage proper focus.
+      # Window decorations are turned off: when the WM reparents a window into a titled
+      # frame, JavaFX learns the new screen position late, so screen-coordinate clicks can
+      # land a title-bar height (about one text line) too high.
       - name: Install virtual display and window manager
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y xvfb fluxbox
@@ -42,6 +45,8 @@ jobs:
         env:
           DISPLAY: ':99'
         run: |
+          mkdir -p ~/.fluxbox
+          printf '[app] (name=.*)\n  [Deco] {NONE}\n[end]\n' > ~/.fluxbox/apps
           Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp &
           sleep 2
           fluxbox > /dev/null 2>&1 &
@@ -55,7 +60,7 @@ jobs:
 
       - name: Upload test reports
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: test-reports-${{ matrix.os }}
           path: richtextfx/build/reports/tests/
