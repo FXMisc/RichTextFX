@@ -19,7 +19,7 @@ javafx {
     def taskNames = gradle.getStartParameter().getTaskNames()
     // Prevent pom & module.json from containing JavaFX runtime dependencies
     if ( taskNames.stream().anyMatch( t -> t.startsWith('pub') ) ) {
-        configuration = ['compileOnly']
+        configuration = 'compileOnly'
     }
 }
 
